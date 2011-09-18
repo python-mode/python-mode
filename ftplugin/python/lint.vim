@@ -19,8 +19,8 @@ if g:pymode_lint_write
     au BufWritePost <buffer> call <SID>:PyLint()
 endif
 
-command PyLintToggle :let b:pylint_disabled = exists('b:pylint_disabled') ? b:pylint_disabled ? 0 : 1 : 1
-command PyLint :call <SID>:PyLint()
+command! PyLintToggle :let b:pylint_disabled = exists('b:pylint_disabled') ? b:pylint_disabled ? 0 : 1 : 1
+command! PyLint :call <SID>:PyLint()
 
 " Signs definition
 sign define W text=WW texthl=Todo
@@ -56,6 +56,7 @@ function! <SID>:PyLint()
 
     py check()
 
+    let pylint_output = ""
     let b:qf_list = []
     for error in split(pylint_output, "\n")
         let b:parts = matchlist(error, '\v([A-Za-z\.]+):(\d+): \[([EWRCI]+)[^\]]*\] (.*)')

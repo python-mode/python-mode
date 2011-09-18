@@ -26,6 +26,6 @@ fun! <SID>:PydocLoad(word) "{{{
 
 endfunction "}}}
 
-com! -nargs=+ Pydoc call <SID>:PydocLoad("<args>")
+command! -nargs=+ Pydoc call <SID>:PydocLoad("<args>")
 
 nnoremap <silent> <buffer> K :call <SID>:PydocLoad(expand("<cword>"))<CR>
