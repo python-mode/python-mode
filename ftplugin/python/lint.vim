@@ -53,10 +53,11 @@ function! <SID>:PyLint()
     if exists("b:pylint_disabled") && b:pylint_disabled == 1 | return | endif
 
     if &modifiable && &modified | write | endif	
-
-    py check()
+    cclose
 
     let pylint_output = ""
+    py check()
+
     let b:qf_list = []
     for error in split(pylint_output, "\n")
         let b:parts = matchlist(error, '\v([A-Za-z\.]+):(\d+): \[([EWRCI]+)[^\]]*\] (.*)')
@@ -76,31 +77,16 @@ function! <SID>:PyLint()
 
     endfor
 
+    call setqflist(b:qf_list, 'r')
+
     " Open cwindow
-    if g:pymode_lint_cwindow
-        call setqflist(b:qf_list, 'r')
-        if len(b:qf_list)
-            cwindow
-        else
-            cclose
-        endif
+    if g:pymode_lint_cwindow && len(b:qf_list)
+        cwindow
     endif
 
     " Place signs
     if g:pymode_lint_signs
-        call s:PlacePyLintSigns()
+        call helpers#PlaceErrorSigns()
     endif
 
-endfunction
-
-function! s:PlacePyLintSigns()
-    "first remove all sings
-    sign unplace *
-
-    "now we place one sign for every quickfix line
-    let l:id = 1
-    for item in getqflist()
-        execute(':sign place '.l:id.' name='.l:item.type.' line='.l:item.lnum.' buffer='.l:item.bufnr)
-        let l:id = l:id + 1
-    endfor
 endfunction

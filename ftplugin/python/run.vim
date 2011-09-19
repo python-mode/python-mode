@@ -12,12 +12,7 @@ endif
 " DESC: Save and run python code
 fun! RunPython() "{{{
     if &modifiable && &modified | write | endif	
-    let output = system(g:python . ' ' . expand('%:p'))
-    pclose | botright 8new
-    setlocal buftype=nofile bufhidden=wipe noswapfile nowrap previewwindow
-    put! =output
-    $del
-    wincmd p
+    helpers#ShowPreviewCmd(g:python . ' ' . expand('%:p'))
 endfunction "}}}
 
 " Map keys

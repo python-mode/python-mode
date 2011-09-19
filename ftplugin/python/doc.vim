@@ -17,13 +17,7 @@ fun! <SID>:PydocLoad(word) "{{{
         call helpers#ShowError('no name/symbol under cursor!')
         return 0
     endif
-
-    let cmd = "pclose | botright 10new __doc__ | r!" . escape(g:pydoc, " ")
-    let cmd = cmd . " " . escape(a:word, " ")
-    silent exec cmd
-    setlocal buftype=nofile bufhidden=wipe noswapfile nowrap previewwindow
-    normal gg
-
+    call helpers#ShowPreviewCmd(g:pydoc . " " . escape(a:word, " "))
 endfunction "}}}
 
 command! -nargs=+ Pydoc call <SID>:PydocLoad("<args>")
