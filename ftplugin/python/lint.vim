@@ -76,7 +76,7 @@ function! <SID>:PyLint()
 
     " Open cwindow
     if g:pymode_lint_cwindow && len(b:qf_list)
-        cwindow
+        botright cwindow
     endif
 
     " Place signs
