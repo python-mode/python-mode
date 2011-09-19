@@ -56,25 +56,20 @@ function! <SID>:PyLint()
     cclose
 
     let pylint_output = ""
+    let bufnum = bufnr("%")
     py check()
-
     let b:qf_list = []
     for error in split(pylint_output, "\n")
         let b:parts = matchlist(error, '\v([A-Za-z\.]+):(\d+): \[([EWRCI]+)[^\]]*\] (.*)')
-
         if len(b:parts) > 3
-
-            " Store the error for the quickfix window
             let l:qf_item = {}
             let l:qf_item.filename = expand('%')
-            let l:qf_item.bufnr = bufnr(b:parts[1])
+            let l:qf_item.bufnr = bufnum
             let l:qf_item.lnum = b:parts[2]
             let l:qf_item.type = b:parts[3]
             let l:qf_item.text = b:parts[4]
             call add(b:qf_list, l:qf_item)
-
         endif
-
     endfor
 
     call setqflist(b:qf_list, 'r')
