@@ -9,8 +9,6 @@ if helpers#SafeVar("b:pylint", 1)
     finish
 endif
 
-call helpers#SafeVar('g:pymode_lint_disable', '"C0103,C0111,C0301,W0141,W0142,W0212,W0221,W0223,W0232,W0401,W0613,W0631,E1101,E1120,R0903,R0904,R0913"')
-call helpers#SafeVar('g:pymode_lint_members', '"REQUEST,acl_users,aq_parent,objects,DoesNotExist,_meta,status_code,content,context"')
 call helpers#SafeVar('g:pymode_lint_cwindow', 1)
 call helpers#SafeVar('g:pymode_lint_signs', 1)
 call helpers#SafeVar('g:pymode_lint_write', 1)
@@ -37,8 +35,9 @@ from pylint import lint, checkers
 linter = lint.PyLinter()
 checkers.initialize(linter)
 linter.set_option('output-format', 'parseable')
-linter.set_option('disable', vim.eval("g:pymode_lint_disable"))
 linter.set_option('reports', 0)
+linter.read_config_file()
+linter.load_config_file()
 
 def check():
     target = vim.eval("expand('%:p')")
