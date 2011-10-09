@@ -123,7 +123,12 @@ def _object_attributes(obj, parent):
     for name in dir(obj):
         if name == 'None':
             continue
-        child = getattr(obj, name)
+        try:
+            child = getattr(obj, name)
+        except AttributeError:
+            # descriptors are allowed to raise AttributeError
+            # even if they are in dir()
+            continue
         pyobject = None
         if inspect.isclass(child):
             pyobject = BuiltinClass(child, {}, parent=parent)

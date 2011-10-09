@@ -337,7 +337,10 @@ class _RealFinder(object):
 
     def is_a_name_after_from_import(self, offset):
         try:
-            line_start = self._get_line_start(offset)
+            if len(self.code) > offset and  self.code[offset] == '\n':
+                line_start = self._get_line_start(offset - 1)
+            else:
+                line_start = self._get_line_start(offset)
             last_from = self.code.rindex('from ', line_start, offset)
             from_import = self.code.index(' import ', last_from)
             from_names = from_import + 8

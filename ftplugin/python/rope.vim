@@ -2,7 +2,9 @@ if helpers#SafeVar("g:python_rope", 1)
     finish
 endif
 
-py import ropevim
+python << EOF
+import ropevim
+EOF
 let g:ropevim_loaded = 1
 
 " RopeVim settings
