@@ -7,6 +7,8 @@ features like python code looking for bugs, refactoring and some other usefull t
 This plugin allow you create python code in vim very easily.
 There is no need to install the pylint_ or rope_ library on your system.
 
+See screencast here: http://t.co/3b0bzeXA (sory for quality, this my first screencasting)
+
 
 Requirements
 ------------
