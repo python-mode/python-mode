@@ -246,8 +246,8 @@ class InspectBuilder(object):
                 object_build_function(node, member, name)
             elif isbuiltin(member):
                 if self.imported_member(node, member, name):
-                    if obj is object:
-                        print 'skippp', obj, name, member
+                    #if obj is object:
+                    #    print 'skippp', obj, name, member
                     continue
                 object_build_methoddescriptor(node, member, name)
             elif isclass(member):

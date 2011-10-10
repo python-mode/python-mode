@@ -26,6 +26,27 @@ import sys
 import time
 import warnings
 
+def setugid(user):
+    """Change process user and group ID
+
+    Argument is a numeric user id or a user name"""
+    try:
+        from pwd import getpwuid
+        passwd = getpwuid(int(user))
+    except ValueError:
+        from pwd import getpwnam
+        passwd = getpwnam(user)
+
+    if hasattr(os, 'initgroups'): # python >= 2.7
+        os.initgroups(passwd.pw_name, passwd.pw_gid)
+    else:
+        import ctypes
+        if ctypes.CDLL(None).initgroups(passwd.pw_name, passwd.pw_gid) < 0:
+            err = ctypes.c_int.in_dll(ctypes.pythonapi,"errno").value
+            raise OSError(err, os.strerror(err), 'initgroups')
+    os.setgid(passwd.pw_gid)
+    os.setuid(passwd.pw_uid)
+
 
 def daemonize(pidfile=None, uid=None, umask=077):
     """daemonize a Unix process. Set paranoid umask by default.
@@ -33,13 +54,12 @@ def daemonize(pidfile=None, uid=None, umask=077):
     Return 1 in the original process, 2 in the first fork, and None for the
     second fork (eg daemon process).
     """
-    # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
-    # XXX unix specific
+    # http://www.faqs.org/faqs/unix-faq/programmer/faq/
     #
     # fork so the parent can exit
     if os.fork():   # launch child and...
         return 1
-    # deconnect from tty and create a new session
+    # disconnect from tty and create a new session
     os.setsid()
     # fork again so the parent, (the session group leader), can exit.
     # as a non-session group leader, we can never regain a controlling
@@ -74,12 +94,7 @@ def daemonize(pidfile=None, uid=None, umask=077):
         f.close()
     # change process uid
     if uid:
-        try:
-            uid = int(uid)
-        except ValueError:
-            from pwd import getpwnam
-            uid = getpwnam(uid).pw_uid
-        os.setuid(uid)
+        setugid(uid)
     return None
 
 

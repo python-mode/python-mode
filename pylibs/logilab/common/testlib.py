@@ -484,8 +484,8 @@ class TestCase(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super(TestCase, self).__init__(methodName)
-        # internal API changed in python2.5
-        if sys.version_info >= (2, 5):
+        # internal API changed in python2.4 and needed by DocTestCase
+        if sys.version_info >= (2, 4):
             self.__exc_info = sys.exc_info
             self.__testMethodName = self._testMethodName
         else:
@@ -1207,6 +1207,9 @@ class DocTest(TestCase):
             finder = DocTestFinder(skipped=self.skipped)
             if sys.version_info >= (2, 4):
                 suite = doctest.DocTestSuite(self.module, test_finder=finder)
+                if sys.version_info >= (2, 5):
+                    # XXX iirk
+                    doctest.DocTestCase._TestCase__exc_info = sys.exc_info
             else:
                 suite = doctest.DocTestSuite(self.module)
         except AttributeError:

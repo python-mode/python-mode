@@ -632,7 +632,7 @@ def report_messages_stats(sect, stats, _):
     if not stats['by_msg']:
         # don't print this report when we didn't detected any errors
         raise EmptyReport()
-    in_order = sorted([(value, msg_id)
+    in_order = sorted([(value, msg_id) 
                        for msg_id, value in stats['by_msg'].items()
                        if not msg_id.startswith('I')])
     in_order.reverse()
@@ -687,6 +687,10 @@ except AttributeError:
     __builtins__['_'] = str
 
 
+class ArgumentPreprocessingError(Exception):
+    """Raised if an error occurs during argument preprocessing."""
+
+
 def preprocess_options(args, search_for):
     """look for some options (keys of <search_for>) which have to be processed
     before others
@@ -706,6 +710,8 @@ def preprocess_options(args, search_for):
                 cb, takearg = search_for[option]
                 del args[i]
                 if takearg and val is None:
+                    if i >= len(args) or args[i].startswith('-'):
+                        raise ArgumentPreprocessingError(arg)
                     val = args[i]
                     del args[i]
                 cb(option, val)
@@ -728,11 +734,16 @@ group are mutually exclusive.'),
     def __init__(self, args, reporter=None, exit=True):
         self._rcfile = None
         self._plugins = []
-        preprocess_options(args, {
-            # option: (callback, takearg)
-            'rcfile':       (self.cb_set_rcfile, True),
-            'load-plugins': (self.cb_add_plugins, True),
-            })
+        try:
+            preprocess_options(args, {
+                # option: (callback, takearg)
+                'rcfile':       (self.cb_set_rcfile, True),
+                'load-plugins': (self.cb_add_plugins, True),
+                })
+        except ArgumentPreprocessingError, e:
+            print >> sys.stderr, 'Argument %s expects a value.' % (e.args[0],)
+            sys.exit(32)
+
         self.linter = linter = self.LinterClass((
             ('rcfile',
              {'action' : 'callback', 'callback' : lambda *args: 1,
@@ -798,28 +809,28 @@ are done by default'''}),
         # add some help section
         linter.add_help_section('Environment variables', config.ENV_HELP, level=1)
         linter.add_help_section('Output', '''
-Using the default text output, the message format is :
-
-        MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE
-
-There are 5 kind of message types :
-    * (C) convention, for programming standard violation
-    * (R) refactor, for bad code smell
-    * (W) warning, for python specific problems
-    * (E) error, for probable bugs in the code
+Using the default text output, the message format is :                          
+                                                                                
+        MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE                                
+                                                                                
+There are 5 kind of message types :                                             
+    * (C) convention, for programming standard violation                        
+    * (R) refactor, for bad code smell                                          
+    * (W) warning, for python specific problems                                 
+    * (E) error, for probable bugs in the code                                  
     * (F) fatal, if an error occurred which prevented pylint from doing further
 processing.
         ''', level=1)
         linter.add_help_section('Output status code', '''
-Pylint should leave with following status code:
-    * 0 if everything went fine
-    * 1 if a fatal message was issued
-    * 2 if an error message was issued
-    * 4 if a warning message was issued
-    * 8 if a refactor message was issued
-    * 16 if a convention message was issued
-    * 32 on usage error
-
+Pylint should leave with following status code:                                 
+    * 0 if everything went fine                                                 
+    * 1 if a fatal message was issued                                           
+    * 2 if an error message was issued                                          
+    * 4 if a warning message was issued                                         
+    * 8 if a refactor message was issued                                        
+    * 16 if a convention message was issued                                     
+    * 32 on usage error                                                         
+                                                                                
 status 1 to 16 will be bit-ORed so you can know which different categories has
 been issued by analysing pylint output status code
         ''', level=1)

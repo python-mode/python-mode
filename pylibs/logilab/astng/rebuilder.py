@@ -1,15 +1,3 @@
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # copyright 2003-2010 Sylvain Thenault, all rights reserved.
@@ -223,6 +211,8 @@ class TreeRebuilder(object):
                     if isinstance(meth, new.Function):
                         if func_name in ('classmethod', 'staticmethod'):
                             meth.type = func_name
+                        elif func_name == 'classproperty': # see lgc.decorators
+                            meth.type = 'classmethod'
                         meth.extra_decorators.append(newnode.value)
                 except (AttributeError, KeyError):
                     continue
@@ -498,9 +488,11 @@ class TreeRebuilder(object):
                 newnode.type = 'method'
         if newnode.decorators is not None:
             for decorator_expr in newnode.decorators.nodes:
-                if isinstance(decorator_expr, new.Name) and \
-                       decorator_expr.name in ('classmethod', 'staticmethod'):
-                    newnode.type = decorator_expr.name
+                if isinstance(decorator_expr, new.Name):
+                    if decorator_expr.name in ('classmethod', 'staticmethod'):
+                        newnode.type = decorator_expr.name
+                    elif decorator_expr.name == 'classproperty':
+                        newnode.type = 'classmethod'
         frame.set_local(newnode.name, newnode)
         return newnode
 

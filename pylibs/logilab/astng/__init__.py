@@ -24,7 +24,7 @@ python source code for projects such as pychecker, pyreverse,
 pylint... Well, actually the development of this library is essentially
 governed by pylint's needs.
 
-It extends class defined in the compiler.ast [1] module with some
+It extends class defined in the python's _ast module with some
 additional methods and attributes. Instance attributes are added by a
 builder object, which can either generate extended ast (let's call
 them astng ;) by visiting an existent ast tree or by inspecting living

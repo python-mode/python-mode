@@ -330,8 +330,8 @@ TIME_UNITS = {
     "d": 60 * 60 *24,
 }
 
-def apply_units( string, units, inter=None, final=float, blank_reg=_BLANK_RE,
-    value_reg=_VALUE_RE):
+def apply_units(string, units, inter=None, final=float, blank_reg=_BLANK_RE,
+                value_reg=_VALUE_RE):
     """Parse the string applying the units defined in units
     (e.g.: "1.5m",{'m',60} -> 80).
 

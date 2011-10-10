@@ -75,7 +75,7 @@ class LazyObject(object):
         self.obj = obj
         self._imported = None
 
-    def __getobj(self):
+    def _getobj(self):
         if self._imported is None:
            self._imported = getattr(load_module_from_name(self.module),
                                     self.obj)
@@ -85,10 +85,10 @@ class LazyObject(object):
         try:
             return super(LazyObject, self).__getattribute__(attr)
         except AttributeError, ex:
-            return getattr(self.__getobj(), attr)
+            return getattr(self._getobj(), attr)
 
     def __call__(self, *args, **kwargs):
-        return self.__getobj()(*args, **kwargs)
+        return self._getobj()(*args, **kwargs)
 
 
 def load_module_from_name(dotted_name, path=None, use_sys=1):

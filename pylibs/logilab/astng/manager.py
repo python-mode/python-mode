@@ -1,16 +1,4 @@
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # copyright 2003-2010 Sylvain Thenault, all rights reserved.
 # contact mailto:thenault@gmail.com
@@ -32,7 +20,6 @@
 """astng manager: avoid multiple astng build of a same module when
 possible by providing a class responsible to get astng representation
 from various source and using a cache of built modules)
-
 """
 
 __docformat__ = "restructuredtext en"
@@ -99,7 +86,7 @@ class ASTNGManager(OptionsProviderMixIn):
             # NOTE: cache entries are added by the [re]builder
             self.astng_cache = {}
             self._mod_file_cache = {}
-
+            self.transformers = []
 
     def astng_from_file(self, filepath, modname=None, fallback=True, source=False):
         """given a module name, return the astng object"""
@@ -127,6 +114,9 @@ class ASTNGManager(OptionsProviderMixIn):
         """given a module name, return the astng object"""
         if modname in self.astng_cache:
             return self.astng_cache[modname]
+        if modname == '__main__':
+            from logilab.astng.builder import ASTNGBuilder
+            return ASTNGBuilder(self).string_build('', modname)
         old_cwd = os.getcwd()
         if context_file:
             os.chdir(dirname(context_file))
@@ -276,6 +266,8 @@ class ASTNGManager(OptionsProviderMixIn):
                     project.add_module(astng)
         return project
 
+    def register_transformer(self, transformer):
+        self.transformers.append(transformer)
 
 class Project:
     """a project handle a set of modules / packages"""

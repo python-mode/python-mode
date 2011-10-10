@@ -209,7 +209,7 @@ def locked(acquire, release):
 
 
 def monkeypatch(klass, methodname=None):
-    """Decorator extending class with the decorated function
+    """Decorator extending class with the decorated callable
     >>> class A:
     ...     pass
     >>> @monkeypatch(A)
@@ -227,6 +227,17 @@ def monkeypatch(klass, methodname=None):
     12
     """
     def decorator(func):
-        setattr(klass, methodname or func.__name__, func)
+        try:
+            name = methodname or func.__name__
+        except AttributeError:
+            raise AttributeError('%s has no __name__ attribute: '
+                                 'you should provide an explicit `methodname`'
+                                 % func)
+        if callable(func):
+            setattr(klass, name, types.MethodType(func, None, klass))
+        else:
+            # likely a property
+            # this is quite borderline but usage already in the wild ...
+            setattr(klass, name, func)
         return func
     return decorator

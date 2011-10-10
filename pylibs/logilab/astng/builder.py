@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # copyright 2003-2010 Sylvain Thenault, all rights reserved.
 # contact mailto:thenault@gmail.com
@@ -17,9 +17,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
-"""The ASTNGBuilder makes astng from living object and / or from compiler.ast
-
-With python >= 2.5, the internal _ast module is used instead
+"""The ASTNGBuilder makes astng from living object and / or from _ast
 
 The builder is not thread safe and can't be used to parse different sources
 at the same time.
@@ -121,18 +119,14 @@ class ASTNGBuilder(InspectBuilder):
             raise ASTNGBuildingException(exc)
         except LookupError, exc: # unknown encoding
             raise ASTNGBuildingException(exc)
-        # get module name if necessary, *before modifying sys.path*
+        # get module name if necessary
         if modname is None:
             try:
                 modname = '.'.join(modpath_from_file(path))
             except ImportError:
                 modname = splitext(basename(path))[0]
         # build astng representation
-        try:
-            sys.path.insert(0, dirname(path)) # XXX (syt) iirk
-            node = self.string_build(data, modname, path)
-        finally:
-            sys.path.pop(0)
+        node = self.string_build(data, modname, path)
         node.file_encoding = encoding
         node.file_stream = stream
         return node
@@ -140,14 +134,15 @@ class ASTNGBuilder(InspectBuilder):
     def string_build(self, data, modname='', path=None):
         """build astng from source code string and return rebuilded astng"""
         module = self._data_build(data, modname, path)
-        if self._manager is not None:
-            self._manager.astng_cache[module.name] = module
+        self._manager.astng_cache[module.name] = module
         # post tree building steps after we stored the module in the cache:
         for from_node in module._from_nodes:
             self.add_from_names_to_locals(from_node)
         # handle delayed assattr nodes
         for delayed in module._delayed_assattr:
             self.delayed_assattr(delayed)
+        for transformer in self._manager.transformers:
+            transformer(module)
         return module
 
     def _data_build(self, data, modname, path):
