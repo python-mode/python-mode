@@ -142,10 +142,17 @@ Commands
 
 .. note:: Also you can see vim help. :help PythonModeCommands
 
-**Pydoc <args>** -- Show python documentation
-**PyLintToggle** -- Enable, disable pylint
-**PyLint** -- Check current buffer
-**Pyrun** -- Run current buffer
+============== =============
+Command        Description
+============== =============
+:Pydoc <args>  Show python documentation
+-------------- -------------
+PyLintToggle   Enable, disable pylint
+-------------- -------------
+PyLint         Check current buffer
+-------------- -------------
+Pyrun          Check current buffer
+============== =============
 
 .. note:: See also :help ropevim.txt
 
