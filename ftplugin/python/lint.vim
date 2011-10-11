@@ -30,8 +30,8 @@ if g:pymode_lint_write
 endif
 
 " DESC: Set commands
-command! PyLintToggle :let g:pymode_lint = g:pymode_lint ? 0 : 1
-command! PyLint :call <SID>:PyLint()
+command! -buffer PyLintToggle :let g:pymode_lint = g:pymode_lint ? 0 : 1
+command! -buffer PyLint :call <SID>:PyLint()
 
 " DESC: Signs definition
 sign define W text=WW texthl=Todo

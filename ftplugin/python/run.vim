@@ -24,7 +24,7 @@ fun! <SID>:RunPython() "{{{
 endfunction "}}}
 
 " DESC: Set commands
-command! Pyrun call <SID>:RunPython()
+command! -buffer Pyrun call <SID>:RunPython()
 
 " DESC: Set keys
 exe "nnoremap <silent> <buffer> " g:pymode_run_key ":call <SID>:RunPython()<CR>"

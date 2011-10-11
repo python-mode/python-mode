@@ -28,7 +28,7 @@ fun! <SID>:PydocLoad(word) "{{{
 endfunction "}}}
 
 " DESC: Set commands
-command! -nargs=+ Pydoc call <SID>:PydocLoad("<args>")
+command! -buffer -nargs=+ Pydoc call <SID>:PydocLoad("<args>")
 
 " DESC: Set keys
 exe "nnoremap <silent> <buffer> " g:pymode_doc_key ":call <SID>:PydocLoad(expand('<cword>'))<CR>"
