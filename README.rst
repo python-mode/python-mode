@@ -122,10 +122,17 @@ Default keys
 
 .. note:: Also you can see vim help. :help PythonModeKeys
 
-**K** -- Show python docs
-**<C-Space>** -- Rope autocomplete
-**<Leader>r** -- Run python
-**<Leader>b** -- Set, unset breakpoint
+============== =============
+Keys           Command
+============== =============
+**K**          Show python docs
+-------------- -------------
+**<C-Space>**  Rope autocomplete
+-------------- -------------
+**<Leader>r**  Run python
+-------------- -------------
+**<Leader>b**  Set, unset breakpoint
+============== =============
 
 .. note:: See also :help ropevim.txt
 
