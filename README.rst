@@ -24,18 +24,16 @@ Requirements
 ============
 
 - VIM >= 7.0 with python support
-- plugin-helpers_ -- vim plugin
 
 
 Installation
 ============
 
-- First plugin-helpers_ must be installed.
 - Just copy the plugin folders into your `~/.vim` directory.
 
 .. note:: Alternatively, if you are using pathogen_, clone the plugin into your ``bundle`` folder.
 
-.. note:: Also you can see vim help. :help PythonMode
+.. note:: Also you can see `:help PythonMode`
 
 Settings
 ========
