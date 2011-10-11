@@ -32,7 +32,7 @@ fun! helpers#ShowPreviewCmd(cmd) "{{{
         silent exec 'r!' . a:cmd
     catch /.*/
         close
-        call helpers#ShowError('Command fail')
+        echoerr 'Command fail'
     endtry
     redraw
     normal gg
@@ -74,20 +74,13 @@ fun! helpers#PlaceErrorSigns() "{{{
 endfunction "}}}
 
 
-" DESC: Show error
-" ARGS: output -- str, error message
-fun! helpers#ShowError(output) "{{{
-    redraw | echohl ErrorMsg | echomsg a:output | echohl None
-endfunction "}}}
-
-
 fun! helpers#CheckProgramm(name) "{{{
     let varname = 'g:' . a:name
     if helpers#SafeVar(varname, "'" . a:name . "'")
         return 1
     endif
     if !executable(eval(l:varname))
-        call helpers#ShowError(g:scriptname . ": can't find '" . eval(l:varname) . "'. Please set " . l:varname . ", or extend $PATH")
+        echoerr g:scriptname . ": can't find '" . eval(l:varname) . "'. Please set " . l:varname . ", or extend $PATH"
         return 0
     endif
     return 1

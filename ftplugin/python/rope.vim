@@ -11,7 +11,7 @@ endif
 
 " DESC: Check python support
 if !has('python')
-    helpers#ShowError(s:scriptname . ' required vim compiled with +python.')
+    echoerr s:scriptname . ' required vim compiled with +python.'
     finish
 endif
 

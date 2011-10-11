@@ -21,7 +21,7 @@ endif
 " ARGS: word -- string, word for search
 fun! <SID>:PydocLoad(word) "{{{
     if a:word == ''
-        call helpers#ShowError('no name/symbol under cursor!')
+        echoerr 'no name/symbol under cursor!'
         return 0
     endif
     call helpers#ShowPreviewCmd(g:pydoc . " " . escape(a:word, " "))
