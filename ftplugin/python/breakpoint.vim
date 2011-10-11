@@ -1,3 +1,6 @@
+" DESC: Set scriptname
+let g:scriptname = expand('<sfile>:t')
+
 " OPTION: g:pymode_breakpoint -- bool. Breakpoints enabled
 call helpers#SafeVar('g:pymode_breakpoint', 1)
 

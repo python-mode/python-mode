@@ -1,3 +1,6 @@
+" DESC: Set scriptname
+let g:scriptname = expand('<sfile>:t')
+
 " OPTION: g:pymode_utils -- bool. Load utils
 call helpers#SafeVar('g:pymode_utils', 1)
 

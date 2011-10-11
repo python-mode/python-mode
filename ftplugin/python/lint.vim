@@ -1,3 +1,6 @@
+" DESC: Set scriptname
+let g:scriptname = expand('<sfile>:t')
+
 " OPTION: g:pymode_lint -- bool. Load pylint plugin
 call helpers#SafeVar('g:pymode_lint', 1)
 

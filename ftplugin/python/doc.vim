@@ -1,3 +1,6 @@
+" DESC: Set scriptname
+let g:scriptname = expand('<sfile>:t')
+
 " OPTION: g:pymode_doc -- bool. Show documentation enabled
 call helpers#SafeVar('g:pymode_doc', 1)
 
@@ -11,7 +14,6 @@ endif
 
 " DESC: Check pydoc installed
 if !helpers#CheckProgramm('pydoc')
-    helpers#ShowError(s:scriptname . ' required pydoc.')
     finish
 endif
 

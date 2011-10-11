@@ -1,3 +1,6 @@
+" DESC: Set scriptname
+let g:scriptname = expand('<sfile>:t')
+
 " OPTION: g:pymode_rope -- bool. Load rope plugin
 call helpers#SafeVar('g:pymode_rope', 1)
 
