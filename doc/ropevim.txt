@@ -264,7 +264,7 @@ C-c r a c         RopeShowCalltip
 ===============   ============================
 
 
-Shortcuts
+Shortcuts *RopeShortcuts*
 ---------
 
 Some commands are used very frequently; specially the commands in

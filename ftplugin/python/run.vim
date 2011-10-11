@@ -1,19 +1,28 @@
-" Check this script already load
-if helpers#SafeVar("b:run", 1)
+" OPTION: g:pymode_doc -- bool. Show documentation enabled
+call helpers#SafeVar('g:pymode_run', 1)
+
+" OPTION: g:pymode_doc_key -- string. Key for show python documantation.
+call helpers#SafeVar('g:pymode_run_key', "'<leader>r'")
+
+" DESC: Disable script loading
+if helpers#SafeVar("b:run", 1) || g:pymode_run == 0
     finish
 endif
 
-" Check python
+" DESC: Check python
 if !helpers#CheckProgramm('python')
     helpers#ShowError(s:scriptname . ' required python installed.')
     finish
 endif
 
-" DESC: Save and run python code
-fun! RunPython() "{{{
+" DESC: Save file if it modified and run python code
+fun! <SID>:RunPython() "{{{
     if &modifiable && &modified | write | endif	
     call helpers#ShowPreviewCmd(g:python . ' ' . expand('%:p'))
 endfunction "}}}
 
-" Map keys
-nnoremap <silent> <buffer> <leader>r :call RunPython()<CR>
+" DESC: Set commands
+command! Pyrun call <SID>:RunPython()
+
+" DESC: Set keys
+exe "nnoremap <silent> <buffer> " g:pymode_run_key ":call <SID>:RunPython()<CR>"

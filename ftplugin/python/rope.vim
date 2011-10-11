@@ -1,3 +1,17 @@
+" OPTION: g:pymode_rope -- bool. Load rope plugin
+call helpers#SafeVar('g:pymode_rope', 1)
+
+" DESC: Disable script loading
+if g:pymode_rope == 0
+    finish
+endif
+
+" DESC: Check python support
+if !has('python')
+    helpers#ShowError(s:scriptname . ' required vim compiled with +python.')
+    finish
+endif
+
 if !helpers#SafeVar("g:rope_loaded", 1)
     py import ropevim
 
@@ -9,7 +23,7 @@ if !helpers#SafeVar("g:rope_loaded", 1)
     let g:ropevim_autoimport_modules = ["os", "shutil"]
 endif
 
-" Keys
+" DESC: Set keys
 imap <silent> <buffer> <Nul> <M-/>
 imap <silent> <buffer> <C-Space> <M-/>
 map  <silent> <buffer> <C-c>rd :RopeShowDoc<CR>
