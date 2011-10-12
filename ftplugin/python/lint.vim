@@ -57,7 +57,8 @@ def check():
     MANAGER.astng_cache.clear()
     linter.reporter.out = StringIO.StringIO()
     linter.check(target)
-    vim.command('let pylint_output = "%s"' % linter.reporter.out.getvalue())
+    pylint_output = linter.reporter.out.getvalue()
+    vim.command('let pylint_output = "%s"' % pylint_output.replace('"', '\\"'))
 EOF
 
 

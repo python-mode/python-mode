@@ -90,6 +90,10 @@ Default values: ::
     " Place error signs
     let g:pymode_lint_signs = 1
 
+.. note:: 
+    Pylint options (ex. disable messages) may be defined in '$HOME/pylint.rc'
+    See pylint documentation.
+
 Rope refactoring library
 ------------------------
 
@@ -187,6 +191,10 @@ Contributors
 
 Changelog
 =========
+
+## 2011-10-12 0.1.3
+-------------------
+* Fix pylint and update docs
 
 ## 2011-10-11 0.1.2
 -------------------
