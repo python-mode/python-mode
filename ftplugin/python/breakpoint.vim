@@ -1,11 +1,11 @@
 " DESC: Set scriptname
-let g:scriptname = expand('<sfile>:t')
+let g:scriptname = expand("<sfile>:t")
 
 " OPTION: g:pymode_breakpoint -- bool. Breakpoints enabled
-call helpers#SafeVar('g:pymode_breakpoint', 1)
+call helpers#SafeVar("g:pymode_breakpoint", 1)
 
 " OPTION: g:pymode_breakpoint_key -- string. Key for set/unset breakpoint.
-call helpers#SafeVar('g:pymode_breakpoint_key', "'<leader>b'")
+call helpers#SafeVar("g:pymode_breakpoint_key", "<leader>b")
 
 " DESC: Disable script loading
 if helpers#SafeVar("b:breakpoint", 1) || g:pymode_breakpoint == 0

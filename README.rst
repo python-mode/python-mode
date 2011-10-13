@@ -81,6 +81,10 @@ Default values: ::
     " Load pylint code plugin
     let g:pymode_lint = 1
 
+    " Pylint configuration file
+    " If file not found use '.pylintrc' from python-mode plugin directory
+    let g:pymode_lint_config = "$HOME/.pylintrc"
+
     " Check code every save
     let g:pymode_lint_write = 1
 
@@ -191,6 +195,10 @@ Contributors
 
 Changelog
 =========
+
+## 2011-10-12 0.1.4
+-------------------
+* Add default pylint configuration
 
 ## 2011-10-12 0.1.3
 -------------------

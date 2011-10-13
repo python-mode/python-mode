@@ -1,8 +1,8 @@
 " DESC: Set scriptname
-let g:scriptname = expand('<sfile>:t')
+let g:scriptname = expand("<sfile>:t")
 
 " OPTION: g:pymode_rope -- bool. Load rope plugin
-call helpers#SafeVar('g:pymode_rope', 1)
+call helpers#SafeVar("g:pymode_rope", 1)
 
 " DESC: Disable script loading
 if g:pymode_rope == 0
@@ -11,7 +11,7 @@ endif
 
 " DESC: Check python support
 if !has('python')
-    echoerr s:scriptname . ' required vim compiled with +python.'
+    echoerr s:scriptname . " required vim compiled with +python."
     finish
 endif
 

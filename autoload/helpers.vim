@@ -6,7 +6,7 @@ let g:scriptname = expand('<sfile>:t')
 "       value -- variable value
 fun! helpers#SafeVar(name, value) "{{{
     if !exists(a:name)
-        execute('let ' . a:name . ' = ' . a:value)
+        execute('let ' . a:name . ' = ' . string(a:value))
         return 0
     endif
     return 1
@@ -76,7 +76,7 @@ endfunction "}}}
 
 fun! helpers#CheckProgramm(name) "{{{
     let varname = 'g:' . a:name
-    if helpers#SafeVar(varname, "'" . a:name . "'")
+    if helpers#SafeVar(varname, a:name)
         return 1
     endif
     if !executable(eval(l:varname))

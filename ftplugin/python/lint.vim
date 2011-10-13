@@ -1,17 +1,20 @@
 " DESC: Set scriptname
-let g:scriptname = expand('<sfile>:t')
+let g:scriptname = expand("<sfile>:t")
 
 " OPTION: g:pymode_lint -- bool. Load pylint plugin
-call helpers#SafeVar('g:pymode_lint', 1)
+call helpers#SafeVar("g:pymode_lint", 1)
 
 " OPTION: g:pymode_lint_write -- bool. Check code every save.
-call helpers#SafeVar('g:pymode_lint_write', 1)
+call helpers#SafeVar("g:pymode_lint_write", 1)
 
 " OPTION: g:pymode_lint_cwindow -- bool. Auto open cwindow if errors find
-call helpers#SafeVar('g:pymode_lint_cwindow', 1)
+call helpers#SafeVar("g:pymode_lint_cwindow", 1)
 
 " OPTION: g:pymode_lint_signs -- bool. Place error signs
-call helpers#SafeVar('g:pymode_lint_signs', 1)
+call helpers#SafeVar("g:pymode_lint_signs", 1)
+
+" OPTION: g:pymode_lint_config -- str. Path to pylint config file
+call helpers#SafeVar("g:pymode_lint_config", string($HOME . "/.pylintrc"))
 
 " DESC: Disable script loading
 if helpers#SafeVar("b:lint", 1) || g:pymode_lint == 0
@@ -20,8 +23,13 @@ endif
 
 " DESC: Check python support
 if !has('python')
-    echoerr s:scriptname . ' required vim compiled with +python.'
+    echoerr s:scriptname . " required vim compiled with +python."
     finish
+endif
+
+" DESC: Set default pylint configuration
+if !filereadable(g:pymode_lint_config)
+    let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/.pylintrc"
 endif
 
 " DESC: Set autocommands
@@ -40,6 +48,7 @@ sign define R text=RR texthl=Visual
 sign define E text=EE texthl=Error
 
 python << EOF
+import os
 import StringIO
 
 from logilab.astng.builder import MANAGER
@@ -47,10 +56,10 @@ from pylint import lint, checkers
 
 linter = lint.PyLinter()
 checkers.initialize(linter)
-linter.set_option('output-format', 'parseable')
-linter.set_option('reports', 0)
-linter.read_config_file()
-linter.load_config_file()
+linter.set_option("output-format", "parseable")
+linter.set_option("reports", 0)
+
+linter.load_file_configuration(vim.eval("g:pymode_lint_config"))
 
 def check():
     target = vim.eval("expand('%:p')")

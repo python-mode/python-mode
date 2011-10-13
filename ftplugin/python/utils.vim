@@ -1,8 +1,8 @@
 " DESC: Set scriptname
-let g:scriptname = expand('<sfile>:t')
+let g:scriptname = expand("<sfile>:t")
 
 " OPTION: g:pymode_utils -- bool. Load utils
-call helpers#SafeVar('g:pymode_utils', 1)
+call helpers#SafeVar("g:pymode_utils", 1)
 
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
 call helpers#SafeVar("g:pymode_utils_whitespaces", 1)
