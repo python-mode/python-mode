@@ -1,4 +1,4 @@
-*pymode.txt* Python-mode for vim!
+*pymode.txt*    Python-mode for vim!
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -218,10 +218,16 @@ C-Space           Rope code assist
 ==============================================================================
 5. Credits ~
                                                              *PythonModeCredits* 
-
     Kirill Klenov
         http://klen.github.com/
         http://github.com/klen/
+
+    Rope
+        Copyright (C) 2006-2010 Ali Gholami Rudi
+        Copyright (C) 2009-2010 Anton Gritsay
+
+    Pylint
+        Copyright (C) 2002-2008 LOGILAB S.A. (Paris, FRANCE).
 
 
 ==============================================================================
@@ -232,4 +238,5 @@ The Python-mode is released under the GNU lesser general public license.
 See http://www.gnu.org/copyleft/lesser.html
 
 ------------------------------------------------------------------------------
- vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:
+
+ vim:tw=78:ts=8:ft=help:norl:
