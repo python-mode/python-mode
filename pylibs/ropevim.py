@@ -130,6 +130,10 @@ class VimUtils(ropemode.environment.Environment):
 
     cursor = property(_get_cursor, _set_cursor)
 
+    @staticmethod
+    def get_cur_dir():
+        return vim.eval('getcwd()')
+
     def filename(self):
         return vim.current.buffer.name
 
@@ -390,52 +394,10 @@ class _ValueCompleter(object):
             vim.command('let s:completions = %s' % result)
 
 
-shortcuts = {'code_assist': '<M-/>',
-             'lucky_assist': '<M-?>',
-             'goto_definition': '<C-c>g',
-             'show_doc': '<C-c>d',
-             'find_occurrences': '<C-c>f'}
-
-insert_shortcuts = {'code_assist': '<M-/>',
-                    'lucky_assist': '<M-?>'}
-
-def _enable_shortcuts(env):
-    for command, shortcut in shortcuts.items():
-        vim.command('map %s :call %s()<cr>' %
-                    (shortcut, _vim_name(command)))
-    for command, shortcut in insert_shortcuts.items():
-        command_name = _vim_name(command) + 'InsertMode'
-        vim.command('func! %s()\n' % command_name +
-                    'call %s()\n' % _vim_name(command) +
-                    'return ""\n'
-                    'endfunc')
-        vim.command('imap %s <C-R>=%s()<cr>' % (shortcut, command_name))
-
-def _add_menu(env):
-    project = ['open_project', 'close_project', 'find_file', 'undo', 'redo']
-    refactor = ['rename', 'extract_variable', 'extract_method', 'inline',
-                'move', 'restructure', 'use_function', 'introduce_factory',
-                'change_signature', 'rename_current_module',
-                'move_current_module', 'module_to_package']
-    assists = ['code_assist', 'goto_definition', 'show_doc', 'find_occurrences',
-               'lucky_assist', 'jump_to_global', 'show_calltip']
-    vim.command('silent! aunmenu Ropevim')
-    for index, items in enumerate([project, assists, refactor]):
-        if index != 0:
-            vim.command('amenu <silent> &Ropevim.-SEP%s- :' % index)
-        for name in items:
-            item = '\ '.join(token.title() for token in name.split('_'))
-            for command in ['amenu', 'vmenu']:
-                vim.command('%s <silent> &Ropevim.%s :call %s()<cr>' %
-                            (command, item, _vim_name(name)))
-
-
 ropemode.decorators.logger.message = echo
 ropemode.decorators.logger.only_short = True
+
 _completer = _ValueCompleter()
 
 _env = VimUtils()
 _interface = ropemode.interface.RopeMode(env=_env)
-_interface.init()
-_enable_shortcuts(_env)
-_add_menu(_env)
