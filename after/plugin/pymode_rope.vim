@@ -19,6 +19,9 @@ call helpers#SafeVar("g:pymode_rope_auto_project", 1)
 " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
 call helpers#SafeVar("g:pymode_rope_enable_autoimport", 1)
 
+" OPTION: g:pymode_rope_autoimport_generate -- bool.
+call helpers#SafeVar("g:pymode_rope_autoimport_generate", 1)
+
 " OPTION: g:pymode_rope_autoimport_underlines -- bool.
 call helpers#SafeVar("g:pymode_rope_autoimport_underlineds", 0)
 
@@ -29,7 +32,7 @@ call helpers#SafeVar("g:pymode_rope_codeassist_maxfixes", 10)
 call helpers#SafeVar("g:pymode_rope_sorted_completions", 1)
 
 " OPTION: g:pymode_rope_extended_complete -- bool.
-call helpers#SafeVar("g:pymode_rope_extended_complete", 0)
+call helpers#SafeVar("g:pymode_rope_extended_complete", 1)
 
 " OPTION: g:pymode_rope_autoimport_modules -- array.
 call helpers#SafeVar("g:pymode_rope_autoimport_modules", ["os","shutil","datetime"])
