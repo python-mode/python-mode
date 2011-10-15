@@ -221,6 +221,12 @@ Copyright (C) 2011 Kirill Klenov (klen_)
 Changelog
 =========
 
+## 2011-10-15 0.2.0
+-------------------
+* Change rope variables (ropevim_<name> -> pymode_rope_<name>)
+* Add "pymode_rope_auto_project" option (default: 1)
+* Update and fix docs
+
 ## 2011-10-12 0.1.4
 -------------------
 * Add default pylint configuration
