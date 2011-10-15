@@ -241,7 +241,7 @@ class VimUtils(ropemode.environment.Environment):
 
     def show_doc(self, docs, altview=False):
         if docs:
-            echo(docs)
+            vim.command("call helpers#ShowPreview('%s')" % docs)
 
     def preview_changes(self, diffs):
         echo(diffs)
@@ -283,56 +283,26 @@ class VimUtils(ropemode.environment.Environment):
         return proposal
 
     _docstring_re = re.compile('^[\s\t\n]*([^\n]*)')
+
     def _extended_completion(self, proposal):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
-        ci = {'word': proposal.name}
-
-        scope = proposal.scope[0].upper()
-        type_ = proposal.type
-        info = None
+        word, _, menu = map(lambda x: x.strip(), proposal.name.partition(':'))
+        ci = dict(word = word, menu = menu)
+        kind = ''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3]
 
         if proposal.scope == 'parameter_keyword':
-            scope = ' '
-            type_ = 'param'
-
             default = proposal.get_default()
-            info = '*' if default is None else '= %s' % default
+            ci["menu"] += '*' if default is None else '= %s' % default
 
-        elif proposal.scope == 'keyword':
-            scope = ' '
-            type_ = 'keywd'
-
-        elif proposal.scope == 'attribute':
-            scope = 'M'
-            if proposal.type == 'function':
-                type_ = 'meth'
-            elif proposal.type == 'instance':
-                type_ = 'prop'
-
-        elif proposal.type == 'function':
-            type_ = 'func'
-
-        elif proposal.type == 'instance':
-            type_ = 'inst'
-
-        elif proposal.type == 'module':
-            type_ = 'mod'
-
-        if info is None:
+        if menu is None:
             obj_doc = proposal.get_doc()
-            info = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
+            menu = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
 
-        if type_ is None:
-            type_ = ' '
-        else:
-            type_ = type_.ljust(5)[:5]
-        ci['menu'] = ' '.join((scope, type_, info))
-        ret =  u'{%s}' % \
-               u','.join(u'"%s":"%s"' % \
-                         (key, value.replace('"', '\\"')) \
-                         for (key, value) in ci.iteritems())
-        return ret
+        ci['kind'] = kind
+        ci['menu'] = menu
+
+        return repr(ci)
 
 
 def _vim_name(name):
@@ -346,7 +316,7 @@ class VimProgress(object):
     def __init__(self, name):
         self.name = name
         self.last = 0
-        echo('%s ... ' % self.name)
+        status('%s ... ' % self.name)
 
     def update(self, percent):
         try:
@@ -354,23 +324,25 @@ class VimProgress(object):
         except vim.error:
             raise KeyboardInterrupt('Task %s was interrupted!' % self.name)
         if percent > self.last + 4:
-            echo('%s ... %s%%%%' % (self.name, percent))
+            status('%s ... %s%%%%' % (self.name, percent))
             self.last = percent
 
     def done(self):
-        echo('%s ... done' % self.name)
+        status('%s ... done' % self.name)
 
 
 def echo(message):
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
-    vim.command('redraw')
-    vim.command('echon "%s"' % message)
+    print message
 
+def status(message):
+    if isinstance(message, unicode):
+        message = message.encode(vim.eval('&encoding'))
+    vim.command('redraw | echon "%s"' % message)
 
 def call(command):
     return vim.eval(command)
-
 
 class _ValueCompleter(object):
 
