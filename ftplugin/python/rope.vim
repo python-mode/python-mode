@@ -42,10 +42,10 @@ if !helpers#SafeVar("g:rope_loaded", 1)
     call helpers#SafeVar("g:pymode_rope_confirm_saving", 1)
 
     " OPTION: g:pymode_rope_global_prefix -- string.
-    call helpers#SafeVar("g:pymode_rope_global_prefix", "<C-c>r")
+    call helpers#SafeVar("g:pymode_rope_global_prefix", "<C-x>p")
 
     " OPTION: g:pymode_rope_local_prefix -- string.
-    call helpers#SafeVar("g:pymode_rope_local_prefix", "<C-x>p")
+    call helpers#SafeVar("g:pymode_rope_local_prefix", "<C-c>r")
 
     " OPTION: g:pymode_rope_vim_completion -- bool.
     call helpers#SafeVar("g:pymode_rope_vim_completion", 1)
@@ -65,13 +65,6 @@ if !helpers#SafeVar("g:rope_loaded", 1)
     endfunction "}}}
 
 endif
-
-" Old RopeVim settings
-let g:ropevim_codeassist_maxfixes=10
-let g:ropevim_guess_project=1
-let g:ropevim_vim_completion=1
-let g:ropevim_enable_autoimport=1
-let g:ropevim_autoimport_modules = ["os", "shutil"]
 
 " DESC: Set keys
 imap <silent> <buffer> <Nul> <M-/>

@@ -42,18 +42,12 @@ class VimUtils(ropemode.environment.Environment):
             return values[int(answer)]
         return answer
 
-    def _print_values(self, values):
-        numbered = []
-        for index, value in enumerate(values):
-            numbered.append('%s. %s' % (index, str(value)))
-        echo('\n'.join(numbered) + '\n')
-
     def ask_directory(self, prompt, default=None, starting=None):
         return call('input("%s", ".", "dir")' % prompt)
 
     def ask_completion(self, prompt, values, starting=None):
         if self.get('vim_completion') and 'i' in call('mode()'):
-            if not self.get('extended_complete', False):
+            if not self.get('extended_complete'):
                 proposals = u','.join(u"'%s'" % self._completion_text(proposal)
                                       for proposal in values)
             else:
@@ -72,16 +66,21 @@ class VimUtils(ropemode.environment.Environment):
     def message(self, message):
         echo(message)
 
+    @staticmethod
+    def _print_values(values):
+        numbered = []
+        for index, value in enumerate(values):
+            numbered.append('%s. %s' % (index, str(value)))
+        echo('\n'.join(numbered) + '\n')
+
     def yes_or_no(self, prompt):
         return self.ask_values(prompt, ['yes', 'no']) == 'yes'
 
     def y_or_n(self, prompt):
         return self.yes_or_no(prompt)
 
-    def get(self, name, default=None):
-        vimname = 'g:ropevim_%s' % name
-        if str(vim.eval('exists("%s")' % vimname)) == '0':
-            return default
+    def get(self, name):
+        vimname = 'g:pymode_rope_%s' % name
         result = vim.eval(vimname)
         if isinstance(result, str) and result.isdigit():
             return int(result)
@@ -91,31 +90,30 @@ class VimUtils(ropemode.environment.Environment):
         result = self._position_to_offset(*self.cursor)
         return result
 
-    def _get_encoding(self):
+    @staticmethod
+    def _get_encoding():
         return vim.eval('&encoding')
+
     def _encode_line(self, line):
         return line.encode(self._get_encoding())
+
     def _decode_line(self, line):
         return line.decode(self._get_encoding())
 
     def _position_to_offset(self, lineno, colno):
-        result = min(colno, len(self.buffer[lineno -1]) + 1)
-        for line in self.buffer[:lineno-1]:
+        result = min(colno, len(vim.current.buffer[lineno -1]) + 1)
+        for line in vim.current.buffer[:lineno-1]:
             line = self._decode_line(line)
             result += len(line) + 1
         return result
 
     def get_text(self):
-        return self._decode_line('\n'.join(self.buffer)) + u'\n'
+        return self._decode_line('\n'.join(vim.current.buffer)) + u'\n'
 
     def get_region(self):
-        start = self._position_to_offset(*self.buffer.mark('<'))
-        end = self._position_to_offset(*self.buffer.mark('>'))
+        start = self._position_to_offset(*vim.current.buffer.mark('<'))
+        end = self._position_to_offset(*vim.current.buffer.mark('>'))
         return start, end
-
-    @property
-    def buffer(self):
-        return vim.current.buffer
 
     def _get_cursor(self):
         lineno, col = vim.current.window.cursor
@@ -133,7 +131,7 @@ class VimUtils(ropemode.environment.Environment):
     cursor = property(_get_cursor, _set_cursor)
 
     def filename(self):
-        return self.buffer.name
+        return vim.current.buffer.name
 
     def is_modified(self):
         return vim.eval('&modified')
@@ -142,12 +140,12 @@ class VimUtils(ropemode.environment.Environment):
         self.cursor = (lineno, 0)
 
     def insert_line(self, line, lineno):
-        self.buffer[lineno - 1:lineno - 1] = [line]
+        vim.current.buffer[lineno - 1:lineno - 1] = [line]
 
     def insert(self, text):
         lineno, colno = self.cursor
-        line = self.buffer[lineno - 1]
-        self.buffer[lineno - 1] = line[:colno] + text + line[colno:]
+        line = vim.current.buffer[lineno - 1]
+        vim.current.buffer[lineno - 1] = line[:colno] + text + line[colno:]
         self.cursor = (lineno, colno + len(text))
 
     def delete(self, start, end):
@@ -155,8 +153,8 @@ class VimUtils(ropemode.environment.Environment):
         lineno2, colno2 = self._offset_to_position(end - 1)
         lineno, colno = self.cursor
         if lineno1 == lineno2:
-            line = self.buffer[lineno1 - 1]
-            self.buffer[lineno1 - 1] = line[:colno1] + line[colno2:]
+            line = vim.current.buffer[lineno1 - 1]
+            vim.current.buffer[lineno1 - 1] = line[:colno1] + line[colno2:]
             if lineno == lineno1 and colno >= colno1:
                 diff = colno2 - colno1
                 self.cursor = (lineno, max(0, colno - diff))
@@ -172,15 +170,17 @@ class VimUtils(ropemode.environment.Environment):
 
     def filenames(self):
         result = []
-        for buffer in vim.buffers:
-            if buffer.name:
-                result.append(buffer.name)
+        for b in vim.buffers:
+            if b.name:
+                result.append(b.name)
         return result
 
     def save_files(self, filenames):
         vim.command('wall')
 
-    def reload_files(self, filenames, moves={}):
+    def reload_files(self, filenames, moves=None):
+        if moves is None:
+            moves = dict()
         initial = self.filename()
         for filename in filenames:
             self.find_file(moves.get(filename, filename), force=True)
@@ -223,7 +223,8 @@ class VimUtils(ropemode.environment.Environment):
         finally:
             os.remove(filename)
 
-    def _writedefs(self, locations, filename):
+    @staticmethod
+    def _writedefs(locations, filename):
         tofile = open(filename, 'w')
         try:
             for location in locations:
@@ -266,7 +267,8 @@ class VimUtils(ropemode.environment.Environment):
             key = prekey + key.replace(' ', '')
             vim.command('map %s :call %s()<cr>' % (key, _vim_name(name)))
 
-    def _add_function(self, name, callback, prefix=False):
+    @staticmethod
+    def _add_function(name, callback, prefix=False):
         globals()[name] = callback
         arg = 'None' if prefix else ''
         vim.command('function! %s()\n' % _vim_name(name) +
@@ -289,15 +291,9 @@ class VimUtils(ropemode.environment.Environment):
         if proposal.scope == 'parameter_keyword':
             scope = ' '
             type_ = 'param'
-            if not hasattr(proposal, 'get_default'):
-                # old version of rope
-                pass
-            else:
-                default = proposal.get_default()
-                if default is None:
-                    info = '*'
-                else:
-                    info = '= %s' % default
+
+            default = proposal.get_default()
+            info = '*' if default is None else '= %s' % default
 
         elif proposal.scope == 'keyword':
             scope = ' '
@@ -321,10 +317,7 @@ class VimUtils(ropemode.environment.Environment):
 
         if info is None:
             obj_doc = proposal.get_doc()
-            if obj_doc:
-                info = self._docstring_re.match(obj_doc).group(1)
-            else:
-                info = ''
+            info = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
 
         if type_ is None:
             type_ = ' '
@@ -369,6 +362,7 @@ def echo(message):
         message = message.encode(vim.eval('&encoding'))
     print message
 
+
 def call(command):
     return vim.eval(command)
 
@@ -396,17 +390,6 @@ class _ValueCompleter(object):
             vim.command('let s:completions = %s' % result)
 
 
-variables = {'ropevim_enable_autoimport': 1,
-             'ropevim_autoimport_underlineds': 0,
-             'ropevim_codeassist_maxfixes' : 1,
-             'ropevim_enable_shortcuts' : 1,
-             'ropevim_autoimport_modules': '[]',
-             'ropevim_confirm_saving': 0,
-             'ropevim_local_prefix': '"<C-c>r"',
-             'ropevim_global_prefix': '"<C-x>p"',
-             'ropevim_vim_completion': 0,
-             'ropevim_guess_project': 0}
-
 shortcuts = {'code_assist': '<M-/>',
              'lucky_assist': '<M-?>',
              'goto_definition': '<C-c>g',
@@ -416,23 +399,17 @@ shortcuts = {'code_assist': '<M-/>',
 insert_shortcuts = {'code_assist': '<M-/>',
                     'lucky_assist': '<M-?>'}
 
-def _init_variables():
-    for variable, default in variables.items():
-        vim.command('if !exists("g:%s")\n' % variable +
-                    '  let g:%s = %s\n' % (variable, default))
-
 def _enable_shortcuts(env):
-    if env.get('enable_shortcuts'):
-        for command, shortcut in shortcuts.items():
-            vim.command('map %s :call %s()<cr>' %
-                        (shortcut, _vim_name(command)))
-        for command, shortcut in insert_shortcuts.items():
-            command_name = _vim_name(command) + 'InsertMode'
-            vim.command('func! %s()\n' % command_name +
-                        'call %s()\n' % _vim_name(command) +
-                        'return ""\n'
-                        'endfunc')
-            vim.command('imap %s <C-R>=%s()<cr>' % (shortcut, command_name))
+    for command, shortcut in shortcuts.items():
+        vim.command('map %s :call %s()<cr>' %
+                    (shortcut, _vim_name(command)))
+    for command, shortcut in insert_shortcuts.items():
+        command_name = _vim_name(command) + 'InsertMode'
+        vim.command('func! %s()\n' % command_name +
+                    'call %s()\n' % _vim_name(command) +
+                    'return ""\n'
+                    'endfunc')
+        vim.command('imap %s <C-R>=%s()<cr>' % (shortcut, command_name))
 
 def _add_menu(env):
     project = ['open_project', 'close_project', 'find_file', 'undo', 'redo']
@@ -457,7 +434,6 @@ ropemode.decorators.logger.message = echo
 ropemode.decorators.logger.only_short = True
 _completer = _ValueCompleter()
 
-_init_variables()
 _env = VimUtils()
 _interface = ropemode.interface.RopeMode(env=_env)
 _interface.init()

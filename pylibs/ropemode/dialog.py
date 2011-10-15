@@ -44,6 +44,7 @@ def show_dialog(askdata, actions, confs=None, optionals=None, initial_asking=Tru
     if initial_asking:
         for name, conf in confs.items():
             result[name] = askdata(conf)
+
     actions.append('batchset')
     names = list(actions)
     names.extend(optionals.keys())

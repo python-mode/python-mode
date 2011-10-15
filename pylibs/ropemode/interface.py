@@ -46,6 +46,7 @@ class RopeMode(object):
                 if isinstance(attr, type) and \
                    issubclass(attr, refactor.Refactoring):
                     refname = self._refactoring_name(attr)
+
                     @decorators.local_command(attr.key, 'P', None, refname)
                     def do_refactor(prefix, self=self, refactoring=attr):
                         initial_asking = prefix is None
@@ -94,6 +95,7 @@ class RopeMode(object):
                 return
         progress = self.env.create_progress('Opening [%s] project' % root)
         self.project = rope.base.project.Project(root)
+
         if self.env.get('enable_autoimport'):
             underlined = self.env.get('autoimport_underlineds')
             self.autoimport = autoimport.AutoImport(self.project,
@@ -626,7 +628,7 @@ class _CodeAssist(object):
         proposals = codeassist.code_assist(
             self.interface.project, self.source, self.offset,
             resource, maxfixes=maxfixes)
-        if self.env.get('sorted_completions', True):
+        if self.env.get('sorted_completions'):
             proposals = codeassist.sorted_proposals(proposals)
         if self.autoimport is not None:
             if self.starting.strip() and '.' not in self.expression:
