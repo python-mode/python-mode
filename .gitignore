@@ -1,2 +1,4 @@
 *.pyc
 tags
+todo.txt
+.ropeproject
