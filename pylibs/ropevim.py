@@ -295,13 +295,12 @@ class VimUtils(ropemode.environment.Environment):
             default = proposal.get_default()
             ci["menu"] += '*' if default is None else '= %s' % default
 
-        if menu is None:
+        if menu is '':
             obj_doc = proposal.get_doc()
-            menu = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
+            ci["menu"] = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
 
         ci['kind'] = kind
-        ci['menu'] = menu
-
+        ci['menu'] = menu.replace('"', '\\"')
         return repr(ci)
 
 
