@@ -187,10 +187,17 @@ Contributing
 Development of pylint-mode happens at github: https://github.com/klen/python-mode
 
 
-Contributors
-=============
+Copyright
+=========
 
-* klen_ (Kirill Klenov)
+Copyright (C) 2011 Kirill Klenov (klen_)
+
+    **Rope**
+        Copyright (C) 2006-2010 Ali Gholami Rudi
+        Copyright (C) 2009-2010 Anton Gritsay
+
+    **Pylint**
+        Copyright (C) 2002-2008 LOGILAB S.A. (Paris, FRANCE).
 
 
 Changelog
@@ -221,4 +228,3 @@ Licensed under a `GNU lesser general public license`_.
 .. _rope: http://rope.sourceforge.net/
 .. _pydoc: http://docs.python.org/library/pydoc.html
 .. _pathogen: https://github.com/tpope/vim-pathogen
-.. _plugin-helpers: https://github.com/klen/plugin-helpers
