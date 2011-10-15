@@ -13,7 +13,7 @@ import rope.refactor.restructure
 import rope.refactor.usefunction
 from rope.base import taskhandle
 
-from ropemode import dialog, filter
+from ropemode import dialog, filter as file_filter
 
 
 class Refactoring(object):
@@ -111,8 +111,11 @@ class Refactoring(object):
 
 class Rename(Refactoring):
     key = 'r'
-
     saveall = True
+
+    def __init__(self, *args):
+        self.renamer = None
+        super(Rename, self).__init__(*args)
 
     def _create_refactoring(self):
         self.renamer = rope.refactor.rename.Rename(
@@ -138,7 +141,8 @@ class Rename(Refactoring):
         oldname = str(self.renamer.get_old_name())
         return {'new_name': dialog.Data('New name: ', default=oldname)}
 
-    def _decode_unsure(self, value):
+    @staticmethod
+    def _decode_unsure(value):
         unsure = value == 'match'
         return lambda occurrence: unsure
 
@@ -166,7 +170,8 @@ class Restructure(Refactoring):
             'imports': dialog.Data('Imports: ', decode=self._decode_imports),
             'resources': self.resources_option}
 
-    def _decode_args(self, value):
+    @staticmethod
+    def _decode_args(value):
         if value:
             args = {}
             for raw_check in value.split('\n'):
@@ -175,13 +180,18 @@ class Restructure(Refactoring):
                     args[key.strip()] = value.strip()
             return args
 
-    def _decode_imports(self, value):
+    @staticmethod
+    def _decode_imports(value):
         if value:
             return [line.strip() for line in value.split('\n')]
 
 
 class UseFunction(Refactoring):
     key = 'u'
+
+    def __init__(self, *args):
+        super(UseFunction, self).__init__(*args)
+        self.user = None
 
     def _create_refactoring(self):
         self.user = rope.refactor.usefunction.UseFunction(
@@ -196,6 +206,9 @@ class UseFunction(Refactoring):
 
 class Move(Refactoring):
     key = 'v'
+    def __init__(self, *args):
+        super(Move, self).__init__(*args)
+        self.mover = None
 
     def _create_refactoring(self):
         self.mover = rope.refactor.move.create_move(self.project,
@@ -248,6 +261,9 @@ class MoveCurrentModule(Move):
 class ModuleToPackage(Refactoring):
     key = '1 p'
     saveall = False
+    def __init__(self, *args):
+        super(ModuleToPackage, self).__init__(*args)
+        self.packager = None
 
     def _create_refactoring(self):
         self.packager = rope.refactor.ModuleToPackage(
@@ -259,6 +275,9 @@ class ModuleToPackage(Refactoring):
 
 class Inline(Refactoring):
     key = 'i'
+    def __init__(self, *args):
+        super(Inline, self).__init__(*args)
+        self.inliner = None
 
     def _create_refactoring(self):
         self.inliner = rope.refactor.inline.create_inline(
@@ -284,7 +303,11 @@ class _Extract(Refactoring):
     optionals = {'similar': dialog.Boolean('Extract similar pieces: ', True),
                  'global_': dialog.Boolean('Make global: ')}
     kind = None
-    constructor = None
+    constructor = rope.refactor.extract.ExtractVariable
+
+    def __init__(self, *args):
+        super(_Extract, self).__init__(*args)
+        self.extractor = None
 
     def _create_refactoring(self):
         start, end = self.region
@@ -317,6 +340,10 @@ class OrganizeImports(Refactoring):
     key = 'o'
     saveall = False
 
+    def __init__(self, *args):
+        self.organizer = None
+        super(OrganizeImports, self).__init__(*args)
+
     def _create_refactoring(self):
         self.organizer = rope.refactor.ImportOrganizer(self.project)
 
@@ -328,6 +355,9 @@ class MethodObject(Refactoring):
     saveall = False
     confs = {'classname': dialog.Data('New class name: ',
                                       default='_ExtractedClass')}
+    def __init__(self, *args):
+        super(MethodObject, self).__init__(*args)
+        self.objecter = None
 
     def _create_refactoring(self):
         self.objecter = rope.refactor.method_object.MethodObject(
@@ -341,6 +371,9 @@ class MethodObject(Refactoring):
 class IntroduceFactory(Refactoring):
     saveall = True
     key = 'f'
+    def __init__(self, *args):
+        super(IntroduceFactory, self).__init__(*args)
+        self.factory = None
 
     def _create_refactoring(self):
         self.factory = rope.refactor.introduce_factory.IntroduceFactory(
@@ -361,6 +394,9 @@ class IntroduceFactory(Refactoring):
 class ChangeSignature(Refactoring):
     saveall = True
     key = 's'
+    def __init__(self, *args):
+        super(ChangeSignature, self).__init__(*args)
+        self.changer = None
 
     def _create_refactoring(self):
         self.changer = rope.refactor.change_signature.ChangeSignature(
@@ -400,7 +436,7 @@ class ChangeSignature(Refactoring):
 
     def _get_confs(self):
         args = []
-        for arg, default in self._get_args():
+        for arg, _ in self._get_args():
             args.append(arg)
         signature = '(' + ', '.join(args) + ')'
         return {'signature': dialog.Data('Change the signature: ',
@@ -415,6 +451,9 @@ class ChangeSignature(Refactoring):
 
 
 class _GenerateElement(Refactoring):
+    def __init__(self, *args):
+        super(_GenerateElement, self).__init__(*args)
+        self.generator = None
 
     def _create_refactoring(self):
         kind = self.name.split('_')[-1]
@@ -462,7 +501,7 @@ def refactoring_name(refactoring):
 def _resources(project, text):
     if text is None or text.strip() == '':
         return None
-    return filter.resources(project, text)
+    return file_filter.resources(project, text)
 
 
 def runtask(env, command, name, interrupts=True):
