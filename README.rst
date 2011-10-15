@@ -112,6 +112,9 @@ Default values: ::
     " Enable autoimport
     let g:pymode_rope_enable_autoimport = 1
 
+    " Auto generate global cache
+    let g:pymode_rope_autoimport_generate = 1
+
     let g:pymode_rope_autoimport_underlineds = 0
 
     let g:pymode_rope_codeassist_maxfixes = 10
