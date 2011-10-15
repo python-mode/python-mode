@@ -102,4 +102,3 @@ class Environment(object):
 
     def _completion_data(self, proposal):
         return self._completion_text(proposal)
-
