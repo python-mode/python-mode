@@ -269,7 +269,7 @@ class RopeMode(object):
     def lucky_assist(self, prefix):
         _CodeAssist(self, self.env).lucky_assist(prefix)
 
-    @decorators.local_command()
+    @decorators.local_command('a')
     def auto_import(self):
         _CodeAssist(self, self.env).auto_import()
 
@@ -296,12 +296,14 @@ class RopeMode(object):
             return
 
         modules = self.env.get('autoimport_modules')
+        modules = [ m if isinstance(m, basestring) else m.value() for m in modules ]
 
         def gen(handle):
             self.autoimport.generate_cache(task_handle=handle)
             self.autoimport.generate_modules_cache(modules, task_handle=handle)
 
         refactor.runtask(self.env, gen, 'Generate autoimport cache')
+        self.write_project()
 
     @decorators.global_command('f', 'P')
     def find_file(self, prefix):
@@ -576,10 +578,16 @@ class _CodeAssist(object):
         self._apply_assist(result)
 
     def auto_import(self):
+
         if not self.interface._check_autoimport():
             return
+
+        if not self.autoimport.names and self.env.get('autoimport_generate'):
+            self.interface.generate_autoimport_cache()
+
         name = self.env.current_word()
         modules = self.autoimport.get_modules(name)
+
         if modules:
             if len(modules) == 1:
                 module = modules[0]
