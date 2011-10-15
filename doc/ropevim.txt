@@ -51,8 +51,8 @@ file in the other window.
                                                               *RopeCodeAssist*
                                                              *:RopeCodeAssist*
                                                             *:RopeLuckyAssist*
-                                                    *'ropevim_vim_completion'*
-                                                 *'ropevim_extended_complete'*
+                                                    *'pymode_rope_vim_completion'*
+                                                 *'pymode_rope_extended_complete'*
 
 |:RopeCodeAssist| command (<M-/>) will let you select from a list
 of completions.  |:RopeLuckyAssist| command (<M-?>) does not ask
@@ -61,7 +61,7 @@ anything; instead, it inserts the first proposal.
 You can tell ropevim to use vim's complete function in insert mode;
 Add: >
 
-  let ropevim_vim_completion=1
+  let pymode_rope_vim_completion=1
 <
 to your '~/.vimrc' file.
 
@@ -74,7 +74,7 @@ By default autocomplete feature will use plain list of proposed completion
 items. You can enable showing extended information about completion
 proposals by setting : >
 
-  let ropevim_extended_complete=1
+  let pymode_rope_extended_complete=1
 <
 Completion menu list will show the proposed name itself, one letter which
 shows where this proposal came from (it can be "L" for locals, "G" for
@@ -96,10 +96,10 @@ modules.  Rope maintains a cache of global names for each project.  It
 updates the cache only when modules are changed; if you want to cache
 all your modules at once, use |:RopeGenerateAutoimportCache|.  It
 will cache all of the modules inside the project plus those whose
-names are listed in |'ropevim_autoimport_modules'| list: >
+names are listed in |'pymode_rope_autoimport_modules'| list: >
 
   " add the name of modules you want to autoimport
-  let g:ropevim_autoimport_modules = ["os", "shutil"]
+  let g:pymode_rope_autoimport_modules = ["os", "shutil"]
 <
 Now if you are in a buffer that contains: >
 
@@ -221,34 +221,34 @@ restructuring can be: >
 8. Variables ~
                                                                  *RopeVariables*
 
-*'ropevim_codeassist_maxfixes'*     The maximum number of syntax errors
+*'pymode_rope_codeassist_maxfixes'*     The maximum number of syntax errors
                                   to fix for code assists. 
                                   The default value is `1`.
 
-*'ropevim_local_prefix'*            The prefix for ropevim refactorings.
+*'pymode_rope_local_prefix'*            The prefix for ropevim refactorings.
                                   Defaults to `<C-c> r`.
 
-*'ropevim_global_prefix'*           The prefix for ropevim project commands
+*'pymode_rope_global_prefix'*           The prefix for ropevim project commands
                                   Defaults to `<C-x> p`.
 
-*'ropevim_enable_shortcuts'*        Shows whether to bind ropevim shortcuts keys.
+*'pymode_rope_enable_shortcuts'*        Shows whether to bind ropevim shortcuts keys.
                                   Defaults to `1`.
 
-*'ropevim_guess_project'*           If non-zero, ropevim tries to guess and
+*'pymode_rope_guess_project'*           If non-zero, ropevim tries to guess and
                                   open the project that contains the file on which
                                   a ropevim command is performed when no project
                                   is already open.
 
-*'ropevim_enable_autoimport'*       Shows whether to enable autoimport.
+*'pymode_rope_enable_autoimport'*       Shows whether to enable autoimport.
 
-*'ropevim_autoimport_modules'*      The name of modules whose global names should
+*'pymode_rope_autoimport_modules'*      The name of modules whose global names should
                                   be cached. |:RopeGenerateAutoimportCache| reads
                                   this list and fills its cache.
 
-*'ropevim_autoimport_underlineds'*  If set, autoimport will cache names starting
+*'pymode_rope_autoimport_underlineds'*  If set, autoimport will cache names starting
                                   with underlines, too.
 
-*'ropevim_goto_def_newwin'*         If set, ropevim will open a new buffer
+*'pymode_rope_goto_def_newwin'*         If set, ropevim will open a new buffer
                                   for "go to definition" result if the definition
                                   found is located in another file. By default the
                                   file is open in the same buffer.
@@ -319,14 +319,11 @@ code-assist group.  You can define your own shortcuts like this: >
 
 <
 
-Ropevim itself comes with a few shortcuts.  These shortcuts will be
-used only when |'ropevim_enable_shortcuts'| is set.
-
 ================  ============================
 Key               Command
 ================  ============================
-M-/               |:RopeCodeAssist|
-M-?               |:RopeLuckyAssist|
+<C-Space>         |:RopeCodeAssist|
+<C-?>             |:RopeLuckyAssist|
 <C-c> g           |:RopeGotoDefinition|
 <C-c> d           |:RopeShowDoc|
 <C-c> f           |:RopeFindOccurrences|

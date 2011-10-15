@@ -1,20 +1,17 @@
-" DESC: Set scriptname
-let g:scriptname = expand("<sfile>:t")
-
 " OPTION: g:pymode_breakpoint -- bool. Breakpoints enabled
 call helpers#SafeVar("g:pymode_breakpoint", 1)
+
+" DESC: Disable script loading
+if ! g:pymode_breakpoint
+    finish
+endif
 
 " OPTION: g:pymode_breakpoint_key -- string. Key for set/unset breakpoint.
 call helpers#SafeVar("g:pymode_breakpoint_key", "<leader>b")
 
-" DESC: Disable script loading
-if helpers#SafeVar("b:breakpoint", 1) || g:pymode_breakpoint == 0
-    finish
-endif
-
 " DESC: Set or unset breakpoint
 " ARGS: lnum -- int, number of current line
-fun! <SID>:BreakPoint(lnum) "{{{
+fun! pymode_breakpoint#Set(lnum) "{{{
     let import = "import ipdb; ipdb.set_trace() ### XXX BREAKPOINT"
     let line = getline(a:lnum)
 
@@ -30,6 +27,3 @@ fun! <SID>:BreakPoint(lnum) "{{{
     normal k
 
 endfunction "}}}
-
-" DESC: Set keys
-exe "nnoremap <silent> <buffer> " g:pymode_breakpoint_key ":call <SID>:BreakPoint(line('.'))<CR>"

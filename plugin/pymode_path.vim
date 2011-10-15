@@ -13,3 +13,8 @@ sys.path.append(
 
         'pylibs'))
 EOF
+
+" Syntax highlight
+let python_highlight_all=1
+let python_highlight_exceptions=1
+let python_highlight_builtins=1
