@@ -52,7 +52,8 @@ class RopeMode(object):
                         refactoring(self, self.env).show(initial_asking=initial_asking)
                     setattr(self, refname, do_refactor)
 
-    def _refactoring_name(self, refactoring):
+    @staticmethod
+    def _refactoring_name(refactoring):
         return refactor.refactoring_name(refactoring)
 
     @decorators.rope_hook('before_save')
@@ -302,22 +303,24 @@ class RopeMode(object):
                 modnames.append(modname)
         else:
             modules = []
-        def generate(handle):
+
+        def gen(handle):
             self.autoimport.generate_cache(task_handle=handle)
             self.autoimport.generate_modules_cache(modules, task_handle=handle)
-        refactor.runtask(self.env, generate, 'Generate autoimport cache')
+
+        refactor.runtask(self.env, gen, 'Generate autoimport cache')
 
     @decorators.global_command('f', 'P')
     def find_file(self, prefix):
-        file = self._base_find_file(prefix)
-        if file is not None:
-            self.env.find_file(file.real_path)
+        f = self._base_find_file(prefix)
+        if f is not None:
+            self.env.find_file(f.real_path)
 
     @decorators.global_command('4 f', 'P')
     def find_file_other_window(self, prefix):
-        file = self._base_find_file(prefix)
-        if file is not None:
-            self.env.find_file(file.real_path, other=True)
+        f = self._base_find_file(prefix)
+        if f is not None:
+            self.env.find_file(f.real_path, other=True)
 
     def _base_find_file(self, prefix):
         self._check_project()
@@ -329,13 +332,14 @@ class RopeMode(object):
 
     def _ask_file(self, files):
         names = []
-        for file in files:
-            names.append('<'.join(reversed(file.path.split('/'))))
+        for f in files:
+            names.append('<'.join(reversed(f.path.split('/'))))
         result = self.env.ask_values('Rope Find File: ', names)
+
         if result is not None:
             path = '/'.join(reversed(result.split('<')))
-            file = self.project.get_file(path)
-            return file
+            f = self.project.get_file(path)
+            return f
         self.env.message('No file selected')
 
     @decorators.local_command('a j')
@@ -481,7 +485,9 @@ class RopeMode(object):
             changes.get_changed_resources(),
             self._get_moved_resources(changes, undo))
 
-    def _reload_buffers_for_changes(self, changed, moved={}):
+    def _reload_buffers_for_changes(self, changed, moved=None):
+        if moved is None:
+            moved = dict()
         filenames = [resource.real_path for resource in changed]
         moved = dict([(resource.real_path, moved[resource].real_path)
                       for resource in moved])
@@ -548,6 +554,7 @@ class _CodeAssist(object):
     def __init__(self, interface, env):
         self.interface = interface
         self.env = env
+        self._offset = self._starting = None
 
     def code_assist(self, prefix):
         proposals = self._calculate_proposals()
