@@ -13,7 +13,7 @@ import rope.refactor.restructure
 import rope.refactor.usefunction
 from rope.base import taskhandle
 
-from ropemode import dialog, filter as file_filter
+from ropemode import dialog, filter
 
 
 class Refactoring(object):
@@ -138,8 +138,7 @@ class Rename(Refactoring):
         oldname = str(self.renamer.get_old_name())
         return {'new_name': dialog.Data('New name: ', default=oldname)}
 
-    @staticmethod
-    def _decode_unsure(value):
+    def _decode_unsure(self, value):
         unsure = value == 'match'
         return lambda occurrence: unsure
 
@@ -167,8 +166,7 @@ class Restructure(Refactoring):
             'imports': dialog.Data('Imports: ', decode=self._decode_imports),
             'resources': self.resources_option}
 
-    @staticmethod
-    def _decode_args(value):
+    def _decode_args(self, value):
         if value:
             args = {}
             for raw_check in value.split('\n'):
@@ -177,8 +175,7 @@ class Restructure(Refactoring):
                     args[key.strip()] = value.strip()
             return args
 
-    @staticmethod
-    def _decode_imports(value):
+    def _decode_imports(self, value):
         if value:
             return [line.strip() for line in value.split('\n')]
 
@@ -403,7 +400,7 @@ class ChangeSignature(Refactoring):
 
     def _get_confs(self):
         args = []
-        for arg, _ in self._get_args():
+        for arg, default in self._get_args():
             args.append(arg)
         signature = '(' + ', '.join(args) + ')'
         return {'signature': dialog.Data('Change the signature: ',
@@ -465,7 +462,7 @@ def refactoring_name(refactoring):
 def _resources(project, text):
     if text is None or text.strip() == '':
         return None
-    return file_filter.resources(project, text)
+    return filter.resources(project, text)
 
 
 def runtask(env, command, name, interrupts=True):

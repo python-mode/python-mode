@@ -20,8 +20,7 @@ class Boolean(Data):
         Data.__init__(self, prompt, self._encode(default),
                       [self._encode(True), self._encode(False)])
 
-    @staticmethod
-    def _encode(value):
+    def _encode(self, value):
         if value:
             return 'yes'
         return 'no'
@@ -87,8 +86,9 @@ def _parse_batchset(sets):
         else:
             if not line.strip():
                 continue
-            multiline = False
+            multiline= False
             tokens = line.split(None, 1)
+            value = ''
             if len(tokens) > 1:
                 result.append([tokens[0], tokens[1].rstrip('\r\n')])
             else:

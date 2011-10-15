@@ -1,13 +1,13 @@
 """ropevim, a vim mode for using rope refactoring library"""
 import os
-import re
 import tempfile
-
-import vim
+import re
 
 import ropemode.decorators
 import ropemode.environment
 import ropemode.interface
+
+import vim
 
 
 class VimUtils(ropemode.environment.Environment):
@@ -42,8 +42,7 @@ class VimUtils(ropemode.environment.Environment):
             return values[int(answer)]
         return answer
 
-    @staticmethod
-    def _print_values(values):
+    def _print_values(self, values):
         numbered = []
         for index, value in enumerate(values):
             numbered.append('%s. %s' % (index, str(value)))
@@ -80,7 +79,7 @@ class VimUtils(ropemode.environment.Environment):
         return self.yes_or_no(prompt)
 
     def get(self, name, default=None):
-        vimname = 'g:pymode_rope_%s' % name
+        vimname = 'g:ropevim_%s' % name
         if str(vim.eval('exists("%s")' % vimname)) == '0':
             return default
         result = vim.eval(vimname)
@@ -92,13 +91,10 @@ class VimUtils(ropemode.environment.Environment):
         result = self._position_to_offset(*self.cursor)
         return result
 
-    @staticmethod
-    def _get_encoding():
+    def _get_encoding(self):
         return vim.eval('&encoding')
-
     def _encode_line(self, line):
         return line.encode(self._get_encoding())
-
     def _decode_line(self, line):
         return line.decode(self._get_encoding())
 
@@ -176,17 +172,15 @@ class VimUtils(ropemode.environment.Environment):
 
     def filenames(self):
         result = []
-        for b in vim.buffers:
-            if b.name:
-                result.append(b.name)
+        for buffer in vim.buffers:
+            if buffer.name:
+                result.append(buffer.name)
         return result
 
     def save_files(self, filenames):
         vim.command('wall')
 
-    def reload_files(self, filenames, moves=None):
-        if moves is None:
-            moves = dict()
+    def reload_files(self, filenames, moves={}):
         initial = self.filename()
         for filename in filenames:
             self.find_file(moves.get(filename, filename), force=True)
@@ -229,8 +223,7 @@ class VimUtils(ropemode.environment.Environment):
         finally:
             os.remove(filename)
 
-    @staticmethod
-    def _writedefs(locations, filename):
+    def _writedefs(self, locations, filename):
         tofile = open(filename, 'w')
         try:
             for location in locations:
@@ -273,8 +266,7 @@ class VimUtils(ropemode.environment.Environment):
             key = prekey + key.replace(' ', '')
             vim.command('map %s :call %s()<cr>' % (key, _vim_name(name)))
 
-    @staticmethod
-    def _add_function(name, callback, prefix=False):
+    def _add_function(self, name, callback, prefix=False):
         globals()[name] = callback
         arg = 'None' if prefix else ''
         vim.command('function! %s()\n' % _vim_name(name) +
@@ -285,7 +277,6 @@ class VimUtils(ropemode.environment.Environment):
         return proposal
 
     _docstring_re = re.compile('^[\s\t\n]*([^\n]*)')
-
     def _extended_completion(self, proposal):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
@@ -298,11 +289,15 @@ class VimUtils(ropemode.environment.Environment):
         if proposal.scope == 'parameter_keyword':
             scope = ' '
             type_ = 'param'
-            default = proposal.get_default()
-            if default is None:
-                info = '*'
+            if not hasattr(proposal, 'get_default'):
+                # old version of rope
+                pass
             else:
-                info = '= %s' % default
+                default = proposal.get_default()
+                if default is None:
+                    info = '*'
+                else:
+                    info = '= %s' % default
 
         elif proposal.scope == 'keyword':
             scope = ' '
@@ -335,7 +330,6 @@ class VimUtils(ropemode.environment.Environment):
             type_ = ' '
         else:
             type_ = type_.ljust(5)[:5]
-
         ci['menu'] = ' '.join((scope, type_, info))
         ret =  u'{%s}' % \
                u','.join(u'"%s":"%s"' % \
@@ -383,6 +377,12 @@ class _ValueCompleter(object):
 
     def __init__(self):
         self.values = []
+        vim.command('python import vim')
+        vim.command('function! RopeValueCompleter(A, L, P)\n'
+                    'python args = [vim.eval("a:" + p) for p in "ALP"]\n'
+                    'python ropevim._completer(*args)\n'
+                    'return s:completions\n'
+                    'endfunction\n')
 
     def __call__(self, arg_lead, cmd_line, cursor_pos):
         # don't know if self.values can be empty but better safe then sorry
@@ -393,8 +393,46 @@ class _ValueCompleter(object):
             else:
                 result = [proposal for proposal in self.values \
                           if proposal.startswith(arg_lead)]
-            vim.command('let g:rope_completions = %s' % result)
+            vim.command('let s:completions = %s' % result)
 
+
+variables = {'ropevim_enable_autoimport': 1,
+             'ropevim_autoimport_underlineds': 0,
+             'ropevim_codeassist_maxfixes' : 1,
+             'ropevim_enable_shortcuts' : 1,
+             'ropevim_autoimport_modules': '[]',
+             'ropevim_confirm_saving': 0,
+             'ropevim_local_prefix': '"<C-c>r"',
+             'ropevim_global_prefix': '"<C-x>p"',
+             'ropevim_vim_completion': 0,
+             'ropevim_guess_project': 0}
+
+shortcuts = {'code_assist': '<M-/>',
+             'lucky_assist': '<M-?>',
+             'goto_definition': '<C-c>g',
+             'show_doc': '<C-c>d',
+             'find_occurrences': '<C-c>f'}
+
+insert_shortcuts = {'code_assist': '<M-/>',
+                    'lucky_assist': '<M-?>'}
+
+def _init_variables():
+    for variable, default in variables.items():
+        vim.command('if !exists("g:%s")\n' % variable +
+                    '  let g:%s = %s\n' % (variable, default))
+
+def _enable_shortcuts(env):
+    if env.get('enable_shortcuts'):
+        for command, shortcut in shortcuts.items():
+            vim.command('map %s :call %s()<cr>' %
+                        (shortcut, _vim_name(command)))
+        for command, shortcut in insert_shortcuts.items():
+            command_name = _vim_name(command) + 'InsertMode'
+            vim.command('func! %s()\n' % command_name +
+                        'call %s()\n' % _vim_name(command) +
+                        'return ""\n'
+                        'endfunc')
+            vim.command('imap %s <C-R>=%s()<cr>' % (shortcut, command_name))
 
 def _add_menu(env):
     project = ['open_project', 'close_project', 'find_file', 'undo', 'redo']
@@ -417,8 +455,11 @@ def _add_menu(env):
 
 ropemode.decorators.logger.message = echo
 ropemode.decorators.logger.only_short = True
-
 _completer = _ValueCompleter()
 
-_interface = ropemode.interface.RopeMode(env=VimUtils())
+_init_variables()
+_env = VimUtils()
+_interface = ropemode.interface.RopeMode(env=_env)
 _interface.init()
+_enable_shortcuts(_env)
+_add_menu(_env)
