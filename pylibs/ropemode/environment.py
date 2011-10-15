@@ -57,7 +57,7 @@ class Environment(object):
     def save_files(self, filenames):
         pass
 
-    def reload_files(self, filenames, moves={}):
+    def reload_files(self, filenames, moves=None):
         pass
 
     def find_file(self, filename, readonly=False, other=False):
@@ -96,7 +96,8 @@ class Environment(object):
     def add_hook(self, name, callback, hook):
         pass
 
-    def _completion_text(self, proposal):
+    @staticmethod
+    def _completion_text(proposal):
         return proposal.name
 
     def _completion_data(self, proposal):
