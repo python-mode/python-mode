@@ -121,7 +121,7 @@ Default values: ::
 
     let g:pymode_rope_sorted_completions = 1
 
-    let g:pymode_rope_extended_complete = 0
+    let g:pymode_rope_extended_complete = 1
 
     let g:pymode_rope_autoimport_modules = ["os","shutil","datetime"])
 
