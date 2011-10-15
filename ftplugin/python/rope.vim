@@ -53,6 +53,9 @@ if !helpers#SafeVar("g:rope_loaded", 1)
     " OPTION: g:pymode_rope_guess_project -- bool.
     call helpers#SafeVar("g:pymode_rope_guess_project", 1)
 
+    " OPTION: g:pymode_rope_goto_def_newwin -- bool.
+    call helpers#SafeVar("g:pymode_rope_goto_def_newwin", 0)
+
     " DESC: Init Rope
     py import ropevim
 
