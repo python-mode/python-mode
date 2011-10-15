@@ -21,9 +21,7 @@ fun! pymode_breakpoint#Set(lnum) "{{{
     endif
 
     let plnum = prevnonblank(a:lnum)
-    let indent = indent(plnum)
-
-    call append(line('.') - 1, repeat(' ', indent) . import)
+    call append(line('.') - 1, repeat(' ', indent(plnum)) . import)
     normal k
 
 endfunction "}}}

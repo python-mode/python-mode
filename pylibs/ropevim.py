@@ -364,7 +364,8 @@ class VimProgress(object):
 def echo(message):
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
-    print message
+    vim.command('redraw')
+    vim.command('echon "%s"' % message)
 
 
 def call(command):

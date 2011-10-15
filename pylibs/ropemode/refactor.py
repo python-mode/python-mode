@@ -507,6 +507,7 @@ def _resources(project, text):
 def runtask(env, command, name, interrupts=True):
     return RunTask(env, command, name, interrupts)()
 
+
 class RunTask(object):
 
     def __init__(self, env, task, name, interrupts=True):
@@ -518,12 +519,14 @@ class RunTask(object):
     def __call__(self):
         handle = taskhandle.TaskHandle(name=self.name)
         progress = self.env.create_progress(self.name)
+
         def update_progress():
             jobset = handle.current_jobset()
             if jobset:
                 percent = jobset.get_percent_done()
                 if percent is not None:
                     progress.update(percent)
+
         handle.add_observer(update_progress)
         result = self.task(handle)
         progress.done()

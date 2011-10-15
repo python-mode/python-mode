@@ -289,20 +289,13 @@ class RopeMode(object):
             return False
         return True
 
-    @decorators.global_command()
+    @decorators.global_command('g')
     def generate_autoimport_cache(self):
+
         if not self._check_autoimport():
             return
+
         modules = self.env.get('autoimport_modules')
-        modnames = []
-        if modules:
-            for i in range(len(modules)):
-                modname = modules[i]
-                if not isinstance(modname, basestring):
-                    modname = modname.value()
-                modnames.append(modname)
-        else:
-            modules = []
 
         def gen(handle):
             self.autoimport.generate_cache(task_handle=handle)
