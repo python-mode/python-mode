@@ -106,12 +106,33 @@ Default values: ::
     " Load rope plugin
     let g:pymode_rope = 1
 
-    " RopeVim settings
-    let g:ropevim_codeassist_maxfixes=10
-    let g:ropevim_guess_project=1
-    let g:ropevim_vim_completion=1
-    let g:ropevim_enable_autoimport=1
-    let g:ropevim_autoimport_modules = ["os", "shutil"]
+    " Auto create and open ropeproject
+    let g:pymode_rope_auto_project = 1
+
+    " Enable autoimport
+    let g:pymode_rope_enable_autoimport = 1
+
+    let g:pymode_rope_autoimport_underlineds = 0
+
+    let g:pymode_rope_codeassist_maxfixes = 10
+
+    let g:pymode_rope_sorted_completions = 1
+
+    let g:pymode_rope_extended_complete = 0
+
+    let g:pymode_rope_autoimport_modules = ["os","shutil","datetime"])
+
+    let g:pymode_rope_confirm_saving = 1
+
+    let g:pymode_rope_global_prefix = "<C-x>p"
+
+    let g:pymode_rope_local_prefix = "<C-c>r"
+
+    let g:pymode_rope_vim_completion = 1
+
+    let g:pymode_rope_guess_project = 1
+
+    let g:pymode_rope_goto_def_newwin = 0
 
 Other stuff
 -----------
@@ -123,9 +144,6 @@ Default values: ::
 
     " Key for set/unset breakpoint
     let g:pymode_breakpoint_key = '<leader>b'
-
-    " Load utils plugin
-    let g:pymode_utils = 1
 
     " Autoremove unused whitespaces
     let g:pymode_utils_whitespaces = 1
