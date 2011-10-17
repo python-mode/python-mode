@@ -2,14 +2,7 @@
 call helpers#SafeVar("g:pymode_lint", 1)
 
 " DESC: Disable script loading
-if g:pymode_lint == 0
-    finish
-endif
-
-" DESC: Check python support
-if !has('python')
-    echoerr expand("<sfile>:t") . " required vim compiled with +python."
-    let g:pymode_lint = 0
+if !g:pymode_lint || !g:pymode
     finish
 endif
 

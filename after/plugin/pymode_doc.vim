@@ -5,7 +5,7 @@ let g:scriptname = expand("<sfile>:t")
 call helpers#SafeVar("g:pymode_doc", 1)
 
 " DESC: Disable script loading
-if g:pymode_doc == 0
+if !g:pymode_doc
     finish
 endif
 

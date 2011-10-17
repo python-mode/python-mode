@@ -1,7 +1,21 @@
-if exists('g:python_path') || !has('python')
+" OPTION: g:pymode -- bool. Run pymode.
+call helpers#SafeVar("g:pymode", 1)
+
+let g:pymode_path = 0
+
+" DESC: Disable script loading
+if !g:pymode || g:pymode_path
     finish
 endif
-let g:python_path = 1
+
+" DESC: Check python support
+if !has('python')
+    echoerr expand("<sfile>:t") . " required vim compiled with +python."
+    echoerr "Pymode pylint and rope plugins will be disabled."
+    let g:pymode = 0
+    finish
+endif
+let g:pymode_path = 1
 
 python << EOF
 import sys, os, vim

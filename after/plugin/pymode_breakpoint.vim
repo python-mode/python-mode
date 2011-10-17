@@ -2,7 +2,7 @@
 call helpers#SafeVar("g:pymode_breakpoint", 1)
 
 " DESC: Disable script loading
-if ! g:pymode_breakpoint
+if !g:pymode_breakpoint
     finish
 endif
 
