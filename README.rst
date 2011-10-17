@@ -215,35 +215,12 @@ Copyright (C) 2011 Kirill Klenov (klen_)
 
     **Rope**
         Copyright (C) 2006-2010 Ali Gholami Rudi
+
         Copyright (C) 2009-2010 Anton Gritsay
 
     **Pylint**
-        Copyright (C) 2002-2008 LOGILAB S.A. (Paris, FRANCE).
-
-
-Changelog
-=========
-
-## 2011-10-15 0.2.1
--------------------
-* Change rope variables (ropevim_<name> -> pymode_rope_<name>)
-* Add "pymode_rope_auto_project" option (default: 1)
-* Update and fix docs
-* 'pymode_rope_extended_complete' set by default
-* Auto generate rope project and cache
-* "<C-c>r a" for RopeAutoImport
-
-## 2011-10-12 0.1.4
--------------------
-* Add default pylint configuration
-
-## 2011-10-12 0.1.3
--------------------
-* Fix pylint and update docs
-
-## 2011-10-11 0.1.2
--------------------
-* First public release
+        Copyright (C) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
+        http://www.logilab.fr/
 
 
 License
