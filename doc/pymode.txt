@@ -227,7 +227,8 @@ C-Space           Rope code assist
         Copyright (C) 2009-2010 Anton Gritsay
 
     Pylint
-        Copyright (C) 2002-2008 LOGILAB S.A. (Paris, FRANCE).
+        Copyright (C) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
+        http://www.logilab.fr/
 
 
 ==============================================================================
@@ -235,7 +236,7 @@ C-Space           Rope code assist
                                                              *PythonModeLicense*
 
 The Python-mode is released under the GNU lesser general public license.
-See http://www.gnu.org/copyleft/lesser.html
+See: http://www.gnu.org/copyleft/lesser.html
 
 ------------------------------------------------------------------------------
 
