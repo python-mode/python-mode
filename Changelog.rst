@@ -1,11 +1,12 @@
 Changelog
 =========
 
-## 2011-10-17 0.2.3
+## 2011-10-17 0.2.4
 -------------------
 * Add current work path to sys.path
 * Add 'g:pymode' option (disable/enable pylint and rope)
 * Fix pylint copyright
+* Hotfix rope autocomplete
 
 ## 2011-10-15 0.2.1
 -------------------

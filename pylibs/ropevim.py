@@ -288,7 +288,7 @@ class VimUtils(ropemode.environment.Environment):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
         word, _, menu = map(lambda x: x.strip(), proposal.name.partition(':'))
-        ci = dict(word = word, menu = menu)
+        ci = dict(word = word, menu = menu or '')
         kind = ''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3]
 
         if proposal.scope == 'parameter_keyword':
@@ -301,7 +301,7 @@ class VimUtils(ropemode.environment.Environment):
 
         ci['kind'] = kind
         ci['menu'] = menu.replace('"', '\\"')
-        return repr(ci)
+        return repr(ci).replace(": u'", ": '")
 
 
 def _vim_name(name):
