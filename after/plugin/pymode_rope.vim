@@ -3,6 +3,7 @@ call helpers#SafeVar("g:pymode_rope", 1)
 
 " DESC: Disable script loading
 if !g:pymode_rope || !g:pymode
+    let g:pymode_rope = 0
     finish
 endif
 

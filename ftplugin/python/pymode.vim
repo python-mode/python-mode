@@ -12,6 +12,13 @@ setlocal tabstop=4
 setlocal textwidth=80
 setlocal softtabstop=4
 
+" Fix path for project
+if g:pymode
+
+    py curpath = vim.eval('getcwd()')
+    py curpath in sys.path or sys.path.append(curpath)
+
+endif
 
 " Python documentation
 if g:pymode_doc

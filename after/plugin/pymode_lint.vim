@@ -3,6 +3,7 @@ call helpers#SafeVar("g:pymode_lint", 1)
 
 " DESC: Disable script loading
 if !g:pymode_lint || !g:pymode
+    let g:pymode_lint = 0
     finish
 endif
 

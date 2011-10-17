@@ -1,10 +1,8 @@
 " OPTION: g:pymode -- bool. Run pymode.
 call helpers#SafeVar("g:pymode", 1)
 
-let g:pymode_path = 0
-
 " DESC: Disable script loading
-if !g:pymode || g:pymode_path
+if !g:pymode
     finish
 endif
 
@@ -15,7 +13,6 @@ if !has('python')
     let g:pymode = 0
     finish
 endif
-let g:pymode_path = 1
 
 python << EOF
 import sys, os, vim
