@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2011-10-18 0.2.5
+-------------------
+* Add <C-space> shortcut for macvim users.
+
 ## 2011-10-17 0.2.4
 -------------------
 * Add current work path to sys.path

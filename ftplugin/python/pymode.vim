@@ -55,6 +55,7 @@ if g:pymode_rope
     noremap <silent> <buffer> <C-c>f :RopeFindOccurences<CR>
     noremap <silent> <buffer> <C-c>m :emenu Rope.<TAB>
     inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>
+    inoremap <silent> <buffer> <C-space> <C-R>=RopeCodeAssistInsertMode()<CR>
     inoremap <silent> <buffer> <S-TAB> <C-R>=RopeLuckyAssistInsertMode()<CR>
 
 endif
