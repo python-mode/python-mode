@@ -20,6 +20,12 @@ if g:pymode
 
 endif
 
+" Add virtualenv paths
+if g:pymode_virtualenv && exists("$VIRTUAL_ENV")
+    echomsg "Enabled virtualenv: " . $VIRTUAL_ENV
+    call pymode_virtualenv#Activate()
+endif
+
 " Python documentation
 if g:pymode_doc
 

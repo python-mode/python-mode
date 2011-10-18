@@ -62,6 +62,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_utils'|                    Turns off utils
 
+|'pymode_virtualenv'|               Turns off virtualenv
+
 |'pymode_utils_whitespaces'|        Remove unused whitespaces
 
 
@@ -170,6 +172,13 @@ Values: 0 or 1.
 Default: 1.
 
 If this option is set to 0 then utils script is disabled.
+
+------------------------------------------------------------------------------
+                                                           *'pymode_virtualenv'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 0 then virtualenv support is disabled.
 
 ------------------------------------------------------------------------------
                                                     *'pymode_utils_whitespaces'*
