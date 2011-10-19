@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2011-10-19 0.2.7
+-------------------
+* Minor fix (virtualenv loading)
+
 ## 2011-10-18 0.2.6
 -------------------
 * Add <C-space> shortcut for macvim users.
