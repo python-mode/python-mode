@@ -63,7 +63,14 @@ fun! RopeLuckyAssistInsertMode() "{{{
 endfunction "}}}
 
 fun! RopeOmni(findstart, base) "{{{
-    call RopeCodeAssist()
+    " TODO: Fix omni
+    if a:findstart == 1
+        let start = col('.') - 1
+        return start
+    else
+        call RopeOmniComplete()
+        return g:pythoncomplete_completions
+    endif
 endfunction "}}}
 
 " Rope menu
