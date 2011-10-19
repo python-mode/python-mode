@@ -1,3 +1,7 @@
+if helpers#SafeVar('b:pymode', 1)
+    finish
+endif
+
 " Python Options
 setlocal complete+=t
 setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class

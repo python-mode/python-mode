@@ -1,9 +1,9 @@
 Changelog
 =========
 
-## 2011-10-19 0.2.9
+## 2011-10-19 0.2.10
 -------------------
-* Minor fix (virtualenv loading)
+* Minor fixes (virtualenv loading, buffer commands)
 
 ## 2011-10-18 0.2.6
 -------------------
