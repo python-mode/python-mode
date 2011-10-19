@@ -45,21 +45,31 @@ class VimUtils(ropemode.environment.Environment):
     def ask_directory(self, prompt, default=None, starting=None):
         return call('input("%s", ".", "dir")' % prompt)
 
+    def _update_proposals(self, values):
+        values = sorted(values, key = lambda x: x.name)
+
+        if not self.get('extended_complete'):
+            return u','.join(u"'%s'" % self._completion_text(proposal)
+                                    for proposal in values)
+
+        return u','.join(self._extended_completion(proposal)
+                                    for proposal in values)
+
+    def _command(self, command, encode=False):
+        if encode:
+            command = command.encode(self._get_encoding())
+        vim.command(command)
+
     def ask_completion(self, prompt, values, starting=None):
         if self.get('vim_completion') and 'i' in call('mode()'):
-            if not self.get('extended_complete'):
-                proposals = u','.join(u"'%s'" % self._completion_text(proposal)
-                                      for proposal in values)
-            else:
-                proposals = u','.join(self._extended_completion(proposal)
-                                      for proposal in values)
-
+            proposals = self._update_proposals(values)
             col = int(call('col(".")'))
             if starting:
                 col -= len(starting)
-            command = u'call complete(%s, [%s])' % (col, proposals)
-            vim.command(command.encode(self._get_encoding()))
+            self._command(u'call complete(%s, [%s])' % (col, proposals),
+                    encode=True)
             return None
+
         return self.ask_values(prompt, values, starting=starting,
                                show_values=False)
 
