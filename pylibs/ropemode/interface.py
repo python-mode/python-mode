@@ -269,6 +269,10 @@ class RopeMode(object):
     def lucky_assist(self, prefix):
         _CodeAssist(self, self.env).lucky_assist(prefix)
 
+    @decorators.local_command(prefix='P')
+    def omni_complete(self, prefix):
+        _CodeAssist(self, self.env).omni_complete(prefix)
+
     @decorators.local_command('a')
     def auto_import(self):
         _CodeAssist(self, self.env).auto_import()
@@ -564,6 +568,12 @@ class _CodeAssist(object):
         result = self.env.ask_completion(prompt, proposals, self.starting)
         if result is not None:
             self._apply_assist(result)
+
+    def omni_complete(self, prefix):
+        proposals = self._calculate_proposals()
+        proposals = self.env._update_proposals(proposals)
+        command = u'let g:pythoncomplete_completions = [%s]' % proposals
+        self.env._command(command, encode=True)
 
     def lucky_assist(self, prefix):
         proposals = self._calculate_proposals()
