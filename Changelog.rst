@@ -1,9 +1,10 @@
 Changelog
 =========
 
-## 2011-10-19 0.2.7
+## 2011-10-19 0.2.8
 -------------------
 * Minor fix (virtualenv loading)
+* Sorted rope cempletions
 
 ## 2011-10-18 0.2.6
 -------------------
