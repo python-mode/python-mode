@@ -7,7 +7,19 @@ if !g:pymode_virtualenv || !g:pymode
     finish
 endif
 
+call helpers#SafeVar("g:pymode_virtualenv_enabled", [])
+
 fun! pymode_virtualenv#Activate() "{{{
+
+    for env in g:pymode_virtualenv_enabled
+        if env == $VIRTUAL_ENV
+            return 0
+        endif
+    endfor
+
+    call add(g:pymode_virtualenv_enabled, $VIRTUAL_ENV)
+    echomsg "Enabled virtualenv: " . $VIRTUAL_ENV
+
 python << EOF
 ve_dir = os.environ['VIRTUAL_ENV']
 ve_dir in sys.path or sys.path.insert(0, ve_dir)
