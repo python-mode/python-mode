@@ -46,8 +46,6 @@ class VimUtils(ropemode.environment.Environment):
         return call('input("%s", ".", "dir")' % prompt)
 
     def _update_proposals(self, values):
-        values = sorted(values, key = lambda x: x.name)
-
         if not self.get('extended_complete'):
             return u','.join(u"'%s'" % self._completion_text(proposal)
                                     for proposal in values)
