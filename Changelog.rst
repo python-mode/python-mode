@@ -1,8 +1,12 @@
 Changelog
 =========
 
+## 2011-10-20 0.2.11
+--------------------
+* Add 'pymode_lint_jump' option
+
 ## 2011-10-19 0.2.10
--------------------
+--------------------
 * Minor fixes (virtualenv loading, buffer commands)
 
 ## 2011-10-18 0.2.6

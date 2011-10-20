@@ -54,6 +54,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_signs'|               Place signs
 
+|'pymode_lint_jump'|                Auto jump on first error
+
 |'pymode_rope'|                     Turns off rope script
 
 |'pymode_breakpoint'|               Turns off breakpoint script
@@ -145,6 +147,13 @@ Values: 0 or 1.
 Default: 1.
 
 If this option is set to 0 then pylint not place error signs.
+
+------------------------------------------------------------------------------
+                                                            *'pymode_lint_jump'*
+Values: 0 or 1.
+Default: 0.
+
+If this option is set to 0 then pylint not jump on first error.
 
 ------------------------------------------------------------------------------
                                                                  *'pymode_rope'*

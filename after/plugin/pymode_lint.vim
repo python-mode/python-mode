@@ -19,6 +19,9 @@ call helpers#SafeVar("g:pymode_lint_signs", 1)
 " OPTION: g:pymode_lint_config -- str. Path to pylint config file
 call helpers#SafeVar("g:pymode_lint_config", string($HOME . "/.pylintrc"))
 
+" OPTION: g:pymode_lint_jump -- int. Jump on first error.
+call helpers#SafeVar("g:pymode_lint_jump", 0)
+
 " DESC: Signs definition
 sign define W text=WW texthl=Todo
 sign define C text=CC texthl=Comment
@@ -83,6 +86,9 @@ function! pymode_lint#Lint()
     " Open cwindow
     if g:pymode_lint_cwindow && len(b:qf_list)
         botright cwindow
+        if g:pymode_lint_jump
+            cc
+        endif
     endif
 
     " Place signs

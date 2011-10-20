@@ -92,6 +92,9 @@ Default values: ::
     " Auto open cwindow if errors be finded
     let g:pymode_lint_cwindow = 1
 
+    " Auto jump on first error
+    let g:pymode_lint_jump = 0
+
     " Place error signs
     let g:pymode_lint_signs = 1
 
