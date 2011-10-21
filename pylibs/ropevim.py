@@ -221,6 +221,7 @@ class VimUtils(ropemode.environment.Environment):
 
     def show_occurrences(self, locations):
         self._quickfixdefs(locations)
+        vim.command('cwindow')
 
     def _quickfixdefs(self, locations):
         filename = os.path.join(tempfile.gettempdir(), tempfile.mktemp())
@@ -242,7 +243,6 @@ class VimUtils(ropemode.environment.Environment):
             for location in locations:
                 err = '%s:%d: - %s\n' % (location.filename,
                                          location.lineno, location.note)
-                echo(err)
                 tofile.write(err)
         finally:
             tofile.close()

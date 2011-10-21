@@ -61,7 +61,7 @@ if g:pymode_rope
     " DESC: Set keys
     noremap <silent> <buffer> <C-c>g :RopeGotoDefinition<CR>
     noremap <silent> <buffer> <C-c>d :RopeShowDoc<CR>
-    noremap <silent> <buffer> <C-c>f :RopeFindOccurences<CR>
+    noremap <silent> <buffer> <C-c>f :RopeFindOccurrences<CR>
     noremap <silent> <buffer> <C-c>m :emenu Rope.<TAB>
     inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>
     inoremap <silent> <buffer> <C-space> <C-R>=RopeCodeAssistInsertMode()<CR>

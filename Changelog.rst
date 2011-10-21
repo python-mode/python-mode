@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-10-21 0.2.12
+--------------------
+* Auto open cwindow with results
+  on rope find operations
+
 ## 2011-10-20 0.2.11
 --------------------
 * Add 'pymode_lint_jump' option
