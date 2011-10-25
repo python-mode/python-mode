@@ -49,18 +49,24 @@ call helpers#SafeVar("g:pymode_rope_guess_project", 1)
 " OPTION: g:pymode_rope_goto_def_newwin -- bool.
 call helpers#SafeVar("g:pymode_rope_goto_def_newwin", 0)
 
+" OPTION: g:pymode_rope_always_show_complete_menu -- bool.
+call helpers#SafeVar("g:pymode_rope_always_show_complete_menu", 0)
+
 " DESC: Init Rope
 py import ropevim
+
 
 fun! RopeCodeAssistInsertMode() "{{{
     call RopeCodeAssist()
     return ""
 endfunction "}}}
 
+
 fun! RopeLuckyAssistInsertMode() "{{{
     call RopeLuckyAssist()
     return ""
 endfunction "}}}
+
 
 fun! RopeOmni(findstart, base) "{{{
     " TODO: Fix omni
@@ -72,6 +78,7 @@ fun! RopeOmni(findstart, base) "{{{
         return g:pythoncomplete_completions
     endif
 endfunction "}}}
+
 
 " Rope menu
 menu <silent> Rope.Autoimport :RopeAutoImport<CR>

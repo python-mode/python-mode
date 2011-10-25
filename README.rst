@@ -147,6 +147,8 @@ Default values: ::
 
     let g:pymode_rope_goto_def_newwin = 0
 
+    let g:pymode_rope_always_show_complete_menu = 0
+
 Other stuff
 -----------
 

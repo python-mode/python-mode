@@ -69,9 +69,11 @@ if g:pymode_rope
     noremap <silent> <buffer> <C-c>d :RopeShowDoc<CR>
     noremap <silent> <buffer> <C-c>f :RopeFindOccurrences<CR>
     noremap <silent> <buffer> <C-c>m :emenu Rope.<TAB>
-    inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>
-    inoremap <silent> <buffer> <C-space> <C-R>=RopeCodeAssistInsertMode()<CR>
     inoremap <silent> <buffer> <S-TAB> <C-R>=RopeLuckyAssistInsertMode()<CR>
+
+    let s:prascm = g:pymode_rope_always_show_complete_menu ? "<C-P>" : ""    
+    exe "inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
+    exe "inoremap <silent> <buffer> <C-space> <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
 
 endif
 

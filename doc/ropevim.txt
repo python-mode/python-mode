@@ -253,6 +253,9 @@ restructuring can be: >
                                   found is located in another file. By default the
                                   file is open in the same buffer.
 
+*'pymode_rope_always_show_complete_menu'*   If set, rope autocompletion menu
+always show.
+
 
 ==============================================================================
 9. Keybinding ~

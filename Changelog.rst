@@ -1,6 +1,8 @@
 Changelog
 =========
 
+* Add 'g:pymode_rope_always_show_complete_menu' option
+
 ## 2011-10-25 0.3.0
 -------------------
 * Add g:pymode_lint_minheight and g:pymode_lint_maxheight
