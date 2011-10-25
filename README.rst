@@ -98,6 +98,12 @@ Default values: ::
     " Place error signs
     let g:pymode_lint_signs = 1
 
+    " Minimal height of pylint error window
+    let g:pymode_lint_minheight = 3
+
+    " Maximal height of pylint error window
+    let g:pymode_lint_maxheight = 6
+
 .. note:: 
     Pylint options (ex. disable messages) may be defined in '$HOME/pylint.rc'
     See pylint documentation.

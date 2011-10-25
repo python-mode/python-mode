@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-10-25 0.2.20
+--------------------
+* Add g:pymode_lint_minheight and g:pymode_lint_maxheight
+  options
+
 ## 2011-10-21 0.2.12
 --------------------
 * Auto open cwindow with results

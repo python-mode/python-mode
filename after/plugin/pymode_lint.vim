@@ -22,6 +22,12 @@ call helpers#SafeVar("g:pymode_lint_config", string($HOME . "/.pylintrc"))
 " OPTION: g:pymode_lint_jump -- int. Jump on first error.
 call helpers#SafeVar("g:pymode_lint_jump", 0)
 
+" OPTION: g:pymode_lint_minheight -- int. Minimal height of pymode lint window
+call helpers#SafeVar("g:pymode_lint_minheight", 3)
+
+" OPTION: g:pymode_lint_maxheight -- int. Maximal height of pymode lint window
+call helpers#SafeVar("g:pymode_lint_maxheight", 6)
+
 " DESC: Signs definition
 sign define W text=WW texthl=Todo
 sign define C text=CC texthl=Comment
@@ -86,6 +92,7 @@ function! pymode_lint#Lint()
     " Open cwindow
     if g:pymode_lint_cwindow && len(b:qf_list)
         botright cwindow
+        exe max([min([line("$"), g:pymode_lint_maxheight]), g:pymode_lint_maxheight]) . "wincmd _"
         if g:pymode_lint_jump
             cc
         endif

@@ -56,6 +56,10 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_jump'|                Auto jump on first error
 
+|'pymode_lint_minheight'|           Minimal height of pylint error window
+
+|'pymode_lint_maxheight'|           Maximal height of pylint error window
+
 |'pymode_rope'|                     Turns off rope script
 
 |'pymode_breakpoint'|               Turns off breakpoint script
@@ -154,6 +158,20 @@ Values: 0 or 1.
 Default: 0.
 
 If this option is set to 0 then pylint not jump on first error.
+
+------------------------------------------------------------------------------
+                                                       *'pymode_lint_minheight'*
+Values: int
+Default: 3.
+
+Set minimal height for pylint cwindow
+
+------------------------------------------------------------------------------
+                                                       *'pymode_lint_maxheight'*
+Values: int
+Default: 6.
+
+Set maximal height for pylint cwindow
 
 ------------------------------------------------------------------------------
                                                                  *'pymode_rope'*
