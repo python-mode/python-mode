@@ -12,9 +12,15 @@ setlocal foldmethod=indent
 setlocal formatoptions-=t
 setlocal nowrap
 setlocal number
-setlocal tabstop=4
 setlocal textwidth=80
+setlocal tabstop=4
 setlocal softtabstop=4
+setlocal shiftwidth=4
+setlocal shiftround
+setlocal smartindent
+setlocal smarttab
+setlocal expandtab
+setlocal autoindent
 
 " Fix path for project
 if g:pymode
