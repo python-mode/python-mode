@@ -1,10 +1,11 @@
 Changelog
 =========
 
-## 2011-10-25 0.2.20
+## 2011-10-25 0.2.21
 --------------------
 * Add g:pymode_lint_minheight and g:pymode_lint_maxheight
   options
+* Fix PyLintToggle
 
 ## 2011-10-21 0.2.12
 --------------------

@@ -104,3 +104,13 @@ function! pymode_lint#Lint()
     endif
 
 endfunction
+
+
+fun! pymode_lint#Toggle() "{{{
+    let g:pymode_lint = g:pymode_lint ? 0 : 1
+    if g:pymode_lint
+        echomsg "PyLint enabled."
+    else
+        echomsg "PyLint disabled."
+    endif
+endfunction "}}}

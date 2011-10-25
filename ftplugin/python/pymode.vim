@@ -50,7 +50,7 @@ if g:pymode_lint
     endif
 
     " DESC: Set commands
-    command! -buffer PyLintToggle :let g:pymode_lint = g:pymode_lint ? 0 : 1
+    command! -buffer PyLintToggle :call pymode_lint#Toggle()
     command! -buffer PyLint :call pymode_lint#Lint()
 
 endif
