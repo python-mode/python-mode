@@ -25,6 +25,8 @@ Requirements
 ============
 
 - VIM >= 7.0 with python support
+  (also `--with-features=big` if you want use g:pymode_lint_signs)
+
 
 
 Installation

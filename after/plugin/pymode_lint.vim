@@ -28,11 +28,15 @@ call helpers#SafeVar("g:pymode_lint_minheight", 3)
 " OPTION: g:pymode_lint_maxheight -- int. Maximal height of pymode lint window
 call helpers#SafeVar("g:pymode_lint_maxheight", 6)
 
-" DESC: Signs definition
-sign define W text=WW texthl=Todo
-sign define C text=CC texthl=Comment
-sign define R text=RR texthl=Visual
-sign define E text=EE texthl=Error
+if g:pymode_lint_signs
+
+    " DESC: Signs definition
+    sign define W text=WW texthl=Todo
+    sign define C text=CC texthl=Comment
+    sign define R text=RR texthl=Visual
+    sign define E text=EE texthl=Error
+
+endif
 
 " DESC: Set default pylint configuration
 if !filereadable(g:pymode_lint_config)
