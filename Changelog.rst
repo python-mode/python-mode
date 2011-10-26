@@ -1,7 +1,11 @@
 Changelog
 =========
 
+## 2011-10-27 0.3.1
+-------------------
 * Add 'g:pymode_rope_always_show_complete_menu' option
+* Some pylint fixes
+
 
 ## 2011-10-25 0.3.0
 -------------------
