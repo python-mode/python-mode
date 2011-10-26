@@ -17,7 +17,7 @@ call helpers#SafeVar("g:pymode_lint_cwindow", 1)
 call helpers#SafeVar("g:pymode_lint_signs", 1)
 
 " OPTION: g:pymode_lint_config -- str. Path to pylint config file
-call helpers#SafeVar("g:pymode_lint_config", string($HOME . "/.pylintrc"))
+call helpers#SafeVar("g:pymode_lint_config", $HOME . "/.pylintrc")
 
 " OPTION: g:pymode_lint_jump -- int. Jump on first error.
 call helpers#SafeVar("g:pymode_lint_jump", 0)
