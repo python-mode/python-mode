@@ -168,7 +168,14 @@ Default values: ::
     " Auto fix vim python paths if virtualenv enabled
     let g:pymode_virtualenv = 1
 
-.. note:: See also :help ropevim.txt
+    " Set default pymode python indent options
+    let g:pymode_options_indent = 1
+
+    " Set default pymode python fold options
+    let g:pymode_options_fold = 1
+
+    " Set default pymode python other options
+    let g:pymode_options_other = 1
 
 
 Default keys
@@ -205,7 +212,7 @@ PyLintToggle   Enable, disable pylint
 -------------- -------------
 PyLint         Check current buffer
 -------------- -------------
-Pyrun          Check current buffer
+Pyrun          Run current buffer in python
 ============== =============
 
 .. note:: See also :help ropevim.txt

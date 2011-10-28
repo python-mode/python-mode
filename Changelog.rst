@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-10-28 0.3.2
+-------------------
+* Add 'g:pymode_options_*' stuff, for ability
+  to disable default pymode options for python buffers
+
 ## 2011-10-27 0.3.1
 -------------------
 * Add 'g:pymode_rope_always_show_complete_menu' option

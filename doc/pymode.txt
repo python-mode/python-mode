@@ -72,6 +72,15 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_utils_whitespaces'|        Remove unused whitespaces
 
+|'pymode_options_indent'|           Set default pymode options for
+                                  python indentation
+
+|'pymode_options_fold'|             Set default pymode options for
+                                  python folding
+
+|'pymode_options_other'|            Set default pymode options for
+                                  python codding
+
 
         Note:
         Also see |ropevim.txt|
@@ -213,6 +222,49 @@ Values: 0 or 1.
 Default: 1.
 
 Autoremove unused whitespaces
+
+------------------------------------------------------------------------------
+                                                       *'pymode_options_indent'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 1, pymode enable next options for python buffers: >
+
+    setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class
+    setlocal cindent
+    setlocal tabstop=4
+    setlocal softtabstop=4
+    setlocal shiftwidth=4
+    setlocal shiftround
+    setlocal smartindent
+    setlocal smarttab
+    setlocal expandtab
+    setlocal autoindent
+<
+------------------------------------------------------------------------------
+                                                         *'pymode_options_fold'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 1, pymode enable next options for python buffers: >
+
+    setlocal foldlevelstart=99
+    setlocal foldlevel=99
+    setlocal foldmethod=indent
+<
+------------------------------------------------------------------------------
+                                                        *'pymode_options_other'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 1, pymode enable next options for python buffers: >
+
+    setlocal complete+=t
+    setlocal formatoptions-=t
+    setlocal number
+    setlocal nowrap
+    setlocal textwidth=80
+<
 
 
 ==============================================================================
