@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2011-10-30 0.3.3
+-------------------
+* Fix RopeShowDoc
+
 ## 2011-10-28 0.3.2
 -------------------
 * Add 'g:pymode_options_*' stuff, for ability

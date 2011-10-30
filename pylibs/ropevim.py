@@ -249,7 +249,9 @@ class VimUtils(ropemode.environment.Environment):
 
     def show_doc(self, docs, altview=False):
         if docs:
-            vim.command("call helpers#ShowPreview('%s')" % docs)
+            cmd = 'call helpers#ShowPreview("%s")' % str(docs.replace('"', '\\"'))
+            print cmd
+            vim.command(cmd)
 
     def preview_changes(self, diffs):
         echo(diffs)
