@@ -40,7 +40,7 @@ endif
 
 " DESC: Set default pylint configuration
 if !filereadable(g:pymode_lint_config)
-    let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/.pylintrc"
+    let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/pylintrc"
 endif
 
 python << EOF

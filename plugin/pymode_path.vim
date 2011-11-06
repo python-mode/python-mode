@@ -1,6 +1,10 @@
 " OPTION: g:pymode -- bool. Run pymode.
 call helpers#SafeVar("g:pymode", 1)
 
+let g:pymode_version = "0.3.4"
+command! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
+
+
 " DESC: Disable script loading
 if !g:pymode
     finish
