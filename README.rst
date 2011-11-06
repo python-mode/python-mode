@@ -41,6 +41,9 @@ Installation
 
 .. note:: Alternatively, if you are using pathogen_, clone the plugin into your ``bundle`` folder.
 
+.. note:: filetype-plugin (`:help filetype-plugin-on`) and filetype-indent (`:help filetype-indent-on`)
+    must be enabled for use python-mode.
+
 
 Settings
 ========
