@@ -138,7 +138,7 @@ Values: 'Path to pylint configuration file'
 Default: "$HOME/.pylintrc"
 
 If this option is set path to pylint configuration. If configuration not found
-use file '.pylintrc' from pymode plugin directory.
+uses file 'pylintrc' from python-mode sources.
 
 ------------------------------------------------------------------------------
                                                            *'pymode_lint_write'*
