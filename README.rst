@@ -32,11 +32,15 @@ Requirements
 Installation
 ============
 
-- Just copy the plugin folders into your `~/.vim` directory.
+- Copy the plugin files and directories into your `~/.vim` directory.
+
+- Rebuild the help tags in the runtime directory: ::
+
+    :helptags $VIMRUNTIME/doc
+
 
 .. note:: Alternatively, if you are using pathogen_, clone the plugin into your ``bundle`` folder.
 
-.. note:: Also you can see `:help PythonMode`
 
 Settings
 ========
