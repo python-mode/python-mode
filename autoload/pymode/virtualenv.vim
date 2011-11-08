@@ -1,15 +1,4 @@
-" OPTION: g:pymode_lint -- bool. Load pylint plugin
-call helpers#SafeVar("g:pymode_virtualenv", 1)
-
-" DESC: Disable script loading
-if !g:pymode_virtualenv || !g:pymode
-    let g:pymode_virtualenv = 0
-    finish
-endif
-
-call helpers#SafeVar("g:pymode_virtualenv_enabled", [])
-
-fun! pymode_virtualenv#Activate() "{{{
+fun! pymode#virtualenv#Activate() "{{{
 
     for env in g:pymode_virtualenv_enabled
         if env == $VIRTUAL_ENV

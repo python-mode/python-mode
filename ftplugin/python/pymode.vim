@@ -1,9 +1,14 @@
-if helpers#SafeVar('b:pymode', 1)
+if pymode#Default('b:pymode', 1)
     finish
 endif
 
+" Syntax highlight
+let python_highlight_all=1
+let python_highlight_exceptions=1
+let python_highlight_builtins=1
+
 " Python indent options
-if !helpers#SafeVar('g:pymode_options_indent', 1) || g:pymode_options_indent
+if !pymode#Default('g:pymode_options_indent', 1) || g:pymode_options_indent
     setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class
     setlocal cindent
     setlocal tabstop=4
@@ -17,14 +22,14 @@ if !helpers#SafeVar('g:pymode_options_indent', 1) || g:pymode_options_indent
 endif
 
 " Python fold options
-if !helpers#SafeVar('g:pymode_options_fold', 1) || g:pymode_options_fold
+if !pymode#Default('g:pymode_options_fold', 1) || g:pymode_options_fold
     setlocal foldlevelstart=99
     setlocal foldlevel=99
     setlocal foldmethod=indent
 endif
       
 " Python other options
-if !helpers#SafeVar('g:pymode_options_other', 1) || g:pymode_options_other
+if !pymode#Default('g:pymode_options_other', 1) || g:pymode_options_other
     setlocal complete+=t
     setlocal formatoptions-=t
     setlocal number
@@ -34,25 +39,23 @@ endif
 
 " Fix path for project
 if g:pymode
-
     py curpath = vim.eval('getcwd()')
     py curpath in sys.path or sys.path.append(curpath)
-
 endif
 
 " Add virtualenv paths
 if g:pymode_virtualenv && exists("$VIRTUAL_ENV")
-    call pymode_virtualenv#Activate()
+    call pymode#virtualenv#Activate()
 endif
 
 " Python documentation
 if g:pymode_doc
 
     " DESC: Set commands
-    command! -buffer -nargs=+ Pydoc call pymode_doc#Show("<args>")
+    command! -buffer -nargs=1 Pydoc call pymode#doc#Show("<args>")
 
     " DESC: Set keys
-    exe "nnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode_doc#Show(expand('<cword>'))<CR>"
+    exe "nnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode#doc#Show(expand('<cword>'))<CR>"
 
 endif
 
@@ -60,15 +63,15 @@ endif
 " PyLint
 if g:pymode_lint
 
+    " DESC: Set commands
+    command! -buffer -nargs=0 PyLintToggle :call pymode#lint#Toggle()
+    command! -buffer -nargs=0 PyLintCheckerToggle :call pymode#lint#ToggleChecker()
+    command! -buffer -nargs=0 PyLint :call pymode#lint#Check()
+
     " DESC: Set autocommands
     if g:pymode_lint_write
-        au BufWritePost <buffer> call pymode_lint#Lint()
+        au BufWritePost <buffer> PyLint
     endif
-
-    " DESC: Set commands
-    command! -buffer PyLintToggle :call pymode_lint#Toggle()
-    command! -buffer PyLintCheckerToggle :call pymode_lint#ToggleChecker()
-    command! -buffer PyLint :call pymode_lint#Lint()
 
 endif
 
@@ -92,7 +95,7 @@ endif
 if g:pymode_run
 
     " DESC: Set commands
-    command! -buffer Pyrun call pymode_run#Run()
+    command! -buffer -nargs=0 Pyrun call pymode#run#Run()
 
     " DESC: Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_run_key ":Pyrun<CR>"
@@ -103,12 +106,12 @@ endif
 if g:pymode_breakpoint
 
     " DESC: Set keys
-    exe "nnoremap <silent> <buffer> " g:pymode_breakpoint_key ":call pymode_breakpoint#Set(line('.'))<CR>"
+    exe "nnoremap <silent> <buffer> " g:pymode_breakpoint_key ":call pymode#breakpoint#Set(line('.'))<CR>"
 
 endif
 
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
-call helpers#SafeVar("g:pymode_utils_whitespaces", 1)
+call pymode#Default("g:pymode_utils_whitespaces", 1)
 
 " Utils whitespaces
 if g:pymode_utils_whitespaces
