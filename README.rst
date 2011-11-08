@@ -29,17 +29,41 @@ Requirements
 
 
 
-Installation
-============
-
-- Copy the plugin files and directories into your `~/.vim` directory.
-
-- Rebuild the help tags in the runtime directory: ::
-
-    :helptags $VIMRUNTIME/doc
+How to install
+==============
 
 
-.. note:: Alternatively, if you are using pathogen_, clone the plugin into your ``bundle`` folder.
+Using pathogen_ (recomended)
+----------------------------
+::
+
+    % cd ~/.vim
+    % mkdir -p bundle && cd bundle
+    % git clone git://github.com/klen/python-mode.vim
+
+- Enable pathogen_ in your `~/.vimrc`: ::
+
+    " Pathogen load
+    filetype off
+
+    call pathogen#infect()
+    call pathogen#helptags()
+
+    filetype plugin indent on
+    syntax on
+
+
+Manually
+--------
+::
+    % git clone git://github.com/klen/python-mode.vim
+    % cd python-mode.vim
+    % cp -R * ~/.vim
+
+Then rebuild helptags in vim::
+
+    :helptags ~/.vim/doc/
+
 
 .. note:: filetype-plugin (`:help filetype-plugin-on`) and filetype-indent (`:help filetype-indent-on`)
     must be enabled for use python-mode.
@@ -83,13 +107,16 @@ Default values: ::
     " Key for run python code
     let g:pymode_run_key = '<leader>r'
 
-Pylint checking
----------------
+Code checking
+-------------
 
 Default values: ::
 
     " Load pylint code plugin
     let g:pymode_lint = 1
+
+    " Switch pylint or pyflakes code checker
+    let g:pymode_lint_checker = "pylint"
 
     " Pylint configuration file
     " If file not found use '.pylintrc' from python-mode plugin directory
@@ -116,6 +143,7 @@ Default values: ::
 .. note:: 
     Pylint options (ex. disable messages) may be defined in '$HOME/pylint.rc'
     See pylint documentation.
+
 
 Rope refactoring library
 ------------------------
@@ -216,6 +244,8 @@ Command        Description
 :Pydoc <args>  Show python documentation
 -------------- -------------
 PyLintToggle   Enable, disable pylint
+-------------- -------------
+PyLintCheckerToggle  Toggle code checker (pylint, pyflakes)
 -------------- -------------
 PyLint         Check current buffer
 -------------- -------------
