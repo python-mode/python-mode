@@ -21,6 +21,9 @@ There is no need to install the pylint_ or rope_ library on your system.
 See screencast here: http://t.co/3b0bzeXA (sorry for quality, this my first screencast)
 
 
+.. contents::
+
+
 Requirements
 ============
 
