@@ -10,6 +10,9 @@ endif
 " OPTION: g:pymode_lint_write -- bool. Check code every save.
 call helpers#SafeVar("g:pymode_lint_write", 1)
 
+" OPTION: g:pymode_lint_checker -- str. Use pylint of pyflakes for check.
+call helpers#SafeVar("g:pymode_lint_checker", "pylint")
+
 " OPTION: g:pymode_lint_cwindow -- bool. Auto open cwindow if errors find
 call helpers#SafeVar("g:pymode_lint_cwindow", 1)
 
@@ -46,24 +49,70 @@ endif
 python << EOF
 import os
 import StringIO
+import _ast
+import re
 
 from logilab.astng.builder import MANAGER
 from pylint import lint, checkers
+from pyflakes import checker
 
+
+# Pylint setup
 linter = lint.PyLinter()
+pylint_re = re.compile('^[^:]+:(\d+): \[([EWRCI]+)[^\]]*\] (.*)$')
+
 checkers.initialize(linter)
 linter.set_option("output-format", "parseable")
 linter.set_option("reports", 0)
-
 linter.load_file_configuration(vim.eval("g:pymode_lint_config"))
 
-def check():
-    target = vim.eval("expand('%:p')")
+# Pyflakes setup
+
+# Pylint check
+def pylint():
+    filename = vim.current.buffer.name
     MANAGER.astng_cache.clear()
     linter.reporter.out = StringIO.StringIO()
-    linter.check(target)
-    pylint_output = linter.reporter.out.getvalue()
-    vim.command('let pylint_output = "%s"' % pylint_output.replace('"', '\\"'))
+    linter.check(filename)
+    qf = []
+    for w in linter.reporter.out.getvalue().split('\n'):
+        test = pylint_re.match(w)
+        test and qf.append(dict(
+                filename = filename,
+                bufnr = vim.current.buffer.number,
+                lnum = test.group(1),
+                type = test.group(2),
+                text = test.group(3),
+            ))
+    vim.command('let b:qf_list = %s' % repr(qf))
+
+# Pyflakes check
+def pyflakes():
+    filename = vim.current.buffer.name
+    codeString = file(filename, 'U').read() + '\n'
+    try:
+        tree = compile(codeString, filename, "exec", _ast.PyCF_ONLY_AST)
+    except SyntaxError, value:
+        msg = value.args[0]
+        if text is None:
+            vim.command('echoerr "%s: problem decoding source"' % filename)
+        else:
+            lineno, _, text = value.lineno, value.offset, value.text
+            line = text.splitlines()[-1]
+            vim.command('echoerr "%s:%d: %s"' % (filename, lineno, msg))
+            vim.command('echoerr "%s"' % line)
+    else:
+        w = checker.Checker(tree, filename)
+        w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
+        qf = [dict(
+            filename = filename,
+            bufnr = vim.current.buffer.number,
+            lnum = str(w.lineno),
+            text = w.message % w.message_args,
+            type = 'E'
+        ) for w in w.messages]
+        vim.command('let b:qf_list = %s' % repr(qf))
+
 EOF
 
 " DESC: Check code
@@ -76,21 +125,7 @@ function! pymode_lint#Lint()
 
     let pylint_output = ""
     let bufnum = bufnr("%")
-    py check()
-    let b:qf_list = []
-    for error in split(pylint_output, "\n")
-        let b:parts = matchlist(error, '\v([A-Za-z\.]+):(\d+): \[([EWRCI]+)[^\]]*\] (.*)')
-        if len(b:parts) > 3
-            let l:qf_item = {}
-            let l:qf_item.filename = expand('%')
-            let l:qf_item.bufnr = bufnum
-            let l:qf_item.lnum = b:parts[2]
-            let l:qf_item.type = b:parts[3]
-            let l:qf_item.text = b:parts[4]
-            call add(b:qf_list, l:qf_item)
-        endif
-    endfor
-
+    exe "py ".g:pymode_lint_checker."()"
     call setqflist(b:qf_list, 'r')
 
     " Open cwindow
@@ -117,4 +152,9 @@ fun! pymode_lint#Toggle() "{{{
     else
         echomsg "PyLint disabled."
     endif
+endfunction "}}}
+
+fun! pymode_lint#ToggleChecker() "{{{
+    let g:pymode_lint_checker = g:pymode_lint_checker == "pylint" ? "pyflakes" : "pylint"
+    echomsg "PyLint checker: " . g:pymode_lint_checker
 endfunction "}}}

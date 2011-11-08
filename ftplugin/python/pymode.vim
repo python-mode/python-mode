@@ -67,6 +67,7 @@ if g:pymode_lint
 
     " DESC: Set commands
     command! -buffer PyLintToggle :call pymode_lint#Toggle()
+    command! -buffer PyLintCheckerToggle :call pymode_lint#ToggleChecker()
     command! -buffer PyLint :call pymode_lint#Lint()
 
 endif
