@@ -56,6 +56,7 @@ Using pathogen_ (recomended)
 Manually
 --------
 ::
+
     % git clone git://github.com/klen/python-mode.vim
     % cd python-mode.vim
     % cp -R * ~/.vim
