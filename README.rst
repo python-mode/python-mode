@@ -39,7 +39,7 @@ Using pathogen_ (recomended)
 
     % cd ~/.vim
     % mkdir -p bundle && cd bundle
-    % git clone git://github.com/klen/python-mode.vim
+    % git clone git://github.com/klen/python-mode.git
 
 - Enable pathogen_ in your `~/.vimrc`: ::
 
@@ -57,7 +57,7 @@ Manually
 --------
 ::
 
-    % git clone git://github.com/klen/python-mode.vim
+    % git clone git://github.com/klen/python-mode.git
     % cd python-mode.vim
     % cp -R * ~/.vim
 
