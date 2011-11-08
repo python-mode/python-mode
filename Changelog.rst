@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2011-11-11 0.4.0
+-------------------
+* Add alternative code checker "pyflakes"
+  See :h 'pymode_lint_checker'
+* Update install docs
+
 ## 2011-10-30 0.3.3
 -------------------
 * Fix RopeShowDoc
