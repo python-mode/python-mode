@@ -284,6 +284,10 @@ Copyright (C) 2011 Kirill Klenov (klen_)
         Copyright (C) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
         http://www.logilab.fr/
 
+    **Pyflakes**:
+        Copyright (c) 2005 Divmod, Inc.
+        http://www.divmod.com/
+
 
 License
 =======
