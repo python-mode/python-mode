@@ -1,7 +1,12 @@
 Changelog
 =========
 
-## 2011-11-11 0.4.0
+## 2011-11-09 0.4.1
+-------------------
+* Add FAQ
+* Some refactoring
+
+## 2011-11-08 0.4.0
 -------------------
 * Add alternative code checker "pyflakes"
   See :h 'pymode_lint_checker'
