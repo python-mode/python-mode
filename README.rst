@@ -1,11 +1,11 @@
 Python-mode, Python in VIM
 ##########################
 
-Python-mode is a vim plugin that allows you to use the pylint_, rope_, pydoc_ library in vim to provide
+Python-mode is a vim plugin that allows you to use the pylint_, rope_, pydoc_, pyflakes_ libraries in vim to provide
 features like python code looking for bugs, refactoring and some other useful things.
 
 This plugin allow you create python code in vim very easily.
-There is no need to install the pylint_ or rope_ library on your system.
+There is no need to install the pylint_, rope_ or any used python library on your system.
 
 - Highlight syntax errors
 - Highlight and auto fix unused imports
@@ -259,7 +259,36 @@ Pyrun          Run current buffer in python
 .. note:: See also :help ropevim.txt
 
 
-Bug tracker
+F.A.Q.
+======
+
+Rope completion is very slow
+----------------------------
+
+To work rope_ creates a service directory: `.ropeproject`.
+If `g:pymode_rope_guess_project` set (by default) and `.ropeproject` in current dir not found, rope scan `.ropeproject` on every dir in parent path.
+If rope finded `.ropeproject` in parent dirs, rope set project for all child dir and scan may be slow for many dirs and files.
+
+Solutions:
+
+- Disable `g:pymode_rope_guess_project` to make rope always create `.ropeproject` in current dir.
+- Delete `.ropeproject` from dip parent dir to make rope create `.ropeproject` in current dir.
+- Press `<C-x>po` or `:RopeOpenProject` to make force rope create `.ropeproject` in current dir.
+
+
+
+Pylint check is very slow
+-------------------------
+
+In some projects pylint_ may check slowly, because it also scan imported modules if posible.
+Try use pyflakes_, see `:h 'pymode_lint_checker'`.
+
+.. note:: You may `set exrc` and `set secure` in your `vimrc` for auto set custom settings from `.vimrc` from your projects directories.
+    Example: On Flask projects I automaticly set 'g:pymode_lint_checker = "pyflakes"', on django 'g:pymode_lint_cheker = "pylint"'
+
+
+
+Buctracker
 ===========
 
 If you have any suggestions, bug reports or
@@ -301,6 +330,7 @@ Licensed under a `GNU lesser general public license`_.
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html
 .. _klen: http://klen.github.com/
 .. _pylint: http://www.logilab.org/857
+.. _pylfakes: http://pypi.python.org/pypi/pyflakes
 .. _rope: http://rope.sourceforge.net/
 .. _pydoc: http://docs.python.org/library/pydoc.html
 .. _pathogen: https://github.com/tpope/vim-pathogen

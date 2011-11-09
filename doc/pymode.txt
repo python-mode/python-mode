@@ -1,4 +1,4 @@
-*pymode.txt*    Python-mode for vim!
+*pymode.txt*  *python-mode.txt*  Python-mode for vim!
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -8,8 +8,9 @@ CONTENTS                                                  *Python-mode-contents*
         2.1.Customisation details.............|PythonModeOptionsDetails|
     3.Default Keys............................|PythonModeKeys|
     4.Commands................................|PythonModeCommands|
-    5.Credits.................................|PythonModeCredits|
-    6.License.................................|PythonModeLicense|
+    5.FAQ.....................................|PythonModeFAQ|
+    6.Credits.................................|PythonModeCredits|
+    7.License.................................|PythonModeLicense|
 
 ==============================================================================
 1. Intro ~
@@ -313,7 +314,38 @@ C-Space           Rope code assist
 
 
 ==============================================================================
-5. Credits ~
+5. FAQ ~
+                                                                 *PythonModeFAQ*
+
+Rope completion is very slow
+----------------------------
+
+To work rope_ creates a service directory: `.ropeproject`.
+If |'pymode_rope_guess_project'| set on (by default) and `.ropeproject` in current dir not found, rope scan `.ropeproject` on every dir in parent path.
+If rope finded `.ropeproject` in parent dirs, rope set project for all child dir and scan may be slow for many dirs and files.
+
+Solutions:
+
+- Disable |'pymode_rope_guess_project'| to make rope always create `.ropeproject` in current dir.
+- Delete `.ropeproject` from dip parent dir to make rope create `.ropeproject` in current dir.
+- Press `<C-x>po` or `:RopeOpenProject` to make force rope create `.ropeproject` in current dir.
+
+
+
+Pylint check is very slow
+-------------------------
+
+In some projects pylint_ may check slowly, because it also scan imported modules if posible.
+Try use pyflakes, see |'pymode_lint_checker'|.
+
+You may set |exrc| and |secure| in your |vimrc| for auto set custom settings from `.vimrc` from your projects directories.
+>
+    Example: On Flask projects I automaticly set 'g:pymode_lint_checker = "pyflakes"', on django 'g:pymode_lint_cheker = "pylint"'
+<
+
+
+==============================================================================
+6. Credits ~
                                                              *PythonModeCredits* 
     Kirill Klenov
         http://klen.github.com/
@@ -333,7 +365,7 @@ C-Space           Rope code assist
 
 
 ==============================================================================
-6. License ~
+7. License ~
                                                              *PythonModeLicense*
 
 The Python-mode is released under the GNU lesser general public license.
