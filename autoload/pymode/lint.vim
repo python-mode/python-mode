@@ -1,6 +1,13 @@
 function! pymode#lint#Check()
     if g:pymode_lint == 0 | return | endif
-    if &modifiable && &modified | write | endif	
+    if &modifiable && &modified
+        try
+            write
+        catch /E212/
+            echohl Error | echo "File modified and I can't save it. PyLint cancel." | echohl None
+            return 0
+        endtry
+    endif	
     exe "py ".g:pymode_lint_checker."()"
     call setqflist(b:qf_list, 'r')
     if g:pymode_lint_cwindow

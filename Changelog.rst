@@ -1,10 +1,10 @@
 Changelog
 =========
 
-## 2011-11-09 0.4.1
+## 2011-11-09 0.4.2
 -------------------
 * Add FAQ
-* Some refactoring
+* Some refactoring and fixes
 
 ## 2011-11-08 0.4.0
 -------------------
