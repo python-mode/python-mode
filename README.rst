@@ -222,6 +222,9 @@ Default values: ::
     " Set default pymode python other options
     let g:pymode_options_other = 1
 
+    " Enable pymode's custom syntax highlighting
+    let g:pymode_syntax = 1
+
 
 Default keys
 ============
