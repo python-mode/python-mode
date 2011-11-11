@@ -1,4 +1,4 @@
-let g:pymode_version = "0.4.2"
+let g:pymode_version = "0.4.3"
 
 command! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -111,28 +111,37 @@ def pylint():
 def pyflakes():
     filename = vim.current.buffer.name
     codeString = file(filename, 'U').read() + '\n'
+    qf = []
     try:
         tree = compile(codeString, filename, "exec", _ast.PyCF_ONLY_AST)
+
     except SyntaxError, value:
         msg = value.args[0]
-        if text is None:
+        if codeString is None:
             vim.command('echoerr "%s: problem decoding source"' % filename)
         else:
             lineno, _, text = value.lineno, value.offset, value.text
-            line = text.splitlines()[-1]
-            vim.command('echoerr "%s:%d: %s"' % (filename, lineno, msg))
-            vim.command('echoerr "%s"' % line)
+            qf.append(dict(
+                filename = filename,
+                bufnr = vim.current.buffer.number,
+                lnum = str(lineno),
+                text = msg,
+                type = 'E'
+            ))
+
     else:
         w = checker.Checker(tree, filename)
         w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
-        qf = [dict(
-            filename = filename,
-            bufnr = vim.current.buffer.number,
-            lnum = str(w.lineno),
-            text = w.message % w.message_args,
-            type = 'E'
-        ) for w in w.messages]
-        vim.command('let b:qf_list = %s' % repr(qf))
+        for w in w.messages:
+            qf.append(dict(
+                filename = filename,
+                bufnr = vim.current.buffer.number,
+                lnum = str(w.lineno),
+                text = w.message % w.message_args,
+                type = 'E'
+            ))
+
+    vim.command('let b:qf_list = %s' % repr(qf))
 EOF
 endif
 
