@@ -294,7 +294,7 @@ Try use pyflakes_, see ``:h 'pymode_lint_checker'``.
 
 
 
-Buctracker
+Bugtracker
 ===========
 
 If you have any suggestions, bug reports or
