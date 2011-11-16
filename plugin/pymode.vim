@@ -18,13 +18,15 @@ if !has('python')
     let g:pymode_virtualenv = 0
 endif
 
+" DESC: Fix python path
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 python << EOF
-import sys, os, vim
+import sys, vim
+from os import path as op
 
-sys.path.insert(0,
-    os.path.join(os.path.dirname(os.path.dirname(
-                vim.eval("expand('<sfile>:p')"))), 'pylibs'))
+sys.path = [
+    op.join(op.dirname(op.dirname(vim.eval("expand('<sfile>:p')"))),
+    'pylibs'), vim.eval("getcwd()") ] + sys.path
 EOF
 endif
 
