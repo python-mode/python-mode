@@ -75,6 +75,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_utils_whitespaces'|        Remove unused whitespaces
 
+|'pymode_syntax'|                   Turns off the custom syntax highlighting
+
 |'pymode_options_indent'|           Set default pymode options for
                                   python indentation
 
@@ -232,6 +234,14 @@ Values: 0 or 1.
 Default: 1.
 
 Autoremove unused whitespaces
+
+------------------------------------------------------------------------------
+                                                               *'pymode_syntax'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 0 then the custom syntax highlighting will
+not be used.
 
 ------------------------------------------------------------------------------
                                                        *'pymode_options_indent'*
