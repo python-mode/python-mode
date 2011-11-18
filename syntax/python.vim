@@ -77,6 +77,8 @@ if version < 600
   syntax clear
 elseif exists("b:current_syntax")
   finish
+elseif exists("g:pymode_syntax") && g:pymode_syntax == 0
+  finish
 endif
 
 if exists("python_highlight_all") && python_highlight_all != 0

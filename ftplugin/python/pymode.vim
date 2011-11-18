@@ -3,9 +3,11 @@ if pymode#Default('b:pymode', 1)
 endif
 
 " Syntax highlight
-let python_highlight_all=1
-let python_highlight_exceptions=1
-let python_highlight_builtins=1
+if !pymode#Default('g:pymode_syntax', 1) || g:pymode_syntax
+    let python_highlight_all=1
+    let python_highlight_exceptions=1
+    let python_highlight_builtins=1
+endif
 
 " Python indent options
 if !pymode#Default('g:pymode_options_indent', 1) || g:pymode_options_indent
