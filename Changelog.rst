@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-11-18 0.4.5
+-------------------
+* Add 'g:pymode_syntax' option
+* Highlight 'self' keyword
+
 ## 2011-11-16 0.4.4
 -------------------
 * Minor fixes
