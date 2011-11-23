@@ -1,4 +1,4 @@
-let g:pymode_version = "0.4.5"
+let g:pymode_version = "0.4.6"
 
 command! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -66,7 +66,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     " DESC: Set default pylint configuration
     if !filereadable(g:pymode_lint_config)
-        let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylintrc"
+        let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
     endif
 
 python << EOF
