@@ -24,6 +24,21 @@ See screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first s
 .. contents::
 
 
+Changelog
+=========
+
+## 2011-11-23 0.4.6
+-------------------
+* Enable all syntax highlighting
+  For old settings set in your vimrc: ::
+
+    let g:pymode_syntax_builtin_objs = 0
+    let g:pymode_syntax_builtin_funcs = 0
+
+* Change namespace of syntax variables
+  See README
+
+
 Requirements
 ============
 
