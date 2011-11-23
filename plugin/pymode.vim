@@ -105,7 +105,7 @@ def pylint():
                 bufnr = vim.current.buffer.number,
                 lnum = test.group(1),
                 type = test.group(2),
-                text = test.group(3),
+                text = test.group(3).replace("'", "\""),
             ))
     vim.command('let b:qf_list = %s' % repr(qf))
 
