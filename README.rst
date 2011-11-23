@@ -222,8 +222,50 @@ Default values: ::
     " Set default pymode python other options
     let g:pymode_options_other = 1
 
+
+Syntax highlight
+----------------
+
+Default values: ::
+
     " Enable pymode's custom syntax highlighting
     let g:pymode_syntax = 1
+
+    " Enable all python highlightings
+    let g:pymode_syntax_all = 1
+
+    " Highlight "print" as function
+    leg g:pymode_syntax_print_as_function = 0
+
+    " Highlight indentation errors
+    leg g:pymode_syntax_indent_errors = g:pymode_syntax_all
+
+    " Highlight trailing spaces
+    leg g:pymode_syntax_space_errors = g:pymode_syntax_all
+
+    " Highlight string formatting
+    leg g:pymode_syntax_string_formatting = g:pymode_syntax_all
+
+    " Highlight str.format syntax
+    leg g:pymode_syntax_string_format = g:pymode_syntax_all
+
+    " Highlight string.Template syntax
+    let g:pymode_syntax_string_templates = g:pymode_syntax_all
+
+    " Highlight doc-tests
+    let g:pymode_syntax_doctests = g:pymode_syntax_all
+
+    " Highlight builtin objects (__doc__, self, etc)
+    let g:pymode_syntax_builtin_objs = g:pymode_syntax_all
+
+    " Highlight builtin functions
+    let g:pymode_syntax_builtin_funcs = g:pymode_syntax_all
+
+    " Highlight exceptions
+    let g:pymode_syntax_highlight_exceptions = g:pymode_syntax_all
+
+    " For fast machines
+    let g:pymode_syntax_slow_sync = 0
 
 
 Default keys
@@ -328,6 +370,10 @@ Copyright (C) 2011 Kirill Klenov (klen_)
     **Pyflakes**:
         Copyright (c) 2005 Divmod, Inc.
         http://www.divmod.com/
+
+    **Python syntax for vim**
+        Copyright (c) 2010 Dmitry Vasiliev
+        http://www.hlabs.spb.ru/vim/python.vim
 
 
 License
