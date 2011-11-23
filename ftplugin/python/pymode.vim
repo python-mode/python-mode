@@ -5,8 +5,6 @@ endif
 " Syntax highlight
 if !pymode#Default('g:pymode_syntax', 1) || g:pymode_syntax
     let python_highlight_all=1
-    let python_highlight_exceptions=1
-    let python_highlight_builtins=1
 endif
 
 " Python indent options
