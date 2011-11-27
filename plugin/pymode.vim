@@ -1,6 +1,6 @@
-let g:pymode_version = "0.4.6"
+let g:pymode_version = "0.4.7"
 
-command! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
+com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
 " OPTION: g:pymode -- bool. Run pymode.
 if pymode#Default('g:pymode', 1) || !g:pymode

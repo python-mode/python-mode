@@ -65,6 +65,7 @@ if g:pymode_lint
 
     " DESC: Set commands
     command! -buffer -nargs=0 PyLintToggle :call pymode#lint#Toggle()
+    command! -buffer -nargs=0 PyLintWindowToggle :call pymode#lint#ToggleWindow()
     command! -buffer -nargs=0 PyLintCheckerToggle :call pymode#lint#ToggleChecker()
     command! -buffer -nargs=0 PyLint :call pymode#lint#Check()
 

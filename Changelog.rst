@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-11-27 0.4.7
+-------------------
+* Add `PyLintWindowToggle` command
+* Fix some bugs
+
 ## 2011-11-23 0.4.6
 -------------------
 * Enable all syntax highlighting
