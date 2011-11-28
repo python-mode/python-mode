@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2011-11-27 0.4.7
+## 2011-11-27 0.4.8
 -------------------
 * Add `PyLintWindowToggle` command
 * Fix some bugs
