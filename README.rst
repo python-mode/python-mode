@@ -9,6 +9,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 
 - Highlight syntax errors
 - Highlight and auto fix unused imports
+- Python objects and motion (]], ]m, vac, vim, dim, ...)
 - Strong code completion
 - Code refactoring
 - Python documentation
@@ -27,16 +28,10 @@ See screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first s
 Changelog
 =========
 
-## 2011-11-23 0.4.6
+## 2011-11-30 0.5.0
 -------------------
-* Enable all syntax highlighting
-  For old settings set in your vimrc: ::
-
-    let g:pymode_syntax_builtin_objs = 0
-    let g:pymode_syntax_builtin_funcs = 0
-
-* Change namespace of syntax variables
-  See README
+* Add python objects and motions (beta)
+  :h pymode_motion
 
 
 Requirements
@@ -216,6 +211,9 @@ Other stuff
 
 Default values: ::
 
+    " Load motion plugin
+    let g:pymode_motion = 1
+
     " Load breakpoints plugin
     let g:pymode_breakpoint = 1
 
@@ -291,13 +289,29 @@ Default keys
 ============== =============
 Keys           Command
 ============== =============
-**K**          Show python docs
+**K**          Show python docs (g:pymode_doc enabled)
 -------------- -------------
-**<C-Space>**  Rope autocomplete
+**<C-Space>**  Rope autocomplete (g:pymode_rope enabled)
 -------------- -------------
-**<Leader>r**  Run python
+**<Leader>r**  Run python  (g:pymode_run enabled)
 -------------- -------------
-**<Leader>b**  Set, unset breakpoint
+**<Leader>b**  Set, unset breakpoint (g:pymode_breakpoint enabled)
+-------------- -------------
+[[             Jump on previous class or function (normal, visual, operator modes)
+-------------- -------------
+]]             Jump on next class or function  (normal, visual, operator modes)
+-------------- -------------
+[m             Jump on previous class or method (normal, visual, operator modes)
+-------------- -------------
+]m             Jump on next class or method (normal, visual, operator modes)
+-------------- -------------
+ac             Select a class. Ex: vac, dac, yac, cac (normal, operator modes)
+-------------- -------------
+ic             Select inner class. Ex: vic, dic, yic, cic (normal, operator modes)
+-------------- -------------
+am             Select a function or method. Ex: vam, dam, yam, cam (normal, operator modes)
+-------------- -------------
+im             Select inner function or method. Ex: vim, dim, yim, cim (normal, operator modes)
 ============== =============
 
 .. note:: See also ``:help ropevim.txt``

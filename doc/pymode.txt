@@ -86,6 +86,7 @@ PythonMode. These options should be set in your vimrc.
 |'pymode_options_other'|            Set default pymode options for
                                   python codding
 
+|'pymode_motion'|                   Enable pymode motion stuff
 
         Note:
         Also see |ropevim.txt|
@@ -285,6 +286,26 @@ If this option is set to 1, pymode enable next options for python buffers: >
     setlocal nowrap
     setlocal textwidth=80
 <
+------------------------------------------------------------------------------
+                                                               *'pymode_motion'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 1, pymode enable some python motions. Pymode-motion
+is beta.
+
+================  ============================
+Key               Command
+================  ============================
+[[                Jump on previous class or function (normal, visual, operator modes)
+]]                Jump on next class or function  (normal, visual, operator modes)
+[m                Jump on previous class or method (normal, visual, operator modes)
+]m                Jump on next class or method (normal, visual, operator modes)
+ac                Select a class. Ex: vac, dac, yac, cac (normal, operator modes)
+ic                Select inner class. Ex: vic, dic, yic, cic (normal, operator modes)
+am                Select a function or method. Ex: vam, dam, yam, cam (normal, operator modes)
+im                Select inner function or method. Ex: vim, dim, yim, cim (normal, operator modes)
+================  ============================
 
 
 ==============================================================================

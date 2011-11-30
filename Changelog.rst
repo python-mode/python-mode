@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2011-11-30 0.5.0
+-------------------
+* Add python objects and motions (beta)
+  :h pymode_motion
+
 ## 2011-11-27 0.4.8
 -------------------
 * Add `PyLintWindowToggle` command
