@@ -248,19 +248,19 @@ Default values: ::
     let g:pymode_syntax_all = 1
 
     " Highlight "print" as function
-    leg g:pymode_syntax_print_as_function = 0
+    let g:pymode_syntax_print_as_function = 0
 
     " Highlight indentation errors
-    leg g:pymode_syntax_indent_errors = g:pymode_syntax_all
+    let g:pymode_syntax_indent_errors = g:pymode_syntax_all
 
     " Highlight trailing spaces
-    leg g:pymode_syntax_space_errors = g:pymode_syntax_all
+    let g:pymode_syntax_space_errors = g:pymode_syntax_all
 
     " Highlight string formatting
-    leg g:pymode_syntax_string_formatting = g:pymode_syntax_all
+    let g:pymode_syntax_string_formatting = g:pymode_syntax_all
 
     " Highlight str.format syntax
-    leg g:pymode_syntax_string_format = g:pymode_syntax_all
+    let g:pymode_syntax_string_format = g:pymode_syntax_all
 
     " Highlight string.Template syntax
     let g:pymode_syntax_string_templates = g:pymode_syntax_all
