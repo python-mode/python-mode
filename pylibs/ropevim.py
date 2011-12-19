@@ -203,6 +203,7 @@ class VimUtils(ropemode.environment.Environment):
         if filename != self.filename() or force:
             if other:
                 vim.command('new')
+            filename = '\\ '.join(s.rstrip() for s in filename.split())
             vim.command('e %s' % filename)
             if readonly:
                 vim.command('set nomodifiable')
