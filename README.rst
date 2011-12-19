@@ -189,7 +189,7 @@ Default values: ::
 
     let g:pymode_rope_extended_complete = 1
 
-    let g:pymode_rope_autoimport_modules = ["os","shutil","datetime"])
+    let g:pymode_rope_autoimport_modules = ["os","shutil","datetime"]
 
     let g:pymode_rope_confirm_saving = 1
 
