@@ -15,6 +15,7 @@ endfunction "}}}
 
 
 fun! pymode#motion#move2(pattern, flags, ...) "{{{
+    normal! m'
     let cnt = v:count1 - 1
     let [line, column] = searchpos(a:pattern, a:flags . 'W')
     let indent = indent(line)
