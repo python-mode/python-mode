@@ -74,7 +74,8 @@ endif
 " }}}
 
 
-" PyLint
+" Lint {{{
+
 if g:pymode_lint
 
     " DESC: Set commands
@@ -90,7 +91,11 @@ if g:pymode_lint
 
 endif
 
-" Rope
+" }}}
+
+
+" Rope {{{
+
 if g:pymode_rope
 
     " DESC: Set keys
@@ -106,7 +111,11 @@ if g:pymode_rope
 
 endif
 
-" Run code
+" }}}
+
+
+" Execution {{{
+
 if g:pymode_run
 
     " DESC: Set commands
@@ -117,7 +126,11 @@ if g:pymode_run
 
 endif
 
-" Set breakpoints
+" }}}
+
+
+" Breakpoints {{{
+
 if g:pymode_breakpoint
 
     " DESC: Set keys
@@ -125,12 +138,15 @@ if g:pymode_breakpoint
 
 endif
 
-" OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
-call pymode#Default("g:pymode_utils_whitespaces", 1)
+" }}}
 
-" Utils whitespaces
+
+" Utils {{{
+
 if g:pymode_utils_whitespaces
     au BufWritePre <buffer> :call setline(1,map(getline(1,"$"),'substitute(v:val,"\\s\\+$","","")'))
 endif
+
+" }}}
 
 " vim: fdm=marker:fdl=0

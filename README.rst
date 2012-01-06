@@ -28,10 +28,10 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2011-11-30 0.5.0
+## 2012-01-06 0.5.1
 -------------------
-* Add python objects and motions (beta)
-  :h pymode_motion
+* Happy new year!
+* Objects and motion  fixes
 
 
 Requirements
@@ -211,7 +211,7 @@ Other stuff
 
 Default values: ::
 
-    " Load motion plugin
+    " Load python objects and motion
     let g:pymode_motion = 1
 
     " Load breakpoints plugin

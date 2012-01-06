@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2012-01-06 0.5.1
+-------------------
+* Happy new year!
+* Objects and motion  fixes
+
 ## 2011-11-30 0.5.0
 -------------------
 * Add python objects and motions (beta)

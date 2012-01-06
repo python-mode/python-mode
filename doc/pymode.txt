@@ -1,5 +1,13 @@
 *pymode.txt*  *python-mode.txt*  Python-mode for vim!
 
+    ____  _  _  ____  _   _  _____  _  _     __  __  _____  ____  ____      ~
+   (  _ \( \/ )(_  _)( )_( )(  _  )( \( )___(  \/  )(  _  )(  _ \( ___)     ~
+    )___/ \  /   )(   ) _ (  )(_)(  )  ((___))    (  )(_)(  )(_) ))__)     ~
+   (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
+
+
+                          Version: 0.5.1
+
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
 
@@ -321,6 +329,18 @@ K                 Show python docs for current word under cursor
 C-Space           Rope code assist
 <leader>r         Run current buffer
 <leader>b         Set breakpoints
+[[                Jump on previous class or function (normal, visual, operator modes)
+]]                Jump on next class or function  (normal, visual, operator modes)
+[m                Jump on previous class or method (normal, visual, operator modes)
+]m                Jump on next class or method (normal, visual, operator modes)
+ac c              Operation with a class.
+                  Ex: vac, dac, dc, yac, yc, cac, cc (normal, operator modes)
+ic                Operation with inner class.
+                  Ex: vic, dic, yic, cic (normal, operator modes)
+am m              Operation with function or method.
+                  Ex: vam, dam, dm, yam, ym, cam, cm (normal, operator modes)
+im                Operation with inner function or method.
+                  Ex: vim, dim, yim, cim (normal, operator modes)
 ================  ============================
 
 	Note:
@@ -405,6 +425,11 @@ You may set |exrc| and |secure| in your |vimrc| for auto set custom settings fro
 
 The Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
+
+If you like this plugin, you can send me postcard :) 
+My address is here: Russia, 143400, Krasnogorsk, Shkolnaya 1-19
+Thanks for support!
+
 
 ------------------------------------------------------------------------------
 
