@@ -7,9 +7,9 @@ features like python code looking for bugs, refactoring and some other useful th
 This plugin allow you create python code in vim very easily.
 There is no need to install the pylint_, rope_ or any used python library on your system.
 
+- Python objects and motion (]], 3[[, ]]m, vac, vim, dac, cim, ...)
 - Highlight syntax errors
 - Highlight and auto fix unused imports
-- Python objects and motion (]], ]m, vac, vim, dim, ...)
 - Strong code completion
 - Code refactoring
 - Python documentation
@@ -19,7 +19,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 - Virtualenv support
 - And more...
 
-See screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
+See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
 
 
 .. contents::
@@ -305,11 +305,11 @@ Keys           Command
 -------------- -------------
 ]m             Jump on next class or method (normal, visual, operator modes)
 -------------- -------------
-ac             Select a class. Ex: vac, dac, yac, cac (normal, operator modes)
+ac c           Select a class. Ex: vac, dac, dc, yac, yc, cac, cc (normal, operator modes)
 -------------- -------------
 ic             Select inner class. Ex: vic, dic, yic, cic (normal, operator modes)
 -------------- -------------
-am             Select a function or method. Ex: vam, dam, yam, cam (normal, operator modes)
+am m           Select a function or method. Ex: vam, dam, dm, yam, ym, cam, cm (normal, operator modes)
 -------------- -------------
 im             Select inner function or method. Ex: vim, dim, yim, cim (normal, operator modes)
 ============== =============
@@ -409,6 +409,10 @@ License
 =======
 
 Licensed under a `GNU lesser general public license`_.
+
+If you like this plugin, you can send me postcard :) 
+My address is here: Russia, 143400, Krasnogorsk, Shkolnaya 1-19
+Thanks for support!
 
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html
