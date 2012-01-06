@@ -1,3 +1,6 @@
+" Check indentation level on motion
+" dC dM
+
 fun! pymode#motion#block(lnum) "{{{
     let start = indent(a:lnum)
     let num = a:lnum
@@ -11,18 +14,25 @@ fun! pymode#motion#block(lnum) "{{{
 endfunction "}}}
 
 
-fun! pymode#motion#move(pattern, flags) "{{{
-    let i = v:count1
-    while i > 0
-        let result = searchpos(a:pattern, a:flags.'W')
-        let i = i - 1
+fun! pymode#motion#move2(pattern, flags, ...) "{{{
+    let cnt = v:count1 - 1
+    let [line, column] = searchpos(a:pattern, a:flags . 'W')
+    let indent = indent(line)
+
+    while l:cnt && l:line
+        let [line, column] = searchpos(a:pattern, a:flags . 'W')
+        if indent(line) == l:indent
+            let cnt = l:cnt - 1
+        endif
     endwhile
-    return result
-endfunction "}}} 
+
+    return [line, column]
+
+endfunction "}}}
 
 
 fun! pymode#motion#vmove(pattern, flags) "{{{
-    let end = pymode#motion#move(a:pattern, a:flags)
+    let end = pymode#motion#move2(a:pattern, a:flags)
     normal! gv
     call cursor(end)
 endfunction "}}} 
@@ -35,7 +45,7 @@ endfunction "}}}
 
 fun! pymode#motion#select(pattern, inner) "{{{
     let orig = getpos('.')[1:2]
-    let start = pymode#motion#move(a:pattern, 'bW')
+    let start = pymode#motion#move2(a:pattern, 'cb')
     let eline = pymode#motion#block(start[0])
     let end = [eline, len(getline(eline))]
     call cursor(orig)
