@@ -13,6 +13,7 @@ class RopeMode(object):
         self.project = None
         self.old_content = None
         self.env = env
+        self._assist = None
 
         self._prepare_refactorings()
         self.autoimport = None
@@ -271,7 +272,13 @@ class RopeMode(object):
 
     @decorators.local_command(prefix='P')
     def omni_complete(self, prefix):
-        _CodeAssist(self, self.env).omni_complete(prefix)
+        self._assist.omni_complete(prefix)
+
+    def _find_start(self):
+        self._assist = _CodeAssist(self, self.env)
+        start = (self.env.cursor[1] - self.env.get_offset()
+                + self._assist.starting_offset)
+        self.env._command('let g:pymode_offset = %s' % start)
 
     @decorators.local_command('a')
     def auto_import(self):

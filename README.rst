@@ -28,10 +28,10 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2012-01-06 0.5.1
+## 2012-01-08 0.5.2
 -------------------
-* Happy new year!
-* Objects and motion  fixes
+* Fix ropeomnicompletion
+* Add preview documentation
 
 
 Requirements

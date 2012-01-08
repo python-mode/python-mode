@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2012-01-08 0.5.2
+-------------------
+* Fix ropeomnicompletion
+* Add preview documentation
+
 ## 2012-01-06 0.5.1
 -------------------
 * Happy new year!

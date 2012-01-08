@@ -1,4 +1,4 @@
-let g:pymode_version = "0.5.1"
+let g:pymode_version = "0.5.2"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -273,10 +273,9 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     endfunction "}}}
 
     fun! RopeOmni(findstart, base) "{{{
-        " TODO: Fix omni
-        if a:findstart == 1
-            let start = col('.') - 1
-            return start
+        if a:findstart
+            py ropevim._interface._find_start()
+            return g:pymode_offset
         else
             call RopeOmniComplete()
             return g:pythoncomplete_completions

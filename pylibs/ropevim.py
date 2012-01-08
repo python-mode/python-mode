@@ -12,6 +12,11 @@ import vim
 
 class VimUtils(ropemode.environment.Environment):
 
+    def __init__(self, *args, **kwargs):
+        super(VimUtils, self).__init__(*args, **kwargs)
+        self.completeopt = vim.eval('&completeopt')
+        self.preview = 'preview' in self.completeopt
+
     def ask(self, prompt, default=None, starting=None):
         if starting is None:
             starting = ''
@@ -46,6 +51,9 @@ class VimUtils(ropemode.environment.Environment):
         return call('input("%s", ".", "dir")' % prompt)
 
     def _update_proposals(self, values):
+        self.completeopt = vim.eval('&completeopt')
+        self.preview = 'preview' in self.completeopt
+
         if not self.get('extended_complete'):
             return u','.join(u"'%s'" % self._completion_text(proposal)
                                     for proposal in values)
@@ -299,20 +307,28 @@ class VimUtils(ropemode.environment.Environment):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
         word, _, menu = map(lambda x: x.strip(), proposal.name.partition(':'))
-        ci = dict(word = word, menu = menu or '')
-        kind = ''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3]
+        ci = dict(
+                word = word,
+                info = '',
+                kind = ''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3],
+                menu = menu or '')
 
         if proposal.scope == 'parameter_keyword':
             default = proposal.get_default()
             ci["menu"] += '*' if default is None else '= %s' % default
 
-        if menu is '':
-            obj_doc = proposal.get_doc()
-            ci["menu"] = self._docstring_re.match(obj_doc).group(1) if obj_doc else ''
+        if self.preview and not ci['menu']:
+            doc = proposal.get_doc()
+            ci['info'] = self._docstring_re.match(doc).group(1) if doc else ''
 
-        ci['kind'] = kind
-        ci['menu'] = menu.replace('"', '\\"')
-        return repr(ci).replace(": u'", ": '")
+        return self._conv(ci)
+
+    def _conv(self, obj):
+        if isinstance(obj, dict):
+            return u'{' + u','.join([
+                u"%s:%s" % (self._conv(key), self._conv(value))
+                for key, value in obj.iteritems()]) + u'}'
+        return u'"%s"' % str(obj).replace(u'"', u'\\"')
 
 
 def _vim_name(name):
@@ -375,6 +391,7 @@ class _ValueCompleter(object):
                 result = [proposal for proposal in self.values \
                           if proposal.startswith(arg_lead)]
             vim.command('let s:completions = %s' % result)
+
 
 
 ropemode.decorators.logger.message = echo
