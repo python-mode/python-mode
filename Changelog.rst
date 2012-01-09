@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2012-01-09 0.5.3
+-------------------
+* Prevent the configuration from breaking python-mode
+  (c) Dirk Wallenstein
+
 ## 2012-01-08 0.5.2
 -------------------
 * Fix ropeomnicompletion
@@ -68,7 +73,6 @@ Changelog
 -------------------
 * Add 'g:pymode_rope_always_show_complete_menu' option
 * Some pylint fixes
-
 
 ## 2011-10-25 0.3.0
 -------------------

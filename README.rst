@@ -28,10 +28,10 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2012-01-08 0.5.2
+## 2012-01-09 0.5.3
 -------------------
-* Fix ropeomnicompletion
-* Add preview documentation
+* Prevent the configuration from breaking python-mode
+  (c) Dirk Wallenstein
 
 
 Requirements
