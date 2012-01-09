@@ -88,9 +88,9 @@ linter = lint.PyLinter()
 pylint_re = re.compile('^[^:]+:(\d+): \[([EWRCI]+)[^\]]*\] (.*)$')
 
 checkers.initialize(linter)
+linter.load_file_configuration(vim.eval("g:pymode_lint_config"))
 linter.set_option("output-format", "parseable")
 linter.set_option("reports", 0)
-linter.load_file_configuration(vim.eval("g:pymode_lint_config"))
 
 # Pyflakes setup
 
