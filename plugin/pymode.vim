@@ -64,6 +64,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         sign define C text=CC texthl=Comment
         sign define R text=RR texthl=Visual
         sign define E text=EE texthl=Error
+        sign define I text=II texthl=Info
 
     endif
 
