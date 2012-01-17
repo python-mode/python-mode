@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.5.4
+                          Version: 0.5.5
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -56,6 +56,8 @@ PythonMode. These options should be set in your vimrc.
 |'pymode_lint'|                     Turns off pylint script
 
 |'pymode_lint_checker'|             Switch code checkers (pylint, pyflakes)
+
+|'pymode_lint_onfly'|               Run linter on the fly
 
 |'pymode_lint_config'|              Filepath to pylinc configuration
 
@@ -152,6 +154,13 @@ Values: "pylint" or "pyflakes"
 Default: "pylint".
 
 This option set code checker.
+
+------------------------------------------------------------------------------
+                                                           *'pymode_lint_onfly'*
+Values: 0 or 1
+Default: 0
+
+This option enabled "on the fly" code checking
 
 ------------------------------------------------------------------------------
                                                           *'pymode_lint_config'*
@@ -427,7 +436,7 @@ The Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
 
 If you like this plugin, you can send me postcard :) 
-My address is here: Russia, 143400, Krasnogorsk, Shkolnaya 1-19
+My address is here: Russia, 143401, Krasnogorsk, Shkolnaya 1 kv. 19
 Thanks for support!
 
 

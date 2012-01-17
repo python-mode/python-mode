@@ -89,6 +89,10 @@ if g:pymode_lint
         au BufWritePost <buffer> PyLint
     endif
 
+    if g:pymode_lint_onfly
+        au InsertLeave <buffer> PyLint
+    endif
+
 endif
 
 " }}}

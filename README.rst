@@ -136,6 +136,9 @@ Default values: ::
     " values (pylint, pyflakes)
     let g:pymode_lint_checker = "pylint"
 
+    " Run linter on the fly
+    let g:pymode_lint_onfly = 0
+
     " Pylint configuration file
     " If file not found use 'pylintrc' from python-mode plugin directory
     let g:pymode_lint_config = "$HOME/.pylintrc"
@@ -411,7 +414,7 @@ License
 Licensed under a `GNU lesser general public license`_.
 
 If you like this plugin, you can send me postcard :) 
-My address is here: Russia, 143400, Krasnogorsk, Shkolnaya 1-19
+My address is here: Russia, 143401, Krasnogorsk, Shkolnaya 1 kv. 19
 Thanks for support!
 
 
