@@ -7,7 +7,7 @@ features like python code looking for bugs, refactoring and some other useful th
 This plugin allow you create python code in vim very easily.
 There is no need to install the pylint_, rope_ or any used python library on your system.
 
-- Python objects and motion (]], 3[[, ]]m, vac, vim, dac, cim, ...)
+- Python objects and motion (]], 3[[, ]]M, vaC, viM, daC, ciM, ...)
 - Highlight syntax errors
 - Highlight and auto fix unused imports
 - Strong code completion
@@ -301,17 +301,17 @@ Keys           Command
 -------------- -------------
 ]]             Jump on next class or function  (normal, visual, operator modes)
 -------------- -------------
-[m             Jump on previous class or method (normal, visual, operator modes)
+[M             Jump on previous class or method (normal, visual, operator modes)
 -------------- -------------
-]m             Jump on next class or method (normal, visual, operator modes)
+]M             Jump on next class or method (normal, visual, operator modes)
 -------------- -------------
-ac c           Select a class. Ex: vac, dac, dc, yac, yc, cac, cc (normal, operator modes)
+aC C           Select a class. Ex: vaC, daC, dC, yaC, yC, caC, cC (normal, operator modes)
 -------------- -------------
-ic             Select inner class. Ex: vic, dic, yic, cic (normal, operator modes)
+iC             Select inner class. Ex: viC, diC, yiC, ciC (normal, operator modes)
 -------------- -------------
-am m           Select a function or method. Ex: vam, dam, dm, yam, ym, cam, cm (normal, operator modes)
+aM M           Select a function or method. Ex: vaM, daM, dM, yaM, yM, caM, cM (normal, operator modes)
 -------------- -------------
-im             Select inner function or method. Ex: vim, dim, yim, cim (normal, operator modes)
+iM             Select inner function or method. Ex: viM, diM, yiM, ciM (normal, operator modes)
 ============== =============
 
 .. note:: See also ``:help ropevim.txt``

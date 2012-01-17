@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.5.3
+                          Version: 0.5.4
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -307,12 +307,12 @@ Key               Command
 ================  ============================
 [[                Jump on previous class or function (normal, visual, operator modes)
 ]]                Jump on next class or function  (normal, visual, operator modes)
-[m                Jump on previous class or method (normal, visual, operator modes)
-]m                Jump on next class or method (normal, visual, operator modes)
-ac                Select a class. Ex: vac, dac, yac, cac (normal, operator modes)
-ic                Select inner class. Ex: vic, dic, yic, cic (normal, operator modes)
-am                Select a function or method. Ex: vam, dam, yam, cam (normal, operator modes)
-im                Select inner function or method. Ex: vim, dim, yim, cim (normal, operator modes)
+[M                Jump on previous class or method (normal, visual, operator modes)
+]M                Jump on next class or method (normal, visual, operator modes)
+aC                Select a class. Ex: vaC, daC, yaC, caC (normal, operator modes)
+iC                Select inner class. Ex: viC, diC, yiC, ciC (normal, operator modes)
+aM                Select a function or method. Ex: vaM, daM, yaM, caM (normal, operator modes)
+iM                Select inner function or method. Ex: viM, diM, yiM, ciM (normal, operator modes)
 ================  ============================
 
 
@@ -331,16 +331,16 @@ C-Space           Rope code assist
 <leader>b         Set breakpoints
 [[                Jump on previous class or function (normal, visual, operator modes)
 ]]                Jump on next class or function  (normal, visual, operator modes)
-[m                Jump on previous class or method (normal, visual, operator modes)
-]m                Jump on next class or method (normal, visual, operator modes)
-ac c              Operation with a class.
-                  Ex: vac, dac, dc, yac, yc, cac, cc (normal, operator modes)
-ic                Operation with inner class.
-                  Ex: vic, dic, yic, cic (normal, operator modes)
-am m              Operation with function or method.
-                  Ex: vam, dam, dm, yam, ym, cam, cm (normal, operator modes)
-im                Operation with inner function or method.
-                  Ex: vim, dim, yim, cim (normal, operator modes)
+[M                Jump on previous class or method (normal, visual, operator modes)
+]M                Jump on next class or method (normal, visual, operator modes)
+aC C              Operation with a class.
+                  Ex: vaC, daC, dC, yaC, yC, caC, cC (normal, operator modes)
+iC                Operation with inner class.
+                  Ex: viC, diC, yiC, ciC (normal, operator modes)
+aM M              Operation with function or method.
+                  Ex: vaM, daM, dM, yaM, yM, caM, cM (normal, operator modes)
+iM                Operation with inner function or method.
+                  Ex: viM, diM, yiM, ciM (normal, operator modes)
 ================  ============================
 
 	Note:

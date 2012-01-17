@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2012-01-17 0.5.4
+-------------------
+* Add a sign for info messages from pylint.
+  (c) Fredrik Henrysson
+* Change motion keys: vic - viC, dam - daM and etc
+
 ## 2012-01-09 0.5.3
 -------------------
 * Prevent the configuration from breaking python-mode
