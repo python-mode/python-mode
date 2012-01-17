@@ -28,10 +28,12 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2012-01-09 0.5.3
+## 2012-01-17 0.5.5
 -------------------
-* Prevent the configuration from breaking python-mode
-  (c) Dirk Wallenstein
+* Add a sign for info messages from pylint.
+  (c) Fredrik Henrysson
+* Change motion keys: vic - viC, dam - daM and etc
+* Add 'g:pymode_lint_onfly' option
 
 
 Requirements
