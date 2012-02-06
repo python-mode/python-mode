@@ -10,12 +10,23 @@ function! pymode#lint#Check()
     endif	
     exe "py ".g:pymode_lint_checker."()"
     call setqflist(b:qf_list, 'r')
+
     if g:pymode_lint_cwindow
         call pymode#QuickfixOpen(0, 0, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
     endif
+
     if g:pymode_lint_signs
         call pymode#PlaceSigns()
     endif
+
+    if g:pymode_lint_message
+        let b:errors = {}
+        for v in b:qf_list
+            let b:errors[v['lnum']] = v['text']
+        endfor
+        call pymode#lint#show_errormessage()
+    endif
+
 endfunction
 
 fun! pymode#lint#Toggle() "{{{
@@ -45,3 +56,17 @@ fun! pymode#lint#toggle_win(toggle, msg) "{{{
         cclose
     endif
 endfunction "}}}
+
+fun! pymode#lint#show_errormessage() "{{{
+    let cursor = getpos(".")
+    if !pymode#Default('b:errors', {}) || !len(b:errors)
+        return
+    endif
+    if has_key(b:errors, l:cursor[1])
+        call pymode#WideMessage(b:errors[l:cursor[1]])
+        let b:show_message = 1
+    else
+        let b:show_message = 0
+        echo
+    endif
+endfunction " }}}

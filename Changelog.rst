@@ -1,6 +1,14 @@
 Changelog
 =========
 
+## 2012-02-06 0.5.6
+-------------------
+* Fix 'g:pymode_syntax' option
+* Show error message in bottom part of screen
+  see 'g:pymode_lint_message'
+* Fix pylint for windows users
+* Fix breakpoint command (Use pdb when idpb not installed)
+
 ## 2012-01-17 0.5.5
 -------------------
 * Add a sign for info messages from pylint.

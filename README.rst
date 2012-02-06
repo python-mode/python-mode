@@ -151,6 +151,9 @@ Default values: ::
     " Auto open cwindow if errors be finded
     let g:pymode_lint_cwindow = 1
 
+    " Show error message if cursor placed at the error line
+    let g:pymode_lint_message = 1
+
     " Auto jump on first error
     let g:pymode_lint_jump = 0
 

@@ -73,3 +73,12 @@ fun! pymode#ShowCommand(cmd) "{{{
     normal gg
     wincmd p
 endfunction "}}}
+
+" DESC: Show wide message
+fun! pymode#WideMessage(msg) "{{{
+    let x=&ruler | let y=&showcmd
+    set noruler noshowcmd
+    redraw
+    echo strpart(a:msg, 0, &columns-1)
+    let &ruler=x | let &showcmd=y
+endfunction "}}}

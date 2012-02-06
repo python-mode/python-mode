@@ -65,6 +65,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_cwindow'|             Show cwindow
 
+|'pymode_lint_message'|             Show current line errors in bottom
+
 |'pymode_lint_signs'|               Place signs
 
 |'pymode_lint_jump'|                Auto jump on first error
@@ -183,6 +185,13 @@ Values: 0 or 1.
 Default: 1.
 
 If this option is set to 0 then pylint not show cwindow.
+
+------------------------------------------------------------------------------
+                                                         *'pymode_lint_message'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 0 then pylint not show errors in bottom
 
 ------------------------------------------------------------------------------
                                                            *'pymode_lint_signs'*
