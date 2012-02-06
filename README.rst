@@ -420,8 +420,8 @@ License
 Licensed under a `GNU lesser general public license`_.
 
 If you like this plugin, you can send me postcard :) 
-My address is here: Russia, 143401, Krasnogorsk, Shkolnaya 1 kv. 19
-Thanks for support!
+My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
+**Thanks for support!**
 
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html

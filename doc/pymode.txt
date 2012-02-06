@@ -445,7 +445,7 @@ The Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
 
 If you like this plugin, you can send me postcard :) 
-My address is here: Russia, 143401, Krasnogorsk, Shkolnaya 1 kv. 19
+My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 Thanks for support!
 
 
