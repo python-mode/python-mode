@@ -9,6 +9,15 @@ function! pymode#lint#Check()
         endtry
     endif	
     exe "py ".g:pymode_lint_checker."()"
+
+    if g:pymode_lint_message
+        let b:errors = {}
+        for v in b:qf_list
+            let b:errors[v['lnum']] = v['text']
+        endfor
+        call pymode#lint#show_errormessage()
+    endif
+
     call setqflist(b:qf_list, 'r')
 
     if g:pymode_lint_cwindow
@@ -17,14 +26,6 @@ function! pymode#lint#Check()
 
     if g:pymode_lint_signs
         call pymode#PlaceSigns()
-    endif
-
-    if g:pymode_lint_message
-        let b:errors = {}
-        for v in b:qf_list
-            let b:errors[v['lnum']] = v['text']
-        endfor
-        call pymode#lint#show_errormessage()
     endif
 
 endfunction
