@@ -28,13 +28,11 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2012-02-06 0.5.6
+## 2012-02-11 0.5.7
 -------------------
-* Fix 'g:pymode_syntax' option
-* Show error message in bottom part of screen
-  see 'g:pymode_lint_message'
-* Fix pylint for windows users
-* Fix breakpoint command (Use pdb when idpb not installed)
+* Fix 'g:pymode_lint_message' mode error
+* Fix breakpoints
+* Fix python paths and virtualenv detection
 
 
 Requirements

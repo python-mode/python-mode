@@ -1,4 +1,4 @@
-let g:pymode_version = "0.5.6"
+let g:pymode_version = "0.5.7"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -21,14 +21,29 @@ endif
 " DESC: Fix python path
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 python << EOF
-import sys, vim
-from os import path as op
+import sys, vim, os
 
-sys.path = [
-    op.join(op.dirname(op.dirname(vim.eval("expand('<sfile>:p')"))),
-    'pylibs'), vim.eval("getcwd()") ] + sys.path
+curpath = vim.eval("getcwd()")
+libpath = os.path.join(os.path.dirname(os.path.dirname(
+    vim.eval("expand('<sfile>:p')"))), 'pylibs')
+
+sys.path = [libpath, curpath] + sys.path
 EOF
 endif
+
+
+" Virtualenv {{{
+
+if !pymode#Default("g:pymode_virtualenv", 1) || g:pymode_virtualenv
+
+    call pymode#Default("g:pymode_virtualenv_enabled", [])
+
+    " Add virtualenv paths
+    call pymode#virtualenv#Activate()
+
+endif
+
+" }}}
 
 
 " Lint {{{
@@ -160,27 +175,6 @@ endif
 " }}}
 
 
-" Breakpoints {{{
-
-if !pymode#Default("g:pymode_breakpoint", 1) || g:pymode_breakpoint
-
-    if !pymode#Default("g:pymode_breakpoint_cmd", "import ipdb; ipdb.set_trace() ### XXX BREAKPOINT")  && has("python")
-python << EOF
-try:
-    import ipdb
-except ImportError:
-    vim.command('let g:pymode_breakpoint_cmd = "import pdb; pdb.set_trace() ### XXX BREAKPOINT"')
-EOF
-    endif
-
-    " OPTION: g:pymode_breakpoint_key -- string. Key for set/unset breakpoint.
-    call pymode#Default("g:pymode_breakpoint_key", "<leader>b")
-
-endif
-
-" }}}
-
-
 " Documentation {{{
 
 if !pymode#Default("g:pymode_doc", 1) || g:pymode_doc
@@ -197,11 +191,21 @@ endif
 " }}}
 
 
-" Virtualenv {{{
+" Breakpoints {{{
 
-if !pymode#Default("g:pymode_virtualenv", 1) || g:pymode_virtualenv
+if !pymode#Default("g:pymode_breakpoint", 1) || g:pymode_breakpoint
 
-    call pymode#Default("g:pymode_virtualenv_enabled", [])
+    if !pymode#Default("g:pymode_breakpoint_cmd", "import ipdb; ipdb.set_trace() ### XXX BREAKPOINT")  && has("python")
+python << EOF
+try:
+    import ipdb
+except ImportError:
+    vim.command('let g:pymode_breakpoint_cmd = "import pdb; pdb.set_trace() ### XXX BREAKPOINT"')
+EOF
+    endif
+
+    " OPTION: g:pymode_breakpoint_key -- string. Key for set/unset breakpoint.
+    call pymode#Default("g:pymode_breakpoint_key", "<leader>b")
 
 endif
 

@@ -43,22 +43,6 @@ endif
 " }}}
 
 
-" Paths {{{
-
-" Fix path for project
-if g:pymode
-    py curpath = vim.eval('getcwd()')
-    py curpath in sys.path or sys.path.append(curpath)
-endif
-
-" Add virtualenv paths
-if g:pymode_virtualenv && exists("$VIRTUAL_ENV")
-    call pymode#virtualenv#Activate()
-endif
-
-" }}}
-
-
 " Documentation {{{
 
 if g:pymode_doc

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2012-02-11 0.5.7
+-------------------
+* Fix 'g:pymode_lint_message' mode error
+* Fix breakpoints
+* Fix python paths and virtualenv detection
+
 ## 2012-02-06 0.5.6
 -------------------
 * Fix 'g:pymode_syntax' option
