@@ -1,5 +1,9 @@
 fun! pymode#virtualenv#Activate() "{{{
 
+    if !exists("$VIRTUAL_ENV")
+        return
+    endif
+
     for env in g:pymode_virtualenv_enabled
         if env == $VIRTUAL_ENV
             return 0
@@ -7,7 +11,6 @@ fun! pymode#virtualenv#Activate() "{{{
     endfor
 
     call add(g:pymode_virtualenv_enabled, $VIRTUAL_ENV)
-    echomsg "Enabled virtualenv: " . $VIRTUAL_ENV
 
 python << EOF
 ve_dir = os.environ['VIRTUAL_ENV']
