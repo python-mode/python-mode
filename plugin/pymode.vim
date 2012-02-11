@@ -1,4 +1,4 @@
-let g:pymode_version = "0.5.7"
+let g:pymode_version = "0.5.8"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -11,10 +11,11 @@ endif
 " DESC: Check python support
 if !has('python')
     echoerr expand("<sfile>:t") . " required vim compiled with +python."
-    echoerr "Pymode rope, pylint and virtualenv plugins will be disabled."
-    let g:pymode_lint = 0
-    let g:pymode_rope = 0
-    let g:pymode_path = 0
+    let g:pymode_lint       = 0
+    let g:pymode_rope       = 0
+    let g:pymode_path       = 0
+    let g:pymode_doc        = 0
+    let g:pymode_run        = 0
     let g:pymode_virtualenv = 0
 endif
 
@@ -179,10 +180,6 @@ endif
 
 if !pymode#Default("g:pymode_doc", 1) || g:pymode_doc
 
-    if !pymode#CheckProgram("pydoc", "or disable pymode_doc.")
-        let g:pymode_doc = 0
-    endif
-
     " OPTION: g:pymode_doc_key -- string. Key for show python documantation.
     call pymode#Default("g:pymode_doc_key", "K")
 
@@ -216,11 +213,7 @@ endif
 
 if !pymode#Default("g:pymode_run", 1) || g:pymode_run
 
-    if !pymode#CheckProgram("python", "or disable pymode_run.")
-        let g:pymode_run = 0
-    endif
-
-    " OPTION: g:pymode_doc_key -- string. Key for show python documantation.
+    " OPTION: g:pymode_doc_key -- string. Key for show python documentation.
     call pymode#Default("g:pymode_run_key", "<leader>r")
 
 endif

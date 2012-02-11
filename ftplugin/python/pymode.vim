@@ -52,6 +52,7 @@ if g:pymode_doc
 
     " DESC: Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode#doc#Show(expand('<cword>'))<CR>"
+    exe "vnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode#doc#Show('<C-R><C-A>')<CR>"
 
 endif
 
@@ -115,10 +116,11 @@ endif
 if g:pymode_run
 
     " DESC: Set commands
-    command! -buffer -nargs=0 Pyrun call pymode#run#Run()
+    command! -buffer -nargs=0 -range=% Pyrun call pymode#run#Run(<f-line1>, <f-line2>)
 
     " DESC: Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_run_key ":Pyrun<CR>"
+    exe "vnoremap <silent> <buffer> " g:pymode_run_key ":Pyrun<CR>"
 
 endif
 
