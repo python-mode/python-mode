@@ -494,6 +494,10 @@ This is used by the global evaluation report (RP0004).'}),
             # if it's actually a c extension)
             self.current_file = astng.file
             self.check_astng_module(astng, walker, rawcheckers)
+
+            # Close file for windows users
+            astng.file_stream.close()
+
         # notify global end
         self.set_current_module('')
         self.stats['statement'] = walker.nbstatements
@@ -632,7 +636,7 @@ def report_messages_stats(sect, stats, _):
     if not stats['by_msg']:
         # don't print this report when we didn't detected any errors
         raise EmptyReport()
-    in_order = sorted([(value, msg_id) 
+    in_order = sorted([(value, msg_id)
                        for msg_id, value in stats['by_msg'].items()
                        if not msg_id.startswith('I')])
     in_order.reverse()
@@ -809,28 +813,28 @@ are done by default'''}),
         # add some help section
         linter.add_help_section('Environment variables', config.ENV_HELP, level=1)
         linter.add_help_section('Output', '''
-Using the default text output, the message format is :                          
-                                                                                
-        MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE                                
-                                                                                
-There are 5 kind of message types :                                             
-    * (C) convention, for programming standard violation                        
-    * (R) refactor, for bad code smell                                          
-    * (W) warning, for python specific problems                                 
-    * (E) error, for probable bugs in the code                                  
+Using the default text output, the message format is :
+
+        MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE
+
+There are 5 kind of message types :
+    * (C) convention, for programming standard violation
+    * (R) refactor, for bad code smell
+    * (W) warning, for python specific problems
+    * (E) error, for probable bugs in the code
     * (F) fatal, if an error occurred which prevented pylint from doing further
 processing.
         ''', level=1)
         linter.add_help_section('Output status code', '''
-Pylint should leave with following status code:                                 
-    * 0 if everything went fine                                                 
-    * 1 if a fatal message was issued                                           
-    * 2 if an error message was issued                                          
-    * 4 if a warning message was issued                                         
-    * 8 if a refactor message was issued                                        
-    * 16 if a convention message was issued                                     
-    * 32 on usage error                                                         
-                                                                                
+Pylint should leave with following status code:
+    * 0 if everything went fine
+    * 1 if a fatal message was issued
+    * 2 if an error message was issued
+    * 4 if a warning message was issued
+    * 8 if a refactor message was issued
+    * 16 if a convention message was issued
+    * 32 on usage error
+
 status 1 to 16 will be bit-ORed so you can know which different categories has
 been issued by analysing pylint output status code
         ''', level=1)
