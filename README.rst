@@ -28,11 +28,11 @@ See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my f
 Changelog
 =========
 
-## 2012-02-11 0.5.7
+## 2012-02-12 0.5.8
 -------------------
-* Fix 'g:pymode_lint_message' mode error
-* Fix breakpoints
-* Fix python paths and virtualenv detection
+* Fix pylint for Windows users
+* Python documentation search running from Vim (delete g:pydoc option)
+* Python code execution running from Vim (delete g:python option)
 
 
 Requirements
@@ -108,9 +108,6 @@ Default values: ::
 
     " Key for show python documentation
     let g:pymode_doc_key = 'K'
-
-    " Executable command for documentation search
-    let g:pydoc = 'pydoc'
 
 
 Run python code

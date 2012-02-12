@@ -47,8 +47,6 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_doc_key'|                  Key for show documentation
 
-|'pydoc'|                           Command for run pydoc
-
 |'pymode_run'|                      Turns off the run code script
 
 |'pymode_run_key'|                  Key for run python code
@@ -123,12 +121,6 @@ If this option is set to 0 then docs script is disabled.
 Default: 'K'.
 
 Set key for show python documentation.
-
-------------------------------------------------------------------------------
-                                                                       *'pydoc'*
-Default: 'pydoc'.
-
-Set command for documentation search.
 
 ------------------------------------------------------------------------------
                                                                   *'pymode_run'*

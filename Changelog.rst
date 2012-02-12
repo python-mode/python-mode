@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## 2012-02-12 0.5.8
+-------------------
+* Fix pylint for Windows users
+* Python documentation search running from Vim (delete g:pydoc option)
+* Python code execution running from Vim (delete g:python option)
+
 ## 2012-02-11 0.5.7
 -------------------
 * Fix 'g:pymode_lint_message' mode error
