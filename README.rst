@@ -153,6 +153,10 @@ Default values: ::
     " Auto jump on first error
     let g:pymode_lint_jump = 0
 
+    " Hold cursor in current window
+    " when quickfix is open
+    let g:pymode_lint_hold = 0
+
     " Place error signs
     let g:pymode_lint_signs = 1
 

@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2012-02-?? 0.6.0
+-------------------
+* Add 'pymode_lint_hold' option 
+
 ## 2012-02-12 0.5.8
 -------------------
 * Fix pylint for Windows users

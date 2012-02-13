@@ -69,6 +69,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_jump'|                Auto jump on first error
 
+|'pymode_lint_hold'|                Hold cursor in current window
+
 |'pymode_lint_minheight'|           Minimal height of pylint error window
 
 |'pymode_lint_maxheight'|           Maximal height of pylint error window
@@ -198,6 +200,14 @@ Values: 0 or 1.
 Default: 0.
 
 If this option is set to 0 then pylint not jump on first error.
+
+------------------------------------------------------------------------------
+                                                            *'pymode_lint_hold'*
+Values: 0 or 1.
+Default: 0.
+
+If this option is set to 0 then pylint switch on quickfix window when it open
+Not working when |'pymode_lint_jump'| enabled.
 
 ------------------------------------------------------------------------------
                                                        *'pymode_lint_minheight'*

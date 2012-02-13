@@ -21,7 +21,7 @@ function! pymode#lint#Check()
     call setqflist(b:qf_list, 'r')
 
     if g:pymode_lint_cwindow
-        call pymode#QuickfixOpen(0, 0, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
+        call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
     endif
 
     if g:pymode_lint_signs

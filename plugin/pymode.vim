@@ -1,4 +1,4 @@
-let g:pymode_version = "0.5.8"
+let g:pymode_version = "0.6.0"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -71,6 +71,10 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     " OPTION: g:pymode_lint_jump -- int. Jump on first error.
     call pymode#Default("g:pymode_lint_jump", 0)
+
+    " OPTION: g:pymode_lint_hold -- int. Hold cursor on current window when
+    " quickfix open
+    call pymode#Default("g:pymode_lint_hold", 0)
 
     " OPTION: g:pymode_lint_minheight -- int. Minimal height of pymode lint window
     call pymode#Default("g:pymode_lint_minheight", 3)
