@@ -10,18 +10,22 @@ function! pymode#lint#Check()
     endif	
     exe "py ".g:pymode_lint_checker."()"
 
+    if len(b:qf_list) || (exists('b:errors') && len(b:errors))
+
+        call setqflist(b:qf_list, 'r')
+
+        if g:pymode_lint_cwindow
+            call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
+        endif
+
+    endif
+
     if g:pymode_lint_message
         let b:errors = {}
         for v in b:qf_list
             let b:errors[v['lnum']] = v['text']
         endfor
         call pymode#lint#show_errormessage()
-    endif
-
-    call setqflist(b:qf_list, 'r')
-
-    if g:pymode_lint_cwindow
-        call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
     endif
 
     if g:pymode_lint_signs

@@ -31,7 +31,7 @@ endfunction "}}}
 fun! pymode#PlaceSigns() "{{{
     sign unplace *
     for item in filter(getqflist(), 'v:val.bufnr != ""')
-        execute printf('sign place 1 line=%d name=%s buffer=%d', item.lnum, item.type, item.bufnr)
+        execute printf('silent! sign place 1 line=%d name=%s buffer=%d', item.lnum, item.type, item.bufnr)
     endfor
 endfunction "}}}
 
