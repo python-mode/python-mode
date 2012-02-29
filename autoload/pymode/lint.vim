@@ -8,7 +8,8 @@ function! pymode#lint#Check()
             return 0
         endtry
     endif	
-    exe "py ".g:pymode_lint_checker."()"
+
+    py check_file()
 
     if len(b:qf_list) || (exists('b:errors') && len(b:errors))
 

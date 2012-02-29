@@ -82,6 +82,12 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_maxheight -- int. Maximal height of pymode lint window
     call pymode#Default("g:pymode_lint_maxheight", 6)
 
+    " OPTION: g:pymode_lint_ignore -- string. Skip errors and warnings (e.g. E4,W)
+    call pymode#Default("g:pymode_lint_ignore", "E501")
+
+    " OPTION: g:pymode_lint_select -- string. Select errors and warnings (e.g. E4,W)
+    call pymode#Default("g:pymode_lint_select", "")
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if !pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs
 
@@ -99,82 +105,8 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
     endif
 
-python << EOF
-import os
-import StringIO
-import _ast
-import re
+    py from pymode import check_file
 
-from logilab.astng.builder import MANAGER
-from pylint import lint, checkers
-from pyflakes import checker
-
-
-# Pylint setup
-linter = lint.PyLinter()
-pylint_re = re.compile('^(?:.:)?[^:]+:(\d+): \[([EWRCI]+)[^\]]*\] (.*)$')
-
-checkers.initialize(linter)
-linter.load_file_configuration(vim.eval("g:pymode_lint_config"))
-linter.set_option("output-format", "parseable")
-linter.set_option("reports", 0)
-
-# Pyflakes setup
-
-# Pylint check
-def pylint():
-    filename = vim.current.buffer.name
-    MANAGER.astng_cache.clear()
-    linter.reporter.out = StringIO.StringIO()
-    linter.check(filename)
-    qf = []
-    for w in linter.reporter.out.getvalue().split('\n'):
-        test = pylint_re.match(w)
-        test and qf.append(dict(
-                filename = filename,
-                bufnr = vim.current.buffer.number,
-                lnum = test.group(1),
-                type = test.group(2),
-                text = test.group(3).replace("'", "\""),
-            ))
-    vim.command('let b:qf_list = %s' % repr(qf))
-
-# Pyflakes check
-def pyflakes():
-    filename = vim.current.buffer.name
-    codeString = file(filename, 'U').read() + '\n'
-    qf = []
-    try:
-        tree = compile(codeString, filename, "exec", _ast.PyCF_ONLY_AST)
-
-    except SyntaxError, value:
-        msg = value.args[0]
-        if codeString is None:
-            vim.command('echoerr "%s: problem decoding source"' % filename)
-        else:
-            lineno, _, text = value.lineno, value.offset, value.text
-            qf.append(dict(
-                filename = filename,
-                bufnr = vim.current.buffer.number,
-                lnum = str(lineno),
-                text = msg,
-                type = 'E'
-            ))
-
-    else:
-        w = checker.Checker(tree, filename)
-        w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
-        for w in w.messages:
-            qf.append(dict(
-                filename = filename,
-                bufnr = vim.current.buffer.number,
-                lnum = str(w.lineno),
-                text = w.message % w.message_args,
-                type = 'E'
-            ))
-
-    vim.command('let b:qf_list = %s' % repr(qf))
-EOF
 endif
 
 " }}}
