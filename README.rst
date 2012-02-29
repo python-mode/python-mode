@@ -1,7 +1,7 @@
 Python-mode, Python in VIM
 ##########################
 
-Python-mode is a vim plugin that allows you to use the pylint_, rope_, pydoc_, pyflakes_ libraries in vim to provide
+Python-mode is a vim plugin that allows you to use the pylint_, rope_, pydoc_, pyflakes_, pep8_, mccabe_ libraries in vim to provide
 features like python code looking for bugs, refactoring and some other useful things.
 
 This plugin allow you create python code in vim very easily.
@@ -17,6 +17,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 - Go to definition
 - Powerful customization
 - Virtualenv support
+- Many linters (pylint_, pyflakes_, ...) that can be run simultaneously
 - And more...
 
 See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
@@ -130,9 +131,17 @@ Default values: ::
     " Load pylint code plugin
     let g:pymode_lint = 1
 
-    " Switch pylint or pyflakes code checker
-    " values (pylint, pyflakes)
+    " Switch pylint, pyflakes, pep8, mccabe code-checkers
+    " Can have multiply values "pep8,pyflakes,mcccabe"
     let g:pymode_lint_checker = "pylint"
+
+    " Skip errors and warnings
+    " E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc
+    let g:pymode_lint_ignore = "E501"
+
+    " Select errors and warnings
+    " E.g. "E4,W"
+    let g:pymode_lint_select = ""
 
     " Run linter on the fly
     let g:pymode_lint_onfly = 0
@@ -430,3 +439,5 @@ My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Kle
 .. _rope: http://rope.sourceforge.net/
 .. _pydoc: http://docs.python.org/library/pydoc.html
 .. _pathogen: https://github.com/tpope/vim-pathogen
+.. _pep8: http://pypi.python.org/pypi/pep8
+.. _mccabe: http://en.wikipedia.org/wiki/Cyclomatic_complexity

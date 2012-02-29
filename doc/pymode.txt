@@ -53,7 +53,11 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint'|                     Turns off pylint script
 
-|'pymode_lint_checker'|             Switch code checkers (pylint, pyflakes)
+|'pymode_lint_checker'|             Switch code checkers (pylint, pyflakes, pep8, mccabe)
+
+|'pymode_lint_ignore'|              Skip errors and warnings
+
+|'pymode_lint_select'|              Select errors and warnings
 
 |'pymode_lint_onfly'|               Run linter on the fly
 
@@ -146,10 +150,32 @@ If this option is set to 0 then pylint script is disabled.
 
 ------------------------------------------------------------------------------
                                                          *'pymode_lint_checker'*
-Values: "pylint" or "pyflakes"
+Values: "pylint", "pyflakes", "pep8", "mccabe"
+        You can set many checkers. E.g. "pyflakes,pep8,mccabe" ~
+
 Default: "pylint".
 
-This option set code checker.
+This option set code checkers.
+
+------------------------------------------------------------------------------
+                                                          *'pymode_lint_ignore'*
+Values: IDs of errors, separated by commas or empty string
+        E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc ~
+
+Default: "E501".
+
+Skip errors and warnings.
+See also: |'pymode_lint_select'|, |'pymode_lint_config'|
+
+------------------------------------------------------------------------------
+                                                         *'pymode_lint_select'*
+Values: IDs of errors, separated by commas or empty string
+        E.g. "W002,C" Force W002 and all C-ids ~
+
+Default: "".
+
+Select errors and warnings.
+See also: |'pymode_lint_ignore'|, |'pymode_lint_config'|
 
 ------------------------------------------------------------------------------
                                                            *'pymode_lint_onfly'*
@@ -165,6 +191,8 @@ Default: "$HOME/.pylintrc"
 
 If this option is set path to pylint configuration. If configuration not found
 uses file 'pylintrc' from python-mode sources.
+
+See also: |'pymode_lint_ignore'|, |'pymode_lint_select'|
 
 ------------------------------------------------------------------------------
                                                            *'pymode_lint_write'*
