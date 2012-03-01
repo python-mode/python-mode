@@ -28,12 +28,14 @@ fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpE
     endif
 endfunction "}}}
 
+
 fun! pymode#PlaceSigns() "{{{
     sign unplace *
     for item in filter(getqflist(), 'v:val.bufnr != ""')
         execute printf('silent! sign place 1 line=%d name=%s buffer=%d', item.lnum, item.type, item.bufnr)
     endfor
 endfunction "}}}
+
 
 fun! pymode#CheckProgram(name, append) "{{{
     let name = 'g:' . a:name
@@ -73,6 +75,7 @@ fun! pymode#ShowCommand(cmd) "{{{
     normal gg
     wincmd p
 endfunction "}}}
+
 
 " DESC: Show wide message
 fun! pymode#WideMessage(msg) "{{{

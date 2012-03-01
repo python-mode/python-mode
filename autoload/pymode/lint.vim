@@ -1,7 +1,9 @@
 function! pymode#lint#Check()
+
+    if !g:pymode_lint | return | endif
+
     let b:errors = {}
 
-    if g:pymode_lint == 0 | return | endif
     if &modifiable && &modified
         try
             write
@@ -19,17 +21,17 @@ function! pymode#lint#Check()
 
         let g:qf_list = b:qf_list
 
+        if g:pymode_lint_message
+            for v in b:qf_list
+                let b:errors[v['lnum']] = v['text']
+            endfor
+            call pymode#lint#show_errormessage()
+        endif
+
         if g:pymode_lint_cwindow
             call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
         endif
 
-    endif
-
-    if g:pymode_lint_message
-        for v in b:qf_list
-            let b:errors[v['lnum']] = v['text']
-        endfor
-        call pymode#lint#show_errormessage()
     endif
 
     if g:pymode_lint_signs

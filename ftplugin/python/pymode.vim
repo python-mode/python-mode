@@ -90,6 +90,7 @@ if g:pymode_lint
 
         au CursorHold <buffer> call pymode#lint#show_errormessage()
         au CursorMoved <buffer> call pymode#lint#show_errormessage()
+
     endif
 
 endif
