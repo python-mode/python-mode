@@ -13,7 +13,15 @@ def check_file():
     for c in checkers:
         checker = globals().get(c)
         if checker:
-            errors += checker(filename)
+            try:
+                errors += checker(filename)
+            except SyntaxError, e:
+                errors.append(dict(
+                    lnum = e.lineno,
+                    col = e.offset,
+                    text = e.args[0]
+                ))
+                break
 
     for e in errors:
         e.update(
@@ -38,16 +46,7 @@ def check_file():
 
 def mccabe(filename):
     import mccabe as mc
-    try:
-        return mc.get_module_complexity(filename)
-    except SyntaxError, e:
-        lnum, col, msg = e.lineno, e.offset, e.text
-        return [dict(
-            lnum = lnum,
-            col = col,
-            text = msg,
-            type = 'E'
-        )]
+    return mc.get_module_complexity(filename)
 
 
 def pep8(filename):
@@ -77,32 +76,16 @@ def pyflakes(filename):
 
     codeString = file(filename, 'U').read() + '\n'
     errors = []
-    try:
-        tree = compile(codeString, filename, "exec", _ast.PyCF_ONLY_AST)
-
-    except SyntaxError, value:
-        msg = value.args[0]
-        if codeString is None:
-            vim.command('echoerr "%s: problem decoding source"' % filename)
-        else:
-            lnum, col, _ = value.lineno, value.offset, value.text
-            errors.append(dict(
-                lnum = lnum,
-                col = col,
-                text = msg,
-                type = 'E'
-            ))
-
-    else:
-        w = checker.Checker(tree, filename)
-        w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
-        for w in w.messages:
-            errors.append(dict(
-                lnum = w.lineno,
-                col = w.col,
-                text = w.message % w.message_args,
-                type = 'E'
-            ))
+    tree = compile(codeString, filename, "exec", _ast.PyCF_ONLY_AST)
+    w = checker.Checker(tree, filename)
+    w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
+    for w in w.messages:
+        errors.append(dict(
+            lnum = w.lineno,
+            col = w.col,
+            text = w.message % w.message_args,
+            type = 'E'
+        ))
     return errors
 
 
