@@ -90,7 +90,7 @@ def pyflakes(filename):
         for w in w.messages:
             errors.append(dict(
                 lnum = w.lineno,
-                col = w.offset,
+                col = w.col,
                 text = w.message % w.message_args,
                 type = 'E'
             ))
