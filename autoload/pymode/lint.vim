@@ -1,4 +1,6 @@
 function! pymode#lint#Check()
+    let b:errors = {}
+
     if g:pymode_lint == 0 | return | endif
     if &modifiable && &modified
         try
