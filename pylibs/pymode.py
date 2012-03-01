@@ -38,7 +38,16 @@ def check_file():
 
 def mccabe(filename):
     import mccabe as mc
-    return mc.get_module_complexity(filename)
+    try:
+        return mc.get_module_complexity(filename)
+    except SyntaxError, e:
+        lnum, col, msg = e.lineno, e.offset, e.text
+        return [dict(
+            lnum = lnum,
+            col = col,
+            text = msg,
+            type = 'E'
+        )]
 
 
 def pep8(filename):
