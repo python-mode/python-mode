@@ -63,8 +63,7 @@ endif
 
 if g:pymode_lint
 
-    " DESC: Show message flag
-    let b:show_message = 0
+    let b:qf_list = []
 
     " DESC: Set commands
     command! -buffer -nargs=0 PyLintToggle :call pymode#lint#Toggle()
@@ -82,6 +81,13 @@ if g:pymode_lint
     endif
 
     if g:pymode_lint_message
+
+        " DESC: Show message flag
+        let b:show_message = 0
+
+        " DESC: Errors dict
+        let b:errors = {}
+
         au CursorHold <buffer> call pymode#lint#show_errormessage()
         au CursorMoved <buffer> call pymode#lint#show_errormessage()
     endif
