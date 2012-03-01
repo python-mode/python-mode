@@ -1,99 +1,4 @@
 #!/usr/bin/python
-# flake8: noqa
-# pep8.py - Check Python source code formatting, according to PEP 8
-# Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
-#
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation files
-# (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge,
-# publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so,
-# subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-"""
-Check Python source code formatting, according to PEP 8:
-http://www.python.org/dev/peps/pep-0008/
-
-For usage and a list of options, try this:
-$ python pep8.py -h
-
-This program and its regression test suite live here:
-http://github.com/jcrocholl/pep8
-
-Groups of errors and warnings:
-E errors
-W warnings
-100 indentation
-200 whitespace
-300 blank lines
-400 imports
-500 line length
-600 deprecation
-700 statements
-
-You can add checks to this program by writing plugins. Each plugin is
-a simple function that is called for each line of source code, either
-physical or logical.
-
-Physical line:
-- Raw line of text from the input file.
-
-Logical line:
-- Multi-line statements converted to a single line.
-- Stripped left and right.
-- Contents of strings replaced with 'xxx' of same length.
-- Comments removed.
-
-The check function requests physical or logical lines by the name of
-the first argument:
-
-def maximum_line_length(physical_line)
-def extraneous_whitespace(logical_line)
-def blank_lines(logical_line, blank_lines, indent_level, line_number)
-
-The last example above demonstrates how check plugins can request
-additional information with extra arguments. All attributes of the
-Checker object are available. Some examples:
-
-lines: a list of the raw lines from the input file
-tokens: the tokens that contribute to this logical line
-line_number: line number in the input file
-blank_lines: blank lines before this one
-indent_char: first indentation character in this file (' ' or '\t')
-indent_level: indentation (with tabs expanded to multiples of 8)
-previous_indent_level: indentation on previous line
-previous_logical: previous logical line
-
-The docstring of each check function shall be the relevant part of
-text from PEP 8. It is printed if the user enables --show-pep8.
-Several docstrings contain examples directly from the PEP 8 document.
-
-Okay: spam(ham[1], {eggs: 2})
-E201: spam( ham[1], {eggs: 2})
-
-These examples are verified automatically when pep8.py is run with the
---doctest option. You can add examples for your own check functions.
-The format is simple: "Okay" or error/warning code followed by colon
-and space, the rest of the line is example source code. If you put 'r'
-before the docstring, you can use \n for newline, \t for tab and \s
-for space.
-
-"""
-from flake8 import __version__ as flake8_version
-from flake8.pyflakes import __version__ as pep8_version
 
 __version__ = '0.6.1'
 
@@ -110,8 +15,6 @@ try:
     frozenset
 except NameError:
     from sets import ImmutableSet as frozenset
-
-from flake8.util import skip_line
 
 DEFAULT_EXCLUDE = '.svn,CVS,.bzr,.hg,.git'
 DEFAULT_IGNORE = 'E24'
@@ -1003,8 +906,6 @@ class Checker(object):
         """
         Report an error, according to options.
         """
-        if skip_line(self.physical_line):
-            return
         code = text[:4]
         if ignore_code(code):
             return
@@ -1254,8 +1155,7 @@ def process_options(arglist=None):
     Process options passed either via arglist or via command line args.
     """
     global options, args
-    version = '%s (pyflakes: %s, pep8: %s)' % (flake8_version, pep8_version,
-            __version__)
+    version = __version__
     parser = OptionParser(version=version,
                           usage="%prog [options] input ...")
     parser.add_option('--builtins', default=[], action="append",
