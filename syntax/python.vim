@@ -33,7 +33,7 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn keyword pythonException	try except finally
     syn keyword pythonOperator	and in is not or
 
-    if !pymode#Default("g:pymode_syntax_print_as_function", 0) || g:pymode_syntax_print_as_function
+    if !pymode#Default("g:pymode_syntax_print_as_function", 0) || !g:pymode_syntax_print_as_function
         syn keyword pythonStatement print
     endif
 
