@@ -22,9 +22,12 @@ def check_file():
                     text = e.args[0]
                 ))
                 break
+            except Exception, e:
+                print e
 
     for e in errors:
         e.update(
+            text = e.get('text', '').replace("'", "\"").split('\n')[0],
             filename = filename,
             bufnr = vim.current.buffer.number,
         )
@@ -41,7 +44,7 @@ def check_file():
     errors = filter(ignore_error, errors)
     errors = sorted(errors, key=lambda x: x['lnum'])
 
-    vim.command('let b:qf_list = %s' % repr(errors))
+    vim.command(('let b:qf_list = %s' % repr(errors)).replace('\': u', '\': '))
 
 
 def mccabe(filename):
