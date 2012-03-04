@@ -103,10 +103,10 @@ endif
 if g:pymode_rope
 
     " DESC: Set keys
-    noremap <silent> <buffer> <C-c>g :RopeGotoDefinition<CR>
-    noremap <silent> <buffer> <C-c>d :RopeShowDoc<CR>
-    noremap <silent> <buffer> <C-c>f :RopeFindOccurrences<CR>
-    noremap <silent> <buffer> <C-c>m :emenu Rope.<TAB>
+    exec "noremap <silent> <buffer> " . g:pymode_rope_local_prefix . "g :RopeGotoDefinition<CR>"
+    exec "noremap <silent> <buffer> " . g:pymode_rope_local_prefix . "d :RopeShowDoc<CR>"
+    exec "noremap <silent> <buffer> " . g:pymode_rope_local_prefix . "f :RopeFindOccurrences<CR>"
+    exec "noremap <silent> <buffer> " . g:pymode_rope_local_prefix . "m :emenu Rope . <TAB>"
     inoremap <silent> <buffer> <S-TAB> <C-R>=RopeLuckyAssistInsertMode()<CR>
 
     let s:prascm = g:pymode_rope_always_show_complete_menu ? "<C-P>" : ""
