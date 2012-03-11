@@ -9,6 +9,7 @@ Changelog
 * Now g:pymode_lint_checker can have many values
   Ex. "pep8,pyflakes,mccabe"
 * Add 'pymode_lint_ignore' and 'pymode_lint_select' options 
+* Fix rope keys
 
 ## 2012-02-12 0.5.8
 -------------------

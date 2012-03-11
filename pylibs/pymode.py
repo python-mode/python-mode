@@ -27,6 +27,7 @@ def check_file():
 
     for e in errors:
         e.update(
+            col = e.get('col') or '',
             text = e.get('text', '').replace("'", "\"").split('\n')[0],
             filename = filename,
             bufnr = vim.current.buffer.number,
