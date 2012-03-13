@@ -258,6 +258,9 @@ endif
 " }}}
 
 
+" OPTION: g:pymode_folding -- bool. Enable python-mode folding for pyfiles.
+call pymode#Default("g:pymode_folding", 1)
+
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
 call pymode#Default("g:pymode_utils_whitespaces", 1)
 

@@ -24,13 +24,6 @@ if !pymode#Default('g:pymode_options_indent', 1) || g:pymode_options_indent
     setlocal autoindent
 endif
 
-" Python fold options
-if !pymode#Default('g:pymode_options_fold', 1) || g:pymode_options_fold
-    setlocal foldlevelstart=99
-    setlocal foldlevel=99
-    setlocal foldmethod=indent
-endif
-
 " Python other options
 if !pymode#Default('g:pymode_options_other', 1) || g:pymode_options_other
     setlocal complete+=t
@@ -153,5 +146,19 @@ if g:pymode_utils_whitespaces
 endif
 
 " }}}
+
+
+" Folding {{{
+
+if g:pymode_folding
+
+    setlocal foldmethod=expr
+    setlocal foldexpr=pymode#folding#expr(v:lnum)
+    setlocal foldtext=pymode#folding#text()
+
+endif
+
+" }}}
+
 
 " vim: fdm=marker:fdl=0
