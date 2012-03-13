@@ -134,7 +134,7 @@ Default values: ::
 
     " Switch pylint, pyflakes, pep8, mccabe code-checkers
     " Can have multiply values "pep8,pyflakes,mcccabe"
-    let g:pymode_lint_checker = "pylint"
+    let g:pymode_lint_checker = "pyflakes,pep8,mccabe"
 
     " Skip errors and warnings
     " E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc
@@ -329,6 +329,12 @@ Keys           Command
 -------------- -------------
 **<C-Space>**  Rope autocomplete (g:pymode_rope enabled)
 -------------- -------------
+**<C-c>g**     Rope goto definition  (g:pymode_rope enabled)
+-------------- -------------
+**<C-c>d**     Rope show documentation  (g:pymode_rope enabled)
+-------------- -------------
+**<C-c>f**     Rope find occurrences  (g:pymode_rope enabled)
+-------------- -------------
 **<Leader>r**  Run python  (g:pymode_run enabled)
 -------------- -------------
 **<Leader>b**  Set, unset breakpoint (g:pymode_breakpoint enabled)
@@ -421,7 +427,7 @@ Development of pylint-mode happens at github: https://github.com/klen/python-mod
 Copyright
 =========
 
-Copyright (C) 2011 Kirill Klenov (klen_)
+Copyright (C) 2012 Kirill Klenov (klen_)
 
     **Rope**
         Copyright (C) 2006-2010 Ali Gholami Rudi

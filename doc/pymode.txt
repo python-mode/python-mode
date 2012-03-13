@@ -152,7 +152,7 @@ If this option is set to 0 then pylint script is disabled.
 Values: "pylint", "pyflakes", "pep8", "mccabe"
         You can set many checkers. E.g. "pyflakes,pep8,mccabe" ~
 
-Default: "pylint".
+Default: "pyflakes,pep8,mccabe".
 
 This option set code checkers.
 

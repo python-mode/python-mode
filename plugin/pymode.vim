@@ -62,8 +62,8 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_message -- bool. Show current line error message
     call pymode#Default("g:pymode_lint_message", 1)
 
-    " OPTION: g:pymode_lint_checker -- str. Use pylint of pyflakes for check.
-    call pymode#Default("g:pymode_lint_checker", "pylint")
+    " OPTION: g:pymode_lint_checker -- str. Choices are: pylint, pyflakes, pep8, mccabe
+    call pymode#Default("g:pymode_lint_checker", "pyflakes,pep8,mccabe")
 
     " OPTION: g:pymode_lint_config -- str. Path to pylint config file
     call pymode#Default("g:pymode_lint_config", $HOME . "/.pylintrc")
@@ -196,6 +196,9 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
     " OPTION: g:pymode_rope_local_prefix -- string.
     call pymode#Default("g:pymode_rope_local_prefix", "<C-c>r")
+
+    " OPTION: g:pymode_rope_short_prefix -- string.
+    call pymode#Default("g:pymode_rope_short_prefix", "<C-c>")
 
     " OPTION: g:pymode_rope_vim_completion -- bool.
     call pymode#Default("g:pymode_rope_vim_completion", 1)
