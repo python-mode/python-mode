@@ -1,40 +1,25 @@
-" Check indentation level on motion
-" dC dM
-
-fun! pymode#motion#block(lnum) "{{{
-    let start = indent(a:lnum)
-    let num = a:lnum
-    while num
-        let num = nextnonblank(num + 1)
-        if num && indent(num) <= start
-            return num - 1
-        endif
-    endwhile
-    return line('$')
-endfunction "}}}
+" Python-mode motion functions
 
 
-fun! pymode#motion#move2(pattern, flags, ...) "{{{
-    normal! m'
+fun! pymode#motion#move(pattern, flags, ...) "{{{
     let cnt = v:count1 - 1
-    let [line, column] = searchpos(a:pattern, a:flags . 'W')
+    let [line, column] = searchpos(a:pattern, a:flags . 'sW')
     let indent = indent(line)
-
-    while l:cnt && l:line
+    while cnt && line
         let [line, column] = searchpos(a:pattern, a:flags . 'W')
-        if indent(line) == l:indent
-            let cnt = l:cnt - 1
+        if indent(line) == indent
+            let cnt = cnt - 1
         endif
     endwhile
-
     return [line, column]
-
 endfunction "}}}
 
 
-fun! pymode#motion#vmove(pattern, flags) "{{{
-    let end = pymode#motion#move2(a:pattern, a:flags)
-    normal! gv
+fun! pymode#motion#vmove(pattern, flags) range "{{{
+    call cursor(a:lastline, 0)
+    let end = pymode#motion#move(a:pattern, a:flags)
+    call cursor(a:firstline, 0)
+    normal! v
     call cursor(end)
 endfunction "}}} 
 
@@ -45,21 +30,32 @@ endfunction "}}}
 
 
 fun! pymode#motion#select(pattern, inner) "{{{
+    let cnt = v:count1 - 1
     let orig = getpos('.')[1:2]
-    let start = pymode#motion#move2(a:pattern, 'cb')
-    let eline = pymode#motion#block(start[0])
-    let end = [eline, len(getline(eline))]
-    call cursor(orig)
-
-    if pymode#motion#pos_le(start, orig) && pymode#motion#pos_le(orig, end)
-        if a:inner
-            let start = [start[0] + 1, start[1]]
-            let eline = prevnonblank(end[0])
-            let end = [eline, len(getline(eline))] 
+    let snum = pymode#BlockStart(orig[0], a:pattern)
+    if getline(snum) !~ a:pattern
+        return 0
+    endif
+    let enum = pymode#BlockEnd(snum, indent(snum))
+    while cnt
+        let lnum = search(a:pattern, 'nW')
+        if lnum
+            let enum = pymode#BlockEnd(lnum, indent(lnum))
+            call cursor(enum, 1)
         endif
+        let cnt = cnt - 1
+    endwhile
+    if pymode#motion#pos_le([snum, 0], orig) && pymode#motion#pos_le(orig, [enum, 1])
+        if a:inner
+            let snum = snum + 1
+            let enum = prevnonblank(enum)
+        endif
+
+        call cursor(snum, 1)
         normal! v
-        call cursor(start)
-        normal! o
-        call cursor(end)
+        call cursor(enum, len(getline(enum)))
     endif
 endfunction "}}}
+
+
+" vim: fdm=marker:fdl=0
