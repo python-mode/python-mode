@@ -1,3 +1,6 @@
+" Python-mode search by documentation
+
+
 fun! pymode#doc#Show(word) "{{{
     if a:word == ''
         echoerr "No name/symbol under cursor!"
@@ -13,3 +16,6 @@ fun! pymode#doc#Show(word) "{{{
         wincmd p
     endif
 endfunction "}}}
+
+
+" vim: fdm=marker:fdl=0

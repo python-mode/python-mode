@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2012-02-?? 0.6.0
+## 2012-03-?? 0.6.0
 -------------------
 * Add 'pymode_lint_hold' option 
 * Improve pymode loading speed
@@ -10,6 +10,8 @@ Changelog
   Ex. "pep8,pyflakes,mccabe"
 * Add 'pymode_lint_ignore' and 'pymode_lint_select' options 
 * Fix rope keys
+* Fix python motion in visual mode
+* Add folding 'pymode_folding'
 
 ## 2012-02-12 0.5.8
 -------------------

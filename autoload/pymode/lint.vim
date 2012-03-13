@@ -1,4 +1,4 @@
-function! pymode#lint#Check()
+fun! pymode#lint#Check()
 
     if !g:pymode_lint | return | endif
 

@@ -8,19 +8,20 @@ This plugin allow you create python code in vim very easily.
 There is no need to install the pylint_, rope_ or any used python library on your system.
 
 - Python objects and motion (]], 3[[, ]]M, vaC, viM, daC, ciM, ...)
+- Folding of python code
+- Virtualenv support
 - Highlight syntax errors
 - Highlight and auto fix unused imports
+- Many linters (pylint_, pyflakes_, ...) that can be run simultaneously
 - Strong code completion
 - Code refactoring
 - Python documentation
 - Run python code
 - Go to definition
 - Powerful customization
-- Virtualenv support
-- Many linters (pylint_, pyflakes_, ...) that can be run simultaneously
-- And more...
+- And more, more ...
 
-See (old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
+See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
 
 
 .. contents::
@@ -223,13 +224,37 @@ Default values: ::
     let g:pymode_rope_always_show_complete_menu = 0
 
 
+Automatically folding of python code
+--------------------------------------
+
+Default values: ::
+
+    " Enable python folding
+    let g:pymode_folding = 1
+
+
+Vim python motions and operators
+--------------------------------
+
+Default values: ::
+
+    " Enable python objects and motion
+    let g:pymode_motion = 1
+
+
+Virtualenv support
+------------------
+
+Default values: ::
+
+    " Auto fix vim python paths if virtualenv enabled
+    let g:pymode_virtualenv = 1
+
+
 Other stuff
 -----------
 
 Default values: ::
-
-    " Load python objects and motion
-    let g:pymode_motion = 1
 
     " Load breakpoints plugin
     let g:pymode_breakpoint = 1
@@ -240,14 +265,8 @@ Default values: ::
     " Autoremove unused whitespaces
     let g:pymode_utils_whitespaces = 1
 
-    " Auto fix vim python paths if virtualenv enabled
-    let g:pymode_virtualenv = 1
-
     " Set default pymode python indent options
     let g:pymode_options_indent = 1
-
-    " Set default pymode python fold options
-    let g:pymode_options_fold = 1
 
     " Set default pymode python other options
     let g:pymode_options_other = 1

@@ -81,6 +81,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_rope'|                     Turns off rope script
 
+|'pymode_folding'|                  Turns on/off python folding
+
 |'pymode_breakpoint'|               Turns off breakpoint script
 
 |'pymode_breakpoint_key'|           Key for breakpoint
@@ -95,9 +97,6 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_options_indent'|           Set default pymode options for
                                   python indentation
-
-|'pymode_options_fold'|             Set default pymode options for
-                                  python folding
 
 |'pymode_options_other'|            Set default pymode options for
                                   python codding
@@ -319,16 +318,12 @@ If this option is set to 1, pymode enable next options for python buffers: >
     setlocal autoindent
 <
 ------------------------------------------------------------------------------
-                                                         *'pymode_options_fold'*
+                                                              *'pymode_folding'*
 Values: 0 or 1.
 Default: 1.
 
-If this option is set to 1, pymode enable next options for python buffers: >
+If this option is set to 1, pymode enable python-folding.
 
-    setlocal foldlevelstart=99
-    setlocal foldlevel=99
-    setlocal foldmethod=indent
-<
 ------------------------------------------------------------------------------
                                                         *'pymode_options_other'*
 Values: 0 or 1.
