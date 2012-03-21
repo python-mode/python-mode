@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2012-03-?? 0.6.1
+-------------------
+* Fix pymode_run for "unnamed" clipboard
+
 ## 2012-03-13 0.6.0
 -------------------
 * Add 'pymode_lint_hold' option 

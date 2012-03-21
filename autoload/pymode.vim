@@ -74,10 +74,12 @@ endfunction "}}}
 fun! pymode#ShowStr(str) "{{{
     " DESC: Open temp buffer with `str`.
     "
+    let g:pymode_curbuf = bufnr("%")
     call pymode#TempBuffer()
     put! =a:str
     redraw
-    normal gg | wincmd p
+    normal gg 
+    wincmd p
 endfunction "}}}
 
 
@@ -92,7 +94,8 @@ fun! pymode#ShowCommand(cmd) "{{{
         echoerr 'Command fail: '.a:cmd
     endtry
     redraw
-    normal gg | wincmd p
+    normal gg
+    wincmd p
 endfunction "}}}
 
 

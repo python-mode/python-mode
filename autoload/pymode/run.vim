@@ -5,6 +5,6 @@ fun! pymode#run#Run(line1, line2) "{{{
     sil!py execfile(vim.eval('expand("%s:p")'))
     redi END
     call pymode#TempBuffer()
-    normal Pdd
+    normal ""Pdd
     wincmd p
 endfunction "}}}
