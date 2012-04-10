@@ -1,9 +1,15 @@
 Changelog
 =========
 
-## 2012-03-?? 0.6.1
+## 2012-04-10 0.6.1
 -------------------
 * Fix pymode_run for "unnamed" clipboard
+* Add 'pymode_lint_mccabe_complexity' option
+* Update Pep8 to version 1.0.1
+* Warning! Change 'pymode_rope_goto_def_newwin' option
+  for open "goto definition" in new window, set it to 'new' or 'vnew'
+  for horizontally or vertically split
+  If you use default behaviour (in the same buffer), not changes needed.
 
 ## 2012-03-13 0.6.0
 -------------------

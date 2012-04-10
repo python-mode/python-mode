@@ -252,6 +252,9 @@ restructuring can be: >
                                   for "go to definition" result if the definition
                                   found is located in another file. By default the
                                   file is open in the same buffer.
+                                  Values: '' -- same buffer, 'new' --
+                                  horizontally split, 'vnew' --
+                                  vertically split
 
 *'pymode_rope_always_show_complete_menu'*   If set, rope autocompletion menu
 always show.

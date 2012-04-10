@@ -30,7 +30,7 @@ if !pymode#Default('g:pymode_options_other', 1) || g:pymode_options_other
     setlocal formatoptions-=t
     setlocal number
     setlocal nowrap
-    setlocal textwidth=80
+    setlocal textwidth=79
 endif
 
 " }}}

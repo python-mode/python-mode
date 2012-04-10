@@ -209,8 +209,8 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " OPTION: g:pymode_rope_guess_project -- bool.
     call pymode#Default("g:pymode_rope_guess_project", 1)
 
-    " OPTION: g:pymode_rope_goto_def_newwin -- bool.
-    call pymode#Default("g:pymode_rope_goto_def_newwin", 0)
+    " OPTION: g:pymode_rope_goto_def_newwin -- str ('new', 'vnew', '').
+    call pymode#Default("g:pymode_rope_goto_def_newwin", "")
 
     " OPTION: g:pymode_rope_always_show_complete_menu -- bool.
     call pymode#Default("g:pymode_rope_always_show_complete_menu", 0)

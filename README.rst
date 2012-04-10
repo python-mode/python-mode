@@ -222,7 +222,7 @@ Default values: ::
 
     let g:pymode_rope_guess_project = 1
 
-    let g:pymode_rope_goto_def_newwin = 0
+    let g:pymode_rope_goto_def_newwin = ""
 
     let g:pymode_rope_always_show_complete_menu = 0
 
@@ -444,6 +444,10 @@ Copyright (C) 2012 Kirill Klenov (klen_)
     **Pyflakes**:
         Copyright (c) 2005 Divmod, Inc.
         http://www.divmod.com/
+
+    **PEP8**
+        Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
+        http://github.com/jcrocholl/pep8
 
     **Python syntax for vim**
         Copyright (c) 2010 Dmitry Vasiliev
