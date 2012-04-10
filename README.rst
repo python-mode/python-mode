@@ -30,11 +30,15 @@ See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is
 Changelog
 =========
 
-## 2012-02-12 0.5.8
+## 2012-04-10 0.6.2
 -------------------
-* Fix pylint for Windows users
-* Python documentation search running from Vim (delete g:pydoc option)
-* Python code execution running from Vim (delete g:python option)
+* Fix pymode_run for "unnamed" clipboard
+* Add 'pymode_lint_mccabe_complexity' option
+* Update Pep8 to version 1.0.1
+* Warning! Change 'pymode_rope_goto_def_newwin' option
+  for open "goto definition" in new window, set it to 'new' or 'vnew'
+  for horizontally or vertically split
+  If you use default behaviour (in the same buffer), not changes needed.
 
 
 Requirements
