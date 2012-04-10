@@ -1,6 +1,98 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# pep8.py - Check Python source code formatting, according to PEP 8
+# Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-__version__ = '0.6.1'
+"""
+Check Python source code formatting, according to PEP 8:
+http://www.python.org/dev/peps/pep-0008/
+
+For usage and a list of options, try this:
+$ python pep8.py -h
+
+This program and its regression test suite live here:
+http://github.com/jcrocholl/pep8
+
+Groups of errors and warnings:
+E errors
+W warnings
+100 indentation
+200 whitespace
+300 blank lines
+400 imports
+500 line length
+600 deprecation
+700 statements
+
+You can add checks to this program by writing plugins. Each plugin is
+a simple function that is called for each line of source code, either
+physical or logical.
+
+Physical line:
+- Raw line of text from the input file.
+
+Logical line:
+- Multi-line statements converted to a single line.
+- Stripped left and right.
+- Contents of strings replaced with 'xxx' of same length.
+- Comments removed.
+
+The check function requests physical or logical lines by the name of
+the first argument:
+
+def maximum_line_length(physical_line)
+def extraneous_whitespace(logical_line)
+def blank_lines(logical_line, blank_lines, indent_level, line_number)
+
+The last example above demonstrates how check plugins can request
+additional information with extra arguments. All attributes of the
+Checker object are available. Some examples:
+
+lines: a list of the raw lines from the input file
+tokens: the tokens that contribute to this logical line
+line_number: line number in the input file
+blank_lines: blank lines before this one
+indent_char: first indentation character in this file (' ' or '\t')
+indent_level: indentation (with tabs expanded to multiples of 8)
+previous_indent_level: indentation on previous line
+previous_logical: previous logical line
+
+The docstring of each check function shall be the relevant part of
+text from PEP 8. It is printed if the user enables --show-pep8.
+Several docstrings contain examples directly from the PEP 8 document.
+
+Okay: spam(ham[1], {eggs: 2})
+E201: spam( ham[1], {eggs: 2})
+
+These examples are verified automatically when pep8.py is run with the
+--doctest option. You can add examples for your own check functions.
+The format is simple: "Okay" or error/warning code followed by colon
+and space, the rest of the line is example source code. If you put 'r'
+before the docstring, you can use \n for newline, \t for tab and \s
+for space.
+
+"""
+
+__version__ = '1.0.1'
 
 import os
 import sys
@@ -16,13 +108,14 @@ try:
 except NameError:
     from sets import ImmutableSet as frozenset
 
+
 DEFAULT_EXCLUDE = '.svn,CVS,.bzr,.hg,.git'
 DEFAULT_IGNORE = 'E24'
 MAX_LINE_LENGTH = 79
 
 INDENT_REGEX = re.compile(r'([ \t]*)')
 RAISE_COMMA_REGEX = re.compile(r'raise\s+\w+\s*(,)')
-QUOTED_REGEX = re.compile(r"""([""'])(?:(?=(\\?))\2.)*?\1""")
+RERAISE_COMMA_REGEX = re.compile(r'raise\s+\w+\s*,\s*\w+\s*,\s*\w+')
 SELFTEST_REGEX = re.compile(r'(Okay|[EW]\d{3}):\s(.*)')
 ERRORCODE_REGEX = re.compile(r'[EW]\d{3}')
 DOCSTRING_REGEX = re.compile(r'u?r?["\']')
@@ -31,6 +124,7 @@ WHITESPACE_AROUND_OPERATOR_REGEX = \
 EXTRANEOUS_WHITESPACE_REGEX = re.compile(r'[[({] | []}),;:]')
 WHITESPACE_AROUND_NAMED_PARAMETER_REGEX = \
     re.compile(r'[()]|\s=[^=]|[^=!<>]=\s')
+LAMBDA_REGEX = re.compile(r'\blambda\b')
 
 
 WHITESPACE = ' \t'
@@ -150,16 +244,17 @@ def maximum_line_length(physical_line):
     """
     line = physical_line.rstrip()
     length = len(line)
-    if length > MAX_LINE_LENGTH:
+    if length > options.max_line_length:
         try:
             # The line could contain multi-byte characters
             if not hasattr(line, 'decode'):   # Python 3
                 line = line.encode('latin-1')
             length = len(line.decode('utf-8'))
-        except UnicodeDecodeError:
+        except UnicodeError:
             pass
-    if length > MAX_LINE_LENGTH:
-        return MAX_LINE_LENGTH, "E501 line too long (%d characters)" % length
+    if length > options.max_line_length:
+        return options.max_line_length, \
+            "E501 line too long (%d characters)" % length
 
 
 ##############################################################################
@@ -564,7 +659,7 @@ def compound_statements(logical_line):
         before = line[:found]
         if (before.count('{') <= before.count('}') and  # {'a': 1} (dict)
             before.count('[') <= before.count(']') and  # [1:2] (slice)
-            not re.search(r'\blambda\b', before)):      # lambda x: x
+            not LAMBDA_REGEX.search(before)):           # lambda x: x
             return found, "E701 multiple statements on one line (colon)"
     found = line.find(';')
     if -1 < found:
@@ -595,11 +690,8 @@ def python_3000_raise_comma(logical_line):
     form will be removed in Python 3000.
     """
     match = RAISE_COMMA_REGEX.match(logical_line)
-    if match:
-        rest = QUOTED_REGEX.sub("", logical_line)
-        # but allow three argument form of raise
-        if rest.count(",") == 1:
-            return match.start(1), "W602 deprecated form of raising exception"
+    if match and not RERAISE_COMMA_REGEX.match(logical_line):
+        return match.start(1), "W602 deprecated form of raising exception"
 
 
 def python_3000_not_equal(logical_line):
@@ -630,15 +722,13 @@ def python_3000_backticks(logical_line):
 
 if '' == ''.encode():
     # Python 2: implicit encoding.
-
     def readlines(filename):
         return open(filename).readlines()
 else:
     # Python 3: decode to latin-1.
     # This function is lazy, it does not read the encoding declaration.
     # XXX: use tokenize.detect_encoding()
-
-    def readlines(filename):        # NOQA
+    def readlines(filename):
         return open(filename, encoding='latin-1').readlines()
 
 
@@ -692,13 +782,6 @@ def mute_string(text):
         start += 2
         end -= 2
     return text[:start] + 'x' * (end - start) + text[end:]
-
-
-def message(text):
-    """Print a message."""
-    # print >> sys.stderr, options.prog + ': ' + text
-    # print >> sys.stderr, text
-    print(text)
 
 
 ##############################################################################
@@ -922,9 +1005,8 @@ def input_file(filename):
     Run all checks on a Python source file.
     """
     if options.verbose:
-        message('checking ' + filename)
+        print('checking ' + filename)
     errors = Checker(filename).check_all()
-    return errors
 
 
 def input_dir(dirname, runner=None):
@@ -938,10 +1020,10 @@ def input_dir(dirname, runner=None):
         runner = input_file
     for root, dirs, files in os.walk(dirname):
         if options.verbose:
-            message('directory ' + root)
+            print('directory ' + root)
         options.counters['directories'] += 1
         dirs.sort()
-        for subdir in dirs:
+        for subdir in dirs[:]:
             if excluded(subdir):
                 dirs.remove(subdir)
         files.sort()
@@ -1046,8 +1128,8 @@ def print_benchmark(elapsed):
     print('%-7.2f %s' % (elapsed, 'seconds elapsed'))
     for key in BENCHMARK_KEYS:
         print('%-7d %s per second (%d total)' % (
-            options.counters[key] / elapsed, key,
-            options.counters[key]))
+              options.counters[key] / elapsed, key,
+              options.counters[key]))
 
 
 def run_tests(filename):
@@ -1087,9 +1169,9 @@ def run_tests(filename):
             for code in codes:
                 if not options.counters.get(code):
                     errors += 1
-                    message('%s: error %s not found' % (label, code))
+                    print('%s: error %s not found' % (label, code))
             if options.verbose and not errors:
-                message('%s: passed (%s)' % (label, ' '.join(codes)))
+                print('%s: passed (%s)' % (label, ' '.join(codes)))
             # Keep showing errors for multiple tests
             reset_counters()
         # output the real line numbers
@@ -1155,27 +1237,20 @@ def process_options(arglist=None):
     Process options passed either via arglist or via command line args.
     """
     global options, args
-    version = __version__
-    parser = OptionParser(version=version,
+    parser = OptionParser(version=__version__,
                           usage="%prog [options] input ...")
-    parser.add_option('--builtins', default=[], action="append",
-                      help="append builtin function (pyflakes "
-                           "_MAGIC_GLOBALS)")
-    parser.add_option('--max-complexity', default=-1, action='store',
-                      type='int', help="McCabe complexity treshold")
     parser.add_option('-v', '--verbose', default=0, action='count',
                       help="print status messages, or debug with -vv")
     parser.add_option('-q', '--quiet', default=0, action='count',
                       help="report only file names, or nothing with -qq")
-    parser.add_option('-r', '--no-repeat', action='store_true',
-                      help="don't show all occurrences of the same error")
+    parser.add_option('-r', '--repeat', default=True, action='store_true',
+                      help="(obsolete) show all occurrences of the same error")
+    parser.add_option('--first', action='store_false', dest='repeat',
+                      help="show first occurrence of each error")
     parser.add_option('--exclude', metavar='patterns', default=DEFAULT_EXCLUDE,
                       help="exclude files or directories which match these "
                         "comma separated patterns (default: %s)" %
                         DEFAULT_EXCLUDE)
-    parser.add_option('--exit-zero', action='store_true',
-                      help="use exit code 0 (success), even if there are "
-                        "warnings")
     parser.add_option('--filename', metavar='patterns', default='*.py',
                       help="when parsing directories, only check filenames "
                         "matching these comma separated patterns (default: "
@@ -1198,6 +1273,10 @@ def process_options(arglist=None):
                       help="measure processing speed")
     parser.add_option('--testsuite', metavar='dir',
                       help="run regression tests from dir")
+    parser.add_option('--max-line-length', type='int', metavar='n',
+                      default=MAX_LINE_LENGTH,
+                      help="set maximum allowed line length (default: %d)" %
+                      MAX_LINE_LENGTH)
     parser.add_option('--doctest', action='store_true',
                       help="run doctest on myself")
     options, args = parser.parse_args(arglist)
@@ -1220,7 +1299,7 @@ def process_options(arglist=None):
     elif options.select:
         # Ignore all checks which are not explicitly selected
         options.ignore = ['']
-    elif options.testsuite or options.doctest:
+    elif options.testsuite or options.doctest or not DEFAULT_IGNORE:
         # For doctest and testsuite, all checks are required
         options.ignore = []
     else:

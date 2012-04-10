@@ -466,6 +466,10 @@ You may set |exrc| and |secure| in your |vimrc| for auto set custom settings fro
         Copyright (c) 2005 Divmod, Inc.
         http://www.divmod.com/
 
+    PEP8:
+        Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
+        http://github.com/jcrocholl/pep8
+
     Python syntax for vim:
         Copyright (c) 2010 Dmitry Vasiliev
         http://www.hlabs.spb.ru/vim/python.vim
