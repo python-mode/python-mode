@@ -1,3 +1,4 @@
+import StringIO
 import locale
 
 import vim
@@ -46,9 +47,9 @@ def check_file():
 
 def mccabe(filename):
     import mccabe as mc
-    return mc.get_module_complexity(filename)
+
     complexity = int(vim.eval("g:pymode_lint_mccabe_complexity"))
-    return mc.get_module_complexity(filename, complexity)
+    return mc.get_module_complexity(filename, min=complexity)
 
 
 def pep8(filename):
@@ -59,9 +60,8 @@ def pep8(filename):
 
 
 def pylint(filename):
-
-    import StringIO
     from logilab.astng.builder import MANAGER
+
     PYLINT or _init_pylint()
     linter = PYLINT['lint']
 
