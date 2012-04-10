@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2012-04-10 0.6.1
+## 2012-04-10 0.6.2
 -------------------
 * Fix pymode_run for "unnamed" clipboard
 * Add 'pymode_lint_mccabe_complexity' option
