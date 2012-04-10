@@ -47,6 +47,8 @@ def check_file():
 def mccabe(filename):
     import mccabe as mc
     return mc.get_module_complexity(filename)
+    complexity = int(vim.eval("g:pymode_lint_mccabe_complexity"))
+    return mc.get_module_complexity(filename, complexity)
 
 
 def pep8(filename):

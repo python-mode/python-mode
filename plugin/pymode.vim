@@ -90,6 +90,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_select -- string. Select errors and warnings (e.g. E4,W)
     call pymode#Default("g:pymode_lint_select", "")
 
+    " OPTION: g:pymode_lint_mccabe_complexity -- int. Maximum allowd complexity
+    call pymode#Default("g:pymode_lint_mccabe_complexity", 8)
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if !pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs
 
@@ -268,4 +271,3 @@ call pymode#Default("g:pymode_folding", 1)
 call pymode#Default("g:pymode_utils_whitespaces", 1)
 
 " vim: fdm=marker:fdl=0
-

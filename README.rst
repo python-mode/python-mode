@@ -170,6 +170,9 @@ Default values: ::
     " Place error signs
     let g:pymode_lint_signs = 1
 
+    " Maximum allowed mccabe complexity
+    let g:pymode_lint_mccabe_complexity = 8
+
     " Minimal height of pylint error window
     let g:pymode_lint_minheight = 3
 

@@ -77,6 +77,8 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_minheight'|           Minimal height of pylint error window
 
+|'pymode_lint_mccabe_complexity'|   Maximum allowed mccabe complexity
+
 |'pymode_lint_maxheight'|           Maximal height of pylint error window
 
 |'pymode_rope'|                     Turns off rope script
@@ -242,6 +244,13 @@ Values: int
 Default: 3.
 
 Set minimal height for pylint cwindow
+
+------------------------------------------------------------------------------
+                                               *'pymode_lint_mccabe_complexity'*
+Values: int
+Default: 8.
+
+Set minimal complexity for mccabe linter.
 
 ------------------------------------------------------------------------------
                                                        *'pymode_lint_maxheight'*
