@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2012-04-18 0.6.3
+-------------------
+* Fix pydocs integration
+
 ## 2012-04-10 0.6.2
 -------------------
 * Fix pymode_run for "unnamed" clipboard

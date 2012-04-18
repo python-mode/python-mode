@@ -45,7 +45,7 @@ if g:pymode_doc
 
     " DESC: Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode#doc#Show(expand('<cword>'))<CR>"
-    exe "vnoremap <silent> <buffer> " g:pymode_doc_key ":call pymode#doc#Show('<C-R><C-A>')<CR>"
+    exe "vnoremap <silent> <buffer> " g:pymode_doc_key ":<C-U>call pymode#doc#Show(@*)<CR>"
 
 endif
 
