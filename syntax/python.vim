@@ -4,7 +4,7 @@
 call pymode#Default('g:pymode_syntax', 1)
 
 " DESC: Disable script loading
-if pymode#Default('b:current_syntax', 'python') || !g:pymode_syntax
+if !g:pymode_syntax || pymode#Default('b:current_syntax', 'python')
     finish
 endif
 
