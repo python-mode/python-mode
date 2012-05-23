@@ -35,50 +35,70 @@ fun! pymode#folding#expr(lnum) "{{{
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
 
-    if line == '' | return getline(a:lnum+1) == ''?'=':'-1' | endif
+    if line == ''
+        return getline(a:lnum+1) == '' ? '=' : '-1'
+    endif
 
     if line =~ s:defpat && getline(prevnonblank(a:lnum-1)) !~ '^\s*@'
         let n = a:lnum
-        while getline(n) =~ '^\s*@' | let n = nextnonblank(n + 1) | endwhile
+        while getline(n) =~ '^\s*@'
+            let n = nextnonblank(n + 1)
+        endwhile
         if getline(n) =~ s:defpat
             return ">".(indent/&shiftwidth+1)
         endif
     endif
 
     let p = prevnonblank(a:lnum-1)
-    while p>0 && getline(p) =~ '^\s*#' | let p = prevnonblank(p-1)
+    while p>0 && getline(p) =~ '^\s*#'
+        let p = prevnonblank(p-1)
     endwhile
     let pind = indent(p)
     if getline(p) =~ s:defpat && getline(prevnonblank(a:lnum - 1)) !~ '^\s*@'
         let pind = pind + &shiftwidth
-    elseif p==0 | let pind = 0
+    elseif p==0
+        let pind = 0
     endif
 
-    if indent>0 && indent==pind | return '='
-    elseif indent>pind | return '='
+    if (indent>0 && indent==pind) || indent>pind
+        return '='
     elseif indent==0
-        if pind==0 && line =~ '^#' | return 0
+        if pind==0 && line =~ '^#'
+            return 0
         elseif line !~'^#'
-            if 0<pind && line!~'^else\s*:\|^except.*:\|^elif.*:\|^finally\s*:' | return '>1'
-            elseif 0==pind && getline(prevnonblank(a:lnum-1)) =~ '^\s*#' | return '>1'
-            else | return '='
+            if 0<pind && line!~'^else\s*:\|^except.*:\|^elif.*:\|^finally\s*:'
+                return '>1'
+            elseif 0==pind && getline(prevnonblank(a:lnum-1)) =~ '^\s*#'
+                return '>1'
+            else
+                return '='
             endif
         endif
         let n = nextnonblank(a:lnum+1)
-        while n>0 && getline(n) =~'^\s*#' | let n = nextnonblank(n+1)
+        while n>0 && getline(n) =~'^\s*#'
+            let n = nextnonblank(n+1)
         endwhile
-        if indent(n)==0 | return 0
-        else | return -1
+        if indent(n)==0
+            return 0
+        else
+            return -1
         end
     endif
     let blockindent = indent(pymode#BlockStart(a:lnum)) + &shiftwidth
-    if blockindent==0 | return 1 | endif
+    if blockindent==0
+        return 1
+    endif
     let n = nextnonblank(a:lnum+1)
-    while n>0 && getline(n) =~'^\s*#' | let n = nextnonblank(n+1) | endwhile
+    while n>0 && getline(n) =~'^\s*#'
+        let n = nextnonblank(n+1)
+    endwhile
     let nind = indent(n)
-    if line =~ '^\s*#' && indent>=nind | return -1
-    elseif line =~ '^\s*#' | return nind / &shiftwidth
-    else | return blockindent / &shiftwidth
+    if line =~ '^\s*#' && indent>=nind
+        return -1
+    elseif line =~ '^\s*#'
+        return nind / &shiftwidth
+    else
+        return blockindent / &shiftwidth
     endif
 endfunction "}}}
 

@@ -13,7 +13,7 @@ fun! pymode#doc#Show(word) "{{{
         sil!py print out
         redi END
         call pymode#TempBuffer()
-        normal Pdd
+        normal ""Pdd
         wincmd p
     endif
 endfunction "}}}
