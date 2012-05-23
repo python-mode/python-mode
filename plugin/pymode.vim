@@ -36,6 +36,9 @@ endif
 
 " DESC: Fix python path
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
+
+    call pymode#Default('g:pymode_paths', [])
+
 python << EOF
 import sys, vim, os
 
@@ -43,8 +46,9 @@ curpath = vim.eval("getcwd()")
 libpath = os.path.join(os.path.dirname(os.path.dirname(
     vim.eval("expand('<sfile>:p')"))), 'pylibs')
 
-sys.path = [libpath, curpath] + sys.path
+sys.path = [libpath, curpath] + vim.eval("g:pymode_paths") + sys.path
 EOF
+
 endif
 
 

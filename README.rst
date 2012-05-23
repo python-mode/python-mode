@@ -263,6 +263,9 @@ Other stuff
 
 Default values: ::
 
+    " Additional python paths
+    let g:pymode_paths = []
+
     " Load breakpoints plugin
     let g:pymode_breakpoint = 1
 

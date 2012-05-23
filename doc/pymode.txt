@@ -43,6 +43,8 @@ to install the pylint or rope library on your system.
 The script provides the following options that can customise the behaviour the
 PythonMode. These options should be set in your vimrc.
 
+|'pymode_paths'|                    Additional python paths for pymode
+
 |'pymode_doc'|                      Turns off the documentation script
 
 |'pymode_doc_key'|                  Key for show documentation
@@ -115,6 +117,13 @@ PythonMode. These options should be set in your vimrc.
 
 To enable any of the below options you should put the given line in your
 '$HOME/.vimrc'. See |vimrc-intro|.
+
+------------------------------------------------------------------------------
+                                                                *'pymode_paths'*
+Values: List of strings
+Default: [].
+
+This option set additional python import paths
 
 ------------------------------------------------------------------------------
                                                                   *'pymode_doc'*

@@ -1,6 +1,8 @@
 Changelog
 =========
 
+* Add 'pymode_paths' option
+
 ## 2012-04-18 0.6.3
 -------------------
 * Fix pydocs integration
