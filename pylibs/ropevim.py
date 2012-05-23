@@ -29,22 +29,26 @@ class VimUtils(ropemode.environment.Environment):
 
     def ask_values(self, prompt, values, default=None,
                    starting=None, show_values=None):
+
         if show_values or (show_values is None and len(values) < 14):
             self._print_values(values)
+
         if default is not None:
             prompt = prompt + ('[%s] ' % default)
+
         starting = starting or ''
         _completer.values = values
         answer = call('input("%s", "%s", "customlist,RopeValueCompleter")' %
                       (prompt, starting))
         if answer is None:
-            if 'cancel' in values:
-                return 'cancel'
-            return
+            return 'cancel' if 'cancel' in values else None
+
         if default is not None and not answer:
             return default
+
         if answer.isdigit() and 0 <= int(answer) < len(values):
             return values[int(answer)]
+
         return answer
 
     def ask_directory(self, prompt, default=None, starting=None):
@@ -108,7 +112,7 @@ class VimUtils(ropemode.environment.Environment):
 
     @staticmethod
     def _get_encoding():
-        return vim.eval('&encoding')
+        return vim.eval('&encoding') or 'utf-8'
 
     def _encode_line(self, line):
         return line.encode(self._get_encoding())
@@ -117,8 +121,8 @@ class VimUtils(ropemode.environment.Environment):
         return line.decode(self._get_encoding())
 
     def _position_to_offset(self, lineno, colno):
-        result = min(colno, len(vim.current.buffer[lineno -1]) + 1)
-        for line in vim.current.buffer[:lineno-1]:
+        result = min(colno, len(vim.current.buffer[lineno - 1]) + 1)
+        for line in vim.current.buffer[:lineno - 1]:
             line = self._decode_line(line)
             result += len(line) + 1
         return result
@@ -308,10 +312,10 @@ class VimUtils(ropemode.environment.Environment):
         # `ci` means "completion item". see `:help complete-items`
         word, _, menu = map(lambda x: x.strip(), proposal.name.partition(':'))
         ci = dict(
-                word = word,
-                info = '',
-                kind = ''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3],
-                menu = menu or '')
+                word=word,
+                info='',
+                kind=''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3],
+                menu=menu or '')
 
         if proposal.scope == 'parameter_keyword':
             default = proposal.get_default()
@@ -362,13 +366,16 @@ def echo(message):
         message = message.encode(vim.eval('&encoding'))
     print message
 
+
 def status(message):
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
     vim.command('redraw | echon "%s"' % message)
 
+
 def call(command):
     return vim.eval(command)
+
 
 class _ValueCompleter(object):
 
@@ -391,7 +398,6 @@ class _ValueCompleter(object):
                 result = [proposal for proposal in self.values \
                           if proposal.startswith(arg_lead)]
             vim.command('let s:completions = %s' % result)
-
 
 
 ropemode.decorators.logger.message = echo
