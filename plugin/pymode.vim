@@ -99,7 +99,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     call pymode#Default("g:pymode_lint_mccabe_complexity", 8)
 
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
-    if !pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs
+    if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
         " DESC: Signs definition
         sign define W text=WW texthl=Todo
