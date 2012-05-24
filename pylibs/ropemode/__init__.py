@@ -1,9 +1,9 @@
 """ropemode, a helper for using rope refactoring library in IDEs"""
 
 INFO = __doc__
-VERSION = '0.1-rc2'
+VERSION = '0.2'
 COPYRIGHT = """\
-Copyright (C) 2007-2008 Ali Gholami Rudi
+Copyright (C) 2007-2012 Ali Gholami Rudi
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of GNU General Public License as published by the
