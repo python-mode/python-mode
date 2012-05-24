@@ -29,27 +29,29 @@ class VimUtils(ropemode.environment.Environment):
 
     def ask_values(self, prompt, values, default=None,
                    starting=None, show_values=None):
-
         if show_values or (show_values is None and len(values) < 14):
             self._print_values(values)
-
         if default is not None:
             prompt = prompt + ('[%s] ' % default)
-
         starting = starting or ''
         _completer.values = values
         answer = call('input("%s", "%s", "customlist,RopeValueCompleter")' %
                       (prompt, starting))
         if answer is None:
-            return 'cancel' if 'cancel' in values else None
-
+            if 'cancel' in values:
+                return 'cancel'
+            return
         if default is not None and not answer:
             return default
-
         if answer.isdigit() and 0 <= int(answer) < len(values):
             return values[int(answer)]
-
         return answer
+
+    def _print_values(self, values):
+        numbered = []
+        for index, value in enumerate(values):
+            numbered.append('%s. %s' % (index, str(value)))
+        echo('\n'.join(numbered) + '\n')
 
     def ask_directory(self, prompt, default=None, starting=None):
         return call('input("%s", ".", "dir")' % prompt)
@@ -86,21 +88,16 @@ class VimUtils(ropemode.environment.Environment):
     def message(self, message):
         echo(message)
 
-    @staticmethod
-    def _print_values(values):
-        numbered = []
-        for index, value in enumerate(values):
-            numbered.append('%s. %s' % (index, str(value)))
-        echo('\n'.join(numbered) + '\n')
-
     def yes_or_no(self, prompt):
         return self.ask_values(prompt, ['yes', 'no']) == 'yes'
 
     def y_or_n(self, prompt):
         return self.yes_or_no(prompt)
 
-    def get(self, name):
+    def get(self, name, default=None):
         vimname = 'g:pymode_rope_%s' % name
+        if str(vim.eval('exists("%s")' % vimname)) == '0':
+            return default
         result = vim.eval(vimname)
         if isinstance(result, str) and result.isdigit():
             return int(result)
@@ -121,19 +118,23 @@ class VimUtils(ropemode.environment.Environment):
         return line.decode(self._get_encoding())
 
     def _position_to_offset(self, lineno, colno):
-        result = min(colno, len(vim.current.buffer[lineno - 1]) + 1)
-        for line in vim.current.buffer[:lineno - 1]:
+        result = min(colno, len(self.buffer[lineno -1]) + 1)
+        for line in self.buffer[:lineno-1]:
             line = self._decode_line(line)
             result += len(line) + 1
         return result
 
     def get_text(self):
-        return self._decode_line('\n'.join(vim.current.buffer)) + u'\n'
+        return self._decode_line('\n'.join(self.buffer)) + u'\n'
 
     def get_region(self):
-        start = self._position_to_offset(*vim.current.buffer.mark('<'))
-        end = self._position_to_offset(*vim.current.buffer.mark('>'))
+        start = self._position_to_offset(*self.buffer.mark('<'))
+        end = self._position_to_offset(*self.buffer.mark('>'))
         return start, end
+
+    @property
+    def buffer(self):
+        return vim.current.buffer
 
     def _get_cursor(self):
         lineno, col = vim.current.window.cursor
@@ -155,7 +156,7 @@ class VimUtils(ropemode.environment.Environment):
         return vim.eval('getcwd()')
 
     def filename(self):
-        return vim.current.buffer.name
+        return self.buffer.name
 
     def is_modified(self):
         return vim.eval('&modified')
@@ -164,12 +165,12 @@ class VimUtils(ropemode.environment.Environment):
         self.cursor = (lineno, 0)
 
     def insert_line(self, line, lineno):
-        vim.current.buffer[lineno - 1:lineno - 1] = [line]
+        self.buffer[lineno - 1:lineno - 1] = [line]
 
     def insert(self, text):
         lineno, colno = self.cursor
-        line = vim.current.buffer[lineno - 1]
-        vim.current.buffer[lineno - 1] = line[:colno] + text + line[colno:]
+        line = self.buffer[lineno - 1]
+        self.buffer[lineno - 1] = line[:colno] + text + line[colno:]
         self.cursor = (lineno, colno + len(text))
 
     def delete(self, start, end):
@@ -177,8 +178,8 @@ class VimUtils(ropemode.environment.Environment):
         lineno2, colno2 = self._offset_to_position(end - 1)
         lineno, colno = self.cursor
         if lineno1 == lineno2:
-            line = vim.current.buffer[lineno1 - 1]
-            vim.current.buffer[lineno1 - 1] = line[:colno1] + line[colno2:]
+            line = self.buffer[lineno1 - 1]
+            self.buffer[lineno1 - 1] = line[:colno1] + line[colno2:]
             if lineno == lineno1 and colno >= colno1:
                 diff = colno2 - colno1
                 self.cursor = (lineno, max(0, colno - diff))
@@ -194,17 +195,15 @@ class VimUtils(ropemode.environment.Environment):
 
     def filenames(self):
         result = []
-        for b in vim.buffers:
-            if b.name:
-                result.append(b.name)
+        for buffer in vim.buffers:
+            if buffer.name:
+                result.append(buffer.name)
         return result
 
     def save_files(self, filenames):
         vim.command('wall')
 
-    def reload_files(self, filenames, moves=None):
-        if moves is None:
-            moves = dict()
+    def reload_files(self, filenames, moves={}):
         initial = self.filename()
         for filename in filenames:
             self.find_file(moves.get(filename, filename), force=True)
@@ -249,13 +248,13 @@ class VimUtils(ropemode.environment.Environment):
         finally:
             os.remove(filename)
 
-    @staticmethod
-    def _writedefs(locations, filename):
+    def _writedefs(self, locations, filename):
         tofile = open(filename, 'w')
         try:
             for location in locations:
                 err = '%s:%d: - %s\n' % (location.filename,
                                          location.lineno, location.note)
+                echo(err)
                 tofile.write(err)
         finally:
             tofile.close()
@@ -263,7 +262,6 @@ class VimUtils(ropemode.environment.Environment):
     def show_doc(self, docs, altview=False):
         if docs:
             cmd = 'call pymode#ShowStr("%s")' % str(docs.replace('"', '\\"'))
-            print cmd
             vim.command(cmd)
 
     def preview_changes(self, diffs):
@@ -294,8 +292,7 @@ class VimUtils(ropemode.environment.Environment):
             key = prekey + key.replace(' ', '')
             vim.command('noremap %s :call %s()<cr>' % (key, _vim_name(name)))
 
-    @staticmethod
-    def _add_function(name, callback, prefix=False):
+    def _add_function(self, name, callback, prefix=False):
         globals()[name] = callback
         arg = 'None' if prefix else ''
         vim.command('function! %s()\n' % _vim_name(name) +
@@ -306,7 +303,6 @@ class VimUtils(ropemode.environment.Environment):
         return proposal
 
     _docstring_re = re.compile('^[\s\t\n]*([^\n]*)')
-
     def _extended_completion(self, proposal):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
