@@ -33,9 +33,9 @@ def relative(root, path):
     root = rope.base.project._realpath(root).replace(os.path.sep, '/')
     path = rope.base.project._realpath(path).replace(os.path.sep, '/')
     if path == root:
-        return ''
+    	return ''
     if path.startswith(root + '/'):
-        return path[len(root) + 1:]
+    	return path[len(root) + 1:]
 
 def report_change(project, path, old_content):
     """Report that the contents of file at `path` was changed
