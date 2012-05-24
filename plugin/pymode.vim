@@ -1,4 +1,4 @@
-let g:pymode_version = "0.6.3"
+let g:pymode_version = "0.6.4"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 

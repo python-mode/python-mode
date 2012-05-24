@@ -1,7 +1,10 @@
 Changelog
 =========
 
+## 2012-05-24 0.6.4
+-------------------
 * Add 'pymode_paths' option
+* Rope updated to version 0.9.4
 
 ## 2012-04-18 0.6.3
 -------------------
