@@ -79,9 +79,8 @@ fun! pymode#ShowStr(str) "{{{
     let g:pymode_curbuf = bufnr("%")
     call pymode#TempBuffer()
     put! =a:str
-    redraw
-    normal gg 
     wincmd p
+    redraw
 endfunction "}}}
 
 
