@@ -78,7 +78,7 @@ Manually
 ::
 
     % git clone git://github.com/klen/python-mode.git
-    % cd python-mode.vim
+    % cd python-mode
     % cp -R * ~/.vim
 
 Then rebuild **helptags** in vim::
