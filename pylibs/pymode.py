@@ -54,9 +54,8 @@ def mccabe(filename):
 
 def pep8(filename):
     PEP8 or _init_pep8()
-    checker = PEP8['module'].Checker(filename)
-    checker.check_all()
-    return checker.errors
+    style = PEP8['style']
+    return style.input_file(filename)
 
 
 def pylint(filename):
@@ -130,37 +129,27 @@ def _init_pep8():
 
     import pep8 as p8
 
-    class _PEP8Options(object):
-        # Default options taken from pep8.process_options()
-        verbose = False
-        quiet = False
-        repeat = True
-        exclude = [exc.rstrip('/') for exc in p8.DEFAULT_EXCLUDE.split(',')]
-        select = []
-        ignore = p8.DEFAULT_IGNORE.split(',')  # or []?
-        show_source = False
-        show_pep8 = False
-        statistics = False
-        count = False
-        benchmark = False
-        testsuite = ''
-        max_line_length = p8.MAX_LINE_LENGTH
-        filename = ['*.py']
-        doctest = False
+    class _PEP8Report(p8.BaseReport):
 
-        logical_checks = physical_checks = None
-        messages = counters = None
+        def init_file(self, filename, lines, expected, line_offset):
+            super(_PEP8Report, self).init_file(
+                filename, lines, expected, line_offset)
+            self.errors = []
 
-    # default p8 setup
-    p8.options = _PEP8Options()
-    p8.options.physical_checks = p8.find_checks('physical_line')
-    p8.options.logical_checks = p8.find_checks('logical_line')
-    p8.options.counters = dict.fromkeys(p8.BENCHMARK_KEYS, 0)
-    p8.options.messages = {}
-    p8.args = []
+        def error(self, line_number, offset, text, check):
+            code = super(_PEP8Report, self).error(
+                line_number, offset, text, check)
+            self.errors.append(dict(
+                text=text,
+                type=code,
+                col=offset + 1,
+                lnum=line_number,
+            ))
 
-    PEP8['init'] = True
-    PEP8['module'] = p8
+        def get_file_results(self):
+            return self.errors
+
+    PEP8['style'] = p8.StyleGuide(reporter=_PEP8Report)
 
 
 def _ignore_error(e, select, ignore):

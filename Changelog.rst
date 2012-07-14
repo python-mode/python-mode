@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2012-XX-XX .....
+-------------------
+* Update Pep8 to version 1.3.3
+
 ## 2012-05-24 0.6.4
 -------------------
 * Add 'pymode_paths' option
