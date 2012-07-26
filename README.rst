@@ -90,6 +90,16 @@ Then rebuild **helptags** in vim::
     must be enabled for use python-mode.
 
 
+Troubleshooting
+===============
+
+If your python-mode dont work, type command: ::
+
+    :call pymode#troubleshooting#Test()
+
+And fix warnings or copy output and send it to me (ex. with github issue).
+
+
 Settings
 ========
 
@@ -469,6 +479,8 @@ Licensed under a `GNU lesser general public license`_.
 If you like this plugin, you can send me postcard :) 
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 **Thanks for support!**
+
+Version 0.6.5: I still haven't received any postcard, guys :(
 
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html

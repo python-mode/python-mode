@@ -6,6 +6,7 @@ Changelog
 * Updated Pep8 to version 1.3.3
 * Fixed virtualenv support for windows users
 * Added pymode modeline ':help PythonModeModeline'
+* Added diagnostic tool ':call pymode#troubleshooting#Test()'
 
 ## 2012-05-24 0.6.4
 -------------------
