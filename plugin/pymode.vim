@@ -272,7 +272,16 @@ endif
 " OPTION: g:pymode_folding -- bool. Enable python-mode folding for pyfiles.
 call pymode#Default("g:pymode_folding", 1)
 
+" OPTION: g:pymode_syntax -- bool. Enable python-mode syntax for pyfiles.
+call pymode#Default("g:pymode_syntax", 1)
+
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
 call pymode#Default("g:pymode_utils_whitespaces", 1)
+
+" OPTION: g:pymode_options_indent -- bool. To set indent options.
+call pymode#Default("g:pymode_options_indent", 1)
+
+" OPTION: g:pymode_options_other -- bool. To set other options.
+call pymode#Default("g:pymode_options_other", 1)
 
 " vim: fdm=marker:fdl=0

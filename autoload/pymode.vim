@@ -12,6 +12,15 @@ fun! pymode#Default(name, default) "{{{
 endfunction "}}}
 
 
+fun! pymode#Option(name) "{{{
+    if exists('b:pymode_'.a:name)
+        return {'b:pymode_'.a:name}
+    else
+        return {'g:pymode_'.a:name}
+    endif
+endfunction "}}}
+
+
 fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpError) "{{{
     " DESC: Open quickfix window
     "
@@ -146,6 +155,17 @@ fun! pymode#BlockEnd(lnum, ...) "{{{
         endif
     endwhile
     return line('$')
+endfunction "}}}
+
+
+fun! pymode#Modeline() "{{{
+    let modeline = getline('$')
+    if modeline =~ '^#\s\+pymode:'
+        for ex in split(modeline, ':')[1:]
+            let [name, value] = split(ex, '=')
+            let {'b:pymode_'.name} = value
+        endfor
+    endif
 endfunction "}}}
 
 

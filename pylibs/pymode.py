@@ -9,10 +9,10 @@ locale.setlocale(locale.LC_CTYPE, "C")
 
 def check_file():
     filename = vim.current.buffer.name
-    checkers = vim.eval('g:pymode_lint_checker').split(',')
-    ignore = vim.eval("g:pymode_lint_ignore")
+    checkers = vim.eval("pymode#Option('lint_checker')").split(',')
+    ignore = vim.eval("pymode#Option('lint_ignore')")
     ignore = ignore and ignore.split(',') or []
-    select = vim.eval("g:pymode_lint_select")
+    select = vim.eval("pymode#Option('lint_select')")
     select = select and select.split(',') or []
     errors = []
 
@@ -20,7 +20,15 @@ def check_file():
         checker = globals().get(c)
         if checker:
             try:
-                errors += checker(filename)
+                for e in checker(filename):
+                    e.update(
+                        col=e.get('col') or '',
+                        text="%s [%s]" % (e.get('text', '').replace("'", "\"").split('\n')[0], c),
+                        filename=filename,
+                        bufnr=vim.current.buffer.number,
+                    )
+                    errors.append(e)
+
             except SyntaxError, e:
                 errors.append(dict(
                     lnum=e.lineno,
@@ -31,14 +39,6 @@ def check_file():
             except Exception, e:
                 print e
 
-    for e in errors:
-        e.update(
-            col=e.get('col') or '',
-            text=e.get('text', '').replace("'", "\"").split('\n')[0],
-            filename=filename,
-            bufnr=vim.current.buffer.number,
-        )
-
     errors = filter(lambda e: _ignore_error(e, select, ignore), errors)
     errors = sorted(errors, key=lambda x: x['lnum'])
 
@@ -48,7 +48,7 @@ def check_file():
 def mccabe(filename):
     import mccabe as mc
 
-    complexity = int(vim.eval("g:pymode_lint_mccabe_complexity"))
+    complexity = int(vim.eval("pymode#Option('lint_mccabe_complexity')"))
     return mc.get_module_complexity(filename, min=complexity)
 
 

@@ -3,7 +3,9 @@ Changelog
 
 ## 2012-XX-XX .....
 -------------------
-* Update Pep8 to version 1.3.3
+* Updated Pep8 to version 1.3.3
+* Fixed virtualenv support for windows users
+* Added pymode modeline ':help PythonModeModeline'
 
 ## 2012-05-24 0.6.4
 -------------------

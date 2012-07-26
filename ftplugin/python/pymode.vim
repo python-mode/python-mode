@@ -3,15 +3,19 @@ if pymode#Default('b:pymode', 1)
 endif
 
 " Syntax highlight
-if !pymode#Default('g:pymode_syntax', 1) || g:pymode_syntax
+if pymode#Option('syntax')
     let python_highlight_all=1
 endif
+
+
+" Parse pymode modeline
+call pymode#Modeline()
 
 
 " Options {{{
 
 " Python indent options
-if !pymode#Default('g:pymode_options_indent', 1) || g:pymode_options_indent
+if pymode#Option('options_indent')
     setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class
     setlocal cindent
     setlocal tabstop=4
@@ -25,7 +29,7 @@ if !pymode#Default('g:pymode_options_indent', 1) || g:pymode_options_indent
 endif
 
 " Python other options
-if !pymode#Default('g:pymode_options_other', 1) || g:pymode_options_other
+if pymode#Option('options_other')
     setlocal complete+=t
     setlocal formatoptions-=t
     if v:version > 702 && !&relativenumber
@@ -40,7 +44,7 @@ endif
 
 " Documentation {{{
 
-if g:pymode_doc
+if pymode#Option('doc')
 
     " DESC: Set commands
     command! -buffer -nargs=1 Pydoc call pymode#doc#Show("<args>")
@@ -56,7 +60,7 @@ endif
 
 " Lint {{{
 
-if g:pymode_lint
+if pymode#Option('lint')
 
     let b:qf_list = []
 
@@ -67,15 +71,15 @@ if g:pymode_lint
     command! -buffer -nargs=0 PyLint :call pymode#lint#Check()
 
     " DESC: Set autocommands
-    if g:pymode_lint_write
+    if pymode#Option('lint_write')
         au BufWritePost <buffer> PyLint
     endif
 
-    if g:pymode_lint_onfly
+    if pymode#Option('lint_onfly')
         au InsertLeave <buffer> PyLint
     endif
 
-    if g:pymode_lint_message
+    if pymode#Option('lint_message')
 
         " DESC: Show message flag
         let b:show_message = 0
@@ -95,7 +99,7 @@ endif
 
 " Rope {{{
 
-if g:pymode_rope
+if pymode#Option('rope')
 
     " DESC: Set keys
     exe "noremap <silent> <buffer> " . g:pymode_rope_short_prefix . "g :RopeGotoDefinition<CR>"
@@ -115,7 +119,7 @@ endif
 
 " Execution {{{
 
-if g:pymode_run
+if pymode#Option('run')
 
     " DESC: Set commands
     command! -buffer -nargs=0 -range=% Pyrun call pymode#run#Run(<f-line1>, <f-line2>)
@@ -131,7 +135,7 @@ endif
 
 " Breakpoints {{{
 
-if g:pymode_breakpoint
+if pymode#Option('breakpoint')
 
     " DESC: Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_breakpoint_key ":call pymode#breakpoint#Set(line('.'))<CR>"
@@ -143,7 +147,7 @@ endif
 
 " Utils {{{
 
-if g:pymode_utils_whitespaces
+if pymode#Option('utils_whitespaces')
     au BufWritePre <buffer> :call setline(1,map(getline(1,"$"),'substitute(v:val,"\\s\\+$","","")'))
 endif
 
@@ -152,7 +156,7 @@ endif
 
 " Folding {{{
 
-if g:pymode_folding
+if pymode#Option('folding')
 
     setlocal foldmethod=expr
     setlocal foldexpr=pymode#folding#expr(v:lnum)
@@ -161,6 +165,5 @@ if g:pymode_folding
 endif
 
 " }}}
-
 
 " vim: fdm=marker:fdl=0

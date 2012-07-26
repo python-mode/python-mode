@@ -14,6 +14,7 @@ CONTENTS                                                  *Python-mode-contents*
     1.Intro...................................|PythonMode|
     2.Options.................................|PythonModeOptions|
         2.1.Customisation details.............|PythonModeOptionsDetails|
+        2.2.Modeline..........................|PythonModeModeline|
     3.Default Keys............................|PythonModeKeys|
     4.Commands................................|PythonModeCommands|
     5.FAQ.....................................|PythonModeFAQ|
@@ -117,6 +118,32 @@ PythonMode. These options should be set in your vimrc.
 
 To enable any of the below options you should put the given line in your
 '$HOME/.vimrc'. See |vimrc-intro|.
+
+------------------------------------------------------------------------------
+2.2. Modeline ~
+                                                      *PythonModeModeline*
+
+Feature like VIM modeline `:help modeline`. Allow changing pymode options for
+edited file. Pymode modeline should always be the last line in the file and
+look like:
+
+>
+    # pymode:lint_ignore=E0202:doc=0:lint_write=0
+<
+
+Examples:
+
+Disable folding on current file:
+>
+    # pymode:folding=0
+<
+
+Set linters and mccabe complexity.
+>
+    # pymode:lint_checker=pip,mccabe:lint_mccabe_complexity=10
+<
+
+This changes will work only in current buffer.
 
 ------------------------------------------------------------------------------
                                                                 *'pymode_paths'*
