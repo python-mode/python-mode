@@ -2,14 +2,15 @@ if pymode#Default('b:pymode', 1)
     finish
 endif
 
+
+" Parse pymode modeline
+call pymode#Modeline()
+
+
 " Syntax highlight
 if pymode#Option('syntax')
     let python_highlight_all=1
 endif
-
-
-" Parse pymode modeline
-call pymode#Modeline()
 
 
 " Options {{{
