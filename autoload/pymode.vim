@@ -159,7 +159,7 @@ endfunction "}}}
 
 
 fun! pymode#Modeline() "{{{
-    let modeline = getline('$')
+    let modeline = getline(prevnonblank('$'))
     if modeline =~ '^#\s\+pymode:'
         for ex in split(modeline, ':')[1:]
             let [name, value] = split(ex, '=')
@@ -170,3 +170,6 @@ endfunction "}}}
 
 
 " vim: fdm=marker:fdl=0
+
+
+
