@@ -10,10 +10,13 @@ locale.setlocale(locale.LC_CTYPE, "C")
 
 def check_file():
     checkers = vim.eval("pymode#Option('lint_checker')").split(',')
-    ignore = vim.eval("pymode#Option('lint_ignore')")
-    ignore = ignore and ignore.split(',') or []
-    select = vim.eval("pymode#Option('lint_select')")
-    select = select and select.split(',') or []
+
+    ignore = set(filter(lambda i: i, vim.eval("pymode#Option('lint_ignore')").split(',') +
+                 vim.eval("g:pymode_lint_ignore").split(',')))
+
+    select = set(filter(lambda s: s, vim.eval("pymode#Option('lint_select')").split(',') +
+                 vim.eval("g:pymode_lint_select").split(',')))
+
     thread = Checker(vim.current.buffer, select, ignore, checkers)
     thread.start()
 
@@ -38,7 +41,7 @@ class Checker(threading.Thread):
                     for e in checker(self.filename):
                         e.update(
                             col=e.get('col') or '',
-                            text="%s [%s]" % (e.get('text', '').replace("'", "\"").split('\n')[0], c),
+                            text="%s [%s]" % (e.get('text', '').strip().replace("'", "\"").split('\n')[0], c),
                             filename=self.filename,
                             bufnr=self.buffer,
                         )

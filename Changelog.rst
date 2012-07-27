@@ -7,6 +7,7 @@ Changelog
 * Fixed virtualenv support for windows users
 * Added pymode modeline ':help PythonModeModeline'
 * Added diagnostic tool ':call pymode#troubleshooting#Test()'
+* Async code checking
 
 ## 2012-05-24 0.6.4
 -------------------

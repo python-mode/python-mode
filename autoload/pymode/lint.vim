@@ -1,5 +1,6 @@
-fun! pymode#lint#Check()
-
+fun! pymode#lint#Check() "{{{
+    " DESC: Run checkers on current file.
+    "
     if !g:pymode_lint | return | endif
 
     if &modifiable && &modified
@@ -15,11 +16,12 @@ fun! pymode#lint#Check()
 
     py check_file()
 
-endfunction
+endfunction " }}}
 
 
 fun! pymode#lint#Parse()
-
+    " DESC: Parse result of code checking.
+    "
     call setqflist(g:qf_list, 'r')
 
     if g:pymode_lint_signs
@@ -28,6 +30,10 @@ fun! pymode#lint#Parse()
 
     if g:pymode_lint_cwindow
         call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
+    endif
+
+    if !len(g:qf_list)
+        call pymode#WideMessage('Code checking is completed. No errors found.')
     endif
 
 endfunction
