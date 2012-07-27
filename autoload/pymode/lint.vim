@@ -14,7 +14,7 @@ fun! pymode#lint#Check() "{{{
 
     let g:pymode_lint_buffer = bufnr('%')
 
-    py check_file()
+    py lint.check_file()
 
 endfunction " }}}
 

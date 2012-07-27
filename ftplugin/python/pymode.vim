@@ -72,7 +72,7 @@ if pymode#Option('lint')
     " DESC: Set autocommands
     if pymode#Option('lint_write')
         au BufWritePost <buffer> PyLint
-        au BufLeave <buffer> py stop_queue()
+        au BufLeave <buffer> py queue.stop_queue()
     endif
 
     if pymode#Option('lint_onfly')
@@ -84,8 +84,9 @@ if pymode#Option('lint')
         au CursorMoved <buffer> call pymode#lint#show_errormessage()
     endif
 
+    " DESC: Run queue
     au CursorHold <buffer> call pymode#queue#Poll()
-    set updatetime=1000
+    setlocal updatetime=1000
 
 endif
 
