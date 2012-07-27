@@ -115,7 +115,7 @@ fun! pymode#WideMessage(msg) "{{{
     let x=&ruler | let y=&showcmd
     set noruler noshowcmd
     redraw
-    echo strpart(a:msg, 0, &columns-1)
+    echohl Debug | echo strpart(a:msg, 0, &columns-1) | echohl none
     let &ruler=x | let &showcmd=y
 endfunction "}}}
 
