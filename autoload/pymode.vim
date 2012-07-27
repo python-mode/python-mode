@@ -31,7 +31,7 @@ fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpE
         exe max([min([line("$"), a:maxHeight]), a:minHeight]) . "wincmd _"
         if a:jumpError
             cc
-        elseif a:holdCursor
+        elseif !a:holdCursor
             wincmd p
         endif
     else

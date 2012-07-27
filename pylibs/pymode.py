@@ -1,5 +1,6 @@
 import StringIO
 import locale
+import threading
 
 import vim
 
@@ -8,41 +9,56 @@ locale.setlocale(locale.LC_CTYPE, "C")
 
 
 def check_file():
-    filename = vim.current.buffer.name
     checkers = vim.eval("pymode#Option('lint_checker')").split(',')
     ignore = vim.eval("pymode#Option('lint_ignore')")
     ignore = ignore and ignore.split(',') or []
     select = vim.eval("pymode#Option('lint_select')")
     select = select and select.split(',') or []
-    errors = []
+    thread = Checker(vim.current.buffer, select, ignore, checkers)
+    thread.start()
 
-    for c in checkers:
-        checker = globals().get(c)
-        if checker:
-            try:
-                for e in checker(filename):
-                    e.update(
-                        col=e.get('col') or '',
-                        text="%s [%s]" % (e.get('text', '').replace("'", "\"").split('\n')[0], c),
-                        filename=filename,
-                        bufnr=vim.current.buffer.number,
-                    )
-                    errors.append(e)
 
-            except SyntaxError, e:
-                errors.append(dict(
-                    lnum=e.lineno,
-                    col=e.offset,
-                    text=e.args[0]
-                ))
-                break
-            except Exception, e:
-                print e
+class Checker(threading.Thread):
+    def __init__(self, buffer, select, ignore, checkers):
+        self.buffer = buffer.number
+        self.filename = buffer.name
+        self.select = select
+        self.ignore = ignore
+        self.checkers = checkers
+        super(Checker, self).__init__()
 
-    errors = filter(lambda e: _ignore_error(e, select, ignore), errors)
-    errors = sorted(errors, key=lambda x: x['lnum'])
+    def run(self):
 
-    vim.command(('let b:qf_list = %s' % repr(errors)).replace('\': u', '\': '))
+        errors = []
+
+        for c in self.checkers:
+            checker = globals().get(c)
+            if checker:
+                try:
+                    for e in checker(self.filename):
+                        e.update(
+                            col=e.get('col') or '',
+                            text="%s [%s]" % (e.get('text', '').replace("'", "\"").split('\n')[0], c),
+                            filename=self.filename,
+                            bufnr=self.buffer,
+                        )
+                        errors.append(e)
+
+                except SyntaxError, e:
+                    errors.append(dict(
+                        lnum=e.lineno,
+                        col=e.offset,
+                        text=e.args[0]
+                    ))
+                    break
+                except Exception, e:
+                    print e
+
+        errors = filter(lambda e: _ignore_error(e, self.select, self.ignore), errors)
+        errors = sorted(errors, key=lambda x: x['lnum'])
+
+        vim.command(('let g:qf_list = %s' % repr(errors)).replace('\': u', '\': '))
+        vim.command('call pymode#lint#Parse()')
 
 
 def mccabe(filename):
