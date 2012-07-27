@@ -116,7 +116,10 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
     endif
 
-    py from pymode import check_file, stop_checkers
+    py from pymode.lint import check_file
+    py from pymode.queue import stop_queue
+
+    au VimLeavePre * py stop_queue()
 
 endif
 

@@ -1,99 +1,84 @@
 import StringIO
 import locale
-import threading
 
-import vim
+from .interface import get_option, get_var, get_current_buffer, command
+from .queue import add_task
 
 
 locale.setlocale(locale.LC_CTYPE, "C")
 
 
 def check_file():
-    checkers = vim.eval("pymode#Option('lint_checker')").split(',')
+    checkers = get_option('lint_checker').split(',')
 
-    ignore = set(filter(lambda i: i, vim.eval("pymode#Option('lint_ignore')").split(',') +
-                 vim.eval("g:pymode_lint_ignore").split(',')))
+    ignore = set(filter(lambda i: i, get_option('lint_ignore').split(',') +
+                 get_var('lint_ignore').split(',')))
 
-    select = set(filter(lambda s: s, vim.eval("pymode#Option('lint_select')").split(',') +
-                 vim.eval("g:pymode_lint_select").split(',')))
+    select = set(filter(lambda s: s, get_option('lint_select').split(',') +
+                 get_var('lint_select').split(',')))
 
-    # Stop current threads
-    stop_checkers()
+    buffer = get_current_buffer()
 
-    # Create new thread
-    thread = Checker(vim.current.buffer, select, ignore, checkers)
-    thread.start()
+    add_task(run_checkers, checkers=checkers, ignore=ignore, title='Code checking', callback=parse_result, buffer=buffer, select=select)
 
 
-def stop_checkers():
-    for thread in threading.enumerate():
-        if isinstance(thread, Checker):
-            thread.stop()
+def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None):
+
+    buffer = (task and task.buffer) or buffer
+    filename = buffer.name
+    result = []
+    part = 100 / len(checkers)
+
+    for c in checkers:
+
+        checker = globals().get(c)
+        if not checker:
+            continue
+
+        try:
+            for e in checker(filename):
+                e.update(
+                    col=e.get('col') or 0,
+                    text="%s [%s]" % (e.get('text', '')
+                                      .strip().replace("'", "\"").split('\n')[0], c),
+                    filename=filename,
+                    bufnr=buffer.number,
+                )
+                result.append(e)
+
+        except SyntaxError, e:
+            result.append(dict(
+                lnum=e.lineno,
+                col=e.offset or 0,
+                text=e.args[0],
+                bufnr=buffer.number,
+            ))
+            break
+
+        except Exception, e:
+            print e
+
+        if task:
+            task.done += part
+
+    result = filter(lambda e: _ignore_error(e, select, ignore), result)
+    result = sorted(result, key=lambda x: x['lnum'])
+
+    if task:
+        task.result = result
+        task.finished = True
+        task.done = 100
 
 
-class Checker(threading.Thread):
-    def __init__(self, buffer, select, ignore, checkers):
-        self.buffer = buffer.number
-        self.filename = buffer.name
-        self.select = select
-        self.ignore = ignore
-        self.checkers = checkers
-        self._stop = threading.Event()
-        super(Checker, self).__init__()
-
-    def run(self):
-        " Run code checking. "
-
-        errors = []
-
-        for c in self.checkers:
-
-            if self.stopped():
-                return True
-
-            checker = globals().get(c)
-            if checker:
-                try:
-                    for e in checker(self.filename):
-                        e.update(
-                            col=e.get('col') or '',
-                            text="%s [%s]" % (e.get('text', '').strip().replace("'", "\"").split('\n')[0], c),
-                            filename=self.filename,
-                            bufnr=self.buffer,
-                        )
-                        errors.append(e)
-
-                except SyntaxError, e:
-                    errors.append(dict(
-                        lnum=e.lineno,
-                        col=e.offset,
-                        text=e.args[0]
-                    ))
-                    break
-                except Exception, e:
-                    print e
-
-        if self.stopped():
-            return True
-
-        errors = filter(lambda e: _ignore_error(e, self.select, self.ignore), errors)
-        errors = sorted(errors, key=lambda x: x['lnum'])
-
-        vim.command(('let g:qf_list = %s' % repr(errors)).replace('\': u', '\': '))
-        vim.command('call pymode#lint#Parse()')
-
-    def stop(self):
-        " Stop code checking. "
-        self._stop.set()
-
-    def stopped(self):
-        return self._stop.isSet()
+def parse_result(result):
+    command(('let g:qf_list = %s' % repr(result)).replace('\': u', '\': '))
+    command('call pymode#lint#Parse()')
 
 
 def mccabe(filename):
     import mccabe as mc
 
-    complexity = int(vim.eval("pymode#Option('lint_mccabe_complexity')"))
+    complexity = int(get_option('lint_mccabe_complexity'))
     return mc.get_module_complexity(filename, min=complexity)
 
 
@@ -157,10 +142,11 @@ def _init_pylint():
             ))
 
     PYLINT['lint'] = lint.PyLinter()
-    PYLINT['re'] = re.compile('^(?:.:)?[^:]+:(\d+): \[([EWRCI]+)[^\]]*\] (.*)$')
+    PYLINT['re'] = re.compile(
+        '^(?:.:)?[^:]+:(\d+): \[([EWRCI]+)[^\]]*\] (.*)$')
 
     checkers.initialize(PYLINT['lint'])
-    PYLINT['lint'].load_file_configuration(vim.eval("g:pymode_lint_config"))
+    PYLINT['lint'].load_file_configuration(get_var('lint_config'))
     PYLINT['lint'].set_option("output-format", "parseable")
     PYLINT['lint'].set_option("include-ids", 1)
     PYLINT['lint'].set_option("reports", 0)
@@ -184,6 +170,7 @@ def _init_pep8():
         def error(self, line_number, offset, text, check):
             code = super(_PEP8Report, self).error(
                 line_number, offset, text, check)
+
             self.errors.append(dict(
                 text=text,
                 type=code,

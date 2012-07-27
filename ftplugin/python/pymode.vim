@@ -63,8 +63,6 @@ endif
 
 if pymode#Option('lint')
 
-    let b:errors = []
-
     " DESC: Set commands
     command! -buffer -nargs=0 PyLintToggle :call pymode#lint#Toggle()
     command! -buffer -nargs=0 PyLintWindowToggle :call pymode#lint#ToggleWindow()
@@ -74,7 +72,7 @@ if pymode#Option('lint')
     " DESC: Set autocommands
     if pymode#Option('lint_write')
         au BufWritePost <buffer> PyLint
-        au BufLeave <buffer> call pymode#lint#Stop()
+        au BufLeave <buffer> py stop_queue()
     endif
 
     if pymode#Option('lint_onfly')
@@ -85,6 +83,9 @@ if pymode#Option('lint')
         au CursorHold <buffer> call pymode#lint#show_errormessage()
         au CursorMoved <buffer> call pymode#lint#show_errormessage()
     endif
+
+    au CursorHold <buffer> call pymode#queue#Poll()
+    set updatetime=1000
 
 endif
 
