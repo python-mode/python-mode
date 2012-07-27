@@ -17,8 +17,18 @@ def check_file():
     select = set(filter(lambda s: s, vim.eval("pymode#Option('lint_select')").split(',') +
                  vim.eval("g:pymode_lint_select").split(',')))
 
+    # Stop current threads
+    stop_checkers()
+
+    # Create new thread
     thread = Checker(vim.current.buffer, select, ignore, checkers)
     thread.start()
+
+
+def stop_checkers():
+    for thread in threading.enumerate():
+        if isinstance(thread, Checker):
+            thread.stop()
 
 
 class Checker(threading.Thread):
@@ -28,13 +38,19 @@ class Checker(threading.Thread):
         self.select = select
         self.ignore = ignore
         self.checkers = checkers
+        self._stop = threading.Event()
         super(Checker, self).__init__()
 
     def run(self):
+        " Run code checking. "
 
         errors = []
 
         for c in self.checkers:
+
+            if self.stopped():
+                return True
+
             checker = globals().get(c)
             if checker:
                 try:
@@ -57,11 +73,21 @@ class Checker(threading.Thread):
                 except Exception, e:
                     print e
 
+        if self.stopped():
+            return True
+
         errors = filter(lambda e: _ignore_error(e, self.select, self.ignore), errors)
         errors = sorted(errors, key=lambda x: x['lnum'])
 
         vim.command(('let g:qf_list = %s' % repr(errors)).replace('\': u', '\': '))
         vim.command('call pymode#lint#Parse()')
+
+    def stop(self):
+        " Stop code checking. "
+        self._stop.set()
+
+    def stopped(self):
+        return self._stop.isSet()
 
 
 def mccabe(filename):

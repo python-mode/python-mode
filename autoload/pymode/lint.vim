@@ -16,6 +16,8 @@ fun! pymode#lint#Check() "{{{
 
     py check_file()
 
+    call pymode#WideMessage('Code checking is run.')
+
 endfunction " }}}
 
 
@@ -37,6 +39,15 @@ fun! pymode#lint#Parse()
     endif
 
 endfunction
+
+
+fun! pymode#lint#Stop() "{{{
+    " DESC: Stop async threading.
+    "
+    py stop_checkers()
+    call pymode#WideMessage('Code checking is aborted.')
+
+endfunction "}}}
 
 
 fun! pymode#lint#Toggle() "{{{
@@ -76,7 +87,9 @@ fun! pymode#lint#show_errormessage() "{{{
         return 0
     endif
     let errors = getqflist()
-    if !len(errors) | return | endif
+    if !len(errors)
+        return
+    endif
     let [_, line, _, _] = getpos(".")
     for e in errors
         if e['lnum'] == line

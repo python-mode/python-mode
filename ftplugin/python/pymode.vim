@@ -74,6 +74,7 @@ if pymode#Option('lint')
     " DESC: Set autocommands
     if pymode#Option('lint_write')
         au BufWritePost <buffer> PyLint
+        au BufLeave <buffer> call pymode#lint#Stop()
     endif
 
     if pymode#Option('lint_onfly')
