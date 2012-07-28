@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with logilab-common.  If not, see <http://www.gnu.org/licenses/>.
-"""A daemonize function (for Unices) and daemon mix-in class"""
+"""A daemonize function (for Unices)"""
 
 __docformat__ = "restructuredtext en"
 
@@ -46,6 +46,7 @@ def setugid(user):
             raise OSError(err, os.strerror(err), 'initgroups')
     os.setgid(passwd.pw_gid)
     os.setuid(passwd.pw_uid)
+    os.environ['HOME'] = passwd.pw_dir
 
 
 def daemonize(pidfile=None, uid=None, umask=077):
@@ -92,109 +93,8 @@ def daemonize(pidfile=None, uid=None, umask=077):
         f = file(pidfile, 'w')
         f.write(str(os.getpid()))
         f.close()
+        os.chmod(pidfile, 0644)
     # change process uid
     if uid:
         setugid(uid)
     return None
-
-
-class DaemonMixIn:
-    """Mixin to make a daemon from watchers/queriers.
-    """
-
-    def __init__(self, configmod) :
-        self.delay = configmod.DELAY
-        self.name = str(self.__class__).split('.')[-1]
-        self._pid_file = os.path.join('/tmp', '%s.pid'%self.name)
-        if os.path.exists(self._pid_file):
-            raise Exception('''Another instance of %s must be running.
-If it i not the case, remove the file %s''' % (self.name, self._pid_file))
-        self._alive = 1
-        self._sleeping = 0
-        self.config = configmod
-
-    def _daemonize(self):
-        if not self.config.NODETACH:
-            if daemonize(self._pid_file) is None:
-                # put signal handler
-                signal.signal(signal.SIGTERM, self.signal_handler)
-                signal.signal(signal.SIGHUP, self.signal_handler)
-            else:
-                return -1
-
-    def run(self):
-        """ optionally go in daemon mode and
-        do what concrete class has to do and pauses for delay between runs
-        If self.delay is negative, do a pause before starting
-        """
-        if self._daemonize() == -1:
-            return
-        if self.delay < 0:
-            self.delay = -self.delay
-            time.sleep(self.delay)
-        while True:
-            try:
-                self._run()
-            except Exception, ex:
-                # display for info, sleep, and hope the problem will be solved
-                # later.
-                self.config.exception('Internal error: %s', ex)
-            if not self._alive:
-                break
-            try:
-                self._sleeping = 1
-                time.sleep(self.delay)
-                self._sleeping = 0
-            except SystemExit:
-                break
-        self.config.info('%s instance exited', self.name)
-        # remove pid file
-        os.remove(self._pid_file)
-
-    def signal_handler(self, sig_num, stack_frame):
-        if sig_num == signal.SIGTERM:
-            if self._sleeping:
-                # we are sleeping so we can exit without fear
-                self.config.debug('exit on SIGTERM')
-                sys.exit(0)
-            else:
-                self.config.debug('exit on SIGTERM (on next turn)')
-                self._alive = 0
-        elif sig_num == signal.SIGHUP:
-            self.config.info('reloading configuration on SIGHUP')
-            reload(self.config)
-
-    def _run(self):
-        """should be overridden in the mixed class"""
-        raise NotImplementedError()
-
-
-import logging
-from logilab.common.logging_ext import set_log_methods
-set_log_methods(DaemonMixIn, logging.getLogger('lgc.daemon'))
-
-## command line utilities ######################################################
-
-L_OPTIONS = ["help", "log=", "delay=", 'no-detach']
-S_OPTIONS = 'hl:d:n'
-
-def print_help(modconfig):
-    print """  --help or -h
-    displays this message
-  --log <log_level>
-    log treshold (7 record everything, 0 record only emergency.)
-    Defaults to %s
-  --delay <delay>
-    the number of seconds between two runs.
-    Defaults to %s""" % (modconfig.LOG_TRESHOLD, modconfig.DELAY)
-
-def handle_option(modconfig, opt_name, opt_value, help_meth):
-    if opt_name in ('-h', '--help'):
-        help_meth()
-        sys.exit(0)
-    elif opt_name in ('-l', '--log'):
-        modconfig.LOG_TRESHOLD = int(opt_value)
-    elif opt_name in ('-d', '--delay'):
-        modconfig.DELAY = int(opt_value)
-    elif opt_name in ('-n', '--no-detach'):
-        modconfig.NODETACH = 1

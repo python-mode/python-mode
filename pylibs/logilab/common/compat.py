@@ -20,7 +20,7 @@
 2.5, making them available in for earlier versions of python.
 
 See another compatibility snippets from other projects:
-    
+
     :mod:`lib2to3.fixes`
     :mod:`coverage.backward`
     :mod:`unittest2.compatibility`
@@ -32,6 +32,7 @@ __docformat__ = "restructuredtext en"
 
 import os
 import sys
+import types
 from warnings import warn
 
 import __builtin__ as builtins # 2to3 will tranform '__builtin__' to 'builtins'
@@ -50,14 +51,23 @@ else:
     def str_encode(string, encoding):
         return str(string)
 
-# XXX shouldn't we remove this and just let 2to3 do his job ?
+# XXX callable built-in seems back in all python versions
 try:
-    callable = callable
-except NameError:# callable removed from py3k
-    import collections
+    callable = builtins.callable
+except AttributeError:
+    from collections import Callable
     def callable(something):
-        return isinstance(something, collections.Callable)
-    del collections
+        return isinstance(something, Callable)
+    del Callable
+
+# See also http://bugs.python.org/issue11776
+if sys.version_info[0] == 3:
+    def method_type(callable, instance, klass):
+        # api change. klass is no more considered
+        return types.MethodType(callable, instance)
+else:
+    # alias types otherwise
+    method_type = types.MethodType
 
 if sys.version_info < (3, 0):
     raw_input = raw_input

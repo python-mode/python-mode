@@ -71,7 +71,7 @@ def class_moved(new_class, old_name=None, message=None):
             old_name, new_class.__module__, new_class.__name__)
     return class_renamed(old_name, new_class, message)
 
-def deprecated(reason=None, stacklevel=2):
+def deprecated(reason=None, stacklevel=2, name=None, doc=None):
     """Decorator that raises a DeprecationWarning to print a message
     when the decorated function is called.
     """
@@ -83,10 +83,10 @@ def deprecated(reason=None, stacklevel=2):
             warn(message, DeprecationWarning, stacklevel=stacklevel)
             return func(*args, **kwargs)
         try:
-            wrapped.__name__ = func.__name__
+            wrapped.__name__ = name or func.__name__
         except TypeError: # readonly attribute in 2.3
             pass
-        wrapped.__doc__ = func.__doc__
+        wrapped.__doc__ = doc or func.__doc__
         return wrapped
     return deprecated_decorator
 
@@ -110,3 +110,21 @@ def moved(modpath, objname):
     return callnew
 
 
+
+class DeprecationWrapper(object):
+    """proxy to print a warning on access to any attribute of the wrapped object
+    """
+    def __init__(self, proxied, msg=None):
+        self._proxied = proxied
+        self._msg = msg
+
+    def __getattr__(self, attr):
+        warn(self._msg, DeprecationWarning, stacklevel=2)
+        return getattr(self._proxied, attr)
+
+    def __setattr__(self, attr, value):
+        if attr in ('_proxied', '_msg'):
+            self.__dict__[attr] = value
+        else:
+            warn(self._msg, DeprecationWarning, stacklevel=2)
+            setattr(self._proxied, attr, value)

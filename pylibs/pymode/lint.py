@@ -56,7 +56,7 @@ def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None
             break
 
         except Exception, e:
-            print e
+            assert True
 
         if task:
             task.done += part
@@ -125,11 +125,13 @@ PYLINT = dict()
 
 def _init_pylint():
 
-    from pylint import lint, checkers
+    from pylint import lint, checkers, reporters
     import re
 
-    class VimReporter(object):
+    class VimReporter(reporters.BaseReporter):
+
         def __init__(self):
+            reporters.BaseReporter.__init__(self)
             self.errors = []
 
         def add_message(self, msg_id, location, msg):

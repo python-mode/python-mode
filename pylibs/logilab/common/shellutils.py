@@ -315,9 +315,22 @@ class ProgressBar(object):
 
     text = property(_get_text, _set_text, _del_text)
 
-    def update(self):
-        """Update the progression bar."""
-        self._current += 1
+    def update(self, offset=1, exact=False):
+        """Move FORWARD to new cursor position (cursor will never go backward).
+
+        :offset: fraction of ``size``
+
+        :exact:
+
+          - False: offset relative to current cursor position if True
+          - True: offset as an asbsolute position
+
+        """
+        if exact:
+            self._current = offset
+        else:
+            self._current += offset
+
         progress = int((float(self._current)/float(self._total))*self._size)
         if progress > self._progress:
             self._progress = progress

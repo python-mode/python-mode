@@ -18,9 +18,10 @@
 """ A few useful function/method decorators. """
 __docformat__ = "restructuredtext en"
 
-import types
-import sys, re
+import sys
 from time import clock, time
+
+from logilab.common.compat import callable, method_type
 
 # XXX rewrite so we can use the decorator syntax when keyarg has to be specified
 
@@ -116,6 +117,45 @@ def cached(callableobj=None, keyarg=None, **kwargs):
     else:
         return decorator(callableobj)
 
+
+class cachedproperty(object):
+    """ Provides a cached property equivalent to the stacking of
+    @cached and @property, but more efficient.
+
+    After first usage, the <property_name> becomes part of the object's
+    __dict__. Doing:
+
+      del obj.<property_name> empties the cache.
+
+    Idea taken from the pyramid_ framework and the mercurial_ project.
+
+    .. _pyramid: http://pypi.python.org/pypi/pyramid
+    .. _mercurial: http://pypi.python.org/pypi/Mercurial
+    """
+    __slots__ = ('wrapped',)
+
+    def __init__(self, wrapped):
+        try:
+            wrapped.__name__
+        except AttributeError:
+            raise TypeError('%s must have a __name__ attribute' %
+                            wrapped)
+        self.wrapped = wrapped
+
+    @property
+    def __doc__(self):
+        doc = getattr(self.wrapped, '__doc__', None)
+        return ('<wrapped by the cachedproperty decorator>%s'
+                % ('\n%s' % doc if doc else ''))
+
+    def __get__(self, inst, objtype=None):
+        if inst is None:
+            return self
+        val = self.wrapped(inst)
+        setattr(inst, self.wrapped.__name__, val)
+        return val
+
+
 def get_cache_impl(obj, funcname):
     cls = obj.__class__
     member = getattr(cls, funcname)
@@ -175,8 +215,8 @@ class iclassmethod(object):
         self.func = func
     def __get__(self, instance, objtype):
         if instance is None:
-            return types.MethodType(self.func, objtype, objtype.__class__)
-        return types.MethodType(self.func, instance, objtype)
+            return method_type(self.func, objtype, objtype.__class__)
+        return method_type(self.func, instance, objtype)
     def __set__(self, instance, value):
         raise AttributeError("can't set attribute")
 
@@ -233,8 +273,8 @@ def monkeypatch(klass, methodname=None):
             raise AttributeError('%s has no __name__ attribute: '
                                  'you should provide an explicit `methodname`'
                                  % func)
-        if callable(func):
-            setattr(klass, name, types.MethodType(func, None, klass))
+        if callable(func) and sys.version_info < (3, 0):
+            setattr(klass, name, method_type(func, None, klass))
         else:
             # likely a property
             # this is quite borderline but usage already in the wild ...
