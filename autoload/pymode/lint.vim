@@ -10,7 +10,7 @@ fun! pymode#lint#Check() "{{{
             echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
             return 0
         endtry
-    endif	
+    endif
 
     let g:pymode_lint_buffer = bufnr('%')
 
@@ -88,3 +88,18 @@ fun! pymode#lint#show_errormessage() "{{{
         endif
     endfor
 endfunction " }}}
+
+
+fun! pymode#lint#Auto() "{{{
+    if &modifiable && &modified
+        try
+            write
+        catch /E212/
+            echohl Error | echo "File modified and I can't save it. Cancel operation." | echohl None
+            return 0
+        endtry
+    endif
+    py auto.fix_current_file()
+    cclose
+    edit
+endfunction "}}}

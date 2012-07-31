@@ -43,6 +43,7 @@ def add_task(target, callback=None, buffer=None, title=None, *args, **kwargs):
     " Add all tasks. "
 
     task = Task(buffer, title=title, target=target, callback=callback, args=args, kwargs=kwargs)
+    task.daemon = True
     task.start()
 
     show_message('%s started.' % task.title)

@@ -13,11 +13,15 @@ endfunction "}}}
 
 
 fun! pymode#Option(name) "{{{
-    if exists('b:pymode_'.a:name)
-        return {'b:pymode_'.a:name}
-    else
-        return {'g:pymode_'.a:name}
+
+    let name = 'b:pymode_' . a:name
+    if exists(name)
+        return eval(name)
     endif
+
+    let name = 'g:pymode_' . a:name
+    return eval(name)
+
 endfunction "}}}
 
 
@@ -166,6 +170,7 @@ fun! pymode#Modeline() "{{{
             let {'b:pymode_'.name} = value
         endfor
     endif
+    au BufRead <buffer> call pymode#Modeline()
 endfunction "}}}
 
 

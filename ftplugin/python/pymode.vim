@@ -68,6 +68,7 @@ if pymode#Option('lint')
     command! -buffer -nargs=0 PyLintWindowToggle :call pymode#lint#ToggleWindow()
     command! -buffer -nargs=0 PyLintCheckerToggle :call pymode#lint#ToggleChecker()
     command! -buffer -nargs=0 PyLint :call pymode#lint#Check()
+    command! -buffer -nargs=0 PyLintAuto :call pymode#lint#Auto()
 
     " DESC: Set autocommands
     if pymode#Option('lint_write')

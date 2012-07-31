@@ -2,11 +2,15 @@ import vim
 
 
 def get_option(name):
-    return vim.eval("pymode#Option('%s')" % name)
+    return get_bvar(name) or get_var(name)
 
 
 def get_var(name):
     return vim.eval("g:pymode_%s" % name)
+
+
+def get_bvar(name):
+    return (int(vim.eval("exists('b:pymode_%s')" % name)) and vim.eval("b:pymode_%s" % name)) or None
 
 
 def get_current_buffer():

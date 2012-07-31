@@ -447,6 +447,9 @@ iM                Operation with inner function or method.
 
 *:PyLint*                                                                 *PyLint*
     Check current buffer
+
+*:PyLintAuto*                                                         *PyLintAuto*
+    Automatic fix PEP8 errors
                                  
 *:Pyrun*                                                                   *Pyrun*
     Run current buffer
@@ -509,8 +512,12 @@ You may set |exrc| and |secure| in your |vimrc| for auto set custom settings fro
         http://www.divmod.com/
 
     PEP8:
-        Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
+        Copyright (c) 2006 Johann C. Rocholl <johann@rocholl.net>
         http://github.com/jcrocholl/pep8
+
+    autopep8:
+        Copyright (c) 2012 hhatto <hhatto.jp@gmail.com>
+        https://github.com/hhatto/autopep8
 
     Python syntax for vim:
         Copyright (c) 2010 Dmitry Vasiliev

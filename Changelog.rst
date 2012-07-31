@@ -1,14 +1,15 @@
 Changelog
 =========
 
-## 2012-XX-XX 0.6.5
+## 2012-08-XX 0.6.5
 -------------------
 * Updated Pep8 to version 1.3.3
 * Updated Pylint to version 0.25.2
 * Fixed virtualenv support for windows users
 * Added pymode modeline ':help PythonModeModeline'
 * Added diagnostic tool ':call pymode#troubleshooting#Test()'
-* Async code checking
+* Added `PyLintAuto` command ':help PyLintAuto' 
+* Now Code checking is async operation
 * Improve speed of pymode folding
 
 ## 2012-05-24 0.6.4
