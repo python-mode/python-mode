@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2012-08-XX 0.6.5
+## 2012-08-02 0.6.5
 -------------------
 * Updated Pep8 to version 1.3.3
 * Updated Pylint to version 0.25.2
@@ -11,7 +11,7 @@ Changelog
 * Added `PyLintAuto` command ':help PyLintAuto' 
 * Code checking is async operation now
 * More, more fast the pymode folding
-* Repair python code run
+* Repaired execution of python code
 
 ## 2012-05-24 0.6.4
 -------------------

@@ -449,7 +449,7 @@ iM                Operation with inner function or method.
     Check current buffer
 
 *:PyLintAuto*                                                         *PyLintAuto*
-    Automatic fix PEP8 errors
+    Automatic fix PEP8 errors in current buffer
                                  
 *:Pyrun*                                                                   *Pyrun*
     Run current buffer

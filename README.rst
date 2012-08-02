@@ -30,15 +30,17 @@ See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is
 Changelog
 =========
 
-## 2012-04-10 0.6.2
+## 2012-08-02 0.6.5
 -------------------
-* Fix pymode_run for "unnamed" clipboard
-* Add 'pymode_lint_mccabe_complexity' option
-* Update Pep8 to version 1.0.1
-* Warning! Change 'pymode_rope_goto_def_newwin' option
-  for open "goto definition" in new window, set it to 'new' or 'vnew'
-  for horizontally or vertically split
-  If you use default behaviour (in the same buffer), not changes needed.
+* Updated Pep8 to version 1.3.3
+* Updated Pylint to version 0.25.2
+* Fixed virtualenv support for windows users
+* Added pymode modeline ':help PythonModeModeline'
+* Added diagnostic tool ':call pymode#troubleshooting#Test()'
+* Added `PyLintAuto` command ':help PyLintAuto' 
+* Code checking is async operation now
+* More, more fast the pymode folding
+* Repaired execution of python code
 
 
 Requirements
