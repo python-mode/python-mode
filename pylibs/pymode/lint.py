@@ -76,7 +76,7 @@ def parse_result(result):
 
 
 def mccabe(filename):
-    import mccabe as mc
+    from pylibs.mccabe import get_code_complexity
 
     complexity = int(get_option('lint_mccabe_complexity'))
     return mc.get_module_complexity(filename, min=complexity)
@@ -89,7 +89,7 @@ def pep8(filename):
 
 
 def pylint(filename):
-    from logilab.astng.builder import MANAGER
+    from pylibs.logilab.astng.builder import MANAGER
 
     PYLINT or _init_pylint()
     linter = PYLINT['lint']
@@ -102,7 +102,7 @@ def pylint(filename):
 
 
 def pyflakes(filename):
-    from pyflakes import checker
+    from pylibs.pyflakes import checker
     import _ast
 
     codeString = file(filename, 'U').read() + '\n'
@@ -125,7 +125,7 @@ PYLINT = dict()
 
 def _init_pylint():
 
-    from pylint import lint, checkers, reporters
+    from pylibs.pylint import lint, checkers, reporters
     import re
 
     class VimReporter(reporters.BaseReporter):
@@ -160,7 +160,7 @@ PEP8 = dict()
 
 def _init_pep8():
 
-    import pep8 as p8
+    from pylibs import pep8 as p8
 
     class _PEP8Report(p8.BaseReport):
 
