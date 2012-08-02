@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2012-08-02 0.6.5
+## 2012-08-02 0.6.6
 -------------------
 * Updated Pep8 to version 1.3.3
 * Updated Pylint to version 0.25.2

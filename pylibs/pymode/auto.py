@@ -1,5 +1,5 @@
 import vim
-from autopep8 import fix_file, PEP8_PASSES_MAX
+from pylibs.autopep8 import fix_file, PEP8_PASSES_MAX
 
 
 class Options():

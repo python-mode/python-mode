@@ -3,14 +3,14 @@ import os
 import tempfile
 import re
 
-import ropemode.decorators
-import ropemode.environment
-import ropemode.interface
+from pylibs.ropemode import decorators
+from pylibs.ropemode import environment
+from pylibs.ropemode import interface
 
 import vim
 
 
-class VimUtils(ropemode.environment.Environment):
+class VimUtils(environment.Environment):
 
     def __init__(self, *args, **kwargs):
         super(VimUtils, self).__init__(*args, **kwargs)
@@ -62,10 +62,10 @@ class VimUtils(ropemode.environment.Environment):
 
         if not self.get('extended_complete'):
             return u','.join(u"'%s'" % self._completion_text(proposal)
-                                    for proposal in values)
+                             for proposal in values)
 
         return u','.join(self._extended_completion(proposal)
-                                    for proposal in values)
+                         for proposal in values)
 
     def _command(self, command, encode=False):
         if encode:
@@ -79,7 +79,7 @@ class VimUtils(ropemode.environment.Environment):
             if starting:
                 col -= len(starting)
             self._command(u'call complete(%s, [%s])' % (col, proposals),
-                    encode=True)
+                          encode=True)
             return None
 
         return self.ask_values(prompt, values, starting=starting,
@@ -118,8 +118,8 @@ class VimUtils(ropemode.environment.Environment):
         return line.decode(self._get_encoding())
 
     def _position_to_offset(self, lineno, colno):
-        result = min(colno, len(self.buffer[lineno -1]) + 1)
-        for line in self.buffer[:lineno-1]:
+        result = min(colno, len(self.buffer[lineno - 1]) + 1)
+        for line in self.buffer[:lineno - 1]:
             line = self._decode_line(line)
             result += len(line) + 1
         return result
@@ -303,15 +303,17 @@ class VimUtils(ropemode.environment.Environment):
         return proposal
 
     _docstring_re = re.compile('^[\s\t\n]*([^\n]*)')
+
     def _extended_completion(self, proposal):
         # we are using extended complete and return dicts instead of strings.
         # `ci` means "completion item". see `:help complete-items`
         word, _, menu = map(lambda x: x.strip(), proposal.name.partition(':'))
         ci = dict(
-                word=word,
-                info='',
-                kind=''.join(s if s not in 'aeyuo' else '' for s in proposal.type)[:3],
-                menu=menu or '')
+            word=word,
+            info='',
+            kind=''.join(
+                s if s not in 'aeyuo' else '' for s in proposal.type)[:3],
+            menu=menu or '')
 
         if proposal.scope == 'parameter_keyword':
             default = proposal.get_default()
@@ -388,18 +390,18 @@ class _ValueCompleter(object):
         # don't know if self.values can be empty but better safe then sorry
         if self.values:
             if not isinstance(self.values[0], basestring):
-                result = [proposal.name for proposal in self.values \
+                result = [proposal.name for proposal in self.values
                           if proposal.name.startswith(arg_lead)]
             else:
-                result = [proposal for proposal in self.values \
+                result = [proposal for proposal in self.values
                           if proposal.startswith(arg_lead)]
             vim.command('let s:completions = %s' % result)
 
 
-ropemode.decorators.logger.message = echo
-ropemode.decorators.logger.only_short = True
+decorators.logger.message = echo
+decorators.logger.only_short = True
 
 _completer = _ValueCompleter()
 
 _env = VimUtils()
-_interface = ropemode.interface.RopeMode(env=_env)
+_interface = interface.RopeMode(env=_env)
