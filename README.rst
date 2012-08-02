@@ -30,15 +30,17 @@ See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is
 Changelog
 =========
 
-## 2012-04-10 0.6.2
+## 2012-08-02 0.6.5
 -------------------
-* Fix pymode_run for "unnamed" clipboard
-* Add 'pymode_lint_mccabe_complexity' option
-* Update Pep8 to version 1.0.1
-* Warning! Change 'pymode_rope_goto_def_newwin' option
-  for open "goto definition" in new window, set it to 'new' or 'vnew'
-  for horizontally or vertically split
-  If you use default behaviour (in the same buffer), not changes needed.
+* Updated Pep8 to version 1.3.3
+* Updated Pylint to version 0.25.2
+* Fixed virtualenv support for windows users
+* Added pymode modeline ':help PythonModeModeline'
+* Added diagnostic tool ':call pymode#troubleshooting#Test()'
+* Added `PyLintAuto` command ':help PyLintAuto' 
+* Code checking is async operation now
+* More, more fast the pymode folding
+* Repaired execution of python code
 
 
 Requirements
@@ -88,6 +90,16 @@ Then rebuild **helptags** in vim::
 
 .. note:: **filetype-plugin** (``:help filetype-plugin-on``) and **filetype-indent** (``:help filetype-indent-on``)
     must be enabled for use python-mode.
+
+
+Troubleshooting
+===============
+
+If your python-mode dont work, type command: ::
+
+    :call pymode#troubleshooting#Test()
+
+And fix warnings or copy output and send it to me (ex. with github issue).
 
 
 Settings
@@ -385,6 +397,8 @@ PyLintCheckerToggle  Toggle code checker (pylint, pyflakes)
 -------------------- -------------
 PyLint               Check current buffer
 -------------------- -------------
+PyLintAuto           Automatic fix PEP8 errors
+-------------------- -------------
 Pyrun                Run current buffer in python
 ==================== =============
 
@@ -456,6 +470,10 @@ Copyright (C) 2012 Kirill Klenov (klen_)
         Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
         http://github.com/jcrocholl/pep8
 
+    **autopep8**:
+        Copyright (c) 2012 hhatto <hhatto.jp@gmail.com>
+        https://github.com/hhatto/autopep8
+
     **Python syntax for vim**
         Copyright (c) 2010 Dmitry Vasiliev
         http://www.hlabs.spb.ru/vim/python.vim
@@ -469,6 +487,8 @@ Licensed under a `GNU lesser general public license`_.
 If you like this plugin, you can send me postcard :) 
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 **Thanks for support!**
+
+Version 0.6.5: I still haven't received any postcard, guys :(
 
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html

@@ -23,7 +23,7 @@ from logilab.astng import are_exclusive
 from pylint.interfaces import IASTNGChecker
 from pylint.reporters import diff_string
 from pylint.checkers import BaseChecker, EmptyReport
-from pylint.checkers.utils import check_messages
+from pylint.checkers.utils import check_messages, clobber_in_except, is_inside_except
 
 
 import re
@@ -101,6 +101,22 @@ def report_by_type_stats(sect, stats, old_stats):
                   nice_stats[node_type].get('percent_badname', '0'))
     sect.append(Table(children=lines, cols=6, rheaders=1))
 
+def redefined_by_decorator(node):
+    """return True if the object is a method redefined via decorator.
+
+    For example:
+        @property
+        def x(self): return self._x
+        @x.setter
+        def x(self, value): self._x = value
+    """
+    if node.decorators:
+        for decorator in node.decorators.nodes:
+            if (isinstance(decorator, astng.Getattr) and
+                getattr(decorator.expr, 'name', None) == node.name):
+                return True
+    return False
+
 class _BasicChecker(BaseChecker):
     __implements__ = IASTNGChecker
     name = 'basic'
@@ -142,7 +158,8 @@ class BasicErrorChecker(_BasicChecker):
 
     @check_messages('E0100', 'E0101', 'E0102', 'E0106')
     def visit_function(self, node):
-        self._check_redefinition(node.is_method() and 'method' or 'function', node)
+        if not redefined_by_decorator(node):
+            self._check_redefinition(node.is_method() and 'method' or 'function', node)
         # checks for max returns, branch, return in __init__
         returns = node.nodes_of_class(astng.Return,
                                       skip_klass=(astng.Function, astng.Class))
@@ -411,6 +428,12 @@ functions, methods
                 else:
                     msg = '%s (%s)' % (default.as_string(), value.as_string())
                 self.add_message('W0102', node=node, args=(msg,))
+            if value.qname() == '__builtin__.set':
+                if isinstance(default, astng.CallFunc):
+                    msg = default.as_string()
+                else:
+                    msg = '%s (%s)' % (default.as_string(), value.qname())
+                self.add_message('W0102', node=node, args=(msg,))
 
     @check_messages('W0101', 'W0150')
     def visit_return(self, node):
@@ -649,6 +672,8 @@ class NameChecker(_BasicChecker):
         elif isinstance(frame, astng.Module):
             if isinstance(ass_type, astng.Assign) and not in_loop(ass_type):
                 self._check_name('const', node.name, node)
+            elif isinstance(ass_type, astng.ExceptHandler):
+                self._check_name('variable', node.name, node)
         elif isinstance(frame, astng.Function):
             # global introduced variable aren't in the function locals
             if node.name in frame:
@@ -664,6 +689,11 @@ class NameChecker(_BasicChecker):
 
     def _check_name(self, node_type, name, node):
         """check for a name using the type's regexp"""
+        if is_inside_except(node):
+            clobbering, _ = clobber_in_except(node)
+            if clobbering:
+                return
+
         if name in self.config.good_names:
             return
         if name in self.config.bad_names:
@@ -674,7 +704,6 @@ class NameChecker(_BasicChecker):
         if regexp.match(name) is None:
             self.add_message('C0103', node=node, args=(name, regexp.pattern))
             self.stats['badname_' + node_type] += 1
-
 
 
 class DocStringChecker(_BasicChecker):

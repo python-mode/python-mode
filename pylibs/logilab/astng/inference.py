@@ -245,6 +245,7 @@ def infer_subscript(self, context=None):
             return
         try:
             # suppose it's a Tuple/List node (attribute error else)
+            # XXX infer self.value?
             assigned = self.value.getitem(index.value, context)
         except AttributeError:
             raise InferenceError()

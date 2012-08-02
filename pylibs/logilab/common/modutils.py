@@ -92,7 +92,7 @@ class LazyObject(object):
 
 
 def load_module_from_name(dotted_name, path=None, use_sys=1):
-    """Load a Python module from it's name.
+    """Load a Python module from its name.
 
     :type dotted_name: str
     :param dotted_name: python name of a module or package
@@ -117,7 +117,7 @@ def load_module_from_name(dotted_name, path=None, use_sys=1):
 
 
 def load_module_from_modpath(parts, path=None, use_sys=1):
-    """Load a python module from it's splitted name.
+    """Load a python module from its splitted name.
 
     :type parts: list(str) or tuple(str)
     :param parts:

@@ -1,7 +1,8 @@
 " Python-mode folding functions
 
 
-let s:defpat = '^\s*\(@\|class\s.*:\|def\s\)'
+let s:blank_regex = '^\s*$'
+let s:def_regex = '^\s*\(class\|def\) \w\+'
 
 
 fun! pymode#folding#text() " {{{
@@ -25,81 +26,34 @@ fun! pymode#folding#text() " {{{
 endfunction "}}}
 
 
-fun! pymode#folding#indent(lnum) "{{{
-    let indent = indent(pymode#BlockStart(a:lnum))
-    return indent ? indent + &shiftwidth : 0
-endfunction "}}}
-
-
 fun! pymode#folding#expr(lnum) "{{{
+
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
 
-    if line == ''
-        return getline(a:lnum+1) == '' ? '=' : '-1'
+    if line =~ s:def_regex
+        return ">".(indent / &shiftwidth + 1)
     endif
 
-    if line =~ s:defpat && getline(prevnonblank(a:lnum-1)) !~ '^\s*@'
-        let n = a:lnum
-        while getline(n) =~ '^\s*@'
-            let n = nextnonblank(n + 1)
-        endwhile
-        if getline(n) =~ s:defpat
-            return ">".(indent/&shiftwidth+1)
-        endif
-    endif
-
-    let p = prevnonblank(a:lnum-1)
-    while p>0 && getline(p) =~ '^\s*#'
-        let p = prevnonblank(p-1)
-    endwhile
-    let pind = indent(p)
-    if getline(p) =~ s:defpat && getline(prevnonblank(a:lnum - 1)) !~ '^\s*@'
-        let pind = pind + &shiftwidth
-    elseif p==0
-        let pind = 0
-    endif
-
-    if (indent>0 && indent==pind) || indent>pind
-        return '='
-    elseif indent==0
-        if pind==0 && line =~ '^#'
-            return 0
-        elseif line !~'^#'
-            if 0<pind && line!~'^else\s*:\|^except.*:\|^elif.*:\|^finally\s*:'
-                return '>1'
-            elseif 0==pind && getline(prevnonblank(a:lnum-1)) =~ '^\s*#'
-                return '>1'
-            else
-                return '='
-            endif
-        endif
-        let n = nextnonblank(a:lnum+1)
-        while n>0 && getline(n) =~'^\s*#'
-            let n = nextnonblank(n+1)
-        endwhile
-        if indent(n)==0
-            return 0
-        else
-            return -1
-        end
-    endif
-    let blockindent = indent(pymode#BlockStart(a:lnum)) + &shiftwidth
-    if blockindent==0
-        return 1
-    endif
-    let n = nextnonblank(a:lnum+1)
-    while n>0 && getline(n) =~'^\s*#'
-        let n = nextnonblank(n+1)
-    endwhile
-    let nind = indent(n)
-    if line =~ '^\s*#' && indent>=nind
+    if line =~ '^\s*@'
         return -1
-    elseif line =~ '^\s*#'
-        return nind / &shiftwidth
-    else
-        return blockindent / &shiftwidth
     endif
+
+    if line =~ s:blank_regex
+        let prev_line = getline(a:lnum - 1)
+        if prev_line =~ s:blank_regex
+            return -1
+        else
+            return foldlevel(prevnonblank(a:lnum))
+        endif
+    endif
+
+    if indent == 0
+        return 0
+    endif
+
+    return '='
+
 endfunction "}}}
 
 

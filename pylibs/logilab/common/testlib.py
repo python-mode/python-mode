@@ -62,7 +62,7 @@ if not getattr(unittest_legacy, "__package__", None):
         import unittest2 as unittest
         from unittest2 import SkipTest
     except ImportError:
-        sys.exit("You have to install python-unittest2 to use this module")
+        raise ImportError("You have to install python-unittest2 to use %s" % __name__)
 else:
     import unittest
     from unittest import SkipTest
@@ -1214,7 +1214,14 @@ class DocTest(TestCase):
                 suite = doctest.DocTestSuite(self.module)
         except AttributeError:
             suite = SkippedSuite()
-        return suite.run(result)
+        # doctest may gork the builtins dictionnary
+        # This happen to the "_" entry used by gettext
+        old_builtins =  __builtins__.copy()
+        try:
+            return suite.run(result)
+        finally:
+            __builtins__.clear()
+            __builtins__.update(old_builtins)
     run = __call__
 
     def test(self):

@@ -1,8 +1,7 @@
-fun! pymode#lint#Check()
-
+fun! pymode#lint#Check() "{{{
+    " DESC: Run checkers on current file.
+    "
     if !g:pymode_lint | return | endif
-
-    let b:errors = {}
 
     if &modifiable && &modified
         try
@@ -11,31 +10,30 @@ fun! pymode#lint#Check()
             echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
             return 0
         endtry
-    endif	
-
-    py check_file()
-
-    if g:qf_list != b:qf_list
-
-        call setqflist(b:qf_list, 'r')
-
-        let g:qf_list = b:qf_list
-
-        if g:pymode_lint_message
-            for v in b:qf_list
-                let b:errors[v['lnum']] = v['text']
-            endfor
-            call pymode#lint#show_errormessage()
-        endif
-
-        if g:pymode_lint_cwindow
-            call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
-        endif
-
     endif
+
+    let g:pymode_lint_buffer = bufnr('%')
+
+    py lint.check_file()
+
+endfunction " }}}
+
+
+fun! pymode#lint#Parse()
+    " DESC: Parse result of code checking.
+    "
+    call setqflist(g:qf_list, 'r')
 
     if g:pymode_lint_signs
         call pymode#PlaceSigns()
+    endif
+
+    if g:pymode_lint_cwindow
+        call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
+    endif
+
+    if !len(g:qf_list)
+        call pymode#WideMessage('Code checking is completed. No errors found.')
     endif
 
 endfunction
@@ -74,13 +72,34 @@ endfunction "}}}
 
 
 fun! pymode#lint#show_errormessage() "{{{
-    if !len(b:errors) | return | endif
-    let cursor = getpos(".")
-    if has_key(b:errors, l:cursor[1])
-        call pymode#WideMessage(b:errors[l:cursor[1]])
-        let b:show_message = 1
-    else
-        let b:show_message = 0
-        echo
+    if g:pymode_lint_buffer != bufnr('%')
+        return 0
     endif
+    let errors = getqflist()
+    if !len(errors)
+        return
+    endif
+    let [_, line, _, _] = getpos(".")
+    for e in errors
+        if e['lnum'] == line
+            call pymode#WideMessage(e['text'])
+        else
+            echo
+        endif
+    endfor
 endfunction " }}}
+
+
+fun! pymode#lint#Auto() "{{{
+    if &modifiable && &modified
+        try
+            write
+        catch /E212/
+            echohl Error | echo "File modified and I can't save it. Cancel operation." | echohl None
+            return 0
+        endtry
+    endif
+    py auto.fix_current_file()
+    cclose
+    edit
+endfunction "}}}

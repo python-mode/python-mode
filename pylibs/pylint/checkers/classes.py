@@ -18,11 +18,12 @@
 from __future__ import generators
 
 from logilab import astng
-from logilab.astng import YES, Instance, are_exclusive
+from logilab.astng import YES, Instance, are_exclusive, AssAttr
 
 from pylint.interfaces import IASTNGChecker
 from pylint.checkers import BaseChecker
-from pylint.checkers.utils import PYMETHODS, overrides_a_method, check_messages
+from pylint.checkers.utils import (PYMETHODS, overrides_a_method,
+    check_messages, is_attr_private, is_attr_protected, node_frame_class)
 
 def class_is_abstract(node):
     """return true if the given class node should be considered as an abstract
@@ -254,7 +255,17 @@ a class method.'}
                 continue
             self._check_signature(node, meth_node, 'overridden')
             break
-        # check if the method overload an attribute
+        if node.decorators:
+            for decorator in node.decorators.nodes:
+                if isinstance(decorator, astng.Getattr) and \
+                        decorator.attrname in ('getter', 'setter', 'deleter'):
+                    # attribute affectation will call this method, not hiding it
+                    return
+                if isinstance(decorator, astng.Name) and decorator.name == 'property':
+                    # attribute affectation will either call a setter or raise
+                    # an attribute error, anyway not hiding the function
+                    return
+        # check if the method is hidden by an attribute
         try:
             overridden = klass.instance_attr(node.name)[0] # XXX
             args = (overridden.root().name, overridden.fromlineno)
@@ -289,32 +300,59 @@ a class method.'}
         methods)
         """
         attrname = node.attrname
-        if self._first_attrs and isinstance(node.expr, astng.Name) and \
-               node.expr.name == self._first_attrs[-1]:
+        # Check self
+        if self.is_first_attr(node):
             self._accessed[-1].setdefault(attrname, []).append(node)
             return
         if 'W0212' not in self.active_msgs:
             return
-        if attrname[0] == '_' and not attrname == '_' and not (
-             attrname.startswith('__') and attrname.endswith('__')):
-            # XXX move this in a reusable function
-            klass = node.frame()
-            while klass is not None and not isinstance(klass, astng.Class):
-                if klass.parent is None:
-                    klass = None
-                else:
-                    klass = klass.parent.frame()
+
+        self._check_protected_attribute_access(node)
+
+    def visit_assign(self, assign_node):
+        if 'W0212' not in self.active_msgs:
+            return
+
+        node = assign_node.targets[0]
+        if not isinstance(node, AssAttr):
+            return
+
+        if self.is_first_attr(node):
+            return
+
+        self._check_protected_attribute_access(node)
+
+    def _check_protected_attribute_access(self, node):
+        '''Given an attribute access node (set or get), check if attribute
+        access is legitimate. Call _check_first_attr with node before calling
+        this method. Valid cases are:
+        * self._attr in a method or cls._attr in a classmethod. Checked by
+        _check_first_attr.
+        * Klass._attr inside "Klass" class.
+        * Klass2._attr inside "Klass" class when Klass2 is a base class of
+            Klass.
+        '''
+        attrname = node.attrname
+
+        if is_attr_protected(attrname):
+
+            klass = node_frame_class(node)
+
             # XXX infer to be more safe and less dirty ??
             # in classes, check we are not getting a parent method
             # through the class object or through super
             callee = node.expr.as_string()
-            if klass is None or not (callee == klass.name or
-                callee in klass.basenames
-                or (isinstance(node.expr, astng.CallFunc)
-                    and isinstance(node.expr.func, astng.Name)
-                    and node.expr.func.name == 'super')):
-                self.add_message('W0212', node=node, args=attrname)
 
+            # We are not in a class, no remaining valid case
+            if klass is None:
+                self.add_message('W0212', node=node, args=attrname)
+                return
+
+            # We are in a class, one remaining valid cases, Klass._attr inside
+            # Klass
+            if not (callee == klass.name or callee in klass.basenames):
+
+                self.add_message('W0212', node=node, args=attrname)
 
     def visit_name(self, node):
         """check if the name handle an access to a class member
@@ -519,11 +557,19 @@ a class method.'}
         # if we use *args, **kwargs, skip the below checks
         if method1.args.vararg or method1.args.kwarg:
             return
+        if is_attr_private(method1.name):
+            return
         if len(method1.args.args) != len(refmethod.args.args):
             self.add_message('W0221', args=class_type, node=method1)
         elif len(method1.args.defaults) < len(refmethod.args.defaults):
             self.add_message('W0222', args=class_type, node=method1)
 
+    def is_first_attr(self, node):
+        """Check that attribute lookup name use first attribute variable name
+        (self for method, cls for classmethod and mcs for metaclass).
+        """
+        return self._first_attrs and isinstance(node.expr, astng.Name) and \
+                   node.expr.name == self._first_attrs[-1]
 
 def _ancestors_to_call(klass_node, method='__init__'):
     """return a dictionary where keys are the list of base classes providing

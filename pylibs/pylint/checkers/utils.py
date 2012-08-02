@@ -18,12 +18,56 @@
 """some functions that may be useful for various checkers
 """
 
+import re
 import string
 from logilab import astng
+from logilab.astng import scoped_nodes
 from logilab.common.compat import builtins
 BUILTINS_NAME = builtins.__name__
 
 COMP_NODE_TYPES = astng.ListComp, astng.SetComp, astng.DictComp, astng.GenExpr
+
+
+def is_inside_except(node):
+    """Returns true if node is inside the name of an except handler."""
+    current = node
+    while current and not isinstance(current.parent, astng.ExceptHandler):
+        current = current.parent
+
+    return current and current is current.parent.name
+
+
+def get_all_elements(node):
+    """Recursively returns all atoms in nested lists and tuples."""
+    if isinstance(node, (astng.Tuple, astng.List)):
+        for child in node.elts:
+            for e in get_all_elements(child):
+                yield e
+    else:
+        yield node
+
+
+def clobber_in_except(node):
+    """Checks if an assignment node in an except handler clobbers an existing
+    variable.
+
+    Returns (True, args for W0623) if assignment clobbers an existing variable,
+    (False, None) otherwise.
+    """
+    if isinstance(node, astng.AssAttr):
+        return (True, (node.attrname, 'object %r' % (node.expr.name,)))
+    elif isinstance(node, astng.AssName):
+        name = node.name
+        if is_builtin(name):
+            return (True, (name, 'builtins'))
+        else:
+            scope, stmts = node.lookup(name)
+            if (stmts and
+                not isinstance(stmts[0].ass_type(),
+                               (astng.Assign, astng.AugAssign, astng.ExceptHandler))):
+                return (True, (name, 'outer scope (line %i)' % (stmts[0].lineno,)))
+    return (False, None)
+
 
 def safe_infer(node):
     """return the inferred value for the given node.
@@ -38,6 +82,8 @@ def safe_infer(node):
     try:
         inferit.next()
         return # None if there is ambiguity on the inferred node
+    except astng.InferenceError:
+        return # there is some kind of ambiguity
     except StopIteration:
         return value
 
@@ -67,7 +113,7 @@ def is_empty(body):
     """return true if the given node does nothing but 'pass'"""
     return len(body) == 1 and isinstance(body[0], astng.Pass)
 
-builtins =  __builtins__.copy()
+builtins = builtins.__dict__.copy()
 SPECIAL_BUILTINS = ('__builtins__',) # '__path__', '__file__')
 
 def is_builtin(name): # was is_native_builtin
@@ -140,7 +186,10 @@ def is_func_decorator(node):
     while parent is not None:
         if isinstance(parent, astng.Decorators):
             return True
-        if parent.is_statement or isinstance(parent, astng.Lambda):
+        if (parent.is_statement or
+            isinstance(parent, astng.Lambda) or
+            isinstance(parent, (scoped_nodes.ComprehensionScope,
+                                scoped_nodes.ListComp))):
             break
         parent = parent.parent
     return False
@@ -287,3 +336,38 @@ def parse_format_string(format_string):
                 num_args += 1
         i += 1
     return keys, num_args
+
+def is_attr_protected(attrname):
+    """return True if attribute name is protected (start with _ and some other
+    details), False otherwise.
+    """
+    return attrname[0] == '_' and not attrname == '_' and not (
+             attrname.startswith('__') and attrname.endswith('__'))
+
+def node_frame_class(node):
+    """return klass node for a method node (or a staticmethod or a
+    classmethod), return null otherwise
+    """
+    klass = node.frame()
+
+    while klass is not None and not isinstance(klass, astng.Class):
+        if klass.parent is None:
+            klass = None
+        else:
+            klass = klass.parent.frame()
+
+    return klass
+
+def is_super_call(expr):
+    """return True if expression node is a function call and if function name
+    is super. Check before that you're in a method.
+    """
+    return (isinstance(expr, astng.CallFunc) and
+        isinstance(expr.func, astng.Name) and
+        expr.func.name == 'super')
+def is_attr_private(attrname):
+    """Check that attribute name is private (at least two leading underscores,
+    at most one trailing underscore)
+    """
+    regex = re.compile('^_{2,}.*[^_]+_?$')
+    return regex.match(attrname)
