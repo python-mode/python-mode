@@ -9,8 +9,9 @@ Changelog
 * Added pymode modeline ':help PythonModeModeline'
 * Added diagnostic tool ':call pymode#troubleshooting#Test()'
 * Added `PyLintAuto` command ':help PyLintAuto' 
-* Now Code checking is async operation
-* Improve speed of pymode folding
+* Code checking is async operation now
+* More, more fast the pymode folding
+* Repair python code run
 
 ## 2012-05-24 0.6.4
 -------------------
