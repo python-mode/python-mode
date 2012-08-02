@@ -14,6 +14,7 @@ CONTENTS                                                  *Python-mode-contents*
     1.Intro...................................|PythonMode|
     2.Options.................................|PythonModeOptions|
         2.1.Customisation details.............|PythonModeOptionsDetails|
+        2.2.Modeline..........................|PythonModeModeline|
     3.Default Keys............................|PythonModeKeys|
     4.Commands................................|PythonModeCommands|
     5.FAQ.....................................|PythonModeFAQ|
@@ -26,7 +27,7 @@ CONTENTS                                                  *Python-mode-contents*
 
 Python-mode is a vim plugin that allows you to use the pylint, rope, pydoc
 library in vim to provide features like python code looking for bugs,
-refactoring and some other usefull things.
+refactoring and some other useful things.
 
 This plugin allow you create python code in vim very easily. There is no need
 to install the pylint or rope library on your system.
@@ -63,7 +64,7 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_onfly'|               Run linter on the fly
 
-|'pymode_lint_config'|              Filepath to pylinc configuration
+|'pymode_lint_config'|              Filepath to pylint configuration
 
 |'pymode_lint_write'|               Check code every save
 
@@ -117,6 +118,32 @@ PythonMode. These options should be set in your vimrc.
 
 To enable any of the below options you should put the given line in your
 '$HOME/.vimrc'. See |vimrc-intro|.
+
+------------------------------------------------------------------------------
+2.2. Modeline ~
+                                                      *PythonModeModeline*
+
+Feature like VIM modeline `:help modeline`. Allow changing pymode options for
+edited file. Pymode modeline should always be the last line in the file and
+look like:
+
+>
+    # pymode:lint_ignore=E0202:doc=0:lint_write=0
+<
+
+Examples:
+
+Disable folding on current file:
+>
+    # pymode:folding=0
+<
+
+Set linters and mccabe complexity.
+>
+    # pymode:lint_checker=pip,mccabe:lint_mccabe_complexity=10
+<
+
+This changes will work only in current buffer.
 
 ------------------------------------------------------------------------------
                                                                 *'pymode_paths'*
@@ -381,7 +408,7 @@ iM                Select inner function or method. Ex: viM, diM, yiM, ciM (norma
 3. Default Keys ~
                                                                 *PythonModeKeys*
 
-For redifine keys see: |PythonModeOptions|
+For redefine keys see: |PythonModeOptions|
 
 ================  ============================
 Key               Command
@@ -420,6 +447,9 @@ iM                Operation with inner function or method.
 
 *:PyLint*                                                                 *PyLint*
     Check current buffer
+
+*:PyLintAuto*                                                         *PyLintAuto*
+    Automatic fix PEP8 errors in current buffer
                                  
 *:Pyrun*                                                                   *Pyrun*
     Run current buffer
@@ -428,6 +458,12 @@ iM                Operation with inner function or method.
 ==============================================================================
 5. FAQ ~
                                                                  *PythonModeFAQ*
+
+Python-mode dont work
+---------------------
+
+Run ":call pymode#troubleshooting#Test()", fix warning or send me output.
+
 
 Rope completion is very slow
 ----------------------------
@@ -447,12 +483,12 @@ Solutions:
 Pylint check is very slow
 -------------------------
 
-In some projects pylint_ may check slowly, because it also scan imported modules if posible.
+In some projects pylint_ may check slowly, because it also scan imported modules if possible.
 Try use pyflakes, see |'pymode_lint_checker'|.
 
 You may set |exrc| and |secure| in your |vimrc| for auto set custom settings from `.vimrc` from your projects directories.
 >
-    Example: On Flask projects I automaticly set 'g:pymode_lint_checker = "pyflakes"', on django 'g:pymode_lint_cheker = "pylint"'
+    Example: On Flask projects I automatically set 'g:pymode_lint_checker = "pyflakes"', on Django 'g:pymode_lint_checker = "pylint"'
 <
 
 
@@ -476,8 +512,12 @@ You may set |exrc| and |secure| in your |vimrc| for auto set custom settings fro
         http://www.divmod.com/
 
     PEP8:
-        Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
+        Copyright (c) 2006 Johann C. Rocholl <johann@rocholl.net>
         http://github.com/jcrocholl/pep8
+
+    autopep8:
+        Copyright (c) 2012 hhatto <hhatto.jp@gmail.com>
+        https://github.com/hhatto/autopep8
 
     Python syntax for vim:
         Copyright (c) 2010 Dmitry Vasiliev
@@ -494,6 +534,8 @@ See: http://www.gnu.org/copyleft/lesser.html
 If you like this plugin, you can send me postcard :) 
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 Thanks for support!
+
+Version 0.6.5: I still haven't received any postcard, guys :(
 
 
 ------------------------------------------------------------------------------

@@ -243,6 +243,12 @@ class Module(LocalsDictNodeNG):
         self.locals = self.globals = {}
         self.body = []
 
+    @property
+    def file_stream(self):
+        if self.file is not None:
+            return open(self.file)
+        return None
+
     def block_range(self, lineno):
         """return block line numbers.
 
@@ -460,6 +466,7 @@ else:
 
 class Lambda(LocalsDictNodeNG, FilterStmtsMixin):
     _astng_fields = ('args', 'body',)
+    name = '<lambda>'
 
     # function's type, 'function' | 'method' | 'staticmethod' | 'classmethod'
     type = 'function'
@@ -968,5 +975,3 @@ class Class(Statement, LocalsDictNodeNG, FilterStmtsMixin):
                 yield iface
         if missing:
             raise InferenceError()
-
-

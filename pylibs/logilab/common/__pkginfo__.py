@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of logilab-common.
@@ -17,13 +17,14 @@
 # with logilab-common.  If not, see <http://www.gnu.org/licenses/>.
 """logilab.common packaging information"""
 __docformat__ = "restructuredtext en"
+import sys
 
 distname = 'logilab-common'
 modname = 'common'
 subpackage_of = 'logilab'
 subpackage_master = True
 
-numversion = (0, 56, 2)
+numversion = (0, 58, 0)
 version = '.'.join([str(num) for num in numversion])
 
 license = 'LGPL' # 2.1 or later
@@ -39,4 +40,11 @@ from os.path import join
 scripts = [join('bin', 'pytest')]
 include_dirs = [join('test', 'data')]
 
-install_requires = ['unittest2 >= 0.5.1']
+if sys.version_info < (2, 7):
+    install_requires = ['unittest2 >= 0.5.1']
+
+classifiers = ["Topic :: Utilities",
+               "Programming Language :: Python",
+               "Programming Language :: Python :: 2",
+               "Programming Language :: Python :: 3",
+               ]

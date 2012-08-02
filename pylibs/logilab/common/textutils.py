@@ -313,6 +313,8 @@ _BLANK_RE = re.compile(_BLANK_URE)
 __VALUE_URE = r'-?(([0-9]+\.[0-9]*)|((0x?)?[0-9]+))'
 __UNITS_URE = r'[a-zA-Z]+'
 _VALUE_RE = re.compile(r'(?P<value>%s)(?P<unit>%s)?'%(__VALUE_URE, __UNITS_URE))
+_VALIDATION_RE = re.compile(r'^((%s)(%s))*(%s)?$' % (__VALUE_URE, __UNITS_URE,
+                                                    __VALUE_URE))
 
 BYTE_UNITS = {
     "b": 1,
@@ -352,12 +354,12 @@ def apply_units(string, units, inter=None, final=float, blank_reg=_BLANK_RE,
     """
     if inter is None:
         inter = final
-    string = _BLANK_RE.sub('', string)
+    fstring = _BLANK_RE.sub('', string)
+    if not (fstring and _VALIDATION_RE.match(fstring)):
+        raise ValueError("Invalid unit string: %r." % string)
     values = []
-    for match in value_reg.finditer(string):
+    for match in value_reg.finditer(fstring):
         dic = match.groupdict()
-        #import sys
-        #print >> sys.stderr, dic
         lit, unit = dic["value"], dic.get("unit")
         value = inter(lit)
         if unit is not None:

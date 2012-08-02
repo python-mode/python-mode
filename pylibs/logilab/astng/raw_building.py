@@ -240,10 +240,14 @@ class InspectBuilder(object):
                 member = member.im_func
             if isfunction(member):
                 # verify this is not an imported function
-                if member.func_code.co_filename != getattr(self._module, '__file__', None):
+                filename = getattr(member.func_code, 'co_filename', None)
+                if filename is None:
+                    assert isinstance(member, object)
+                    object_build_methoddescriptor(node, member, name)
+                elif filename != getattr(self._module, '__file__', None):
                     attach_dummy_node(node, name, member)
-                    continue
-                object_build_function(node, member, name)
+                else:
+                    object_build_function(node, member, name)
             elif isbuiltin(member):
                 if self.imported_member(node, member, name):
                     #if obj is object:

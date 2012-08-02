@@ -128,7 +128,6 @@ class ASTNGBuilder(InspectBuilder):
         # build astng representation
         node = self.string_build(data, modname, path)
         node.file_encoding = encoding
-        node.file_stream = stream
         return node
 
     def string_build(self, data, modname='', path=None):
@@ -141,8 +140,9 @@ class ASTNGBuilder(InspectBuilder):
         # handle delayed assattr nodes
         for delayed in module._delayed_assattr:
             self.delayed_assattr(delayed)
-        for transformer in self._manager.transformers:
-            transformer(module)
+        if modname:
+            for transformer in self._manager.transformers:
+                transformer(module)
         return module
 
     def _data_build(self, data, modname, path):

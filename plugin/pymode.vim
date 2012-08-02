@@ -1,4 +1,4 @@
-let g:pymode_version = "0.6.4"
+let g:pymode_version = "0.6.5"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -57,6 +57,7 @@ endif
 if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     let g:qf_list = []
+    let g:pymode_lint_buffer = 0
 
     " OPTION: g:pymode_lint_write -- bool. Check code every save.
     call pymode#Default("g:pymode_lint_write", 1)
@@ -115,7 +116,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
     endif
 
-    py from pymode import check_file
+    py from pymode import lint, queue, auto
+
+    au VimLeavePre * py queue.stop_queue()
 
 endif
 
@@ -208,6 +211,9 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " OPTION: g:pymode_rope_short_prefix -- string.
     call pymode#Default("g:pymode_rope_short_prefix", "<C-c>")
 
+    " OPTION: g:pymode_rope_map_space -- string.
+    call pymode#Default("g:pymode_rope_map_space", 1)
+
     " OPTION: g:pymode_rope_vim_completion -- bool.
     call pymode#Default("g:pymode_rope_vim_completion", 1)
 
@@ -272,7 +278,16 @@ endif
 " OPTION: g:pymode_folding -- bool. Enable python-mode folding for pyfiles.
 call pymode#Default("g:pymode_folding", 1)
 
+" OPTION: g:pymode_syntax -- bool. Enable python-mode syntax for pyfiles.
+call pymode#Default("g:pymode_syntax", 1)
+
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
 call pymode#Default("g:pymode_utils_whitespaces", 1)
+
+" OPTION: g:pymode_options_indent -- bool. To set indent options.
+call pymode#Default("g:pymode_options_indent", 1)
+
+" OPTION: g:pymode_options_other -- bool. To set other options.
+call pymode#Default("g:pymode_options_other", 1)
 
 " vim: fdm=marker:fdl=0
