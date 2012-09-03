@@ -49,7 +49,7 @@ except ImportError:
     pep8 = None
 
 
-__version__ = '0.7.3'
+__version__ = '0.8'
 
 
 PEP8_BIN = 'pep8'
@@ -1580,4 +1580,7 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(1)
