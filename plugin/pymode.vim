@@ -1,4 +1,4 @@
-let g:pymode_version = "0.6.7"
+let g:pymode_version = "0.6.8"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -281,13 +281,13 @@ call pymode#Default("g:pymode_folding", 1)
 " OPTION: g:pymode_syntax -- bool. Enable python-mode syntax for pyfiles.
 call pymode#Default("g:pymode_syntax", 1)
 
+" OPTION: g:pymode_indent -- bool. Enable/Disable pymode PEP8 indentation
+call pymode#Default("g:pymode_indent", 1)
+
 " OPTION: g:pymode_utils_whitespaces -- bool. Remove unused whitespaces on save
 call pymode#Default("g:pymode_utils_whitespaces", 1)
 
-" OPTION: g:pymode_options_indent -- bool. To set indent options.
-call pymode#Default("g:pymode_options_indent", 1)
-
-" OPTION: g:pymode_options_other -- bool. To set other options.
-call pymode#Default("g:pymode_options_other", 1)
+" OPTION: g:pymode_options -- bool. To set some python options.
+call pymode#Default("g:pymode_options", 1)
 
 " vim: fdm=marker:fdl=0

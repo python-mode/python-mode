@@ -287,11 +287,11 @@ Default values: ::
     " Autoremove unused whitespaces
     let g:pymode_utils_whitespaces = 1
 
-    " Set default pymode python indent options
-    let g:pymode_options_indent = 1
+    " Enable pymode indentation
+    let g:pymode_indent = 1
 
-    " Set default pymode python other options
-    let g:pymode_options_other = 1
+    " Set default pymode python options
+    let g:pymode_options = 1
 
 
 Syntax highlight
@@ -478,6 +478,10 @@ Copyright (C) 2012 Kirill Klenov (klen_)
         Copyright (c) 2010 Dmitry Vasiliev
         http://www.hlabs.spb.ru/vim/python.vim
 
+    **PEP8 VIM indentation**
+        Copyright (c) 2012 Hynek Schlawack <hs@ox.cx>
+        http://github.com/hynek/vim-python-pep8-indent
+
 
 License
 =======
@@ -487,8 +491,6 @@ Licensed under a `GNU lesser general public license`_.
 If you like this plugin, you can send me postcard :) 
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 **Thanks for support!**
-
-Version 0.6.5: I still haven't received any postcard, guys :(
 
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html

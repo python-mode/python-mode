@@ -15,22 +15,8 @@ endif
 
 " Options {{{
 
-" Python indent options
-if pymode#Option('options_indent')
-    setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class
-    setlocal cindent
-    setlocal tabstop=4
-    setlocal softtabstop=4
-    setlocal shiftwidth=4
-    setlocal shiftround
-    setlocal smartindent
-    setlocal smarttab
-    setlocal expandtab
-    setlocal autoindent
-endif
-
 " Python other options
-if pymode#Option('options_other')
+if pymode#Option('options')
     setlocal complete+=t
     setlocal formatoptions-=t
     if v:version > 702 && !&relativenumber

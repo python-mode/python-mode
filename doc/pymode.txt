@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.6.7
+                          Version: 0.6.8
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -100,10 +100,9 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_syntax'|                   Turns off the custom syntax highlighting
 
-|'pymode_options_indent'|           Set default pymode options for
-                                  python indentation
+|'pymode_indent'|                   Enable/Disable pymode PEP8 indentation
 
-|'pymode_options_other'|            Set default pymode options for
+|'pymode_options'|                  Set default pymode options for
                                   python codding
 
 |'pymode_motion'|                   Enable pymode motion stuff
@@ -346,24 +345,12 @@ If this option is set to 0 then the custom syntax highlighting will
 not be used.
 
 ------------------------------------------------------------------------------
-                                                       *'pymode_options_indent'*
+                                                               *'pymode_indent'*
 Values: 0 or 1.
 Default: 1.
 
-If this option is set to 1, pymode will enable the following options for python
-buffers: >
+If this option is set to 1, pymode will enable python indentation support
 
-    setlocal cinwords=if,elif,else,for,while,try,except,finally,def,class
-    setlocal cindent
-    setlocal tabstop=4
-    setlocal softtabstop=4
-    setlocal shiftwidth=4
-    setlocal shiftround
-    setlocal smartindent
-    setlocal smarttab
-    setlocal expandtab
-    setlocal autoindent
-<
 ------------------------------------------------------------------------------
                                                               *'pymode_folding'*
 Values: 0 or 1.
@@ -372,7 +359,7 @@ Default: 1.
 If this option is set to 1, pymode will enable python-folding.
 
 ------------------------------------------------------------------------------
-                                                        *'pymode_options_other'*
+                                                              *'pymode_options'*
 Values: 0 or 1.
 Default: 1.
 
@@ -535,6 +522,10 @@ from `.vimrc` from your projects directories.
         Copyright (c) 2010 Dmitry Vasiliev
         http://www.hlabs.spb.ru/vim/python.vim
 
+    PEP8 VIM indentation
+        Copyright (c) 2012 Hynek Schlawack <hs@ox.cx>
+        http://github.com/hynek/vim-python-pep8-indent
+
 
 ==============================================================================
 7. License ~
@@ -546,8 +537,6 @@ See: http://www.gnu.org/copyleft/lesser.html
 If you like this plugin, you can send me a postcard :) 
 My address is: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 Thanks for your support!
-
-Version 0.6.5: I still haven't received any postcards, guys :(
 
 
 ------------------------------------------------------------------------------
