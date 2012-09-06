@@ -287,11 +287,11 @@ Default values: ::
     " Autoremove unused whitespaces
     let g:pymode_utils_whitespaces = 1
 
-    " Set default pymode python indent options
-    let g:pymode_options_indent = 1
+    " Enable pymode indentation
+    let g:pymode_indent = 1
 
-    " Set default pymode python other options
-    let g:pymode_options_other = 1
+    " Set default pymode python options
+    let g:pymode_options = 1
 
 
 Syntax highlight
@@ -477,6 +477,10 @@ Copyright (C) 2012 Kirill Klenov (klen_)
     **Python syntax for vim**
         Copyright (c) 2010 Dmitry Vasiliev
         http://www.hlabs.spb.ru/vim/python.vim
+
+    **PEP8 VIM indentation**
+        Copyright (c) 2012 Hynek Schlawack <hs@ox.cx>
+        http://github.com/hynek/vim-python-pep8-indent
 
 
 License
