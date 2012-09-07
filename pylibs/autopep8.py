@@ -362,23 +362,19 @@ class FixPEP8(object):
         """The 'loose fingernails' indentation level error for hanging
         indents."""
         # fix by deleting whitespace to the correct level
-        modified_lines = self._fix_reindent(result, logical)
-        if modified_lines:
-            return modified_lines
-        else:
-            # Fallback
-            if not logical:
-                return []
-            logical_lines = logical[2]
-            line_index = result['line'] - 1
-            original_line = self.source[line_index]
+        if not logical:
+            return []
+        logical_lines = logical[2]
+        line_index = result['line'] - 1
+        original_line = self.source[line_index]
 
-            fixed_line = (_get_indentation(logical_lines[0]) +
-                          original_line.lstrip())
-            if fixed_line == original_line:
-                return []
-            else:
-                self.source[line_index] = fixed_line
+        fixed_line = (_get_indentation(logical_lines[0]) +
+                      original_line.lstrip())
+        if fixed_line == original_line:
+            # Fallback to slower method.
+            return self._fix_reindent(result, logical)
+        else:
+            self.source[line_index] = fixed_line
 
     def fix_e124(self, result, logical):
         """The 'loose fingernails' indentation level error for visual
@@ -401,33 +397,29 @@ class FixPEP8(object):
     def fix_e126(self, result, logical):
         """The 'spectacular indent' error for hanging indents."""
         # fix by deleting whitespace to the left
-        modified_lines = self._fix_reindent(result, logical)
-        if modified_lines:
-            return modified_lines
-        else:
-            # Fallback
-            if not logical:
-                return []
-            logical_lines = logical[2]
-            line_index = result['line'] - 1
-            original = self.source[line_index]
+        if not logical:
+            return []
+        logical_lines = logical[2]
+        line_index = result['line'] - 1
+        original = self.source[line_index]
 
-            fixed = (_get_indentation(logical_lines[0]) +
-                     self.indent_word + original.lstrip())
-            if fixed == original:
-                return []
-            else:
-                self.source[line_index] = fixed
+        fixed = (_get_indentation(logical_lines[0]) +
+                 self.indent_word + original.lstrip())
+        if fixed == original:
+            # Fallback to slower method.
+            return self._fix_reindent(result, logical)
+        else:
+            self.source[line_index] = fixed
 
     def fix_e127(self, result, logical):
         """The 'interpretive dance' indentation error."""
         # Fix by inserting/deleting whitespace to the correct level.
-        modified_lines = self._fix_reindent(result, logical)
+        modified_lines = self._align_visual_indent(result, logical)
         if modified_lines:
             return modified_lines
         else:
-            # Fallback
-            return self._align_visual_indent(result, logical)
+            # Fallback to slower method.
+            return self._fix_reindent(result, logical)
 
     def _align_visual_indent(self, result, logical):
         """Correct visual indent.
