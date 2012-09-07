@@ -2,9 +2,17 @@
 fun! pymode#troubleshooting#Test() "{{{
     new
     setlocal buftype=nofile bufhidden=delete noswapfile nowrap
+
+    let os = "Unknown"
+    if has('win16') || has('win32') || has('win64')
+        let os = "Windows"
+    else
+        let os = substitute(system('uname'), "\n", "", "")
+    endif
+
     call append('0', ['Pymode diagnostic',
                   \ '===================',
-                  \ 'VIM:' . v:version . ' multi_byte:' . has('multi_byte') . ' pymode: ' . g:pymode_version,
+                  \ 'VIM:' . v:version . ', OS: ' . os .', multi_byte:' .  has('multi_byte') . ', pymode: ' . g:pymode_version,
                   \ ''])
 
     let python = 1
@@ -22,26 +30,48 @@ fun! pymode#troubleshooting#Test() "{{{
 
     call append('$', 'Pymode variables:')
     call append('$', '-------------------')
-    call append('$', 'pymode:' . g:pymode)
-    call append('$', 'pymode_lint:' . g:pymode_lint)
-    call append('$', 'pymode_rope:' . g:pymode_rope)
-    call append('$', 'pymode_path:' . g:pymode_path)
-    call append('$', 'pymode_doc:' . g:pymode_doc)
-    call append('$', 'pymode_run:' . g:pymode_run)
-    call append('$', 'pymode_virtualenv:' . g:pymode_virtualenv)
-    call append('$', 'pymode_breakpoint:' . g:pymode_breakpoint)
-    call append('$', 'pymode_path:' . g:pymode_path)
-    call append('$', 'pymode_folding:' . g:pymode_folding)
-    call append('$', 'pymode_syntax:' . g:pymode_syntax)
-    call append('$', 'pymode_utils_whitespaces:' . g:pymode_utils_whitespaces)
-    call append('$', 'pymode_options_indent:' . g:pymode_options_indent)
-    call append('$', 'pymode_options_other:' . g:pymode_options_other)
+    call append('$', 'let pymode = ' . string(g:pymode))
+    if g:pymode
+        call append('$', 'let pymode_path = ' . string(g:pymode_path))
+        call append('$', 'let pymode_paths = ' . string(g:pymode_paths))
 
-    if len(g:pymode_virtualenv_enabled)
-        call append('$', 'Enabled virtualenv:')
-        call append('$', '-------------------')
-        call append('$', g:pymode_virtualenv_enabled)
-        call append('$', '')
+        call append('$', 'let pymode_doc = ' . string(g:pymode_doc))
+        if g:pymode_doc
+            call append('$', 'let pymode_doc_key = ' . string(g:pymode_doc_key))
+        endif
+
+        call append('$', 'let pymode_run = ' . string(g:pymode_run))
+        if g:pymode_run
+            call append('$', 'let pymode_run_key = ' . string(g:pymode_run_key))
+        endif
+
+        call append('$', 'let pymode_lint = ' . string(g:pymode_lint))
+        if g:pymode_lint
+            call append('$', 'let pymode_lint_checker = ' . string(g:pymode_lint_checker))
+            call append('$', 'let pymode_lint_ignore = ' . string(g:pymode_lint_ignore))
+            call append('$', 'let pymode_lint_select = ' . string(g:pymode_lint_select))
+            call append('$', 'let pymode_lint_onfly = ' . string(g:pymode_lint_onfly))
+            call append('$', 'let pymode_lint_config = ' . string(g:pymode_lint_config))
+            call append('$', 'let pymode_lint_write = ' . string(g:pymode_lint_write))
+            call append('$', 'let pymode_lint_cwindow = ' . string(g:pymode_lint_cwindow))
+            call append('$', 'let pymode_lint_message = ' . string(g:pymode_lint_message))
+            call append('$', 'let pymode_lint_signs = ' . string(g:pymode_lint_signs))
+            call append('$', 'let pymode_lint_jump = ' . string(g:pymode_lint_jump))
+            call append('$', 'let pymode_lint_hold = ' . string(g:pymode_lint_hold))
+            call append('$', 'let pymode_lint_minheight = ' .  string(g:pymode_lint_minheight))
+            call append('$', 'let pymode_lint_maxheight = ' .  string(g:pymode_lint_maxheight)) 
+        endif
+
+        call append('$', 'let pymode_rope = ' . string(g:pymode_rope))
+        call append('$', 'let pymode_folding = ' . string(g:pymode_folding))
+        call append('$', 'let pymode_breakpoint = ' . string(g:pymode_breakpoint))
+        call append('$', 'let pymode_syntax = ' . string(g:pymode_syntax))
+        call append('$', 'let pymode_virtualenv = ' . string(g:pymode_virtualenv))
+        if g:pymode_virtualenv
+            call append('$', 'let pymode_virtualenv_enabled = ' .  string(g:pymode_virtualenv_enabled))
+        endif
+        call append('$', 'pymode_utils_whitespaces:' . string(g:pymode_utils_whitespaces))
+        call append('$', 'pymode_options:' . string(g:pymode_options))
     endif
 
     if python

@@ -92,8 +92,6 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_breakpoint_key'|           Key for breakpoint
 
-|'pymode_utils'|                    Turns off utils
-
 |'pymode_virtualenv'|               Turns off virtualenv
 
 |'pymode_utils_whitespaces'|        Remove unused whitespaces
@@ -314,13 +312,6 @@ If this option is set to 0 then the breakpoint script is disabled.
 Default: '<leader>b'.
 
 Key for setting/unsetting breakpoints.
-
-------------------------------------------------------------------------------
-                                                                *'pymode_utils'*
-Values: 0 or 1.
-Default: 1.
-
-If this option is set to 0 the then utils script is disabled.
 
 ------------------------------------------------------------------------------
                                                            *'pymode_virtualenv'*
