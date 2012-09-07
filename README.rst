@@ -433,6 +433,20 @@ Try use pyflakes_, see ``:h 'pymode_lint_checker'``.
     Example: On Flask projects I automaticly set ``g:pymode_lint_checker = "pyflakes"``, on django ``g:pymode_lint_cheker = "pylint"``
 
 
+OSX cannot import urandom
+-------------------------
+
+See: https://groups.google.com/forum/?fromgroups=#!topic/vim_dev/2NXKF6kDONo
+
+The sequence of commands that fixed this: ::
+
+    brew unlink python
+    brew unlink macvim
+    brew remove macvim
+    brew install -v --force macvim
+    brew link macvim
+    brew link python
+
 
 Bugtracker
 ===========
