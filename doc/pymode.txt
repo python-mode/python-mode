@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.6.8
+                          Version: 0.6.9
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -91,8 +91,6 @@ PythonMode. These options should be set in your vimrc.
 |'pymode_breakpoint'|               Turns off breakpoint script
 
 |'pymode_breakpoint_key'|           Key for breakpoint
-
-|'pymode_utils'|                    Turns off utils
 
 |'pymode_virtualenv'|               Turns off virtualenv
 
@@ -316,13 +314,6 @@ Default: '<leader>b'.
 Key for setting/unsetting breakpoints.
 
 ------------------------------------------------------------------------------
-                                                                *'pymode_utils'*
-Values: 0 or 1.
-Default: 1.
-
-If this option is set to 0 the then utils script is disabled.
-
-------------------------------------------------------------------------------
                                                            *'pymode_virtualenv'*
 Values: 0 or 1.
 Default: 1.
@@ -490,6 +481,20 @@ from `.vimrc` from your projects directories.
              On Django 'g:pymode_lint_checker = "pylint"'
 <
 
+OSX cannot import urandom
+-------------------------
+
+See: https://groups.google.com/forum/?fromgroups=#!topic/vim_dev/2NXKF6kDONo
+
+The sequence of commands that fixed this:
+>
+    brew unlink python
+    brew unlink macvim
+    brew remove macvim
+    brew install -v --force macvim
+    brew link macvim
+    brew link python
+<
 
 ==============================================================================
 6. Credits ~
