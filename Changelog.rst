@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2012-**-** 0.6.9
+## 2012-09-07 0.6.9
 -------------------
 * Update autopep8
 * Improve pymode#troubleshooting#Test()
