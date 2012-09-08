@@ -1,4 +1,5 @@
 """ropevim, a vim mode for using rope refactoring library"""
+import glob
 import os
 import tempfile
 import re
@@ -352,7 +353,7 @@ class VimProgress(object):
         except vim.error:
             raise KeyboardInterrupt('Task %s was interrupted!' % self.name)
         if percent > self.last + 4:
-            status('%s ... %s%%%%' % (self.name, percent))
+            status('%s ... %s%%' % (self.name, percent))
             self.last = percent
 
     def done(self):
@@ -398,10 +399,30 @@ class _ValueCompleter(object):
             vim.command('let s:completions = %s' % result)
 
 
+class RopeMode(interface.RopeMode):
+    @decorators.global_command('o')
+    def open_project(self, root=None):
+        super(RopeMode, self).open_project(root=root)
+        rope_project_dir = os.path.join(self.project.address, '.ropeproject')
+        vimfiles = glob.glob(os.path.join(rope_project_dir, '*.vim'))
+
+        if not vimfiles:
+            return
+
+        txt = 'Sourcing vim files under \'.ropeproject/\''
+        progress = self.env.create_progress(txt)
+        for idx, vimfile in enumerate(vimfiles):
+            progress.name = txt + ' ({0})'.format(os.path.basename(vimfile))
+            vim.command(':so {0}'.format(vimfile))
+            progress.update(idx * 100 / len(vimfiles))
+        progress.name = txt
+        progress.done()
+
+
 decorators.logger.message = echo
 decorators.logger.only_short = True
 
 _completer = _ValueCompleter()
 
 _env = VimUtils()
-_interface = interface.RopeMode(env=_env)
+_interface = RopeMode(env=_env)
