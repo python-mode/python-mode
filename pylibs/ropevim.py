@@ -411,7 +411,7 @@ class RopeMode(interface.RopeMode):
 
         txt = 'Sourcing vim files under \'.ropeproject/\''
         progress = self.env.create_progress(txt)
-        for idx, vimfile in enumerate(vimfiles):
+        for idx, vimfile in enumerate(sorted(vimfiles)):
             progress.name = txt + ' ({0})'.format(os.path.basename(vimfile))
             vim.command(':so {0}'.format(vimfile))
             progress.update(idx * 100 / len(vimfiles))
