@@ -22,8 +22,8 @@ class VimUtils(environment.Environment):
         if starting is None:
             starting = ''
         if default is not None:
-            prompt = prompt + ('[%s] ' % default)
-        result = call('input("%s", "%s")' % (prompt, starting))
+            prompt = prompt + '[{0}] '.format(default)
+        result = call('input("{0}", "{1}")'.format(prompt, starting))
         if default is not None and result == '':
             return default
         return result
@@ -33,11 +33,14 @@ class VimUtils(environment.Environment):
         if show_values or (show_values is None and len(values) < 14):
             self._print_values(values)
         if default is not None:
-            prompt = prompt + ('[%s] ' % default)
+            prompt = prompt + '[{0}] '.format(default)
         starting = starting or ''
         _completer.values = values
-        answer = call('input("%s", "%s", "customlist,RopeValueCompleter")' %
-                      (prompt, starting))
+        answer = call(
+            'input("{0}", "{1}", "customlist,RopeValueCompleter")'.format(
+                prompt, starting
+            )
+        )
         if answer is None:
             if 'cancel' in values:
                 return 'cancel'
@@ -55,14 +58,14 @@ class VimUtils(environment.Environment):
         echo('\n'.join(numbered) + '\n')
 
     def ask_directory(self, prompt, default=None, starting=None):
-        return call('input("%s", ".", "dir")' % prompt)
+        return call('input("{0}", ".", "dir")'.format(prompt))
 
     def _update_proposals(self, values):
         self.completeopt = vim.eval('&completeopt')
         self.preview = 'preview' in self.completeopt
 
         if not self.get('extended_complete'):
-            return u','.join(u"'%s'" % self._completion_text(proposal)
+            return u','.join(u"'{0}'".format(self._completion_text(proposal))
                              for proposal in values)
 
         return u','.join(self._extended_completion(proposal)
@@ -79,7 +82,7 @@ class VimUtils(environment.Environment):
             col = int(call('col(".")'))
             if starting:
                 col -= len(starting)
-            self._command(u'call complete(%s, [%s])' % (col, proposals),
+            self._command(u'call complete({0}, [{1}])'.format(col, proposals),
                           encode=True)
             return None
 
@@ -96,8 +99,8 @@ class VimUtils(environment.Environment):
         return self.yes_or_no(prompt)
 
     def get(self, name, default=None):
-        vimname = 'g:pymode_rope_%s' % name
-        if str(vim.eval('exists("%s")' % vimname)) == '0':
+        vimname = 'g:pymode_rope_{0}'.format(name)
+        if str(vim.eval('exists("{0}")'.format(vimname))) == '0':
             return default
         result = vim.eval(vimname)
         if isinstance(result, str) and result.isdigit():
@@ -262,8 +265,9 @@ class VimUtils(environment.Environment):
 
     def show_doc(self, docs, altview=False):
         if docs:
-            cmd = 'call pymode#ShowStr("%s")' % str(docs.replace('"', '\\"'))
-            vim.command(cmd)
+            vim.command(
+                'call pymode#ShowStr("{0}")'.format(docs.replace('"', '\\"'))
+            )
 
     def preview_changes(self, diffs):
         echo(diffs)
@@ -282,23 +286,33 @@ class VimUtils(environment.Environment):
                    'after_save': 'FileWritePost,BufWritePost',
                    'exit': 'VimLeave'}
         self._add_function(name, callback)
-        vim.command('autocmd %s *.py call %s()' %
-                    (mapping[hook], _vim_name(name)))
+        vim.command(
+            'autocmd {0} *.py call {1}()'.format(
+                mapping[hook], _vim_name(name)
+            )
+        )
 
     def _add_command(self, name, callback, key, prefix, prekey):
         self._add_function(name, callback, prefix)
-        vim.command('command! -range %s call %s()' %
-                    (_vim_name(name), _vim_name(name)))
+        vim.command(
+            'command! -range {0} call {1}()'.format(
+                _vim_name(name), _vim_name(name)
+            )
+        )
         if key is not None:
             key = prekey + key.replace(' ', '')
-            vim.command('noremap %s :call %s()<cr>' % (key, _vim_name(name)))
+            vim.command(
+                'noremap {0} :call {1}()<cr>'.format(key, _vim_name(name))
+            )
 
     def _add_function(self, name, callback, prefix=False):
         globals()[name] = callback
         arg = 'None' if prefix else ''
-        vim.command('function! %s()\n' % _vim_name(name) +
-                    'python ropevim.%s(%s)\n' % (name, arg) +
-                    'endfunction\n')
+        vim.command(
+            'function! {0}()\n'
+            'python ropevim.{1}({2})\n'
+            'endfunction\n'.format(_vim_name(name), name, arg)
+        )
 
     def _completion_data(self, proposal):
         return proposal
@@ -318,7 +332,7 @@ class VimUtils(environment.Environment):
 
         if proposal.scope == 'parameter_keyword':
             default = proposal.get_default()
-            ci["menu"] += '*' if default is None else '= %s' % default
+            ci["menu"] += '*' if default is None else '= {0}'.format(default)
 
         if self.preview and not ci['menu']:
             doc = proposal.get_doc()
@@ -329,9 +343,9 @@ class VimUtils(environment.Environment):
     def _conv(self, obj):
         if isinstance(obj, dict):
             return u'{' + u','.join([
-                u"%s:%s" % (self._conv(key), self._conv(value))
+                u"{0}:{1}".format(self._conv(key), self._conv(value))
                 for key, value in obj.iteritems()]) + u'}'
-        return u'"%s"' % str(obj).replace(u'"', u'\\"')
+        return u'"{0}"'.format(str(obj).replace(u'"', u'\\"'))
 
 
 def _vim_name(name):
@@ -345,19 +359,21 @@ class VimProgress(object):
     def __init__(self, name):
         self.name = name
         self.last = 0
-        status('%s ... ' % self.name)
+        status('{0} ... '.format(self.name))
 
     def update(self, percent):
         try:
             vim.eval('getchar(0)')
         except vim.error:
-            raise KeyboardInterrupt('Task %s was interrupted!' % self.name)
+            raise KeyboardInterrupt(
+                'Task {0} was interrupted!'.format(self.name)
+            )
         if percent > self.last + 4:
-            status('%s ... %s%%' % (self.name, percent))
+            status('{0} ... {1}%'.format(self.name, percent))
             self.last = percent
 
     def done(self):
-        status('%s ... done' % self.name)
+        status('{0} ... done'.format(self.name))
 
 
 def echo(message):
@@ -369,7 +385,7 @@ def echo(message):
 def status(message):
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
-    vim.command('redraw | echon "%s"' % message)
+    vim.command('redraw | echon "{0}"'.format(message))
 
 
 def call(command):
@@ -396,7 +412,7 @@ class _ValueCompleter(object):
             else:
                 result = [proposal for proposal in self.values
                           if proposal.startswith(arg_lead)]
-            vim.command('let s:completions = %s' % result)
+            vim.command('let s:completions = {0}'.format(result))
 
 
 class RopeMode(interface.RopeMode):
