@@ -175,8 +175,13 @@ endif
 
 if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
-    " OPTION: g:pymode_rope_auto_project -- bool. Auto open ropeproject
+    " OPTION: g:pymode_rope_auto_project -- bool. Auto create ropeproject
     call pymode#Default("g:pymode_rope_auto_project", 1)
+
+    " OPTION: g:pymode_rope_auto_project_open -- bool.
+    " Auto open existing projects, ie, if the current directory has a
+    " `.ropeproject` subdirectory.
+    call pymode#Default("g:pymode_rope_auto_project_open", 1)
 
     " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
     call pymode#Default("g:pymode_rope_enable_autoimport", 1)
@@ -234,6 +239,13 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         return ""
     endfunction "}}}
 
+    fun! RopeOpenExistingProject() "{{{
+        if isdirectory('./.ropeproject')
+            call RopeOpenProject()
+            return ""
+        endif
+    endfunction "}}}
+
     fun! RopeLuckyAssistInsertMode() "{{{
         call RopeLuckyAssist()
         return ""
@@ -269,6 +281,12 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     menu <silent> Rope.Restructure :RopeRestructure<CR>
     menu <silent> Rope.Undo :RopeUndo<CR>
     menu <silent> Rope.UseFunction :RopeUseFunction<CR>
+
+    " Hooks
+    if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
+        autocmd VimEnter * call RopeOpenExistingProject()
+        call windo e
+    endif
 
 endif
 
