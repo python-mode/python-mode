@@ -55,6 +55,12 @@ fun! pymode#PlaceSigns() "{{{
     "
     if has('signs')
         sign unplace *
+
+        if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
+            " Show the sign's ruller if asked for, even it there's no error to show
+            execute printf('silent! sign place 1 line=1 name=__dummy__ file=%s', expand("%:p"))
+        endif
+
         for item in filter(getqflist(), 'v:val.bufnr != ""')
             execute printf('silent! sign place 1 line=%d name=%s buffer=%d', item.lnum, item.type, item.bufnr)
         endfor

@@ -429,11 +429,11 @@ class RopeMode(interface.RopeMode):
         progress = self.env.create_progress(txt)
         for idx, vimfile in enumerate(sorted(vimfiles)):
             progress.name = txt + ' ({0})'.format(os.path.basename(vimfile))
-            vim.command(':so {0}'.format(vimfile))
+            vim.command(':silent source {0}'.format(vimfile))
             progress.update(idx * 100 / len(vimfiles))
         progress.name = txt
         progress.done()
-
+        echo('Project opened!')
 
 decorators.logger.message = echo
 decorators.logger.only_short = True

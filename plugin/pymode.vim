@@ -99,6 +99,10 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_mccabe_complexity -- int. Maximum allowed complexity
     call pymode#Default("g:pymode_lint_mccabe_complexity", 8)
 
+    " OPTION: g:pymode_lint_signs_always_visible -- bool. Always show the
+    " errors ruller, even if there's no errors.
+    call pymode#Default("g:pymode_lint_signs_always_visible", 0)
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
@@ -108,6 +112,12 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         sign define R text=RR texthl=Visual
         sign define E text=EE texthl=Error
         sign define I text=II texthl=Info
+
+        if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
+            " Show the sign's ruller if asked for, even it there's no error to show
+            sign define __dummy__
+            autocmd BufRead,BufNew * execute printf('silent! sign place 1 line=1 name=__dummy__ file=%s', expand("%:p"))
+        endif
 
     endif
 
@@ -242,6 +252,9 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     fun! RopeOpenExistingProject() "{{{
         if isdirectory('./.ropeproject')
             call RopeOpenProject()
+            " Reload current buffer
+            "silent edit!
+            " Does not work, looses syntax!!! argg
             return ""
         endif
     endfunction "}}}
@@ -285,7 +298,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " Hooks
     if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
         autocmd VimEnter * call RopeOpenExistingProject()
-        call windo e
     endif
 
 endif
