@@ -261,25 +261,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         endif
     endfunction "}}}
 
-    fun! RopeOpenSession() "{{{
-        if filereadable(getcwd() . '/.ropeproject/.session.vim')
-            execute 'source ' . getcwd() . '/.ropeproject/.session.vim'
-            if bufexists(1)
-                for l in range(1, bufnr('$'))
-                    if bufwinnr(l) == -1
-                        execute 'sbuffer ' . l
-                    endif
-                endfor
-            endif
-        endif
-    endfunction "}}}
-
-    fun! RopeSaveSession() "{{{
-        if isdirectory(getcwd() . '/.ropeproject')
-            execute 'mksession! ' . getcwd() . '/.ropeproject/.session.vim'
-        endif
-    endfunction "}}}
-
     fun! RopeLuckyAssistInsertMode() "{{{
         call RopeLuckyAssist()
         return ""
@@ -315,8 +296,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     menu <silent> Rope.Restructure :RopeRestructure<CR>
     menu <silent> Rope.Undo :RopeUndo<CR>
     menu <silent> Rope.UseFunction :RopeUseFunction<CR>
-    menu <silent> Rope.OpenSession :call RopeOpenSession()<CR>
-    menu <silent> Rope.SaveSession :call RopeSaveSession()<CR>
 
     if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
         call RopeOpenExistingProject()
