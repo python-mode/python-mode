@@ -193,6 +193,9 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " `.ropeproject` subdirectory.
     call pymode#Default("g:pymode_rope_auto_project_open", 1)
 
+    " OPTION: g:pymode_rope_auto_session_manage -- bool
+    call pymode#Default("g:pymode_rope_auto_session_manage", 0)
+
     " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
     call pymode#Default("g:pymode_rope_enable_autoimport", 1)
 
@@ -250,9 +253,30 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     endfunction "}}}
 
     fun! RopeOpenExistingProject() "{{{
-        if isdirectory('./.ropeproject')
-            :silent call RopeOpenProject()
+        if isdirectory(getcwd() . '/.ropeproject')
+            " In order to pass it the quiet kwarg I need to open the project
+            " using python and not vim, which should be no major issue
+            py ropevim._interface.open_project(quiet=True)
             return ""
+        endif
+    endfunction "}}}
+
+    fun! RopeOpenSession() "{{{
+        if filereadable(getcwd() . '/.ropeproject/.session.vim')
+            execute 'source ' . getcwd() . '/.ropeproject/.session.vim'
+            if bufexists(1)
+                for l in range(1, bufnr('$'))
+                    if bufwinnr(l) == -1
+                        execute 'sbuffer ' . l
+                    endif
+                endfor
+            endif
+        endif
+    endfunction "}}}
+
+    fun! RopeSaveSession() "{{{
+        if isdirectory(getcwd() . '/.ropeproject')
+            execute 'mksession! ' . getcwd() . '/.ropeproject/.session.vim'
         endif
     endfunction "}}}
 
@@ -291,11 +315,17 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     menu <silent> Rope.Restructure :RopeRestructure<CR>
     menu <silent> Rope.Undo :RopeUndo<CR>
     menu <silent> Rope.UseFunction :RopeUseFunction<CR>
+    menu <silent> Rope.OpenSession :call RopeOpenSession()<CR>
+    menu <silent> Rope.SaveSession :call RopeSaveSession()<CR>
 
-    " Hooks
     if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
         call RopeOpenExistingProject()
     endif
+
+     if !pymode#Default("g:pymode_rope_auto_session_manage", 0) || g:pymode_rope_auto_session_manage
+        autocmd VimLeave * call RopeSaveSession()
+        autocmd VimEnter * call RopeRestoreSession()
+     endif
 
 endif
 

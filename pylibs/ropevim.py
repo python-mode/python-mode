@@ -10,6 +10,9 @@ from pylibs.ropemode import interface
 
 import vim
 
+# Gobal var to be able to shutup output
+_rope_quiet = False
+
 
 class VimUtils(environment.Environment):
 
@@ -377,12 +380,17 @@ class VimProgress(object):
 
 
 def echo(message):
+    if _rope_quiet:
+        return
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
     print message
 
 
 def status(message):
+    if _rope_quiet:
+        return
+
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
     vim.command('redraw | echon "{0}"'.format(message))
@@ -417,7 +425,10 @@ class _ValueCompleter(object):
 
 class RopeMode(interface.RopeMode):
     @decorators.global_command('o')
-    def open_project(self, root=None):
+    def open_project(self, root=None, quiet=False):
+        global _rope_quiet
+        _rope_quiet = quiet
+
         super(RopeMode, self).open_project(root=root)
         rope_project_dir = os.path.join(self.project.address, '.ropeproject')
         vimfiles = glob.glob(os.path.join(rope_project_dir, '*.vim'))
@@ -431,6 +442,7 @@ class RopeMode(interface.RopeMode):
             progress.name = txt + ' ({0})'.format(os.path.basename(vimfile))
             vim.command(':silent source {0}'.format(vimfile))
             progress.update(idx * 100 / len(vimfiles))
+
         progress.name = txt
         progress.done()
         echo('Project opened!')
