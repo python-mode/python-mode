@@ -116,7 +116,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             " Show the sign's ruller if asked for, even it there's no error to show
             sign define __dummy__
-            autocmd BufRead,BufNew * execute printf('silent! sign place 1 line=1 name=__dummy__ file=%s', expand("%:p"))
+            autocmd BufRead,BufNew * call RopeShowSignsRulerIfNeeded()
         endif
 
     endif
@@ -275,6 +275,13 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
             return g:pythoncomplete_completions
         endif
     endfunction "}}}
+
+    fun! RopeShowSignsRulerIfNeeded() "{{{
+        if &ft == 'python'
+            execute printf('silent! sign place 1 line=1 name=__dummy__ file=%s', expand("%:p"))
+        endif
+     endfunction "}}}
+
 
     " Rope menu
     menu <silent> Rope.Autoimport :RopeAutoImport<CR>
