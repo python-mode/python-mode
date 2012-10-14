@@ -135,7 +135,7 @@ endif
 if pymode#Option('utils_whitespaces')
     function PyModeTrimEndWhiteSpace()
         let cursor_pos = getpos('.')
-        %s/\s\+$//
+        :silent! %s/\s\+$//
         call setpos('.', cursor_pos)
     endfunction
     au BufWritePre <buffer> call PyModeTrimEndWhiteSpace()
