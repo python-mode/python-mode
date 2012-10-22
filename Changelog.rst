@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 2012-09-07 0.6.10
+--------------------
+* Dont raise an exception when Logger has no message handler (c) nixon
+* Improve performance of white space removal (c) Dave Smith
+
 ## 2012-09-07 0.6.9
 -------------------
 * Update autopep8
