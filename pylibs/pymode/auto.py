@@ -1,13 +1,13 @@
 import vim
-from pylibs.autopep8 import fix_file, PEP8_PASSES_MAX
+from pylibs.autopep8 import fix_file
 
 
 class Options():
-    verbose = False
+    verbose = 0
     diff = False
     in_place = True
     recursive = False
-    pep8_passes = PEP8_PASSES_MAX
+    pep8_passes = 100
     ignore = ''
     select = ''
 

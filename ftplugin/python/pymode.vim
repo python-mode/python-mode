@@ -133,12 +133,7 @@ endif
 " Utils {{{
 
 if pymode#Option('utils_whitespaces')
-    function PyModeTrimEndWhiteSpace()
-        let cursor_pos = getpos('.')
-        :silent! %s/\s\+$//
-        call setpos('.', cursor_pos)
-    endfunction
-    au BufWritePre <buffer> call PyModeTrimEndWhiteSpace()
+    au BufWritePre <buffer> call pymode#TrimWhiteSpace()
 endif
 
 " }}}

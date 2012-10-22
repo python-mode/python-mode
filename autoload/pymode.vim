@@ -180,4 +180,11 @@ fun! pymode#Modeline() "{{{
 endfunction "}}}
 
 
+fun! pymode#TrimWhiteSpace() "{{{
+    let cursor_pos = getpos('.')
+    silent! %s/\s\+$//
+    call setpos('.', cursor_pos)
+endfunction "}}}
+
+
 " vim: fdm=marker:fdl=0
