@@ -71,7 +71,7 @@ if pymode#Option('lint')
     endif
 
     " DESC: Run queue
-    setlocal updatetime=1000
+    let &l:updatetime = g:pymode_updatetime
     au CursorHold <buffer> call pymode#queue#Poll()
     au BufLeave <buffer> py queue.stop_queue()
 
@@ -133,7 +133,7 @@ endif
 " Utils {{{
 
 if pymode#Option('utils_whitespaces')
-    au BufWritePre <buffer> :call setline(1,map(getline(1,"$"),'substitute(v:val,"\\s\\+$","","")'))
+    au BufWritePre <buffer> call pymode#TrimWhiteSpace()
 endif
 
 " }}}

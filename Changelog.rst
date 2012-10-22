@@ -1,6 +1,14 @@
 Changelog
 =========
 
+## 2012-09-07 0.6.10
+--------------------
+* Dont raise an exception when Logger has no message handler (c) nixon
+* Improve performance of white space removal (c) Dave Smith
+* Improve ropemode support (c) s0undt3ch 
+* Add `g:pymode_updatetime` option
+* Update autopep8 to version 0.8.1
+
 ## 2012-09-07 0.6.9
 -------------------
 * Update autopep8

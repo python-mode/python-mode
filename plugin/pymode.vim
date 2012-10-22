@@ -99,6 +99,10 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_mccabe_complexity -- int. Maximum allowed complexity
     call pymode#Default("g:pymode_lint_mccabe_complexity", 8)
 
+    " OPTION: g:pymode_lint_signs_always_visible -- bool. Always show the
+    " errors ruller, even if there's no errors.
+    call pymode#Default("g:pymode_lint_signs_always_visible", 0)
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
@@ -108,6 +112,12 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         sign define R text=RR texthl=Visual
         sign define E text=EE texthl=Error
         sign define I text=II texthl=Info
+
+        if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
+            " Show the sign's ruller if asked for, even it there's no error to show
+            sign define __dummy__
+            autocmd BufRead,BufNew * call RopeShowSignsRulerIfNeeded()
+        endif
 
     endif
 
@@ -175,8 +185,16 @@ endif
 
 if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
-    " OPTION: g:pymode_rope_auto_project -- bool. Auto open ropeproject
+    " OPTION: g:pymode_rope_auto_project -- bool. Auto create ropeproject
     call pymode#Default("g:pymode_rope_auto_project", 1)
+
+    " OPTION: g:pymode_rope_auto_project_open -- bool.
+    " Auto open existing projects, ie, if the current directory has a
+    " `.ropeproject` subdirectory.
+    call pymode#Default("g:pymode_rope_auto_project_open", 1)
+
+    " OPTION: g:pymode_rope_auto_session_manage -- bool
+    call pymode#Default("g:pymode_rope_auto_session_manage", 0)
 
     " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
     call pymode#Default("g:pymode_rope_enable_autoimport", 1)
@@ -234,6 +252,15 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         return ""
     endfunction "}}}
 
+    fun! RopeOpenExistingProject() "{{{
+        if isdirectory(getcwd() . '/.ropeproject')
+            " In order to pass it the quiet kwarg I need to open the project
+            " using python and not vim, which should be no major issue
+            py ropevim._interface.open_project(quiet=True)
+            return ""
+        endif
+    endfunction "}}}
+
     fun! RopeLuckyAssistInsertMode() "{{{
         call RopeLuckyAssist()
         return ""
@@ -248,6 +275,13 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
             return g:pythoncomplete_completions
         endif
     endfunction "}}}
+
+    fun! RopeShowSignsRulerIfNeeded() "{{{
+        if &ft == 'python'
+            execute printf('silent! sign place 1 line=1 name=__dummy__ file=%s', expand("%:p"))
+        endif
+     endfunction "}}}
+
 
     " Rope menu
     menu <silent> Rope.Autoimport :RopeAutoImport<CR>
@@ -270,6 +304,15 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     menu <silent> Rope.Undo :RopeUndo<CR>
     menu <silent> Rope.UseFunction :RopeUseFunction<CR>
 
+    if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
+        call RopeOpenExistingProject()
+    endif
+
+     if !pymode#Default("g:pymode_rope_auto_session_manage", 0) || g:pymode_rope_auto_session_manage
+        autocmd VimLeave * call RopeSaveSession()
+        autocmd VimEnter * call RopeRestoreSession()
+     endif
+
 endif
 
 " }}}
@@ -289,5 +332,8 @@ call pymode#Default("g:pymode_utils_whitespaces", 1)
 
 " OPTION: g:pymode_options -- bool. To set some python options.
 call pymode#Default("g:pymode_options", 1)
+
+" OPTION: g:pymode_updatetime -- int. Set updatetime for async pymode's operation
+call pymode#Default("g:pymode_updatetime", 1000)
 
 " vim: fdm=marker:fdl=0
