@@ -333,4 +333,7 @@ call pymode#Default("g:pymode_utils_whitespaces", 1)
 " OPTION: g:pymode_options -- bool. To set some python options.
 call pymode#Default("g:pymode_options", 1)
 
+" OPTION: g:pymode_updatetime -- int. Set updatetime for async pymode's operation
+call pymode#Default("g:pymode_updatetime", 1000)
+
 " vim: fdm=marker:fdl=0

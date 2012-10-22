@@ -71,7 +71,7 @@ if pymode#Option('lint')
     endif
 
     " DESC: Run queue
-    setlocal updatetime=1000
+    let &l:updatetime = g:pymode_updatetime
     au CursorHold <buffer> call pymode#queue#Poll()
     au BufLeave <buffer> py queue.stop_queue()
 
