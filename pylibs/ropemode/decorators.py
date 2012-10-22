@@ -15,7 +15,7 @@ class Logger(object):
             self._show(short)
 
     def _show(self, message):
-        if message is None:
+        if self.message is None:
             print message
         else:
             self.message(message)
