@@ -19,3 +19,30 @@ class LoggerTests(unittest.TestCase):
             logger("a message")
         except TypeError:
             self.fail("logger raised TypeError unexpectedly")
+
+
+class LoggerMessageHandlerTests(unittest.TestCase):
+    def setUp(self):
+        self.message = ""
+        self.logger = Logger()
+        self.logger.message = self._echo
+
+    def _echo(self, message):
+        self.message += message
+
+    def test_message_handler_with_no_short_message(self):
+        """Test that message handler is called"""
+        self.logger("a message")
+        self.assertEqual(self.message, "a message")
+
+    def test_only_short_True(self):
+        """Test that only_short=True prints only the short message"""
+        self.logger.only_short = True
+        self.logger("a long message", "a short message")
+        self.assertEqual(self.message, "a short message")
+
+    def test_only_short_False(self):
+        """Test that only_short=False prints both messages"""
+        self.logger.only_short = False
+        self.logger("a long message", "a short message")
+        self.assertEqual(self.message, "a long messagea short message")
