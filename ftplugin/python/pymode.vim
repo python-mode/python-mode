@@ -1,4 +1,4 @@
-if pymode#Default('b:pymode', 1)
+if !g:pymode
     finish
 endif
 
