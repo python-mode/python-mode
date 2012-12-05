@@ -24,7 +24,7 @@ endif
 syn keyword pyrexStatement	typedef ctypedef sizeof
 syn keyword pyrexStatement	cpdef nextgroup=pythonFunction skipwhite
 syn match   pyrexStatement      "\<cdef\>" nextgroup=pythonFunction skipwhite
-syn match   pyrexStatement      "\<cdef\s+class\>" nextgroup=pythonFunction skipwhite
+syn match   pyrexStatement      "\<cdef\s\+class\>" nextgroup=pythonFunction skipwhite
 syn keyword pyrexType		int long short float double char object void
 syn keyword pyrexType		signed unsigned
 syn keyword pyrexStructure	struct union enum
