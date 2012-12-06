@@ -1,8 +1,7 @@
 " Vim syntax file
 " Language:	Pyrex
-" Maintainer:	Marco Barisione <marco.bari@people.it>
-" URL:		http://marcobari.altervista.org/pyrex_vim.html
-" Last Change:	2009 Nov 09
+" Maintainer:	John Tyree
+" Last Change:	2012 Nov 06
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
