@@ -26,7 +26,7 @@ syn keyword pyrexType		int long short float double char object void
 " variables or functions. c[p]def should work on the top level as a keyword, but
 " should ALSO work to identify functions and classes.
 syn match   pyrexStatement      "\<cp\?def\>"
-syn match   pyrexStatement      "\<cp\?def\>.*(\@=" contains=pythonStatement,pyrexStatement,pythonFunction,pyrexType skipwhite
+syn match   pyrexStatement      "\<cp\?def\>[^=]*(\@=" contains=pythonStatement,pyrexStatement,pythonFunction,pyrexType skipwhite
 syn keyword pyrexType		signed unsigned
 syn keyword pyrexStructure	struct union enum
 syn keyword pyrexInclude	include cimport
