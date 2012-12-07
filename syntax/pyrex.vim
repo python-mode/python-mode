@@ -21,7 +21,7 @@ endif
 
 " Pyrex extentions
 syn keyword pyrexStatement	nogil inline typedef ctypedef sizeof
-syn keyword pyrexType		int long short float double char object void
+syn keyword pyrexType		Py_ssize_t int long short float double char object void
 " Here we want slightly different behavior depending on whether we're declaring
 " variables or functions. c[p]def should work on the top level as a keyword, but
 " should ALSO work to identify functions and classes.
