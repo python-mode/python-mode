@@ -1,3 +1,4 @@
+import os
 import StringIO
 import locale
 
@@ -19,7 +20,10 @@ def check_file():
 
     buffer = get_current_buffer()
 
-    add_task(run_checkers, checkers=checkers, ignore=ignore, title='Code checking', callback=parse_result, buffer=buffer, select=select)
+    add_task(
+        run_checkers, checkers=checkers, ignore=ignore, title='Code checking',
+        callback=parse_result, buffer=buffer, select=select
+    )
 
 
 def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None):
@@ -183,7 +187,49 @@ def _init_pep8():
         def get_file_results(self):
             return self.errors
 
-    PEP8['style'] = p8.StyleGuide(reporter=_PEP8Report)
+    extra_kwargs = {}
+
+    ignore = set(
+        filter(
+            lambda i: i, get_option('lint_ignore').split(',') +
+                         get_var('lint_ignore').split(',')
+        )
+    )
+    open('/tmp/foo.txt', 'w').write(','.join(['{0}'.format(i) for i in ignore]) + '\n')
+
+    select = set(
+        filter(
+            lambda s: s, get_option('lint_select').split(',') +
+                         get_var('lint_select').split(',')
+        )
+    )
+
+    lint_config = get_var('lint_config')
+    if lint_config:
+        lint_config = os.path.abspath(os.path.expanduser(lint_config))
+
+    if os.path.exists(lint_config):
+        extra_kwargs['config_file'] = lint_config
+        if 'pep8' not in lint_config:
+            # This is probably a pylintrc file, let's get some options from it
+            from ConfigParser import RawConfigParser
+            parser = RawConfigParser()
+            parser.read(lint_config)
+            if parser.has_section('FORMAT') and parser.has_option('FORMAT', 'max-line-length'):
+                extra_kwargs['max_line_length'] = int(parser.get('FORMAT', 'max-line-length'))
+            if parser.has_section('MESSAGES CONTROL') and parser.has_option('MESSAGES CONTROL', 'disable'):
+                for code in [i.strip() for i in parser.get('MESSAGES CONTROL', 'disable').split(',')]:
+                    ignore.add(code)
+            if parser.has_section('MESSAGES CONTROL') and parser.has_option('MESSAGES CONTROL', 'enable'):
+                for code in [i.strip() for i in parser.get('MESSAGES CONTROL', 'enable').split(',')]:
+                    select.add(code)
+
+    if ignore:
+        extra_kwargs['ignore'] = list(ignore)
+    if select:
+        extra_kwargs['select'] = list(select)
+
+    PEP8['style'] = p8.StyleGuide(reporter=_PEP8Report, **extra_kwargs)
 
 
 def _ignore_error(e, select, ignore):
