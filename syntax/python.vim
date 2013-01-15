@@ -1,4 +1,6 @@
 " vim: ft=vim:fdm=marker
+"
+runtime ftplugin/python/init-pymode.vim
 
 " DESC: Disable script loading
 if !pymode#Option('syntax') || pymode#Default('b:current_syntax', 'python')
