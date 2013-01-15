@@ -1,3 +1,8 @@
+if exists('did_init_pymode_vim')
+    finish
+endif
+let did_init_pymode_vim = 1
+
 let g:pymode_version = "0.6.9"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
@@ -43,8 +48,7 @@ python << EOF
 import sys, vim, os
 
 curpath = vim.eval("getcwd()")
-libpath = os.path.join(os.path.dirname(os.path.dirname(
-    vim.eval("expand('<sfile>:p')"))), 'pylibs')
+libpath = os.path.join(vim.eval("expand('<sfile>:p:h:h:h')"), 'pylibs')
 
 sys.path = [os.path.dirname(libpath), libpath, curpath] + vim.eval("g:pymode_paths") + sys.path
 EOF
