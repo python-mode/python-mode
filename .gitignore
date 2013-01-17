@@ -1,4 +1,6 @@
-*.pyc
+*.py[cod]
 tags
 todo.txt
 .ropeproject
+*.sw?
+*~
