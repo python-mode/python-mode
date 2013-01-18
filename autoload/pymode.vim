@@ -88,6 +88,7 @@ fun! pymode#TempBuffer() "{{{
     "
     pclose | botright 8new
     setlocal buftype=nofile bufhidden=delete noswapfile nowrap previewwindow
+    syn match Error '^>>>.*$' 
     redraw
 endfunction "}}}
 
