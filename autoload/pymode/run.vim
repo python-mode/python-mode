@@ -8,12 +8,18 @@ fun! pymode#run#Run(line1, line2) "{{{
     call pymode#WideMessage("Code running.")
     try
         py execfile(vim.eval('expand("%s:p")'))
-        py sys.stdout, sys.stderr, out, err = stdout_, stderr_, sys.stdout.getvalue(), sys.stderr.getvalue()
+        py out, err = sys.stdout.getvalue(), sys.stderr.getvalue()
+        py sys.stdout, sys.stderr = stdout_, stderr_
         call pymode#TempBuffer()
         py vim.current.buffer.append([x.encode(enc) for x in out.split('\n')], 0)
-        py if err.strip(): vim.current.buffer.append(['>>>' + x.encode(enc) for x in err.strip().split('\n')], 0)
         wincmd p
+        let l:oldefm = &efm
+        set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
+        cexpr ""
+        py for x in err.split('\n'): vim.command('caddexpr "' + x.replace('"', r'\"') + '"')
+        let &efm = l:oldefm
         call pymode#WideMessage("")
+        8cwin
 
     catch /.*/
 
