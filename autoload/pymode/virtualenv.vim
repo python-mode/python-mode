@@ -15,7 +15,10 @@ fun! pymode#virtualenv#Activate() "{{{
 python << EOF
 import sys, vim, os
 
-ve_dir = os.environ['VIRTUAL_ENV']
+if 'VIRTUAL_ENV' in os.environ:
+    ve_dir = os.environ['VIRTUAL_ENV']
+else:
+    ve_dir = vim.eval('$VIRTUAL_ENV')
 ve_dir in sys.path or sys.path.insert(0, ve_dir)
 activate_this = os.path.join(os.path.join(ve_dir, 'bin'), 'activate_this.py')
 
