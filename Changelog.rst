@@ -7,6 +7,7 @@ Changelog
 * Update `Pylint` to version 0.27.0;
 * Update `autopep8` to version 0.8.7;
 * Fix breakpoint definition;
+* Update python syntax
 
 ## 2012-09-07 0.6.10
 --------------------
