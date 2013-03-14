@@ -8,7 +8,8 @@ Changelog
 * Update `autopep8` to version 0.8.7;
 * Fix breakpoint definition;
 * Update python syntax;
-* fixed run-time error when output non-ascii in multibyte locale;
+* Fixed run-time error when output non-ascii in multibyte locale;
+* Move initialization into ftplugin as it is python specific;
 
 ## 2012-09-07 0.6.10
 --------------------
