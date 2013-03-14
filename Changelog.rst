@@ -7,7 +7,8 @@ Changelog
 * Update `Pylint` to version 0.27.0;
 * Update `autopep8` to version 0.8.7;
 * Fix breakpoint definition;
-* Update python syntax
+* Update python syntax;
+* fixed run-time error when output non-ascii in multibyte locale;
 
 ## 2012-09-07 0.6.10
 --------------------
