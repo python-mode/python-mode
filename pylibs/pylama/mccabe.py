@@ -9,7 +9,6 @@ try:
 except ImportError:
     from ast import parse, iter_child_nodes     # NOQA
 
-import optparse
 import sys
 from collections import defaultdict
 
@@ -262,35 +261,5 @@ def get_module_complexity(module_path, min=7):
     code = open(module_path, "rU").read() + '\n\n'
     return get_code_complexity(code, min, filename=module_path)
 
-
-def main(argv):
-    opar = optparse.OptionParser()
-    opar.add_option("-d", "--dot", dest="dot",
-                    help="output a graphviz dot file", action="store_true")
-    opar.add_option("-m", "--min", dest="min",
-                    help="minimum complexity for output", type="int",
-                    default=2)
-
-    options, args = opar.parse_args(argv)
-
-    text = open(args[0], "rU").read() + '\n\n'
-    ast = parse(text)
-    visitor = PathGraphingAstVisitor()
-    visitor.preorder(ast, visitor)
-
-    if options.dot:
-        print('graph {')
-        for graph in visitor.graphs.values():
-            if graph.complexity() >= options.min:
-                graph.to_dot()
-        print('}')
-    else:
-        for graph in visitor.graphs.values():
-            if graph.complexity() >= options.min:
-                print(graph.name, graph.complexity())
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
 
 # pymode:lint=0

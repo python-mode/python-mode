@@ -66,8 +66,8 @@ def pyflakes(path, code=None, **meta):
 
 
 def pylint(path, **meta):
-    from pylama.pylint.lint import Run
-    from pylama.pylint.reporters import BaseReporter
+    from .pylint.lint import Run
+    from .pylint.reporters import BaseReporter
 
     class Reporter(BaseReporter):
 
