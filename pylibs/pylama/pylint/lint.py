@@ -70,7 +70,7 @@ REPORTER_OPT_MAP = {'text': TextReporter,
 
 def _get_python_path(filepath):
     dirname = os.path.dirname(os.path.realpath(
-            os.path.expanduser(filepath)))
+        os.path.expanduser(filepath)))
     while True:
         if not os.path.exists(os.path.join(dirname, "__init__.py")):
             return dirname

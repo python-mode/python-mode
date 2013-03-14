@@ -1,9 +1,10 @@
-import logging
 import fnmatch
 import re
 import sys
-from argparse import ArgumentParser
 from os import getcwd, walk, path as op
+
+import logging
+from argparse import ArgumentParser
 
 from . import utils
 
@@ -37,16 +38,13 @@ def run(path, ignore=None, select=None, linters=default_linters, **meta):
 
             if params.get('lint'):
                 for e in linter(path, code=code, **meta):
-                    e.update(
-                        col=e.get('col', 0),
-                        lnum=e.get('lnum', 0),
-                        type=e.get('type', 'E'),
-                        text="{0} [{1}]".format(
-                            e.get('text', '').strip(
-                            ).replace("'", "\"").split('\n')[0],
-                            lint),
-                        filename=path or '',
-                    )
+                    e['col'] = e.get('col') or 0
+                    e['lnum'] = e.get('lnum') or 0
+                    e['type'] = e.get('type') or 'E'
+                    e['text'] = "{0} [{1}]".format((e.get(
+                        'text') or '').strip()
+                        .replace("'", "\"").split('\n')[0], lint)
+                    e['filename'] = path or ''
                     errors.append(e)
 
         except IOError, e:
