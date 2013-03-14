@@ -44,7 +44,7 @@ from optparse import OptionParser
 import difflib
 import tempfile
 
-from .pylama import pep8
+from pylama import pep8
 
 
 try:

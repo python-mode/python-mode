@@ -1,5 +1,5 @@
 import vim
-from pylibs.autopep8 import fix_file
+from autopep8 import fix_file
 
 
 class Options():
