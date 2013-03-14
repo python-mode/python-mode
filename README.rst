@@ -116,6 +116,15 @@ To change this settings, edit your ``~/.vimrc``: ::
     let g:pymode_run_key = 'R'
 
 
+Loading the Plugin
+------------------
+
+Default values: ::
+
+    " Load the whole plugin
+    let g:pymode = 1
+
+
 Show documentation
 ------------------
 
