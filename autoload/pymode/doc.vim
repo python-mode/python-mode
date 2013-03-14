@@ -10,7 +10,7 @@ fun! pymode#doc#Show(word) "{{{
         py help(vim.eval('a:word'))
         py sys.stdout, out = _, sys.stdout.getvalue()
         call pymode#TempBuffer()
-        py vim.current.buffer.append(out.split('\n'), 0)
+        py vim.current.buffer.append(str(out).split('\n'), 0)
         wincmd p
     endif
 endfunction "}}}

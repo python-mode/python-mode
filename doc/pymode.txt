@@ -44,6 +44,8 @@ to install the pylint or rope libraries on your system.
 This script provides the following options that can customise the behaviour of
 PythonMode. These options should be set in your vimrc.
 
+|'pymode'|                          Turn off the whole plugin
+
 |'pymode_paths'|                    Additional python paths for pymode
 
 |'pymode_doc'|                      Turns off the documentation script
@@ -143,6 +145,13 @@ Set linters and mccabe complexity.
 This changes will work only in current buffer.
 
 ------------------------------------------------------------------------------
+                                                                      *'pymode'*
+Values: 0 or 1.
+Default: 1.
+
+If this option is set to 0 then the whole plugin is disabled
+
+------------------------------------------------------------------------------
                                                                 *'pymode_paths'*
 Values: List of strings
 Default: [].
@@ -196,7 +205,7 @@ This option sets code checkers.
 Values: IDs of errors, separated by commas or empty strings
         E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc ~
 
-Default: "E501".
+Default: "".
 
 Skip errors and warnings.
 See also: |'pymode_lint_select'|, |'pymode_lint_config'|

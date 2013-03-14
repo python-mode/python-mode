@@ -22,6 +22,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 - And more, more ...
 
 See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
+Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
 
 
 .. contents::
@@ -114,6 +115,15 @@ To change this settings, edit your ``~/.vimrc``: ::
 
     " Set key 'R' for run python code
     let g:pymode_run_key = 'R'
+
+
+Loading the Plugin
+------------------
+
+Default values: ::
+
+    " Load the whole plugin
+    let g:pymode = 1
 
 
 Show documentation
