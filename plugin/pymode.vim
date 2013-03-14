@@ -1,4 +1,4 @@
-let g:pymode_version = "0.6.9"
+let g:pymode_version = "0.6.11"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -10,13 +10,13 @@ endif
 
 " DESC: Check python support
 if !has('python')
-    echoerr expand("<sfile>:t") . " required vim compiled with +python."
-    let g:pymode_lint       = 0
-    let g:pymode_rope       = 0
-    let g:pymode_path       = 0
-    let g:pymode_doc        = 0
-    let g:pymode_run        = 0
     let g:pymode_virtualenv = 0
+    let g:pymode_path       = 0
+    let g:pymode_lint       = 0
+    let g:pymode_doc        = 0
+    let g:pymode_breakpoint = 0
+    let g:pymode_rope       = 0
+    let g:pymode_run        = 0
 endif
 
 
@@ -34,7 +34,7 @@ endif
 " }}}
 
 
-" DESC: Fix python path
+" DESC: Add pymode's pylibs to sys.path {{{
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 
     call pymode#Default('g:pymode_paths', [])
@@ -49,7 +49,7 @@ libpath = os.path.join(os.path.dirname(os.path.dirname(
 sys.path = [os.path.dirname(libpath), libpath, curpath] + vim.eval("g:pymode_paths") + sys.path
 EOF
 
-endif
+endif " }}}
 
 
 " Lint {{{
