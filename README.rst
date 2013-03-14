@@ -22,6 +22,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 - And more, more ...
 
 See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
+Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
 
 
 .. contents::
@@ -30,17 +31,17 @@ See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is
 Changelog
 =========
 
-## 2012-08-02 0.6.5
--------------------
-* Updated Pep8 to version 1.3.3
-* Updated Pylint to version 0.25.2
-* Fixed virtualenv support for windows users
-* Added pymode modeline ':help PythonModeModeline'
-* Added diagnostic tool ':call pymode#troubleshooting#Test()'
-* Added `PyLintAuto` command ':help PyLintAuto' 
-* Code checking is async operation now
-* More, more fast the pymode folding
-* Repaired execution of python code
+## 2013-03-15 0.6.11
+--------------------
+* Update `PEP8` to version 1.4.5;
+* Update `Pylint` to version 0.27.0;
+* Update `autopep8` to version 0.8.7;
+* Fix breakpoint definition;
+* Update python syntax;
+* Fixed run-time error when output non-ascii in multibyte locale;
+* Move initialization into ftplugin as it is python specific;
+* Pyrex (Cython) files support;
+* Support `raw_input` in run python code;
 
 
 Requirements
@@ -114,6 +115,15 @@ To change this settings, edit your ``~/.vimrc``: ::
 
     " Set key 'R' for run python code
     let g:pymode_run_key = 'R'
+
+
+Loading the Plugin
+------------------
+
+Default values: ::
+
+    " Load the whole plugin
+    let g:pymode = 1
 
 
 Show documentation

@@ -1,15 +1,17 @@
 import vim
-from pylibs.autopep8 import fix_file
+from autopep8 import fix_file
 
 
 class Options():
-    verbose = 0
+    aggressive = 0
     diff = False
-    in_place = True
-    recursive = False
-    pep8_passes = 100
     ignore = ''
+    in_place = True
+    max_line_length = 79
+    pep8_passes = 100
+    recursive = False
     select = ''
+    verbose = 0
 
 
 def fix_current_file():

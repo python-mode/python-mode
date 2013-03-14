@@ -4,9 +4,9 @@ import os
 import tempfile
 import re
 
-from pylibs.ropemode import decorators
-from pylibs.ropemode import environment
-from pylibs.ropemode import interface
+from ropemode import decorators
+from ropemode import environment
+from ropemode import interface
 
 import vim
 

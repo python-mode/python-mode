@@ -1,6 +1,18 @@
 Changelog
 =========
 
+## 2013-03-15 0.6.11
+--------------------
+* Update `PEP8` to version 1.4.5;
+* Update `Pylint` to version 0.27.0;
+* Update `autopep8` to version 0.8.7;
+* Fix breakpoint definition;
+* Update python syntax;
+* Fixed run-time error when output non-ascii in multibyte locale;
+* Move initialization into ftplugin as it is python specific;
+* Pyrex (Cython) files support;
+* Support `raw_input` in run python code;
+
 ## 2012-09-07 0.6.10
 --------------------
 * Dont raise an exception when Logger has no message handler (c) nixon

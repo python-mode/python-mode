@@ -1,4 +1,6 @@
 " vim: ft=vim:fdm=marker
+"
+runtime ftplugin/python/init-pymode.vim
 
 " DESC: Disable script loading
 if !pymode#Option('syntax') || pymode#Default('b:current_syntax', 'python')
@@ -21,12 +23,12 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn keyword pythonStatement	pass raise
     syn keyword pythonStatement	global assert
     syn keyword pythonStatement	lambda yield
-    syn keyword pythonStatement	with
+    syn keyword pythonStatement	with as
     syn keyword pythonStatement	def class nextgroup=pythonFunction skipwhite
     syn match   pythonFunction	"[a-zA-Z_][a-zA-Z0-9_]*" display contained
     syn keyword pythonRepeat	for while
     syn keyword pythonConditional	if elif else
-    syn keyword pythonPreCondit	import from as
+    syn keyword pythonInclude	import from
     syn keyword pythonException	try except finally
     syn keyword pythonOperator	and in is not or
 
@@ -240,7 +242,7 @@ endif
 " =============
 
     hi def link  pythonStatement    Statement
-    hi def link  pythonPreCondit    Statement
+    hi def link  pythonInclude      Include
     hi def link  pythonFunction	    Function
     hi def link  pythonConditional  Conditional
     hi def link  pythonRepeat       Repeat
