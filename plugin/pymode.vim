@@ -91,7 +91,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     call pymode#Default("g:pymode_lint_maxheight", 6)
 
     " OPTION: g:pymode_lint_ignore -- string. Skip errors and warnings (e.g. E4,W)
-    call pymode#Default("g:pymode_lint_ignore", "E501")
+    call pymode#Default("g:pymode_lint_ignore", "")
 
     " OPTION: g:pymode_lint_select -- string. Select errors and warnings (e.g. E4,W)
     call pymode#Default("g:pymode_lint_select", "")

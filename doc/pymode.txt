@@ -196,7 +196,7 @@ This option sets code checkers.
 Values: IDs of errors, separated by commas or empty strings
         E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc ~
 
-Default: "E501".
+Default: "".
 
 Skip errors and warnings.
 See also: |'pymode_lint_select'|, |'pymode_lint_config'|
