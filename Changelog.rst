@@ -10,6 +10,7 @@ Changelog
 * Update python syntax;
 * Fixed run-time error when output non-ascii in multibyte locale;
 * Move initialization into ftplugin as it is python specific;
+* Pyrex (Cython) files support;
 
 ## 2012-09-07 0.6.10
 --------------------
