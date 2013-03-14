@@ -15,7 +15,8 @@ fun! pymode#run#Run(line1, line2) "{{{
     call pymode#WideMessage("Code running.")
     try
         call setqflist([])
-        py execfile(vim.eval('expand("%s:p")'))
+        py execfile(vim.eval('expand("%s:p")'), {'raw_input': lambda s:
+        vim.eval('input("{0}")'.format(s)), 'input': vim.eval('input("{0}")'.format(s))})
         py out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()
         py sys.stdout, sys.stderr = stdout_, stderr_
 

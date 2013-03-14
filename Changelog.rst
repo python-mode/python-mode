@@ -11,6 +11,7 @@ Changelog
 * Fixed run-time error when output non-ascii in multibyte locale;
 * Move initialization into ftplugin as it is python specific;
 * Pyrex (Cython) files support;
+* Support `raw_input` in run python code;
 
 ## 2012-09-07 0.6.10
 --------------------

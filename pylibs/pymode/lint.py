@@ -6,7 +6,10 @@ from .interface import get_option, get_var, get_current_buffer, command
 from .queue import add_task
 
 
-locale.setlocale(locale.LC_CTYPE, "C")
+try:
+    locale.setlocale(locale.LC_CTYPE, "C")
+except AttributeError:
+    pass
 
 
 def check_file():
