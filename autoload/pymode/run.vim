@@ -2,7 +2,7 @@
 fun! pymode#run#Run(line1, line2) "{{{
     if &modifiable && &modified
         try
-            write
+            noautocmd write
         catch /E212/
             echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
             return 0
@@ -12,10 +12,12 @@ fun! pymode#run#Run(line1, line2) "{{{
     py sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
     py sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
     py enc = vim.eval('&enc')
+    call setqflist([])
     call pymode#WideMessage("Code running.")
     try
-        call setqflist([])
-        py execfile(vim.eval('expand("%s:p")'), {'raw_input': lambda s: vim.eval('input("{0}")'.format(s)), 'input': lambda s: vim.eval('input("{0}")'.format(s))})
+        py context = globals()
+        py context['raw_input'] = context['input'] = lambda s: vim.eval('input("{0}")'.format(s))
+        py execfile(vim.eval('expand("%:p")'), context)
         py out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()
         py sys.stdout, sys.stderr = stdout_, stderr_
 

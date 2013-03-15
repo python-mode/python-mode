@@ -5,7 +5,7 @@ fun! pymode#lint#Check() "{{{
 
     if &modifiable && &modified
         try
-            write
+            noautocmd write
         catch /E212/
             echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
             return 0
@@ -94,7 +94,7 @@ endfunction " }}}
 fun! pymode#lint#Auto() "{{{
     if &modifiable && &modified
         try
-            write
+            noautocmd write
         catch /E212/
             echohl Error | echo "File modified and I can't save it. Cancel operation." | echohl None
             return 0
