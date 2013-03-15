@@ -1,10 +1,11 @@
 Changelog
 =========
 
-## 2013-03-15 0.6.12
+## 2013-03-16 0.6.13
 --------------------
 * Update `PEP8` to version 1.4.5;
 * Update `Pylint` to version 0.27.0;
+* Update `pyflakes` to version 0.6.1;
 * Update `autopep8` to version 0.8.7;
 * Fix breakpoint definition;
 * Update python syntax;
