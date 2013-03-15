@@ -58,18 +58,16 @@ def pyflakes(path, code=None, **meta):
     for w in w.messages:
         errors.append(dict(
             lnum=w.lineno,
-            col=w.col,
             text=w.message % w.message_args,
-            type='E'
         ))
     return errors
 
 
 def pylint(path, **meta):
     from .pylint.lint import Run
-    from .pylint.logilab.astng.builder import MANAGER
     from .pylint.reporters import BaseReporter
 
+    from .pylint.logilab.astng.builder import MANAGER
     MANAGER.astng_cache.clear()
 
     class Reporter(BaseReporter):
