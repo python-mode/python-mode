@@ -67,7 +67,10 @@ def pyflakes(path, code=None, **meta):
 
 def pylint(path, **meta):
     from .pylint.lint import Run
+    from .pylint.logilab.astng.builder import MANAGER
     from .pylint.reporters import BaseReporter
+
+    MANAGER.astng_cache.clear()
 
     class Reporter(BaseReporter):
 
