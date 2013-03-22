@@ -13,8 +13,10 @@ default_linters = 'pep8', 'pyflakes', 'mccabe'
 default_complexity = 10
 logger = logging.Logger('pylama')
 
+SKIP_PATTERN = '# nolint'
 
-def run(path, ignore=None, select=None, linters=default_linters, **meta):
+
+def run(path, ignore=None, select=None, linters=default_linters, **meta):  # nolint
     errors = []
     ignore = ignore and list(ignore) or []
     select = select and list(select) or []
@@ -29,6 +31,9 @@ def run(path, ignore=None, select=None, linters=default_linters, **meta):
         try:
             code = open(path, "rU").read() + '\n\n'
             params = parse_modeline(code)
+            params['skip'] = [False]
+            for line in code.split('\n'):
+                params['skip'].append(line.endswith(SKIP_PATTERN))
 
             if params.get('lint_ignore'):
                 ignore += params.get('lint_ignore').split(',')
@@ -45,7 +50,8 @@ def run(path, ignore=None, select=None, linters=default_linters, **meta):
                         'text') or '').strip()
                         .replace("'", "\"").split('\n')[0], lint)
                     e['filename'] = path or ''
-                    errors.append(e)
+                    if not params['skip'][e['lnum']]:
+                        errors.append(e)
 
         except IOError, e:
             errors.append(dict(
@@ -164,5 +170,3 @@ def parse_modeline(code):
 
 if __name__ == '__main__':
     shell()
-
-# lint=12:lint_ignore=test
