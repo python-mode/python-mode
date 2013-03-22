@@ -127,7 +127,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     " DESC: Set default pylint configuration
     if !filereadable(g:pymode_lint_config)
-        let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
+        let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/pylint.ini"
     endif
 
     py from pymode import queue
