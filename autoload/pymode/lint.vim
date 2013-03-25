@@ -23,6 +23,10 @@ endfunction " }}}
 fun! pymode#lint#Parse()
     " DESC: Parse result of code checking.
     "
+    if g:pymode_lint_signs
+        call pymode#RemoveSigns()
+    endif
+
     call setqflist(g:qf_list, 'r')
 
     if g:pymode_lint_signs
