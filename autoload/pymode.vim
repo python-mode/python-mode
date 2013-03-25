@@ -49,13 +49,18 @@ fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpE
     endif
 endfunction "}}}
 
+fun! pymode#RemoveSigns() "{{{
+    if has('signs')
+        for item in filter(getqflist(), 'v:val.bufnr != ""')
+            execute printf('silent! sign unplace 1 buffer=%d', item.bufnr)
+        endfor
+    endif
+endfunction "}}}
 
 fun! pymode#PlaceSigns() "{{{
     " DESC: Place error signs
     "
     if has('signs')
-        sign unplace *
-
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             call RopeShowSignsRulerIfNeeded()
         endif
