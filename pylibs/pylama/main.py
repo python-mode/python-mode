@@ -45,7 +45,7 @@ def run(path, ignore=None, select=None, linters=default_linters, **meta):  # nol
                 for e in linter(path, code=code, **meta):
                     e['col'] = e.get('col') or 0
                     e['lnum'] = e.get('lnum') or 0
-                    e['type'] = e.get('type') or 'E'
+                    e['type'] = e.get('type') or 'W'
                     e['text'] = "{0} [{1}]".format((e.get(
                         'text') or '').strip()
                         .replace("'", "\"").split('\n')[0], lint)

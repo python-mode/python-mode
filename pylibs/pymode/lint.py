@@ -57,8 +57,8 @@ def run_checkers(task=None, checkers=None, ignore=None,
         task.done = 100
 
 
-def parse_result(result):
-    command(('let g:qf_list = %s' % repr(result)).replace('\': u', '\': '))
-    command('call pymode#lint#Parse()')
+def parse_result(result, bnum):
+    command(('let g:qf_list = {0}'.format(repr(result)).replace('\': u', '\': ')))
+    command('call pymode#lint#Parse({0})'.format(bnum))
 
 # pymode:lint_ignore=W0622
