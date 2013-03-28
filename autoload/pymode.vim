@@ -54,14 +54,19 @@ fun! pymode#PlaceSigns(bnum) "{{{
     " DESC: Place error signs
     "
     if has('signs')
-        " TODO: Create pymode sign namespace
-        execute "sign unplace buffer=".a:bnum
+        call pymode#Default('b:pymode_signs', [])
+
+        for item in b:pymode_signs
+            execute printf('sign unplace %d buffer=%d', item.lnum, item.bufnr)
+        endfor
+        let b:pymode_signs = []
 
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             call RopeShowSignsRulerIfNeeded()
         endif
 
         for item in filter(getqflist(), 'v:val.bufnr != ""')
+            call add(b:pymode_signs, item)
             execute printf('sign place %d line=%d name=%s buffer=%d', item.lnum, item.lnum, "Pymode".item.type, item.bufnr)
         endfor
 
