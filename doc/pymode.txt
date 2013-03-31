@@ -169,7 +169,7 @@ If this option is set to 0 then the doc script is disabled.
                                                               *'pymode_doc_key'*
 Default: 'K'.
 
-Set the key to the show python documentation.
+Set the key to show the show python documentation.
 
 ------------------------------------------------------------------------------
                                                                   *'pymode_run'*
