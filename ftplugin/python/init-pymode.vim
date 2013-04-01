@@ -3,7 +3,7 @@ if exists('did_init_pymode_vim')
 endif
 let did_init_pymode_vim = 1
 
-let g:pymode_version = "0.6.14"
+let g:pymode_version = "0.6.15"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
