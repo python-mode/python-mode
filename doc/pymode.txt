@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.6.14
+                          Version: 0.6.15
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -452,8 +452,8 @@ iM                Operation with inner function or method.
 Python-mode doesn't work
 ------------------------
 
-Run ":call pymode#troubleshooting#Test()" and fix the warning or send me the
-output.
+Open any python file and run ":call pymode#troubleshooting#Test()",
+fix the warning or send me the output.
 
 
 Rope completion is very slow
