@@ -380,8 +380,6 @@ class VimProgress(object):
 
 
 def echo(message):
-    if _rope_quiet:
-        return
     if isinstance(message, unicode):
         message = message.encode(vim.eval('&encoding'))
     print message
@@ -445,7 +443,6 @@ class RopeMode(interface.RopeMode):
 
         progress.name = txt
         progress.done()
-        echo('Project opened!')
 
 decorators.logger.message = echo
 decorators.logger.only_short = True

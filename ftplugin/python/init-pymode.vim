@@ -3,7 +3,7 @@ if exists('did_init_pymode_vim')
 endif
 let did_init_pymode_vim = 1
 
-let g:pymode_version = "0.6.14"
+let g:pymode_version = "0.6.15"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -111,11 +111,12 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
         " DESC: Signs definition
-        sign define W text=WW texthl=Todo
-        sign define C text=CC texthl=Comment
-        sign define R text=RR texthl=Visual
-        sign define E text=EE texthl=Error
-        sign define I text=II texthl=Info
+        sign define PymodeW text=WW texthl=Todo
+        sign define PymodeC text=CC texthl=Comment
+        sign define PymodeR text=RR texthl=Visual
+        sign define PymodeE text=EE texthl=Error
+        sign define PymodeI text=II texthl=Info
+        sign define PymodeF text=FF texthl=Info
 
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             " Show the sign's ruller if asked for, even it there's no error to show
@@ -127,7 +128,7 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     " DESC: Set default pylint configuration
     if !filereadable(g:pymode_lint_config)
-        let g:pymode_lint_config = expand("<sfile>:p:h:h") . "/pylint.ini"
+        let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/pylint.ini"
     endif
 
     py from pymode import queue

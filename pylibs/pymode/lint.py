@@ -15,18 +15,32 @@ except AttributeError:
 def check_file():
     checkers = get_option('lint_checker').split(',')
 
-    ignore = set(filter(lambda i: i, get_option('lint_ignore').split(',') +
-                 get_var('lint_ignore').split(',')))
-
-    select = set(filter(lambda s: s, get_option('lint_select').split(',') +
-                 get_var('lint_select').split(',')))
+    ignore = set([
+        i for i in (
+            get_option('lint_ignore').split(',') +
+            get_var('lint_ignore').split(','))
+        if i
+    ])
+    select = set([
+        s for s in (
+            get_option('lint_select').split(',') +
+            get_var('lint_select').split(','))
+        if i
+    ])
 
     buffer = get_current_buffer()
+    complexity = int(get_option('lint_mccabe_complexity') or 0)
 
-    add_task(run_checkers, checkers=checkers, ignore=ignore, title='Code checking', callback=parse_result, buffer=buffer, select=select)
+    add_task(run_checkers, checkers=checkers, ignore=ignore,
+             title='Code checking',
+             callback=parse_result,
+             buffer=buffer,
+             select=select,
+             complexity=complexity)
 
 
-def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None):
+def run_checkers(task=None, checkers=None, ignore=None,
+        buffer=None, select=None, complexity=None):
 
     buffer = (task and task.buffer) or buffer
     filename = buffer.name
@@ -34,7 +48,8 @@ def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None
 
     pylint_options = '--rcfile={0} -r n'.format(get_var('lint_config')).split()
 
-    result = run(filename, ignore=ignore, select=select, linters=checkers, pylint=pylint_options)
+    result = run(filename, ignore=ignore, select=select, linters=checkers,
+                 pylint=pylint_options, complexity=complexity)
 
     if task:
         task.result = result
@@ -42,6 +57,8 @@ def run_checkers(task=None, checkers=None, ignore=None, buffer=None, select=None
         task.done = 100
 
 
-def parse_result(result):
-    command(('let g:qf_list = %s' % repr(result)).replace('\': u', '\': '))
-    command('call pymode#lint#Parse()')
+def parse_result(result, bnum):
+    command(('let g:qf_list = {0}'.format(repr(result)).replace('\': u', '\': ')))
+    command('call pymode#lint#Parse({0})'.format(bnum))
+
+# pymode:lint_ignore=W0622

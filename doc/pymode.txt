@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.6.14
+                          Version: 0.6.15
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -29,7 +29,7 @@ Python-mode is a vim plugin that allows you to use the pylint, rope, and pydoc
 libraries in vim to provide features like python code bug checking,
 refactoring, and some other useful things.
 
-This plugin allow you create python code in vim very easily. There is no need
+This plugin allows you to create python code in vim very easily. There is no need
 to install the pylint or rope libraries on your system.
 
 
@@ -122,9 +122,9 @@ To enable any of the options below you should put the given line in your
 2.2. Modeline ~
                                                       *PythonModeModeline*
 
-Feature like VIM modeline `:help modeline`. Allow changing pymode options for
-edited file. Pymode modeline should always be the last line in the file and
-look like:
+The VIM modeline `:help modeline` feature allows you to change pymode 
+options for the current file. Pymode modeline should always be the
+last line in the vimrc file and look like:
 
 >
     # pymode:lint_ignore=E0202:doc=0:lint_write=0
@@ -142,7 +142,7 @@ Set linters and mccabe complexity.
     # pymode:lint_checker=pip,mccabe:lint_mccabe_complexity=10
 <
 
-This changes will work only in current buffer.
+These changes will work only in the current buffer.
 
 ------------------------------------------------------------------------------
                                                                       *'pymode'*
@@ -156,7 +156,7 @@ If this option is set to 0 then the whole plugin is disabled
 Values: List of strings
 Default: [].
 
-This option set additional python import paths
+This option sets additional python import paths
 
 ------------------------------------------------------------------------------
                                                                   *'pymode_doc'*
@@ -169,20 +169,20 @@ If this option is set to 0 then the doc script is disabled.
                                                               *'pymode_doc_key'*
 Default: 'K'.
 
-Set key for show python documentation.
+Set the key to show the show python documentation.
 
 ------------------------------------------------------------------------------
                                                                   *'pymode_run'*
 Values: 0 or 1.
 Default: 1.
 
-If this option is set to 0 then run script is disabled.
+If this option is set to 0 then the run script is disabled.
 
 ------------------------------------------------------------------------------
                                                               *'pymode_run_key'*
 Default: '<leader>r'.
 
-Set key for run python code.
+Set the key for running python code.
 
 ------------------------------------------------------------------------------
                                                                  *'pymode_lint'*
@@ -279,7 +279,7 @@ Values: 0 or 1.
 Default: 0.
 
 If this option is set to 0 then pylint will switch on the quickfix window when
-it opens. Doesn't work when |'pymode_lint_jump'| enabled.
+it opens. Doesn't work when |'pymode_lint_jump'| is enabled.
 
 ------------------------------------------------------------------------------
                                                        *'pymode_lint_minheight'*
@@ -349,7 +349,7 @@ not be used.
 Values: 0 or 1.
 Default: 1.
 
-If this option is set to 1, pymode will enable python indentation support
+If this option is set to 1, pymode will enable python indentation support.
 
 ------------------------------------------------------------------------------
                                                               *'pymode_folding'*
@@ -452,8 +452,8 @@ iM                Operation with inner function or method.
 Python-mode doesn't work
 ------------------------
 
-Run ":call pymode#troubleshooting#Test()" and fix the warning or send me the
-output.
+Open any python file and run ":call pymode#troubleshooting#Test()",
+fix the warning or send me the output.
 
 
 Rope completion is very slow
@@ -463,8 +463,8 @@ To work, rope_ creates a service directory: `.ropeproject`.  If
 |'pymode_rope_guess_project'| is set on (as it is by default) and
 `.ropeproject` is not found in the current dir, rope will scan for
 `.ropeproject` in every dir in the parent path.  If rope finds `.ropeproject`
-in parent dirs, rope sets project for all child dir and the scan may be slow
-for many dirs and files.
+in parent dirs, rope sets projectis for all child dirs and the scan may be 
+slow for many dirs and files.
 
 Solutions:
 
@@ -479,7 +479,7 @@ Solutions:
 Pylint check is very slow
 -------------------------
 
-In some projects pylint_ may check slowly, because it also scan imported
+In some projects pylint_ may check slowly, because it also scans imported
 modules if possible.  Try using pyflakes: see |'pymode_lint_checker'|.
 
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings

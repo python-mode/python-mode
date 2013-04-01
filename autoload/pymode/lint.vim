@@ -20,13 +20,13 @@ fun! pymode#lint#Check() "{{{
 endfunction " }}}
 
 
-fun! pymode#lint#Parse()
+fun! pymode#lint#Parse(bnum)
     " DESC: Parse result of code checking.
     "
     call setqflist(g:qf_list, 'r')
 
     if g:pymode_lint_signs
-        call pymode#PlaceSigns()
+        call pymode#PlaceSigns(a:bnum)
     endif
 
     if g:pymode_lint_cwindow
