@@ -24,8 +24,10 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn keyword pythonStatement	global assert
     syn keyword pythonStatement	lambda yield
     syn keyword pythonStatement	with as
-    syn keyword pythonStatement	def class nextgroup=pythonFunction skipwhite
+    syn keyword pythonStatement	def nextgroup=pythonFunction skipwhite
     syn match   pythonFunction	"[a-zA-Z_][a-zA-Z0-9_]*" display contained
+    syn keyword pythonStatement	class nextgroup=pythonClass skipwhite
+    syn match   pythonClass 	"[a-zA-Z_][a-zA-Z0-9_]*" display contained
     syn keyword pythonRepeat	for while
     syn keyword pythonConditional	if elif else
     syn keyword pythonInclude	import from
