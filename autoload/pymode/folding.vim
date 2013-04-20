@@ -3,6 +3,7 @@
 
 let s:blank_regex = '^\s*$'
 let s:def_regex = '^\s*\(class\|def\) \w\+'
+let s:decorator_regex = '^\s*@'
 
 
 fun! pymode#folding#text() " {{{
@@ -31,12 +32,13 @@ fun! pymode#folding#expr(lnum) "{{{
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
 
-    if line =~ s:def_regex
-        return ">".(indent / &shiftwidth + 1)
-    endif
-
-    if line =~ '^\s*@'
-        return -1
+    if line =~ s:def_regex || line =~ s:decorator_regex
+		let prev_line = getline(a:lnum - 1)
+		if prev_line =~ s:decorator_regex
+			return '='
+		else
+			return ">".(indent / &shiftwidth + 1)
+		endif
     endif
 
     if line =~ s:blank_regex
