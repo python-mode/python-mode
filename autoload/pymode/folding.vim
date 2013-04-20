@@ -4,6 +4,9 @@
 let s:blank_regex = '^\s*$'
 let s:def_regex = '^\s*\%(class\|def\) \w\+'
 let s:decorator_regex = '^\s*@'
+let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
+let s:doc_end_regex = '\%("""\|''''''\)\s*$'
+let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
 
 
 fun! pymode#folding#text() " {{{
@@ -39,6 +42,17 @@ fun! pymode#folding#expr(lnum) "{{{
 		else
 			return ">".(indent / &shiftwidth + 1)
 		endif
+    endif
+
+    if line =~ s:doc_begin_regex
+				\ && line !~ s:doc_line_regex
+				\ && prev_line =~ s:def_regex
+		return ">".(indent / &shiftwidth + 1)
+    endif
+
+    if line =~ s:doc_end_regex
+				\ && line !~ s:doc_line_regex
+		return "<".(indent / &shiftwidth + 1)
     endif
 
     if line =~ s:blank_regex
