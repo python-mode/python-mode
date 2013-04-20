@@ -11,7 +11,7 @@ let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
 
 fun! pymode#folding#text() " {{{
     let fs = v:foldstart
-    while getline(fs) =~ '^\s*@' 
+    while getline(fs) =~ '\%(^\s*@\)\|\%(^\s*\%("""\|''''''\)\s*$\)'
         let fs = nextnonblank(fs + 1)
     endwhile
     let line = getline(fs)
@@ -25,6 +25,7 @@ fun! pymode#folding#text() " {{{
     let line = substitute(line, '\t', onetab, 'g')
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
+    let line = substitute(line, '\%("""\|''''''\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
     return line . '…' . repeat(" ",fillcharcount) . foldedlinecount . '…' . ' '
 endfunction "}}}
