@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 2013-04-26 0.6.16
+--------------------
+* Improvement folding (thanks @alvinfrancis);
+
 ## 2013-04-01 0.6.15
 --------------------
 * Bugfix release
