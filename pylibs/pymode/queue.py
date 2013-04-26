@@ -55,6 +55,6 @@ def check_task():
         if isinstance(thread, Task):
             if thread.finished:
                 thread.stop()
-                thread.callback(thread.result)
+                thread.callback(thread.result, thread.buffer.number)
             else:
                 show_message('%s %s%%' % (thread.title, thread.done))

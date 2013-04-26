@@ -3,34 +3,28 @@
     http://nedbatchelder.com/blog/200803/python_code_complexity_microtool.html
     MIT License.
 """
-try:
-    from compiler import parse      # NOQA
-    iter_child_nodes = None         # NOQA
-except ImportError:
-    from ast import parse, iter_child_nodes     # NOQA
+from __future__ import with_statement
 
 import sys
+
+import ast
+import optparse
+from ast import iter_child_nodes
 from collections import defaultdict
 
-WARNING_CODE = "W901"
+
+__version__ = '0.2'
 
 
-class ASTVisitor:
-
-    VERBOSE = 0
+class ASTVisitor(object):
+    """Performs a depth-first walk of the AST."""
 
     def __init__(self):
         self.node = None
         self._cache = {}
-        self.visitor = None
 
     def default(self, node, *args):
-        if hasattr(node, 'getChildNodes'):
-            children = node.getChildNodes()
-        else:
-            children = iter_child_nodes(node)
-
-        for child in children:
+        for child in iter_child_nodes(node):
             self.dispatch(child, *args)
 
     def dispatch(self, node, *args):
@@ -41,30 +35,29 @@ class ASTVisitor:
             className = klass.__name__
             meth = getattr(self.visitor, 'visit' + className, self.default)
             self._cache[klass] = meth
-
         return meth(node, *args)
 
     def preorder(self, tree, visitor, *args):
         """Do preorder walk of tree using visitor"""
         self.visitor = visitor
         visitor.visit = self.dispatch
-        self.dispatch(tree, *args)
+        self.dispatch(tree, *args)  # XXX *args make sense?
 
 
-class PathNode:
+class PathNode(object):
     def __init__(self, name, look="circle"):
         self.name = name
         self.look = look
 
     def to_dot(self):
-        print('node [shape=%s,label="%s"] %d;' %
-              (self.look, self.name, self.dot_id()))
+        print('node [shape=%s,label="%s"] %d;' % (
+            self.look, self.name, self.dot_id()))
 
     def dot_id(self):
         return id(self)
 
 
-class PathGraph:
+class PathGraph(object):
     def __init__(self, name, entity, lineno):
         self.name = name
         self.entity = entity
@@ -79,8 +72,8 @@ class PathGraph:
         for node in self.nodes:
             node.to_dot()
         for node, nexts in self.nodes.items():
-            for nxt in nexts:
-                print('%s -- %s;' % (node.dot_id(), nxt.dot_id()))
+            for next in nexts:
+                print('%s -- %s;' % (node.dot_id(), next.dot_id()))
         print('}')
 
     def complexity(self):
@@ -98,7 +91,7 @@ class PathGraphingAstVisitor(ASTVisitor):
     """
 
     def __init__(self):
-        ASTVisitor.__init__(self)
+        super(PathGraphingAstVisitor, self).__init__()
         self.classname = ""
         self.graphs = {}
         self.reset()
@@ -107,7 +100,11 @@ class PathGraphingAstVisitor(ASTVisitor):
         self.graph = None
         self.tail = None
 
-    def visitFunction(self, node):
+    def dispatch_list(self, node_list):
+        for node in node_list:
+            self.dispatch(node)
+
+    def visitFunctionDef(self, node):
 
         if self.classname:
             entity = '%s%s' % (self.classname, node.name)
@@ -120,7 +117,7 @@ class PathGraphingAstVisitor(ASTVisitor):
             # closure
             pathnode = self.appendPathNode(name)
             self.tail = pathnode
-            self.default(node)
+            self.dispatch_list(node.body)
             bottom = PathNode("", look='point')
             self.graph.connect(self.tail, bottom)
             self.graph.connect(pathnode, bottom)
@@ -129,16 +126,14 @@ class PathGraphingAstVisitor(ASTVisitor):
             self.graph = PathGraph(name, entity, node.lineno)
             pathnode = PathNode(name)
             self.tail = pathnode
-            self.default(node)
+            self.dispatch_list(node.body)
             self.graphs["%s%s" % (self.classname, node.name)] = self.graph
             self.reset()
 
-    visitFunctionDef = visitFunction
-
-    def visitClass(self, node):
+    def visitClassDef(self, node):
         old_classname = self.classname
         self.classname += node.name + "."
-        self.default(node)
+        self.dispatch_list(node.body)
         self.classname = old_classname
 
     def appendPathNode(self, name):
@@ -157,9 +152,9 @@ class PathGraphingAstVisitor(ASTVisitor):
         name = "Stmt %d" % lineno
         self.appendPathNode(name)
 
-    visitAssert = visitAssign = visitAssTuple = visitPrint = \
-        visitPrintnl = visitRaise = visitSubscript = visitDecorators = \
-        visitPass = visitDiscard = visitGlobal = visitReturn = \
+    visitAssert = visitAssign = visitAugAssign = visitDelete = visitPrint = \
+        visitRaise = visitYield = visitImport = visitCall = visitSubscript = \
+        visitPass = visitContinue = visitBreak = visitGlobal = visitReturn = \
         visitSimpleStatement
 
     def visitLoop(self, node):
@@ -170,96 +165,148 @@ class PathGraphingAstVisitor(ASTVisitor):
             self.graph = PathGraph(name, name, node.lineno)
             pathnode = PathNode(name)
             self.tail = pathnode
-            self.default(node)
+            self.dispatch_list(node.body)
             self.graphs["%s%s" % (self.classname, name)] = self.graph
             self.reset()
         else:
             pathnode = self.appendPathNode(name)
             self.tail = pathnode
-            self.default(node.body)
+            self.dispatch_list(node.body)
             bottom = PathNode("", look='point')
             self.graph.connect(self.tail, bottom)
             self.graph.connect(pathnode, bottom)
             self.tail = bottom
 
-        # TODO: else clause in node.else_
+        # TODO: else clause in node.orelse
 
     visitFor = visitWhile = visitLoop
 
     def visitIf(self, node):
         name = "If %d" % node.lineno
         pathnode = self.appendPathNode(name)
-        if not pathnode:
-            return  # TODO: figure out what to do with if's outside def's.
         loose_ends = []
-        for t, n in node.tests:
+        self.dispatch_list(node.body)
+        loose_ends.append(self.tail)
+        if node.orelse:
             self.tail = pathnode
-            self.default(n)
-            loose_ends.append(self.tail)
-        if node.else_:
-            self.tail = pathnode
-            self.default(node.else_)
+            self.dispatch_list(node.orelse)
             loose_ends.append(self.tail)
         else:
             loose_ends.append(pathnode)
-        bottom = PathNode("", look='point')
-        for le in loose_ends:
-            self.graph.connect(le, bottom)
-        self.tail = bottom
+        if pathnode:
+            bottom = PathNode("", look='point')
+            for le in loose_ends:
+                self.graph.connect(le, bottom)
+            self.tail = bottom
 
-    # TODO: visitTryExcept
-    # TODO: visitTryFinally
-    # TODO: visitWith
+    def visitTryExcept(self, node):
+        name = "TryExcept %d" % node.lineno
+        pathnode = self.appendPathNode(name)
+        loose_ends = []
+        self.dispatch_list(node.body)
+        loose_ends.append(self.tail)
+        for handler in node.handlers:
+            self.tail = pathnode
+            self.dispatch_list(handler.body)
+            loose_ends.append(self.tail)
+        if pathnode:
+            bottom = PathNode("", look='point')
+            for le in loose_ends:
+                self.graph.connect(le, bottom)
+            self.tail = bottom
 
-    # XXX todo: determine which ones can add to the complexity
-    # py2
-    # TODO: visitStmt
-    # TODO: visitAssName
-    # TODO: visitCallFunc
-    # TODO: visitConst
-
-    # py3
-    # TODO: visitStore
-    # TODO: visitCall
-    # TODO: visitLoad
-    # TODO: visitNum
-    # TODO: visitarguments
-    # TODO: visitExpr
+    def visitWith(self, node):
+        name = "With %d" % node.lineno
+        self.appendPathNode(name)
+        self.dispatch_list(node.body)
 
 
-def get_code_complexity(code, min=7, filename='stdin'):
-    complex = []
+class McCabeChecker(object):
+    """McCabe cyclomatic complexity checker."""
+    name = 'mccabe'
+    version = __version__
+    _code = 'C901'
+    _error_tmpl = "C901 %r is too complex (%d)"
+    max_complexity = 0
+
+    def __init__(self, tree, filename):
+        self.tree = tree
+
+    @classmethod
+    def add_options(cls, parser):
+        parser.add_option('--max-complexity', default=-1, action='store',
+                          type='int', help="McCabe complexity threshold")
+        parser.config_options.append('max-complexity')
+
+    @classmethod
+    def parse_options(cls, options):
+        cls.max_complexity = options.max_complexity
+
+    def run(self):
+        if self.max_complexity < 0:
+            return
+        visitor = PathGraphingAstVisitor()
+        visitor.preorder(self.tree, visitor)
+        for graph in visitor.graphs.values():
+            if graph.complexity() >= self.max_complexity:
+                text = self._error_tmpl % (graph.entity, graph.complexity())
+                yield graph.lineno, 0, text, type(self)
+
+
+def get_code_complexity(code, threshold=7, filename='stdin'):
     try:
-        ast = parse(code)
-    except AttributeError:
+        tree = compile(code, filename, "exec", ast.PyCF_ONLY_AST)
+    except SyntaxError:
         e = sys.exc_info()[1]
         sys.stderr.write("Unable to parse %s: %s\n" % (filename, e))
         return 0
 
-    visitor = PathGraphingAstVisitor()
-    visitor.preorder(ast, visitor)
-    for graph in visitor.graphs.values():
-        if graph is None:
-            # ?
-            continue
-        if graph.complexity() >= min:
-            complex.append(dict(
-                type='W',
-                lnum=graph.lineno,
-                text='%s %r is too complex (%d)' % (
-                    WARNING_CODE,
-                    graph.entity,
-                    graph.complexity(),
-                )
-            ))
+    complx = []
+    McCabeChecker.max_complexity = threshold
+    for lineno, offset, text, _ in McCabeChecker(tree, filename).run():
+        complx.append(dict(
+            type=McCabeChecker._code,
+            lnum=lineno,
+            text=text,
+        ))
 
-    return complex
+    return complx
 
 
-def get_module_complexity(module_path, min=7):
+def get_module_complexity(module_path, threshold=7):
     """Returns the complexity of a module"""
-    code = open(module_path, "rU").read() + '\n\n'
-    return get_code_complexity(code, min, filename=module_path)
+    with open(module_path, "rU") as mod:
+        code = mod.read()
+    return get_code_complexity(code, threshold, filename=module_path)
 
 
-# pymode:lint=0
+def main(argv):
+    opar = optparse.OptionParser()
+    opar.add_option("-d", "--dot", dest="dot",
+                    help="output a graphviz dot file", action="store_true")
+    opar.add_option("-m", "--min", dest="threshold",
+                    help="minimum complexity for output", type="int",
+                    default=2)
+
+    options, args = opar.parse_args(argv)
+
+    with open(args[0], "rU") as mod:
+        code = mod.read()
+    tree = compile(code, args[0], "exec", ast.PyCF_ONLY_AST)
+    visitor = PathGraphingAstVisitor()
+    visitor.preorder(tree, visitor)
+
+    if options.dot:
+        print('graph {')
+        for graph in visitor.graphs.values():
+            if graph.complexity() >= options.threshold:
+                graph.to_dot()
+        print('}')
+    else:
+        for graph in visitor.graphs.values():
+            if graph.complexity() >= options.threshold:
+                print(graph.name, graph.complexity())
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

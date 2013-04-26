@@ -1,6 +1,14 @@
 Changelog
 =========
 
+## 2013-04-26 0.6.16
+--------------------
+* Improvement folding (thanks @alvinfrancis);
+
+## 2013-04-01 0.6.15
+--------------------
+* Bugfix release
+
 ## 2013-03-16 0.6.14
 --------------------
 * Update `PEP8` to version 1.4.5;

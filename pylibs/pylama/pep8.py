@@ -45,7 +45,7 @@ W warnings
 700 statements
 900 syntax error
 """
-__version__ = '1.4.5'
+__version__ = '1.4.6a0'
 
 import os
 import sys
@@ -54,6 +54,7 @@ import time
 import inspect
 import keyword
 import tokenize
+from optparse import OptionParser
 from fnmatch import fnmatch
 try:
     from configparser import RawConfigParser
@@ -68,7 +69,7 @@ if sys.platform == 'win32':
 else:
     DEFAULT_CONFIG = os.path.join(os.getenv('XDG_CONFIG_HOME') or
                                   os.path.expanduser('~/.config'), 'pep8')
-PROJECT_CONFIG = ('.pep8', 'tox.ini', 'setup.cfg')
+PROJECT_CONFIG = ('setup.cfg', 'tox.ini', '.pep8')
 TESTSUITE_PATH = os.path.join(os.path.dirname(__file__), 'testsuite')
 MAX_LINE_LENGTH = 79
 REPORT_FORMAT = {
@@ -214,9 +215,7 @@ def maximum_line_length(physical_line, max_line_length):
     """
     line = physical_line.rstrip()
     length = len(line)
-    if length > max_line_length:
-        if noqa(line):
-            return
+    if length > max_line_length and not noqa(line):
         if hasattr(line, 'decode'):   # Python 2
             # The line could contain multi-byte characters
             try:
@@ -382,7 +381,7 @@ def indentation(logical_line, previous_logical, indent_char,
         yield 0, "E113 unexpected indentation"
 
 
-def continuation_line_indentation(logical_line, tokens, indent_level, verbose):
+def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
     r"""
     Continuation lines should align wrapped elements either vertically using
     Python's implicit line joining inside parentheses, brackets and braces, or
@@ -410,7 +409,7 @@ def continuation_line_indentation(logical_line, tokens, indent_level, verbose):
     """
     first_row = tokens[0][2][0]
     nrows = 1 + tokens[-1][2][0] - first_row
-    if nrows == 1 or noqa(tokens[0][4]):
+    if noqa or nrows == 1:
         return
 
     # indent_next tells us whether the next block is indented; assuming
@@ -564,11 +563,9 @@ def whitespace_before_parameters(logical_line, tokens):
     E211: dict ['key'] = list[index]
     E211: dict['key'] = list [index]
     """
-    prev_type = tokens[0][0]
-    prev_text = tokens[0][1]
-    prev_end = tokens[0][3]
+    prev_type, prev_text, __, prev_end, __ = tokens[0]
     for index in range(1, len(tokens)):
-        token_type, text, start, end, line = tokens[index]
+        token_type, text, start, end, __ = tokens[index]
         if (token_type == tokenize.OP and
             text in '([' and
             start != prev_end and
@@ -893,7 +890,7 @@ def explicit_line_join(logical_line, tokens):
                 parens -= 1
 
 
-def comparison_to_singleton(logical_line):
+def comparison_to_singleton(logical_line, noqa):
     """
     Comparisons to singletons like None should always be done
     with "is" or "is not", never the equality operators.
@@ -907,7 +904,7 @@ def comparison_to_singleton(logical_line):
     set to some other value.  The other value might have a type (such as a
     container) that could be false in a boolean context!
     """
-    match = COMPARE_SINGLETON_REGEX.search(logical_line)
+    match = not noqa and COMPARE_SINGLETON_REGEX.search(logical_line)
     if match:
         same = (match.group(1) == '==')
         singleton = match.group(2)
@@ -1261,10 +1258,14 @@ class Checker(object):
         """
         self.mapping = []
         logical = []
+        comments = []
         length = 0
         previous = None
         for token in self.tokens:
             token_type, text = token[0:2]
+            if token_type == tokenize.COMMENT:
+                comments.append(text)
+                continue
             if token_type in SKIP_TOKENS:
                 continue
             if token_type == tokenize.STRING:
@@ -1287,6 +1288,7 @@ class Checker(object):
             length += len(text)
             previous = token
         self.logical_line = ''.join(logical)
+        self.noqa = comments and noqa(''.join(comments))
         # With Python 2, if the line ends with '\r\r\n' the assertion fails
         # assert self.logical_line.strip() == self.logical_line
 
@@ -1553,19 +1555,8 @@ class StyleGuide(object):
         parse_argv = kwargs.pop('parse_argv', False)
         config_file = kwargs.pop('config_file', None)
         parser = kwargs.pop('parser', None)
-
-        class options:
-            exclude = []
-            select = []
-            ignore = []
-            testsuite = None
-            doctest = None
-            verbose = False
-            max_line_length = 79
-
-        self.paths = []
-        # options, self.paths = process_options(
-            # parse_argv=parse_argv, config_file=config_file, parser=parser)
+        options, self.paths = process_options(
+            parse_argv=parse_argv, config_file=config_file, parser=parser)
         if args or kwargs:
             # build options from dict
             options_dict = dict(*args, **kwargs)
@@ -1683,6 +1674,62 @@ class StyleGuide(object):
         return sorted(checks)
 
 
+def get_parser(prog='pep8', version=__version__):
+    parser = OptionParser(prog=prog, version=version,
+                          usage="%prog [options] input ...")
+    parser.config_options = [
+        'exclude', 'filename', 'select', 'ignore', 'max-line-length', 'count',
+        'format', 'quiet', 'show-pep8', 'show-source', 'statistics', 'verbose']
+    parser.add_option('-v', '--verbose', default=0, action='count',
+                      help="print status messages, or debug with -vv")
+    parser.add_option('-q', '--quiet', default=0, action='count',
+                      help="report only file names, or nothing with -qq")
+    parser.add_option('-r', '--repeat', default=True, action='store_true',
+                      help="(obsolete) show all occurrences of the same error")
+    parser.add_option('--first', action='store_false', dest='repeat',
+                      help="show first occurrence of each error")
+    parser.add_option('--exclude', metavar='patterns', default=DEFAULT_EXCLUDE,
+                      help="exclude files or directories which match these "
+                           "comma separated patterns (default: %default)")
+    parser.add_option('--filename', metavar='patterns', default='*.py',
+                      help="when parsing directories, only check filenames "
+                           "matching these comma separated patterns "
+                           "(default: %default)")
+    parser.add_option('--select', metavar='errors', default='',
+                      help="select errors and warnings (e.g. E,W6)")
+    parser.add_option('--ignore', metavar='errors', default='',
+                      help="skip errors and warnings (e.g. E4,W)")
+    parser.add_option('--show-source', action='store_true',
+                      help="show source code for each error")
+    parser.add_option('--show-pep8', action='store_true',
+                      help="show text of PEP 8 for each error "
+                           "(implies --first)")
+    parser.add_option('--statistics', action='store_true',
+                      help="count errors and warnings")
+    parser.add_option('--count', action='store_true',
+                      help="print total number of errors and warnings "
+                           "to standard error and set exit code to 1 if "
+                           "total is not null")
+    parser.add_option('--max-line-length', type='int', metavar='n',
+                      default=MAX_LINE_LENGTH,
+                      help="set maximum allowed line length "
+                           "(default: %default)")
+    parser.add_option('--format', metavar='format', default='default',
+                      help="set the error format [default|pylint|<custom>]")
+    parser.add_option('--diff', action='store_true',
+                      help="report only lines changed according to the "
+                           "unified diff received on STDIN")
+    group = parser.add_option_group("Testing Options")
+    if os.path.exists(TESTSUITE_PATH):
+        group.add_option('--testsuite', metavar='dir',
+                         help="run regression tests from dir")
+        group.add_option('--doctest', action='store_true',
+                         help="run doctest on myself")
+    group.add_option('--benchmark', action='store_true',
+                     help="measure processing speed")
+    return parser
+
+
 def read_config(options, args, arglist, parser):
     """Read both user configuration and local configuration."""
     config = RawConfigParser()
@@ -1695,17 +1742,11 @@ def read_config(options, args, arglist, parser):
 
     parent = tail = args and os.path.abspath(os.path.commonprefix(args))
     while tail:
-        for name in PROJECT_CONFIG:
-            local_conf = os.path.join(parent, name)
-            if os.path.isfile(local_conf):
-                break
-        else:
-            parent, tail = os.path.split(parent)
-            continue
-        if options.verbose:
-            print('local configuration: %s' % local_conf)
-        config.read(local_conf)
-        break
+        if config.read([os.path.join(parent, fn) for fn in PROJECT_CONFIG]):
+            if options.verbose:
+                print('local configuration: in %s' % parent)
+            break
+        parent, tail = os.path.split(parent)
 
     pep8_section = parser.prog
     if config.has_section(pep8_section):
@@ -1738,3 +1779,74 @@ def read_config(options, args, arglist, parser):
         options, _ = parser.parse_args(arglist, values=new_options)
     options.doctest = options.testsuite = False
     return options
+
+
+def process_options(arglist=None, parse_argv=False, config_file=None,
+                    parser=None):
+    """Process options passed either via arglist or via command line args."""
+    if not arglist and not parse_argv:
+        # Don't read the command line if the module is used as a library.
+        arglist = []
+    if not parser:
+        parser = get_parser()
+    if not parser.has_option('--config'):
+        if config_file is True:
+            config_file = DEFAULT_CONFIG
+        group = parser.add_option_group("Configuration", description=(
+            "The project options are read from the [%s] section of the "
+            "tox.ini file or the setup.cfg file located in any parent folder "
+            "of the path(s) being processed.  Allowed options are: %s." %
+            (parser.prog, ', '.join(parser.config_options))))
+        group.add_option('--config', metavar='path', default=config_file,
+                         help="user config file location (default: %default)")
+    options, args = parser.parse_args(arglist)
+    options.reporter = None
+
+    if options.ensure_value('testsuite', False):
+        args.append(options.testsuite)
+    elif not options.ensure_value('doctest', False):
+        if parse_argv and not args:
+            if options.diff or any(os.path.exists(name)
+                                   for name in PROJECT_CONFIG):
+                args = ['.']
+            else:
+                parser.error('input not specified')
+        options = read_config(options, args, arglist, parser)
+        options.reporter = parse_argv and options.quiet == 1 and FileReport
+
+    options.filename = options.filename and options.filename.split(',')
+    options.exclude = options.exclude.split(',')
+    options.select = options.select and options.select.split(',')
+    options.ignore = options.ignore and options.ignore.split(',')
+
+    if options.diff:
+        options.reporter = DiffReport
+        stdin = stdin_get_value()
+        options.selected_lines = parse_udiff(stdin, options.filename, args[0])
+        args = sorted(options.selected_lines)
+
+    return options, args
+
+
+def _main():
+    """Parse options and run checks on Python source."""
+    pep8style = StyleGuide(parse_argv=True, config_file=True)
+    options = pep8style.options
+    if options.doctest or options.testsuite:
+        from testsuite.support import run_tests
+        report = run_tests(pep8style)
+    else:
+        report = pep8style.check_files()
+    if options.statistics:
+        report.print_statistics()
+    if options.benchmark:
+        report.print_benchmark()
+    if options.testsuite and not options.quiet:
+        report.print_results()
+    if report.total_errors:
+        if options.count:
+            sys.stderr.write(str(report.total_errors) + '\n')
+        sys.exit(1)
+
+if __name__ == '__main__':
+    _main()

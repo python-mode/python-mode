@@ -96,7 +96,7 @@ Then rebuild **helptags** in vim::
 Troubleshooting
 ===============
 
-If your python-mode dont work, type command: ::
+If your python-mode dont work, open any python file and type command: ::
 
     :call pymode#troubleshooting#Test()
 

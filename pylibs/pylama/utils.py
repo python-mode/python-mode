@@ -1,4 +1,5 @@
 import _ast
+from os import path as op, environ
 
 from .mccabe import get_code_complexity
 from .pep8 import BaseReport, StyleGuide
@@ -6,6 +7,8 @@ from .pyflakes import checker
 
 
 __all__ = 'pep8', 'mccabe', 'pyflakes', 'pylint'
+
+PYLINT_RC = op.abspath(op.join(op.dirname(__file__), 'pylint.rc'))
 
 
 class PEP8Report(BaseReport):
@@ -54,7 +57,7 @@ def pyflakes(path, code=None, **meta):
     errors = []
     tree = compile(code, path, "exec", _ast.PyCF_ONLY_AST)
     w = checker.Checker(tree, path)
-    w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
+    w.messages = sorted(w.messages, key=lambda m: m.lineno)
     for w in w.messages:
         errors.append(dict(
             lnum=w.lineno,
@@ -64,6 +67,12 @@ def pyflakes(path, code=None, **meta):
 
 
 def pylint(path, **meta):
+    from sys import version_info
+    if version_info > (2, 8):
+        import logging
+        logging.warn("Pylint don't supported python3 and will be disabled.")
+        return []
+
     from .pylint.lint import Run
     from .pylint.reporters import BaseReporter
 
@@ -88,7 +97,11 @@ def pylint(path, **meta):
                 type=msg_id[0]
             ))
 
-    attrs = meta.get('pylint', [])
+    pylintrc = op.join(environ.get('HOME', ''), '.pylintrc')
+    defattrs = '-r n'
+    if not op.exists(pylintrc):
+        defattrs += ' --rcfile={0}'.format(PYLINT_RC)
+    attrs = meta.get('pylint', defattrs.split())
 
     runner = Run(
         [path] + attrs, reporter=Reporter(), exit=False)
