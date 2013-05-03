@@ -1,7 +1,5 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -17,29 +15,63 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
-"""This module renders ASTNG nodes to string representation.
+"""This module renders ASTNG nodes as string:
 
-It will probably not work on bare _ast trees.
+* :func:`to_code` function return equivalent (hopefuly valid) python string
+
+* :func:`dump` function return an internal representation of nodes found
+  in the tree, useful for debugging or understanding the tree structure
 """
-import sys
 
+import sys
 
 INDENT = '    ' # 4 spaces ; keep indentation variable
 
 
-def _import_string(names):
-    """return a list of (name, asname) formatted as a string"""
-    _names = []
-    for name, asname in names:
-        if asname is not None:
-            _names.append('%s as %s' % (name, asname))
+def dump(node, ids=False):
+    """print a nice astng tree representation.
+
+    :param ids: if true, we also print the ids (usefull for debugging)
+    """
+    result = []
+    _repr_tree(node, result, ids=ids)
+    return "\n".join(result)
+
+def _repr_tree(node, result, indent='', _done=None, ids=False):
+    """built a tree representation of a node as a list of lines"""
+    if _done is None:
+        _done = set()
+    if not hasattr(node, '_astng_fields'): # not a astng node
+        return
+    if node in _done:
+        result.append( indent + 'loop in tree: %s' % node )
+        return
+    _done.add(node)
+    node_str = str(node)
+    if ids:
+        node_str += '  . \t%x' % id(node)
+    result.append( indent + node_str )
+    indent += INDENT
+    for field in node._astng_fields:
+        value = getattr(node, field)
+        if isinstance(value, (list, tuple) ):
+            result.append(  indent + field + " = [" )
+            for child in value:
+                if isinstance(child, (list, tuple) ):
+                    # special case for Dict # FIXME
+                    _repr_tree(child[0], result, indent, _done, ids)
+                    _repr_tree(child[1], result, indent, _done, ids)
+                    result.append(indent + ',')
+                else:
+                    _repr_tree(child, result, indent, _done, ids)
+            result.append(  indent + "]" )
         else:
-            _names.append(name)
-    return  ', '.join(_names)
+            result.append(  indent + field + " = " )
+            _repr_tree(value, result, indent, _done, ids)
 
 
 class AsStringVisitor(object):
-    """Visitor to render an ASTNG node as string """
+    """Visitor to render an ASTNG node as a valid python code string"""
 
     def __call__(self, node):
         """Makes this visitor behave as a simple function"""
@@ -385,7 +417,11 @@ class AsStringVisitor(object):
     def visit_yield(self, node):
         """yield an ast.Yield node as string"""
         yi_val = node.value and (" " + node.value.accept(self)) or ""
-        return 'yield' + yi_val
+        expr = 'yield' + yi_val
+        if node.parent.is_statement:
+            return expr
+        else:
+            return "(%s)" % (expr,)
 
 
 class AsStringVisitor3k(AsStringVisitor):
@@ -419,9 +455,21 @@ class AsStringVisitor3k(AsStringVisitor):
         """return Starred node as string"""
         return "*" + node.value.accept(self)
 
+
+def _import_string(names):
+    """return a list of (name, asname) formatted as a string"""
+    _names = []
+    for name, asname in names:
+        if asname is not None:
+            _names.append('%s as %s' % (name, asname))
+        else:
+            _names.append(name)
+    return  ', '.join(_names)
+
+
 if sys.version_info >= (3, 0):
     AsStringVisitor = AsStringVisitor3k
 
 # this visitor is stateless, thus it can be reused
-as_string = AsStringVisitor()
+to_code = AsStringVisitor()
 

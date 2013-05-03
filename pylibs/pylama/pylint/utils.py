@@ -1,5 +1,4 @@
-# Copyright (c) 2003-2010 Sylvain Thenault (thenault@gmail.com).
-# Copyright (c) 2003-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,8 +21,9 @@ import sys
 from warnings import warn
 from os.path import dirname, basename, splitext, exists, isdir, join, normpath
 
+from .logilab.common.interface import implements
 from .logilab.common.modutils import modpath_from_file, get_module_files, \
-                                    file_from_modpath
+                                     file_from_modpath
 from .logilab.common.textutils import normalize_text
 from .logilab.common.configuration import rest_format_section
 from .logilab.common.ureports import Section
@@ -31,6 +31,7 @@ from .logilab.common.ureports import Section
 from .logilab.astng import nodes, Module
 
 from .checkers import EmptyReport
+from .interfaces import IRawChecker
 
 
 class UnknownMessage(Exception):
@@ -59,6 +60,15 @@ MSG_TYPES_STATUS = {
 _MSG_ORDER = 'EWRCIF'
 MSG_STATE_SCOPE_CONFIG = 0
 MSG_STATE_SCOPE_MODULE = 1
+
+
+# The line/node distinction does not apply to fatal errors and reports.
+_SCOPE_EXEMPT = 'FR'
+
+class WarningScope(object):
+    LINE = 'line-based-msg'
+    NODE = 'node-based-msg'
+
 
 def sort_msgs(msgids):
     """sort message identifiers according to their category first"""
@@ -95,7 +105,7 @@ def category_id(id):
 
 
 class Message:
-    def __init__(self, checker, msgid, msg, descr, symbol):
+    def __init__(self, checker, msgid, msg, descr, symbol, scope):
         assert len(msgid) == 5, 'Invalid message id %s' % msgid
         assert msgid[0] in MSG_TYPES, \
                'Bad message type %s in %r' % (msgid[0], msgid)
@@ -104,6 +114,7 @@ class Message:
         self.descr = descr
         self.checker = checker
         self.symbol = symbol
+        self.scope = scope
 
 class MessagesHandlerMixIn:
     """a mix-in class containing all the messages related methods for the main
@@ -121,6 +132,7 @@ class MessagesHandlerMixIn:
         self._msgs_by_category = {}
         self.msg_status = 0
         self._ignored_msgs = {}
+        self._suppression_mapping = {}
 
     def register_messages(self, checker):
         """register a dictionary of messages
@@ -133,11 +145,18 @@ class MessagesHandlerMixIn:
         """
         msgs_dict = checker.msgs
         chkid = None
+
         for msgid, msg_tuple in msgs_dict.iteritems():
-            if len(msg_tuple) == 3:
-                (msg, msgsymbol, msgdescr) = msg_tuple
+            if implements(checker, IRawChecker):
+                scope = WarningScope.LINE
+            else:
+                scope = WarningScope.NODE
+            if len(msg_tuple) > 2:
+                (msg, msgsymbol, msgdescr) = msg_tuple[:3]
                 assert msgsymbol not in self._messages_by_symbol, \
                     'Message symbol %r is already defined' % msgsymbol
+                if len(msg_tuple) > 3 and 'scope' in msg_tuple[3]:
+                    scope = msg_tuple[3]['scope']
             else:
                 # messages should have a symbol, but for backward compatibility
                 # they may not.
@@ -151,7 +170,7 @@ class MessagesHandlerMixIn:
             assert chkid is None or chkid == msgid[1:3], \
                    'Inconsistent checker part in message id %r' % msgid
             chkid = msgid[1:3]
-            msg = Message(checker, msgid, msg, msgdescr, msgsymbol)
+            msg = Message(checker, msgid, msg, msgdescr, msgsymbol, scope)
             self._messages[msgid] = msg
             self._messages_by_symbol[msgsymbol] = msg
             self._msgs_by_category.setdefault(msgid[0], []).append(msgid)
@@ -320,6 +339,17 @@ class MessagesHandlerMixIn:
         astng checkers should provide the node argument, raw checkers should
         provide the line argument.
         """
+        msg_info = self._messages[msgid]
+        # Fatal messages and reports are special, the node/scope distinction
+        # does not apply to them.
+        if msgid[0] not in _SCOPE_EXEMPT:
+            if msg_info.scope == WarningScope.LINE:
+                assert node is None and line is not None, (
+                    'Message %s must only provide line, got line=%s, node=%s' % (msgid, line, node))
+            elif msg_info.scope == WarningScope.NODE:
+                # Node-based warnings may provide an override line.
+                assert node is not None, 'Message %s must provide Node, got None'
+
         if line is None and node is not None:
             line = node.fromlineno
         if hasattr(node, 'col_offset'):
@@ -340,8 +370,8 @@ class MessagesHandlerMixIn:
             self.stats['by_msg'][msgid] += 1
         except KeyError:
             self.stats['by_msg'][msgid] = 1
-        msg = self._messages[msgid].msg
         # expand message ?
+        msg = msg_info.msg
         if args:
             msg %= args
         # get module and object

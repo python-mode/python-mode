@@ -1,7 +1,5 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -28,11 +26,10 @@ from os.path import abspath
 from inspect import (getargspec, isdatadescriptor, isfunction, ismethod,
                      ismethoddescriptor, isclass, isbuiltin)
 
-from . import BUILTINS_MODULE
 from .node_classes import CONST_CLS
 from .nodes import (Module, Class, Const, const_factory, From,
-    Function, EmptyNode, Name, Arguments, Dict, List, Set, Tuple)
-from .bases import Generator
+    Function, EmptyNode, Name, Arguments)
+from .bases import BUILTINS, Generator
 from .manager import ASTNGManager
 MANAGER = ASTNGManager()
 
@@ -277,7 +274,7 @@ class InspectBuilder(object):
             elif isdatadescriptor(member):
                 assert isinstance(member, object)
                 object_build_datadescriptor(node, member, name)
-            elif isinstance(member, _CONSTANTS):
+            elif type(member) in _CONSTANTS:
                 attach_const_node(node, name, member)
             else:
                 # create an empty node so that the name is actually defined
@@ -301,7 +298,7 @@ class InspectBuilder(object):
                 # Python 2.5.1 (r251:54863, Sep  1 2010, 22:03:14)
                 # >>> print object.__new__.__module__
                 # None
-                modname = BUILTINS_MODULE
+                modname = BUILTINS
             else:
                 attach_dummy_node(node, name, member)
                 return True
@@ -319,21 +316,21 @@ class InspectBuilder(object):
 
 
 ### astng boot strapping ################################################### ###
+ASTNG_BUILDER = InspectBuilder()
 
 _CONST_PROXY = {}
 def astng_boot_strapping():
     """astng boot strapping the builtins module"""
     # this boot strapping is necessary since we need the Const nodes to
     # inspect_build builtins, and then we can proxy Const
-    builder = InspectBuilder()
     from ..common.compat import builtins
-    astng_builtin = builder.inspect_build(builtins)
+    astng_builtin = ASTNG_BUILDER.inspect_build(builtins)
     for cls, node_cls in CONST_CLS.items():
         if cls is type(None):
             proxy = build_class('NoneType')
             proxy.parent = astng_builtin
         else:
-            proxy = astng_builtin.getattr(cls.__name__)[0] # XXX
+            proxy = astng_builtin.getattr(cls.__name__)[0]
         if cls in (dict, list, set, tuple):
             node_cls._proxied = proxy
         else:
@@ -348,6 +345,7 @@ def _set_proxied(const):
     return _CONST_PROXY[const.value.__class__]
 Const._proxied = property(_set_proxied)
 
-# FIXME : is it alright that Generator._proxied is not a astng node?
-Generator._proxied = MANAGER.infer_astng_from_something(type(a for a in ()))
+from types import GeneratorType
+Generator._proxied = Class(GeneratorType.__name__, GeneratorType.__doc__)
+ASTNG_BUILDER.object_build(Generator._proxied, GeneratorType)
 

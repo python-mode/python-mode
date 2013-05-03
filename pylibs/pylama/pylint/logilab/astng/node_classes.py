@@ -1,7 +1,5 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -22,10 +20,9 @@
 
 import sys
 
-from . import BUILTINS_MODULE
 from .exceptions import NoDefault
 from .bases import (NodeNG, Statement, Instance, InferenceContext,
-                                 _infer_stmts, YES)
+                                 _infer_stmts, YES, BUILTINS)
 from .mixins import BlockRangeMixIn, AssignTypeMixin, \
                                  ParentAssignTypeMixin, FromImportMixIn
 
@@ -495,7 +492,7 @@ class Dict(NodeNG, Instance):
                           for k,v in items.iteritems()]
 
     def pytype(self):
-        return '%s.dict' % BUILTINS_MODULE
+        return '%s.dict' % BUILTINS
 
     def get_children(self):
         """get children of a Dict node"""
@@ -513,14 +510,16 @@ class Dict(NodeNG, Instance):
     def itered(self):
         return self.items[::2]
 
-    def getitem(self, key, context=None):
-        for i in xrange(0, len(self.items), 2):
-            for inferedkey in self.items[i].infer(context):
+    def getitem(self, lookup_key, context=None):
+        for key, value in self.items:
+            for inferedkey in key.infer(context):
                 if inferedkey is YES:
                     continue
-                if isinstance(inferedkey, Const) and inferedkey.value == key:
-                    return self.items[i+1]
-        raise IndexError(key)
+                if isinstance(inferedkey, Const) and inferedkey.value == lookup_key:
+                    return value
+        # This should raise KeyError, but all call sites only catch
+        # IndexError. Let's leave it like that for now.
+        raise IndexError(lookup_key)
 
 
 class Discard(Statement):
@@ -670,7 +669,7 @@ class List(NodeNG, Instance, ParentAssignTypeMixin):
             self.elts = [const_factory(e) for e in elts]
 
     def pytype(self):
-        return '%s.list' % BUILTINS_MODULE
+        return '%s.list' % BUILTINS
 
     def getitem(self, index, context=None):
         return self.elts[index]
@@ -737,7 +736,7 @@ class Set(NodeNG, Instance, ParentAssignTypeMixin):
             self.elts = [const_factory(e) for e in elts]
 
     def pytype(self):
-        return '%s.set' % BUILTINS_MODULE
+        return '%s.set' % BUILTINS
 
     def itered(self):
         return self.elts
@@ -819,7 +818,7 @@ class Tuple(NodeNG, Instance, ParentAssignTypeMixin):
             self.elts = [const_factory(e) for e in elts]
 
     def pytype(self):
-        return '%s.tuple' % BUILTINS_MODULE
+        return '%s.tuple' % BUILTINS
 
     def getitem(self, index, context=None):
         return self.elts[index]
@@ -891,18 +890,15 @@ _update_const_classes()
 
 def const_factory(value):
     """return an astng node for a python value"""
-    # since const_factory is called to evaluate content of container (eg list,
-    # tuple), it may be called with some node as argument that should be left
-    # untouched
-    if isinstance(value, NodeNG):
-        return value
+    # XXX we should probably be stricter here and only consider stuff in
+    # CONST_CLS or do better treatment: in case where value is not in CONST_CLS,
+    # we should rather recall the builder on this value than returning an empty
+    # node (another option being that const_factory shouldn't be called with something
+    # not in CONST_CLS)
+    assert not isinstance(value, NodeNG)
     try:
         return CONST_CLS[value.__class__](value)
     except (KeyError, AttributeError):
-        # some constants (like from gtk._gtk) don't have their class in
-        # CONST_CLS, though we can "assert isinstance(value, tuple(CONST_CLS))"
-        if isinstance(value, tuple(CONST_CLS)):
-            return Const(value)
         node = EmptyNode()
         node.object = value
         return node

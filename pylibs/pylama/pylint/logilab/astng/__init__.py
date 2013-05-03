@@ -1,7 +1,5 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -44,10 +42,6 @@ Main modules are:
 __doctype__ = "restructuredtext en"
 
 import sys
-if sys.version_info >= (3, 0):
-    BUILTINS_MODULE = 'builtins'
-else:
-    BUILTINS_MODULE = '__builtin__'
 
 # WARNING: internal imports order matters !
 

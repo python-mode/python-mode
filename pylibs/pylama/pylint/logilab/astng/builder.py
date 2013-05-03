@@ -1,7 +1,5 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -25,8 +23,8 @@ at the same time.
 
 __docformat__ = "restructuredtext en"
 
-import sys, re
-from os.path import splitext, basename, dirname, exists, abspath
+import sys
+from os.path import splitext, basename, exists, abspath
 
 from ..common.modutils import modpath_from_file
 
@@ -88,6 +86,7 @@ class ASTNGBuilder(InspectBuilder):
     rebuilder = TreeRebuilder()
 
     def __init__(self, manager=None):
+        InspectBuilder.__init__(self)
         self._manager = manager or MANAGER
 
     def module_build(self, module, modname=None):

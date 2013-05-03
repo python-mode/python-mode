@@ -457,17 +457,17 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                 # an unbracketed continuation line (ie, backslash)
                 open_row = 0
             hang = rel_indent[row] - rel_indent[open_row]
-            visual_indent = indent_chances.get(start[1])
+            close_bracket = (token_type == tokenize.OP and text in ']})')
+            visual_indent = not close_bracket and indent_chances.get(start[1])
 
-            if token_type == tokenize.OP and text in ']})':
-                # this line starts with a closing bracket
-                if indent[depth]:
-                    if start[1] != indent[depth]:
-                        yield (start, "E124 closing bracket does not match "
-                               "visual indentation")
-                elif hang:
-                    yield (start, "E123 closing bracket does not match "
-                           "indentation of opening bracket's line")
+            if close_bracket and indent[depth]:
+                # closing bracket for visual indent
+                if start[1] != indent[depth]:
+                    yield (start, "E124 closing bracket does not match "
+                           "visual indentation")
+            elif close_bracket and not hang:
+                # closing bracket matches indentation of opening bracket's line
+                pass
             elif visual_indent is True:
                 # visual indent is verified
                 if not indent[depth]:
@@ -481,7 +481,9 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                        "under-indented for visual indent")
             elif hang == 4 or (indent_next and rel_indent[row] == 8):
                 # hanging indent is verified
-                pass
+                if close_bracket:
+                    yield (start, "E123 closing bracket does not match "
+                           "indentation of opening bracket's line")
             else:
                 # indent is broken
                 if hang <= 0:
@@ -1015,6 +1017,7 @@ if '' == ''.encode():
         finally:
             f.close()
 
+    BOM_UTF8 = '\xef\xbb\xbf'
     isidentifier = re.compile(r'[a-zA-Z_]\w*').match
     stdin_get_value = sys.stdin.read
 else:
@@ -1033,6 +1036,7 @@ else:
         finally:
             f.close()
 
+    BOM_UTF8 = '\ufeff'
     isidentifier = str.isidentifier
 
     def stdin_get_value():
@@ -1198,14 +1202,19 @@ class Checker(object):
                 self.lines = []
         else:
             self.lines = lines
+        if self.lines and self.lines[0].startswith(BOM_UTF8):
+            self.lines[0] = self.lines[0][len(BOM_UTF8):]
         self.report = report or options.report
         self.report_error = self.report.error
 
     def report_invalid_syntax(self):
         exc_type, exc = sys.exc_info()[:2]
-        offset = exc.args[1]
-        if len(offset) > 2:
-            offset = offset[1:3]
+        if len(exc.args) > 1:
+            offset = exc.args[1]
+            if len(offset) > 2:
+                offset = offset[1:3]
+        else:
+            offset = (1, 0)
         self.report_error(offset[0], offset[1] or 0,
                           'E901 %s: %s' % (exc_type.__name__, exc.args[0]),
                           self.report_invalid_syntax)
@@ -1322,7 +1331,7 @@ class Checker(object):
     def check_ast(self):
         try:
             tree = compile(''.join(self.lines), '', 'exec', PyCF_ONLY_AST)
-        except SyntaxError:
+        except (SyntaxError, TypeError):
             return self.report_invalid_syntax()
         for name, cls, _ in self._ast_checks:
             checker = cls(tree, self.filename)
@@ -1579,7 +1588,7 @@ class StyleGuide(object):
             options.ignore = tuple(DEFAULT_IGNORE.split(','))
         else:
             # Ignore all checks which are not explicitly selected
-            options.ignore = tuple(options.ignore or options.select and ('',))
+            options.ignore = ('',) if options.select else tuple(options.ignore)
         options.benchmark_keys = BENCHMARK_KEYS[:]
         options.ignore_code = self.ignore_code
         options.physical_checks = self.get_checks('physical_line')
@@ -1632,23 +1641,26 @@ class StyleGuide(object):
                 print('directory ' + root)
             counters['directories'] += 1
             for subdir in sorted(dirs):
-                if self.excluded(os.path.join(root, subdir)):
+                if self.excluded(subdir, root):
                     dirs.remove(subdir)
             for filename in sorted(files):
                 # contain a pattern that matches?
                 if ((filename_match(filename, filepatterns) and
-                     not self.excluded(filename))):
+                     not self.excluded(filename, root))):
                     runner(os.path.join(root, filename))
 
-    def excluded(self, filename):
+    def excluded(self, filename, parent=None):
         """
         Check if options.exclude contains a pattern that matches filename.
         """
+        if not self.options.exclude:
+            return False
         basename = os.path.basename(filename)
-        return any((filename_match(filename, self.options.exclude,
-                                   default=False),
-                    filename_match(basename, self.options.exclude,
-                                   default=False)))
+        if filename_match(basename, self.options.exclude):
+            return True
+        if parent:
+            filename = os.path.join(parent, filename)
+        return filename_match(filename, self.options.exclude)
 
     def ignore_code(self, code):
         """

@@ -1,7 +1,5 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -26,7 +24,7 @@ __doctype__ = "restructuredtext en"
 from .exceptions import InferenceError, NoDefault
 from .node_classes import unpack_infer
 from .bases import copy_context, \
-     raise_if_nothing_infered, yes_if_nothing_infered, Instance, Generator, YES
+     raise_if_nothing_infered, yes_if_nothing_infered, Instance, YES
 from .nodes import const_factory
 from . import nodes
 

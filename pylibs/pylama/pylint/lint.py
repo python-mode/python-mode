@@ -1,5 +1,4 @@
-# Copyright (c) 2003-2010 Sylvain Thenault (thenault@gmail.com).
-# Copyright (c) 2003-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -48,7 +47,8 @@ from .logilab.astng import MANAGER, nodes, ASTNGBuildingException
 from .logilab.astng.__pkginfo__ import version as astng_version
 
 from .utils import (PyLintASTWalker, UnknownMessage, MessagesHandlerMixIn,
-                          ReportsHandlerMixIn, MSG_TYPES, expand_modules)
+                          ReportsHandlerMixIn, MSG_TYPES, expand_modules,
+                          WarningScope)
 from .interfaces import ILinter, IRawChecker, IASTNGChecker
 from .checkers import (BaseRawChecker, EmptyReport,
                              table_lines_from_stats)
@@ -508,11 +508,16 @@ This is used by the global evaluation report (RP0004).'}),
             for lineno, state in lines.items():
                 original_lineno = lineno
                 if first <= lineno <= last:
-                    if lineno > firstchildlineno:
-                        state = True
-                    # set state for all lines for this block
-                    first, last = node.block_range(lineno)
-                    for line in xrange(first, last+1):
+                    # Set state for all lines for this block, if the
+                    # warning is applied to nodes.
+                    if self._messages[msgid].scope == WarningScope.NODE:
+                        if lineno > firstchildlineno:
+                            state = True
+                        first_, last_ = node.block_range(lineno)
+                    else:
+                        first_ = lineno
+                        last_ = last
+                    for line in xrange(first_, last_+1):
                         # do not override existing entries
                         if not line in self._module_msgs_state.get(msgid, ()):
                             if line in lines: # state change in the same block
@@ -624,7 +629,6 @@ This is used by the global evaluation report (RP0004).'}),
         # messages which are only detected in the .close step)
         if modname:
             self._module_msgs_state = {}
-            self._module_msg_cats_state = {}
             self._raw_module_msgs_state = {}
             self._ignored_msgs = {}
 
@@ -707,8 +711,8 @@ This is used by the global evaluation report (RP0004).'}),
                 if not enable and (warning, line) not in self._ignored_msgs:
                     self.add_message('I0021', line, None,
                                      (self.get_msg_display_string(warning),))
-
-        for (warning, from_), lines in self._ignored_msgs.iteritems():
+        # don't use iteritems here, _ignored_msgs may be modified by add_message
+        for (warning, from_), lines in self._ignored_msgs.items():
             for line in lines:
                 self.add_message('I0020', line, None,
                                  (self.get_msg_display_string(warning), from_))
@@ -856,8 +860,8 @@ group are mutually exclusive.'),
                 'rcfile':       (self.cb_set_rcfile, True),
                 'load-plugins': (self.cb_add_plugins, True),
                 })
-        except ArgumentPreprocessingError, e:
-            print >> sys.stderr, 'Argument %s expects a value.' % (e.args[0],)
+        except ArgumentPreprocessingError, ex:
+            print >> sys.stderr, 'Argument %s expects a value.' % (ex.args[0],)
             sys.exit(32)
 
         self.linter = linter = self.LinterClass((

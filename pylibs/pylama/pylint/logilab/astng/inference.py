@@ -1,7 +1,5 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# copyright 2003-2010 Sylvain Thenault, all rights reserved.
-# contact mailto:thenault@gmail.com
 #
 # This file is part of logilab-astng.
 #
@@ -23,14 +21,13 @@
 __doctype__ = "restructuredtext en"
 
 from itertools import chain
-import sys
 
 from . import nodes
 
 from .manager import ASTNGManager
-from .exceptions import (ASTNGBuildingException, ASTNGError,
+from .exceptions import (ASTNGError,
     InferenceError, NoDefault, NotFoundError, UnresolvableName)
-from .bases import YES, Instance, InferenceContext, Generator, \
+from .bases import YES, Instance, InferenceContext, \
      _infer_stmts, copy_context, path_wrapper, raise_if_nothing_infered
 from .protocols import _arguments_infer_argname
 
@@ -137,7 +134,7 @@ nodes.Const.infer = infer_end
 nodes.List.infer = infer_end
 nodes.Tuple.infer = infer_end
 nodes.Dict.infer = infer_end
-
+nodes.Set.infer = infer_end
 
 def infer_name(self, context=None):
     """infer a Name: use name lookup rules"""
@@ -238,15 +235,19 @@ nodes.Global.infer = path_wrapper(infer_global)
 
 def infer_subscript(self, context=None):
     """infer simple subscription such as [1,2,3][0] or (1,2,3)[-1]"""
-    if isinstance(self.slice, nodes.Index):
-        index = self.slice.value.infer(context).next()
-        if index is YES:
-            yield YES
-            return
+    value = self.value.infer(context).next()
+    if value is YES:
+        yield YES
+        return
+
+    index = self.slice.infer(context).next()
+    if index is YES:
+        yield YES
+        return
+
+    if isinstance(index, nodes.Const):
         try:
-            # suppose it's a Tuple/List node (attribute error else)
-            # XXX infer self.value?
-            assigned = self.value.getitem(index.value, context)
+            assigned = value.getitem(index.value, context)
         except AttributeError:
             raise InferenceError()
         except (IndexError, TypeError):
@@ -381,3 +382,7 @@ def infer_empty_node(self, context=None):
             yield YES
 nodes.EmptyNode.infer = path_wrapper(infer_empty_node)
 
+
+def infer_index(self, context=None):
+    return self.value.infer(context)
+nodes.Index.infer = infer_index
