@@ -28,22 +28,6 @@ Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
 .. contents::
 
 
-Changelog
-=========
-
-## 2013-03-15 0.6.12
---------------------
-* Update `PEP8` to version 1.4.5;
-* Update `Pylint` to version 0.27.0;
-* Update `autopep8` to version 0.8.7;
-* Fix breakpoint definition;
-* Update python syntax;
-* Fixed run-time error when output non-ascii in multibyte locale;
-* Move initialization into ftplugin as it is python specific;
-* Pyrex (Cython) files support;
-* Support `raw_input` in run python code;
-
-
 Requirements
 ============
 
