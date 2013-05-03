@@ -26,6 +26,7 @@ if pymode#Option('options')
     endif
     setlocal nowrap
     setlocal textwidth=79
+    setlocal commentstring=#%s
 endif
 
 " }}}

@@ -371,6 +371,7 @@ buffers: >
     setlocal number
     setlocal nowrap
     setlocal textwidth=80
+    setlocal commentstring=#%s
 <
 ------------------------------------------------------------------------------
                                                                *'pymode_motion'*
