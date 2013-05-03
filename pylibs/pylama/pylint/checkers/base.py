@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # Copyright (c) 2009-2010 Arista Networks, Inc.
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # This program is free software; you can redistribute it and/or modify it under
@@ -65,6 +65,19 @@ def in_nested_list(nested_list, obj):
         elif elmt == obj:
             return True
     return False
+
+def _loop_exits_early(loop):
+    """Returns true if a loop has a break statement in its body."""
+    loop_nodes = (astng.For, astng.While)
+    # Loop over body explicitly to avoid matching break statements
+    # in orelse.
+    for child in loop.body:
+        if isinstance(child, loop_nodes):
+            continue
+        for _ in child.nodes_of_class(astng.Break, skip_klass=loop_nodes):
+            return True
+    return False
+
 
 def report_by_type_stats(sect, stats, old_stats):
     """make a report of
@@ -160,6 +173,15 @@ class BasicErrorChecker(_BasicChecker):
               'nonexistent-operator',
               "Used when you attempt to use the C-style pre-increment or"
               "pre-decrement operator -- and ++, which doesn't exist in Python."),
+    'E0108': ('Duplicate argument name %s in function definition',
+              'duplicate-argument-name',
+              'Duplicate argument names in function definitions are syntax'
+              ' errors.'),
+    'W0120': ('Else clause on loop without a break statement',
+              'useless-else-on-loop',
+              'Loops should only have an else clause if they can exit early '
+              'with a break statement, otherwise the statements under else '
+              'should be on the same scope as the loop itself.'),
     }
 
     def __init__(self, linter):
@@ -169,7 +191,7 @@ class BasicErrorChecker(_BasicChecker):
     def visit_class(self, node):
         self._check_redefinition('class', node)
 
-    @check_messages('E0100', 'E0101', 'E0102', 'E0106')
+    @check_messages('E0100', 'E0101', 'E0102', 'E0106', 'E0108')
     def visit_function(self, node):
         if not redefined_by_decorator(node):
             self._check_redefinition(node.is_method() and 'method' or 'function', node)
@@ -192,6 +214,13 @@ class BasicErrorChecker(_BasicChecker):
                        retnode.value.value is not None:
                     self.add_message('E0106', node=node,
                                      line=retnode.fromlineno)
+        args = set()
+        for name in node.argnames():
+            if name in args:
+                self.add_message('E0108', node=node, args=(name,))
+            else:
+                args.add(name)
+
 
     @check_messages('E0104')
     def visit_return(self, node):
@@ -200,7 +229,7 @@ class BasicErrorChecker(_BasicChecker):
 
     @check_messages('E0105')
     def visit_yield(self, node):
-        if not isinstance(node.frame(), astng.Function):
+        if not isinstance(node.frame(), (astng.Function, astng.Lambda)):
             self.add_message('E0105', node=node)
 
     @check_messages('E0103')
@@ -211,6 +240,14 @@ class BasicErrorChecker(_BasicChecker):
     def visit_break(self, node):
         self._check_in_loop(node, 'break')
 
+    @check_messages('W0120')
+    def visit_for(self, node):
+        self._check_else_on_loop(node)
+
+    @check_messages('W0120')
+    def visit_while(self, node):
+        self._check_else_on_loop(node)
+
     @check_messages('E0107')
     def visit_unaryop(self, node):
         """check use of the non-existent ++ adn -- operator operator"""
@@ -218,6 +255,15 @@ class BasicErrorChecker(_BasicChecker):
             isinstance(node.operand, astng.UnaryOp) and
             (node.operand.op == node.op)):
             self.add_message('E0107', node=node, args=node.op*2)
+
+    def _check_else_on_loop(self, node):
+        """Check that any loop with an else clause has a break statement."""
+        if node.orelse and not _loop_exits_early(node):
+            self.add_message('W0120', node=node,
+                             # This is not optimal, but the line previous
+                             # to the first statement in the else clause
+                             # will usually be the one that contains the else:.
+                             line=node.orelse[0].lineno - 1)
 
     def _check_in_loop(self, node, node_name):
         """check that a node is inside a for or while loop"""
@@ -448,17 +494,14 @@ functions, methods
                 value = default.infer().next()
             except astng.InferenceError:
                 continue
-            if isinstance(value, (astng.Dict, astng.List)):
+            if (isinstance(value, astng.Instance) and
+                value.qname() in ('__builtin__.set', '__builtin__.dict', '__builtin__.list')):
                 if value is default:
                     msg = default.as_string()
+                elif type(value) is astng.Instance:
+                    msg = '%s (%s)' % (default.as_string(), value.qname())
                 else:
                     msg = '%s (%s)' % (default.as_string(), value.as_string())
-                self.add_message('W0102', node=node, args=(msg,))
-            if value.qname() == '__builtin__.set':
-                if isinstance(default, astng.CallFunc):
-                    msg = default.as_string()
-                else:
-                    msg = '%s (%s)' % (default.as_string(), value.qname())
                 self.add_message('W0102', node=node, args=(msg,))
 
     @check_messages('W0101', 'W0150')
@@ -534,7 +577,7 @@ functions, methods
         """check the use of an assert statement on a tuple."""
         if node.fail is None and isinstance(node.test, astng.Tuple) and \
            len(node.test.elts) == 2:
-            self.add_message('W0199', line=node.fromlineno, node=node)
+            self.add_message('W0199', node=node)
 
     @check_messages('W0109')
     def visit_dict(self, node):

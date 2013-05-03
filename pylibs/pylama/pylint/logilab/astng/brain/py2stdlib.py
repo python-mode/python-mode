@@ -15,11 +15,17 @@ def hashlib_transform(module):
 
 class md5(object):
   def __init__(self, value): pass
+  def digest():
+    return u''
+  def update(self, value): pass
   def hexdigest(self):
     return u''
 
 class sha1(object):
   def __init__(self, value): pass
+  def digest():
+    return u''
+  def update(self, value): pass
   def hexdigest(self):
     return u''
 
@@ -99,7 +105,7 @@ def cleanup_resources(force=False):
 def urlparse_transform(module):
     fake = ASTNGBuilder(MANAGER).string_build('''
 
-def urlparse(urlstring, default_scheme='', allow_fragments=True):
+def urlparse(url, scheme='', allow_fragments=True):
     return ParseResult()
 
 class ParseResult(object):

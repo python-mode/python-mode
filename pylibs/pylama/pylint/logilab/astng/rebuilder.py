@@ -32,7 +32,6 @@ from _ast import (Expr as Discard, Str,
     Eq, Gt, GtE, In, Is, IsNot, Lt, LtE, NotEq, NotIn,
     )
 
-from .exceptions import ASTNGBuildingException
 from . import nodes as new
 
 
@@ -698,7 +697,7 @@ class TreeRebuilder(object):
         return newnode
 
     def visit_set(self, node, parent):
-        """visit a Tuple node by returning a fresh instance of it"""
+        """visit a Set node by returning a fresh instance of it"""
         newnode = new.Set()
         _lineno_parent(node, newnode, parent)
         newnode.elts = [self.visit(child, newnode) for child in node.elts]
@@ -879,6 +878,8 @@ class TreeRebuilder3k(TreeRebuilder):
         newnode.set_line_info(newnode.last_child())
         return newnode
 
+    def visit_yieldfrom(self, node, parent):
+        return self.visit_yield(node, parent)
 
 if sys.version_info >= (3, 0):
     TreeRebuilder = TreeRebuilder3k

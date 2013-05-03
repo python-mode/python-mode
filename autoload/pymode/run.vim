@@ -31,7 +31,7 @@ fun! pymode#run#Run(line1, line2) "{{{
 python << EOF
 if out:
     vim.command("call pymode#TempBuffer()")
-    vim.current.buffer.append([x.encode(enc) for x in out.split('\n')], 0)
+    vim.current.buffer.append([x.decode("utf-8").encode(enc) for x in out.split('\n')], 0)
     vim.command("wincmd p")
 else:
     vim.command('call pymode#WideMessage("No output.")')

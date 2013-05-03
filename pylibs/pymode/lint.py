@@ -25,7 +25,7 @@ def check_file():
         s for s in (
             get_option('lint_select').split(',') +
             get_var('lint_select').split(','))
-        if i
+        if s
     ])
 
     buffer = get_current_buffer()

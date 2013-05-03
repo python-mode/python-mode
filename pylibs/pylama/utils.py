@@ -68,7 +68,7 @@ def pyflakes(path, code=None, **meta):
 
 def pylint(path, **meta):
     from sys import version_info
-    if version_info > (2, 8):
+    if version_info > (3, 0):
         import logging
         logging.warn("Pylint don't supported python3 and will be disabled.")
         return []
