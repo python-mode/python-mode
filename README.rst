@@ -469,13 +469,15 @@ at https://github.com/klen/python-mode/issues
 Contributing
 ============
 
+See in the `AUTHORS` file.
+
 Development of pylint-mode happens at github: https://github.com/klen/python-mode
 
 
 Copyright
 =========
 
-Copyright (C) 2012 Kirill Klenov (klen_)
+Copyright © 2013 Kirill Klenov (klen_)
 
     **Rope**
         Copyright (C) 2006-2010 Ali Gholami Rudi
