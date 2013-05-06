@@ -1,7 +1,6 @@
-if exists('did_init_pymode_vim')
+if pymode#Default('g:pymode_init', 1)
     finish
 endif
-let did_init_pymode_vim = 1
 
 let g:pymode_version = "0.6.17"
 
