@@ -1,60 +1,70 @@
 import threading
+from Queue import Queue, Empty
+
 from .interface import show_message
-import time
+
+
+MAX_LIFE = 60
+CHECK_INTERVAL = .2
+RESULTS = Queue()
 
 
 class Task(threading.Thread):
 
-    def __init__(self, buffer, callback=None, title=None, *args, **kwargs):
-        self.buffer = buffer
-        self._stop = threading.Event()
-        self.result = None
-        self.callback = callback
-        self.done = 0
-        self.finished = False
-        self.title = title
+    def __init__(self, *args, **kwargs):
+        self.stop = threading.Event()
         threading.Thread.__init__(self, *args, **kwargs)
 
     def run(self):
-        " Run tasks. "
-        self._Thread__target(task=self, *self._Thread__args, **self._Thread__kwargs)
+        """ Run the task.
+        """
+        try:
+            args, kwargs = self._Thread__args, self._Thread__kwargs
+            checking = self._Thread__target(*args, **kwargs)
+            if not self.stop.isSet():
+                RESULTS.put((checking, args, kwargs))
 
-        # Wait for result parsing
-        while not self.stopped():
-            time.sleep(.2)
-
-    def stop(self):
-        " Stop task. "
-        self._stop.set()
-
-    def stopped(self):
-        return self._stop.isSet()
+        except Exception as e:
+            if not self.stop.isSet():
+                RESULTS.put(e)
 
 
-def stop_queue():
-    " Stop all tasks. "
-    for thread in threading.enumerate():
-        if isinstance(thread, Task):
-            thread.stop()
-            show_message('%s stopped.' % thread.title)
-
-
-def add_task(target, callback=None, buffer=None, title=None, *args, **kwargs):
+def add_task(target, title=None, *args, **kwargs):
     " Add all tasks. "
 
-    task = Task(buffer, title=title, target=target, callback=callback, args=args, kwargs=kwargs)
+    task = Task(target=target, args=args, kwargs=kwargs)
     task.daemon = True
     task.start()
 
-    show_message('%s started.' % task.title)
+    show_message('{0} started.'.format(title))
+
+
+def stop_queue(message=True):
+    """ Stop all tasks.
+    """
+    with RESULTS.mutex:
+        RESULTS.queue.clear()
+
+    for thread in threading.enumerate():
+        if isinstance(thread, Task):
+            thread.stop.set()
+            if message:
+                show_message("Task stopped.")
 
 
 def check_task():
-    " Check tasks for result. "
-    for thread in threading.enumerate():
-        if isinstance(thread, Task):
-            if thread.finished:
-                thread.stop()
-                thread.callback(thread.result, thread.buffer.number)
-            else:
-                show_message('%s %s%%' % (thread.title, thread.done))
+    """ Checking running tasks.
+    """
+    try:
+        result = RESULTS.get(False)
+        assert isinstance(result, tuple)
+    except Empty:
+        return False
+    except AssertionError:
+        return False
+    result, _, kwargs = result
+    callback = kwargs.pop('callback')
+    callback(result, **kwargs)
+
+
+# lint_ignore=W0703
