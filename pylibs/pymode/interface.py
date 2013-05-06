@@ -18,7 +18,7 @@ def get_current_buffer():
 
 
 def show_message(message):
-    vim.command("call pymode#WideMessage('%s')" % message)
+    vim.command("call pymode#WideMessage('{0}')".format(message))
 
 
 def command(cmd):
