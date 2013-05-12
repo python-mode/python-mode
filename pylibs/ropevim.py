@@ -268,9 +268,8 @@ class VimUtils(environment.Environment):
 
     def show_doc(self, docs, altview=False):
         if docs:
-            vim.command(
-                'call pymode#ShowStr("{0}")'.format(docs.replace('"', '\\"'))
-            )
+            docs = docs.encode(self._get_encoding()).replace('"', '\\"')
+            vim.command('call pymode#ShowStr("{0}")'.format(docs))
 
     def preview_changes(self, diffs):
         echo(diffs)
