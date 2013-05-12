@@ -379,8 +379,7 @@ class VimProgress(object):
 
 
 def echo(message):
-    if isinstance(message, unicode):
-        message = message.encode(vim.eval('&encoding'))
+    message = message.encode(VimUtils._get_encoding())
     print message
 
 
@@ -388,8 +387,7 @@ def status(message):
     if _rope_quiet:
         return
 
-    if isinstance(message, unicode):
-        message = message.encode(vim.eval('&encoding'))
+    message = message.encode(VimUtils._get_encoding())
     vim.command('redraw | echon "{0}"'.format(message))
 
 
