@@ -234,7 +234,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     call pymode#Default("g:pymode_rope_short_prefix", "<C-c>")
 
     " OPTION: g:pymode_rope_map_space -- string.
-    call pymode#Default("g:pymode_rope_map_space", 1)
+    call pymode#Default("g:pymode_rope_map_space", "<C-Space")
 
     " OPTION: g:pymode_rope_vim_completion -- bool.
     call pymode#Default("g:pymode_rope_vim_completion", 1)
