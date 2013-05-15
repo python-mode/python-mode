@@ -2,7 +2,7 @@ if pymode#Default('g:pymode_init', 1)
     finish
 endif
 
-let g:pymode_version = "0.6.17"
+let g:pymode_version = "0.6.18"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
