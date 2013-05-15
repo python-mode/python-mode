@@ -100,6 +100,36 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_syntax'|                   Turns off the custom syntax highlighting
 
+|'pymode_syntax_all'|               Enable all hightlight groups
+
+|'pymode_syntax_print_as_function'| Hightlight `print` as function
+
+|'pymode_syntax_highlight_equal_operator'| Hightlight `=` 
+
+|'pymode_syntax_highlight_stars_operator'| Hightlight `*` 
+
+|'pymode_syntax_highlight_self'|    Hightlight `self` 
+
+|'pymode_syntax_indent_errors'|     Hightlight indentation errors 
+
+|'pymode_syntax_space_errors'|      Hightlight trailing spaces as errors
+
+|'pymode_syntax_string_formating'|  Hightlight string formating
+
+|'pymode_syntax_string_format'|     Hightlight Str.format syntax
+
+|'pymode_syntax_string_templates'|  Hightlight string templates
+
+|'pymode_syntax_doc_tests'|         Hightlight doctests
+
+|'pymode_syntax_builtin_objs'|      Hightlight builtin objects
+
+|'pymode_syntax_builtin_types'|     Hightlight builtin types
+
+|'pymode_syntax_builtin_functions'| Hightlight builtin functions
+
+|'pymode_syntax_highlight_exceptions'| Hightlight builtin exceptions
+
 |'pymode_indent'|                   Enable/Disable pymode PEP8 indentation
 
 |'pymode_options'|                  Set default pymode options for
@@ -343,6 +373,111 @@ Default: 1.
 
 If this option is set to 0 then the custom syntax highlighting will
 not be used.
+
+------------------------------------------------------------------------------
+                                                           *'pymode_syntax_all'*
+Values: 0 or 1.
+Default: 1.
+
+Enabling all hightlight groups.
+
+------------------------------------------------------------------------------
+                                             *'pymode_syntax_print_as_function'*
+Values: 0 or 1.
+Default: 0.
+
+Hightlight `print` as function
+
+------------------------------------------------------------------------------
+                                      *'pymode_syntax_highlight_equal_operator'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight `=` 
+
+------------------------------------------------------------------------------
+                                      *'pymode_syntax_highlight_stars_operator'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight `*` 
+
+------------------------------------------------------------------------------
+                                                 *'pymode_syntax_highlight_self'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight `self` 
+
+------------------------------------------------------------------------------
+                                                 *'pymode_syntax_indent_errors'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight indentation errors 
+
+------------------------------------------------------------------------------
+                                                  *'pymode_syntax_space_errors'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight trailing spaces as errors
+
+------------------------------------------------------------------------------
+                                              *'pymode_syntax_string_formating'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight string formating
+
+------------------------------------------------------------------------------
+                                              *'pymode_syntax_string_format'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight Str.format syntax
+
+------------------------------------------------------------------------------
+                                              *'pymode_syntax_string_templates'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight string templates
+
+------------------------------------------------------------------------------
+                                               *'pymode_syntax_string_doctests'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight doctests
+
+------------------------------------------------------------------------------
+                                                  *'pymode_syntax_builtin_objs'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight builtin objects
+
+------------------------------------------------------------------------------
+                                                 *'pymode_syntax_builtin_types'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight builtin types
+
+------------------------------------------------------------------------------
+                                             *'pymode_syntax_builtin_functions'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight builtin functions
+
+------------------------------------------------------------------------------
+                                          *'pymode_syntax_highlight_exceptions'*
+Values: 0 or 1.
+Default: |'pymode_syntax_all'|.
+
+Hightlight builtin exceptions
 
 ------------------------------------------------------------------------------
                                                                *'pymode_indent'*
