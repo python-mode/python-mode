@@ -5,6 +5,7 @@ Changelog
 --------------------
 * Fixed autopep8 (`PyLintAuto`) command;
 * Fix error on non-ascii characters in docstrings;
+* Update python syntax;
 
 ## 2013-05-03 0.6.17
 --------------------
