@@ -15,6 +15,7 @@ fun! pymode#lint#Check() "{{{
     let g:pymode_lint_buffer = bufnr('%')
 
     py from pymode import lint
+    py queue.stop_queue(False)
     py lint.check_file()
 
 endfunction " }}}

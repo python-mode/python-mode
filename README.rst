@@ -329,6 +329,15 @@ Default values: ::
     " Highlight exceptions
     let g:pymode_syntax_highlight_exceptions = g:pymode_syntax_all
 
+    " Highlight equal operator
+    let g:pymode_syntax_highlight_equal_operator = g:pymode_syntax_all
+
+    " Highlight stars operator
+    let g:pymode_syntax_highlight_stars_operator = g:pymode_syntax_all
+
+    " Highlight `self`
+    let g:pymode_syntax_highlight_self = g:pymode_syntax_all
+
     " For fast machines
     let g:pymode_syntax_slow_sync = 0
 

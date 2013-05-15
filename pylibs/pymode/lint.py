@@ -28,37 +28,36 @@ def check_file():
         if s
     ])
 
-    buffer = get_current_buffer()
+    buf = get_current_buffer()
     complexity = int(get_option('lint_mccabe_complexity') or 0)
 
-    add_task(run_checkers, checkers=checkers, ignore=ignore,
-             title='Code checking',
-             callback=parse_result,
-             buffer=buffer,
-             select=select,
-             complexity=complexity)
+    add_task(
+        run_checkers,
+        callback=parse_result,
+        title='Code checking',
+
+        checkers=checkers,
+        ignore=ignore,
+        buf=buf,
+        select=select,
+        complexity=complexity)
 
 
-def run_checkers(task=None, checkers=None, ignore=None,
-        buffer=None, select=None, complexity=None):
+def run_checkers(checkers=None, ignore=None, buf=None, select=None,
+                 complexity=None, callback=None):
 
-    buffer = (task and task.buffer) or buffer
-    filename = buffer.name
+    filename = buf.name
     result = []
 
     pylint_options = '--rcfile={0} -r n'.format(get_var('lint_config')).split()
 
-    result = run(filename, ignore=ignore, select=select, linters=checkers,
+    return run(filename, ignore=ignore, select=select, linters=checkers,
                  pylint=pylint_options, complexity=complexity)
 
-    if task:
-        task.result = result
-        task.finished = True
-        task.done = 100
 
-
-def parse_result(result, bnum):
-    command(('let g:qf_list = {0}'.format(repr(result)).replace('\': u', '\': ')))
-    command('call pymode#lint#Parse({0})'.format(bnum))
+def parse_result(result, buf=None, **kwargs):
+    command(('let g:qf_list = {0}'.format(repr(result)).replace(
+        '\': u', '\': ')))
+    command('call pymode#lint#Parse({0})'.format(buf.number))
 
 # pymode:lint_ignore=W0622

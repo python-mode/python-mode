@@ -842,19 +842,21 @@ def compound_statements(logical_line):
     line = logical_line
     last_char = len(line) - 1
     found = line.find(':')
-    if -1 < found < last_char:
+    while -1 < found < last_char:
         before = line[:found]
         if (before.count('{') <= before.count('}') and  # {'a': 1} (dict)
             before.count('[') <= before.count(']') and  # [1:2] (slice)
             before.count('(') <= before.count(')') and  # (Python 3 annotation)
                 not LAMBDA_REGEX.search(before)):       # lambda x: x
             yield found, "E701 multiple statements on one line (colon)"
+        found = line.find(':', found + 1)
     found = line.find(';')
-    if -1 < found:
+    while -1 < found:
         if found < last_char:
             yield found, "E702 multiple statements on one line (semicolon)"
         else:
             yield found, "E703 statement ends with a semicolon"
+        found = line.find(';', found + 1)
 
 
 def explicit_line_join(logical_line, tokens):
@@ -1016,8 +1018,6 @@ if '' == ''.encode():
             return f.readlines()
         finally:
             f.close()
-
-    BOM_UTF8 = '\xef\xbb\xbf'
     isidentifier = re.compile(r'[a-zA-Z_]\w*').match
     stdin_get_value = sys.stdin.read
 else:
@@ -1035,8 +1035,6 @@ else:
             return f.readlines()
         finally:
             f.close()
-
-    BOM_UTF8 = '\ufeff'
     isidentifier = str.isidentifier
 
     def stdin_get_value():
@@ -1202,8 +1200,13 @@ class Checker(object):
                 self.lines = []
         else:
             self.lines = lines
-        if self.lines and self.lines[0].startswith(BOM_UTF8):
-            self.lines[0] = self.lines[0][len(BOM_UTF8):]
+        if self.lines:
+            ord0 = ord(self.lines[0][0])
+            if ord0 in (0xef, 0xfeff):  # Strip the UTF-8 BOM
+                if ord0 == 0xfeff:
+                    self.lines[0] = self.lines[0][1:]
+                elif self.lines[0][:3] == '\xef\xbb\xbf':
+                    self.lines[0] = self.lines[0][3:]
         self.report = report or options.report
         self.report_error = self.report.error
 
