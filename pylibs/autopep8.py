@@ -54,7 +54,7 @@ from optparse import OptionParser
 import difflib
 import tempfile
 
-import pep8
+from pylama import pep8
 
 
 try:
@@ -63,7 +63,7 @@ except NameError:
     unicode = str
 
 
-__version__ = '0.8.7'
+__version__ = '0.9'
 
 
 CR = '\r'
@@ -83,8 +83,7 @@ SHORTEN_OPERATOR_GROUPS = frozenset([
 ])
 
 
-DEFAULT_IGNORE = ','.join([pep8.DEFAULT_IGNORE,
-                           'W6'])
+DEFAULT_IGNORE = 'E24,W6'
 
 
 def open_with_encoding(filename, encoding=None, mode='r'):
@@ -716,7 +715,10 @@ class FixPEP8(object):
 
         if self.options.verbose >= 4:
             print(('-' * 79 + '\n').join([''] + candidates + ['']),
-                  file=sys.stderr)
+                  file=codecs.getwriter('utf-8')(sys.stderr.buffer
+                                                 if hasattr(sys.stderr,
+                                                            'buffer')
+                                                 else sys.stderr))
 
         for _candidate in candidates:
             assert _candidate is not None
@@ -1877,8 +1879,15 @@ def fix_file(filename, options=None, output=None):
 
     fixed_source = original_source
 
-    if options.in_place:
+    if options.in_place or output:
         encoding = detect_encoding(filename)
+
+    if output:
+        output = codecs.getwriter(encoding)(output.buffer
+                                            if hasattr(output, 'buffer')
+                                            else output)
+
+        output = LineEndingWrapper(output)
 
     fixed_source = fix_lines(fixed_source, options, filename=filename)
 
@@ -1978,7 +1987,7 @@ def parse_args(args):
                       help='maximum number of additional pep8 passes '
                            '(default: infinite)')
     parser.add_option('-a', '--aggressive', action='count', default=0,
-                      help='enable possibly unsafe changes (E711, E712); '
+                      help='enable non-whitespace changes; '
                            'multiple -a result in more aggressive changes')
     parser.add_option('--exclude', metavar='globs',
                       help='exclude files/directories that match these '
@@ -2066,7 +2075,7 @@ def supported_fixes():
                    re.sub(r'\s+', ' ',
                           getattr(instance, attribute).__doc__))
 
-    for (code, function) in global_fixes():
+    for (code, function) in sorted(global_fixes()):
         yield (code.upper() + (4 - len(code)) * ' ',
                re.sub(r'\s+', ' ', function.__doc__))
 
@@ -2289,13 +2298,7 @@ def main():
             else:
                 filenames = args[:1]
 
-        output = codecs.getwriter('utf-8')(sys.stdout.buffer
-                                           if sys.version_info[0] >= 3
-                                           else sys.stdout)
-
-        output = LineEndingWrapper(output)
-
-        fix_multiple_files(filenames, options, output)
+        fix_multiple_files(filenames, options, sys.stdout)
     except KeyboardInterrupt:
         return 1  # pragma: no cover
 
