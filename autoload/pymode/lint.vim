@@ -3,6 +3,8 @@ fun! pymode#lint#Check() "{{{
     "
     if !g:pymode_lint | return | endif
 
+    if !empty(&buftype) | return | endif
+
     if &modifiable && &modified
         try
             noautocmd write
