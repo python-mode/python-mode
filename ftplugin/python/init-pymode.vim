@@ -80,6 +80,10 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " OPTION: g:pymode_lint_cwindow -- bool. Auto open cwindow if errors find
     call pymode#Default("g:pymode_lint_cwindow", 1)
 
+    " OPTION: g:pymode_lint_ignore_files -- list. Ignore file patterns for lint
+    " For example, ['YouCompleteMe/.*\.py$']
+    call pymode#Default("g:pymode_lint_ignore_files", [])
+
     " OPTION: g:pymode_lint_jump -- int. Jump on first error.
     call pymode#Default("g:pymode_lint_jump", 0)
 
