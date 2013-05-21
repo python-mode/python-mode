@@ -3,6 +3,15 @@ fun! pymode#lint#Check() "{{{
     "
     if !g:pymode_lint | return | endif
 
+    if !empty(&buftype) | return | endif
+
+    let fname = expand('%:p')
+    for p in g:pymode_lint_ignore_files
+        if fname =~# p
+            return
+        endif
+    endfor
+
     if &modifiable && &modified
         try
             noautocmd write
