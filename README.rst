@@ -203,6 +203,9 @@ Default values: ::
     " Load rope plugin
     let g:pymode_rope = 1
 
+    " Map keys for autocompletion
+    let g:pymode_rope_autocomplete_map = '<C-Space>'
+
     " Auto create and open ropeproject
     let g:pymode_rope_auto_project = 1
 

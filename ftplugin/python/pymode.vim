@@ -96,8 +96,8 @@ if pymode#Option('rope')
 
     if g:pymode_rope_map_space
         let s:prascm = g:pymode_rope_always_show_complete_menu ? "<C-P>" : ""
-        exe "inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
-        exe "inoremap <silent> <buffer> <c-space> <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
+        " exe "inoremap <silent> <buffer> <Nul> <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
+        exe "inoremap <silent> <buffer> " . g:pymode_rope_autocomplete_map . " <C-R>=RopeCodeAssistInsertMode()<CR>" . s:prascm
     endif
 
 endif
