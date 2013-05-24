@@ -189,6 +189,10 @@ endif
 
 if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
+    " OPTION: g:pymode_rope_autocomplete_key -- str. Key for the rope
+    " autocompletion.
+    call pymode#Default("g:pymode_rope_autocomplete_map", "<c-space>")
+
     " OPTION: g:pymode_rope_auto_project -- bool. Auto create ropeproject
     call pymode#Default("g:pymode_rope_auto_project", 1)
 
