@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import locale
 
 from pylama.main import run
@@ -47,12 +49,10 @@ def run_checkers(checkers=None, ignore=None, buf=None, select=None,
                  complexity=None, callback=None):
 
     filename = buf.name
-    result = []
-
     pylint_options = '--rcfile={0} -r n'.format(get_var('lint_config')).split()
 
     return run(filename, ignore=ignore, select=select, linters=checkers,
-                 pylint=pylint_options, complexity=complexity)
+               pylint=pylint_options, complexity=complexity)
 
 
 def parse_result(result, buf=None, **kwargs):

@@ -1,6 +1,6 @@
 " pylama -- Python code audit. "
 
-version_info = (0, 3, 2)
+version_info = 0, 3, 7
 
 __version__ = version = '.'.join(map(str, version_info))
 __project__ = __name__
