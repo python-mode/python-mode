@@ -1,6 +1,9 @@
 Changelog
 =========
 
+* Added `g:pymode_rope_autocomplete_map` option;
+* Removed `g:pymode_rope_map_space` option;
+
 ## 2013-05-15 0.6.18
 --------------------
 * Fixed autopep8 (`PyLintAuto`) command;
