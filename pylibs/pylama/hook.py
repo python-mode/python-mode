@@ -1,7 +1,10 @@
+from __future__ import unicode_literals, print_function, absolute_import
+
 import sys
 from os import path as op, chmod
 from subprocess import Popen, PIPE
-from .main import logger
+
+from .main import LOGGER
 
 
 try:
@@ -20,7 +23,7 @@ def run(command):
 def git_hook():
     from .main import check_files
     _, files_modified, _ = run("git diff-index --cached --name-only HEAD")
-    logger.setLevel('WARN')
+    LOGGER.setLevel('WARN')
     check_files([f for f in map(str, files_modified) if f.endswith('.py')])
 
 
@@ -36,7 +39,7 @@ def hg_hook(ui, repo, **kwargs):
             seen.add(file_)
             if file_.endswith('.py'):
                 paths.append(file_)
-    logger.setLevel('WARN')
+    LOGGER.setLevel('WARN')
     check_files(paths)
 
 
@@ -78,11 +81,11 @@ def install_hook(path):
     git = op.join(path, '.git', 'hooks')
     hg = op.join(path, '.hg')
     if op.exists(git):
-        install_git(git) and logger.warn('Git hook has been installed.') # nolint
+        install_git(git) and LOGGER.warn('Git hook has been installed.') # nolint
 
     elif op.exists(hg):
-        install_hg(git) and logger.warn('Mercurial hook has been installed.') # nolint
+        install_hg(git) and LOGGER.warn('Mercurial hook has been installed.') # nolint
 
     else:
-        logger.error('VCS has not found. Check your path.')
+        LOGGER.error('VCS has not found. Check your path.')
         sys.exit(1)
