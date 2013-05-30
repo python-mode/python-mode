@@ -56,8 +56,11 @@ def run_checkers(checkers=None, ignore=None, buf=None, select=None,
 
 
 def parse_result(result, buf=None, **kwargs):
-    command(('let g:qf_list = {0}'.format(repr(result)).replace(
-        '\': u', '\': ')))
+    import re
+    sub1 = re.compile(r"('\s*:\s*)u")
+    sub2 = re.compile(r"(,\s*)u(')")
+    s = 'let g:qf_list = {0}'.format(repr(result))
+    command(sub2.sub(r'\1\2', sub1.sub(r'\1', s)))
     command('call pymode#lint#Parse({0})'.format(buf.number))
 
 # pymode:lint_ignore=W0622
