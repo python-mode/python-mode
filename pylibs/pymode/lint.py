@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import locale
+import json
 
 from pylama.main import run
 
@@ -56,8 +57,7 @@ def run_checkers(checkers=None, ignore=None, buf=None, select=None,
 
 
 def parse_result(result, buf=None, **kwargs):
-    command(('let g:qf_list = {0}'.format(repr(result)).replace(
-        '\': u', '\': ')))
+    command('let g:qf_list = ' + json.dumps(result))
     command('call pymode#lint#Parse({0})'.format(buf.number))
 
 # pymode:lint_ignore=W0622
