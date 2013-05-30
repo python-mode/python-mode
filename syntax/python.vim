@@ -22,15 +22,16 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn keyword pythonStatement exec return
     syn keyword pythonStatement pass raise
     syn keyword pythonStatement global nonlocal assert
-    syn keyword pythonStatement lambda yield
+    syn keyword pythonStatement yield
+    syn keyword pythonLambdaExpr lambda
     syn keyword pythonStatement with as
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
     syn match pythonFunction "\%(\%(def\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonVars
     syn region pythonVars start="(" end=")" contained contains=pythonParameters transparent keepend
-    syn match pythonParameters "[^,]*" contained contains=pythonExtraOperator,pythonParam skipwhite
-    syn match pythonParam "=[^,]*" contained contains=pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonStatement,pythonNumber,pythonString,pythonNumber,pythonBrackets skipwhite
-    syn match pythonBrackets "[(|)]" contained skipwhite
+    syn match pythonParameters "[^,]*" contained contains=pythonParam skipwhite
+    syn match pythonParam "[^,]*" contained contains=pythonExtraOperator,pythonLambdaExpr,pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonString,pythonNumber,pythonBrackets,pythonSelf skipwhite
+    syn match pythonBrackets "{[(|)]}" contained skipwhite
 
     syn keyword pythonStatement class nextgroup=pythonClass skipwhite
     syn match pythonClass "\%(\%(class\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonClassVars
@@ -268,6 +269,7 @@ endif
 " =============
 
     hi def link  pythonStatement    Statement
+    hi def link  pythonLambdaExpr   Statement
     hi def link  pythonInclude      Include
     hi def link  pythonFunction     Function
     hi def link  pythonClass        Type
