@@ -1,5 +1,5 @@
 from __future__ import (
-    unicode_literals, print_function, absolute_import, with_statement
+    print_function, absolute_import, with_statement
 )
 
 import fnmatch
