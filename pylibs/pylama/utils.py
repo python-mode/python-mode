@@ -1,6 +1,4 @@
-from __future__ import (
-    print_function, absolute_import, with_statement
-)
+from __future__ import absolute_import, with_statement
 
 import _ast
 from os import path as op, environ
@@ -52,7 +50,7 @@ def pep8(path, **meta):
 def mccabe(path, code=None, complexity=8, **meta):
     " MCCabe code checking. "
 
-    return get_code_complexity(code, complexity, filename=path)
+    return get_code_complexity(code, complexity, filename=path) or []
 
 
 def pyflakes(path, code=None, **meta):

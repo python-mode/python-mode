@@ -1,6 +1,4 @@
-from __future__ import (
-    print_function, absolute_import, with_statement
-)
+from __future__ import absolute_import, with_statement
 
 import fnmatch
 import logging
@@ -75,7 +73,7 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
             lnum=e.lineno or 0,
             type='E',
             col=e.offset or 0,
-            text=e.args[0]
+            text=e.args[0] + ' [%s]' % lint
         ))
 
     except Exception:

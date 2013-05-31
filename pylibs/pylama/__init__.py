@@ -12,7 +12,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-version_info = 1, 0, 1
+version_info = 1, 0, 2
 
 __version__ = version = '.'.join(map(str, version_info))
 __project__ = __name__

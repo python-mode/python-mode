@@ -3,9 +3,7 @@
     http://nedbatchelder.com/blog/200803/python_code_complexity_microtool.html
     MIT License.
 """
-from __future__ import (
-    print_function, absolute_import, with_statement
-)
+from __future__ import absolute_import, with_statement
 
 import sys
 
