@@ -1,5 +1,7 @@
 " DESC: Get debug information about pymode problem
 fun! pymode#troubleshooting#Test() "{{{
+    runtime ftplugin/python/init-pymode.vim
+
     new
     setlocal buftype=nofile bufhidden=delete noswapfile nowrap
 
@@ -33,7 +35,9 @@ fun! pymode#troubleshooting#Test() "{{{
     call append('$', 'let pymode = ' . string(g:pymode))
     if g:pymode
         call append('$', 'let pymode_path = ' . string(g:pymode_path))
-        call append('$', 'let pymode_paths = ' . string(g:pymode_paths))
+        if g:pymode_path
+            call append('$', 'let pymode_paths = ' . string(g:pymode_paths))
+        end
 
         call append('$', 'let pymode_doc = ' . string(g:pymode_doc))
         if g:pymode_doc
@@ -63,6 +67,12 @@ fun! pymode#troubleshooting#Test() "{{{
         endif
 
         call append('$', 'let pymode_rope = ' . string(g:pymode_rope))
+        if g:pymode_rope
+            call append('$', 'let pymode_rope_autocomplete_map = ' . string(g:pymode_rope_autocomplete_map))
+            call append('$', 'let pymode_rope_auto_project = ' . string(g:pymode_rope_auto_project))
+            call append('$', 'let pymode_rope_auto_project_open = ' . string(g:pymode_rope_auto_project_open))
+            call append('$', 'let pymode_rope_auto_session_manage = ' . string(g:pymode_rope_auto_session_manage))
+        end
         call append('$', 'let pymode_folding = ' . string(g:pymode_folding))
         call append('$', 'let pymode_breakpoint = ' . string(g:pymode_breakpoint))
         call append('$', 'let pymode_syntax = ' . string(g:pymode_syntax))
@@ -75,6 +85,7 @@ fun! pymode#troubleshooting#Test() "{{{
     endif
 
     if python
+        call append('$', '')
         call append('$', 'VIM python paths:')
         call append('$', '-----------------')
 python << EOF
