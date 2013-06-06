@@ -258,6 +258,9 @@ class Namespace(object):
             self.sections[name] = self.section_type(self)
         return self.sections[name]
 
+    def __contains__(self, name):
+        return name in self.sections
+
     def __repr__(self):
         return "<Namespace: {0}>".format(self.sections)
 
