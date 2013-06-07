@@ -1,8 +1,14 @@
 """
-    Parse INI files.
+    Inirama is a python module that parses INI files.
 
+    .. include:: ../README.rst
+       :start-line: 5
+       :end-line: 12
+
+    :copyright: 2013 by Kirill Klenov.
+    :license: BSD, see LICENSE for more details.
 """
-from __future__ import absolute_import
+from __future__ import unicode_literals, print_function
 
 import io
 import re
@@ -10,11 +16,11 @@ import logging
 from collections import MutableMapping
 try:
     from collections import OrderedDict
-except ImportError as e:
+except ImportError:
     from ordereddict import OrderedDict
 
 
-__version__ = '0.2.9'
+__version__ = '0.4.0'
 __project__ = 'Inirama'
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "BSD"
@@ -183,9 +189,33 @@ class InterpolationSection(Section):
 
 
 class Namespace(object):
+    """ Default class for parsing INI.
 
+        :param **default_items: Default items for default section.
+
+        Usage
+        -----
+
+        ::
+
+            from inirama import Namespace
+
+            ns = Namespace()
+            ns.read('config.ini')
+
+            print ns['section']['key']
+
+            ns['other']['new'] = 'value'
+            ns.write('new_config.ini')
+
+    """
+    #: Name of default section (:attr:`~inirama.Namespace.default`)
     default_section = 'DEFAULT'
+
+    #: Dont raise any exception on file reading erorrs
     silent_read = True
+
+    #: Class for generating sections
     section_type = Section
 
     def __init__(self, **default_items):
@@ -201,6 +231,11 @@ class Namespace(object):
 
     def read(self, *files, **params):
         """ Read and parse INI files.
+
+            :param *files: Files for reading
+            :param **params: Params for parsing
+
+            Set `update=False` for prevent values redefinition.
         """
         for f in files:
             try:
@@ -214,7 +249,7 @@ class Namespace(object):
 
     def write(self, f):
         """
-            Write self as INI file.
+            Write namespace as INI file.
 
             :param f: File object or path to file.
         """
@@ -233,7 +268,10 @@ class Namespace(object):
         f.close()
 
     def parse(self, source, update=True, **params):
-        """ Parse INI source.
+        """ Parse INI source as string.
+
+            :param source: Source of INI
+            :param update: Replace alredy defined items
         """
         scanner = INIScanner(source)
         scanner.scan()
@@ -266,7 +304,23 @@ class Namespace(object):
 
 
 class InterpolationNamespace(Namespace):
+    """ That implements the interpolation feature.
+
+    ::
+
+        from inirama import InterpolationNamespace
+
+        ns = InterpolationNamespace()
+        ns.parse('''
+            [main]
+            test = value
+            foo = bar {test}
+            more_deep = wow {foo}
+        ''')
+        print ns['main']['more_deep']  # wow bar value
+
+    """
 
     section_type = InterpolationSection
 
-# lint_ignore=W0201,R0924,F0401
+# lint_ignore=W0201,R0924

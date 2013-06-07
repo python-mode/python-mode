@@ -3,7 +3,8 @@ from __future__ import absolute_import
 import locale
 import json
 
-from pylama.main import run, prepare_params
+from pylama.core import run
+from pylama.main import prepare_params
 from pylama.inirama import Namespace
 from os import path as op
 

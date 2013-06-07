@@ -1,31 +1,33 @@
+""" Interfaces for code checking.
+"""
 from __future__ import absolute_import, with_statement
 
 import _ast
 from os import path as op, environ
 
-from .mccabe import get_code_complexity
 from .pep8 import BaseReport, StyleGuide
-from .pyflakes import checker
 
 
-__all__ = 'pep8', 'mccabe', 'pyflakes', 'pylint'
+__all__ = 'pep8', 'pep257', 'mccabe', 'pyflakes', 'pylint'
 
 PYLINT_RC = op.abspath(op.join(op.dirname(__file__), 'pylint.rc'))
 
 
-class PEP8Report(BaseReport):
+class _PEP8Report(BaseReport):
 
     def __init__(self, *args, **kwargs):
-        super(PEP8Report, self).__init__(*args, **kwargs)
+        super(_PEP8Report, self).__init__(*args, **kwargs)
         self.errors = []
 
     def init_file(self, filename, lines, expected, line_offset):
-        super(PEP8Report, self).init_file(
+        """ Prepare storage for errors. """
+        super(_PEP8Report, self).init_file(
             filename, lines, expected, line_offset)
         self.errors = []
 
     def error(self, line_number, offset, text, check):
-        code = super(PEP8Report, self).error(
+        """ Save errors. """
+        code = super(_PEP8Report, self).error(
             line_number, offset, text, check)
 
         self.errors.append(dict(
@@ -36,25 +38,42 @@ class PEP8Report(BaseReport):
         ))
 
     def get_file_results(self):
-        return self.errors
+        """ Get errors.
 
-P8Style = StyleGuide(reporter=PEP8Report)
+        :return list: List of errors.
+
+        """
+        return self.errors
 
 
 def pep8(path, **meta):
-    " PEP8 code checking. "
+    """ PEP8 code checking.
 
+    :return list: List of errors.
+
+    """
+    P8Style = StyleGuide(reporter=_PEP8Report)
     return P8Style.input_file(path)
 
 
 def mccabe(path, code=None, complexity=8, **meta):
-    " MCCabe code checking. "
+    """ MCCabe code checking.
+
+    :return list: List of errors.
+
+    """
+    from .mccabe import get_code_complexity
 
     return get_code_complexity(code, complexity, filename=path) or []
 
 
 def pyflakes(path, code=None, **meta):
-    " PyFlakes code checking. "
+    """ Pyflake code checking.
+
+    :return list: List of errors.
+
+    """
+    from .pyflakes import checker
 
     errors = []
     tree = compile(code, path, "exec", _ast.PyCF_ONLY_AST)
@@ -69,6 +88,11 @@ def pyflakes(path, code=None, **meta):
 
 
 def pylint(path, **meta):
+    """ Pylint code checking.
+
+    :return list: List of errors.
+
+    """
     from sys import version_info
     if version_info > (3, 0):
         import logging
@@ -77,8 +101,8 @@ def pylint(path, **meta):
 
     from .pylint.lint import Run
     from .pylint.reporters import BaseReporter
+    from .pylint.logilab.astng import MANAGER
 
-    from .pylint.logilab.astng.builder import MANAGER
     MANAGER.astng_cache.clear()
 
     class Reporter(BaseReporter):
@@ -108,5 +132,26 @@ def pylint(path, **meta):
     runner = Run(
         [path] + attrs, reporter=Reporter(), exit=False)
     return runner.linter.reporter.errors
+
+
+def pep257(path, **meta):
+    """ PEP257 code checking.
+
+    :return list: List of errors.
+
+    """
+    f = open(path)
+    from .pep257 import check_source
+
+    errors = []
+    for er in check_source(f.read(), path):
+        errors.append(dict(
+            lnum=er.line,
+            col=er.char,
+            text='C0110 %s' % er.explanation.split('\n')[0].strip(),
+            type='W',
+        ))
+    return errors
+
 
 # pymode:lint_ignore=W0231

@@ -1,3 +1,5 @@
+""" SCM hooks.
+"""
 from __future__ import absolute_import
 
 import sys
@@ -14,6 +16,11 @@ except ImportError:   # Python 2
 
 
 def run(command):
+    """ Run a shell command.
+
+    :return str: Stdout
+
+    """
     p = Popen(command.split(), stdout=PIPE, stderr=PIPE)
     (stdout, stderr) = p.communicate()
     return (p.returncode, [line.strip() for line in stdout.splitlines()],
@@ -21,6 +28,8 @@ def run(command):
 
 
 def git_hook():
+    """ Run pylama after git commit. """
+
     from .main import check_files
     _, files_modified, _ = run("git diff-index --cached --name-only HEAD")
     LOGGER.setLevel('WARN')
@@ -28,6 +37,8 @@ def git_hook():
 
 
 def hg_hook(ui, repo, **kwargs):
+    """ Run pylama after mercurial commit. """
+
     from .main import check_files
     seen = set()
     paths = []
@@ -44,6 +55,7 @@ def hg_hook(ui, repo, **kwargs):
 
 
 def install_git(path):
+    """ Install hook in Git repository. """
     hook = op.join(path, 'pre-commit')
     with open(hook, 'w+') as fd:
         fd.write("""#!/usr/bin/env python
@@ -54,10 +66,11 @@ if __name__ == '__main__':
     sys.exit(git_hook())
 """)
     chmod(hook, 484)
-    return True
 
 
 def install_hg(path):
+    """ Install hook in Mercurial repository. """
+
     hook = op.join(path, 'hgrc')
     if not op.isfile(hook):
         open(hook, 'w+').close()
@@ -74,10 +87,11 @@ def install_hg(path):
         c.set('hooks', 'qrefresh', 'python:pylama.hooks.hg_hook')
 
     c.write(open(path, 'w+'))
-    return True
 
 
 def install_hook(path):
+    """ Auto definition of SCM and hook installation. """
+
     git = op.join(path, '.git', 'hooks')
     hg = op.join(path, '.hg')
     if op.exists(git):
