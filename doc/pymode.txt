@@ -223,7 +223,7 @@ If this option is set to 0 then the pylint script is disabled.
 
 ------------------------------------------------------------------------------
                                                          *'pymode_lint_checker'*
-Values: "pylint", "pyflakes", "pep8", "mccabe"
+Values: "pylint", "pyflakes", "pep8", "mccabe", "pep257"
         You can set many checkers. E.g. "pyflakes,pep8,mccabe" ~
 
 Default: "pyflakes,pep8,mccabe".

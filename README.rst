@@ -144,6 +144,7 @@ Default values: ::
 
     " Switch pylint, pyflakes, pep8, mccabe code-checkers
     " Can have multiply values "pep8,pyflakes,mcccabe"
+    " Choices are pyflakes, pep8, mccabe, pylint, pep257
     let g:pymode_lint_checker = "pyflakes,pep8,mccabe"
 
     " Skip errors and warnings
