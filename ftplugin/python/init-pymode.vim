@@ -201,9 +201,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " `.ropeproject` subdirectory.
     call pymode#Default("g:pymode_rope_auto_project_open", 1)
 
-    " OPTION: g:pymode_rope_auto_session_manage -- bool
-    call pymode#Default("g:pymode_rope_auto_session_manage", 0)
-
     " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
     call pymode#Default("g:pymode_rope_enable_autoimport", 1)
 
@@ -312,11 +309,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     if !pymode#Default("g:pymode_rope_auto_project_open", 1) || g:pymode_rope_auto_project_open
         call RopeOpenExistingProject()
     endif
-
-     if !pymode#Default("g:pymode_rope_auto_session_manage", 0) || g:pymode_rope_auto_session_manage
-        autocmd VimLeave * call RopeSaveSession()
-        autocmd VimEnter * call RopeRestoreSession()
-     endif
 
 endif
 
