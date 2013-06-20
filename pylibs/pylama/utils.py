@@ -5,7 +5,7 @@ from __future__ import absolute_import, with_statement
 import _ast
 from os import path as op, environ
 
-from .pep8 import BaseReport, StyleGuide
+from .checkers.pep8 import BaseReport, StyleGuide
 
 
 __all__ = 'pep8', 'pep257', 'mccabe', 'pyflakes', 'pylint'
@@ -62,7 +62,7 @@ def mccabe(path, code=None, complexity=8, **meta):
     :return list: List of errors.
 
     """
-    from .mccabe import get_code_complexity
+    from .checkers.mccabe import get_code_complexity
 
     return get_code_complexity(code, complexity, filename=path) or []
 
@@ -73,7 +73,7 @@ def pyflakes(path, code=None, **meta):
     :return list: List of errors.
 
     """
-    from .pyflakes import checker
+    from .checkers.pyflakes import checker
 
     errors = []
     tree = compile(code, path, "exec", _ast.PyCF_ONLY_AST)
@@ -99,9 +99,9 @@ def pylint(path, **meta):
         logging.warn("Pylint don't supported python3 and will be disabled.")
         return []
 
-    from .pylint.lint import Run
-    from .pylint.reporters import BaseReporter
-    from .pylint.logilab.astng import MANAGER
+    from .checkers.pylint.lint import Run
+    from .checkers.pylint.reporters import BaseReporter
+    from .checkers.pylint.logilab.astng import MANAGER
 
     MANAGER.astng_cache.clear()
 
@@ -141,7 +141,7 @@ def pep257(path, **meta):
 
     """
     f = open(path)
-    from .pep257 import check_source
+    from .checkers.pep257 import check_source
 
     errors = []
     for er in check_source(f.read(), path):

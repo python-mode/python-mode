@@ -102,12 +102,14 @@ def shell():
         if op.isdir(options.path):
             paths = []
             for root, _, files in walk(options.path):
-                paths += [op.join(root, f) for f in files if f.endswith('.py')]
+                paths += [
+                    op.relpath(op.join(root, f), curdir)
+                    for f in files if f.endswith('.py')]
 
         check_files(
             paths,
             async=options.async,
-            rootpath=options.path,
+            rootpath=curdir,
             skip=options.skip,
             frmt=options.format,
             ignore=options.ignore,
@@ -132,12 +134,12 @@ def check_files(paths, rootpath=None, skip=None, frmt="pep8", async=False,
     params = dict()
     if config:
         for key, section in config.sections.items():
-            if key != 'main':
-                params[op.abspath(key)] = prepare_params(section)
+            if key != config.default_section:
+                mask = re.compile(fnmatch.translate(key))
+                params[mask] = prepare_params(section)
 
     work_paths = []
     for path in paths:
-        path = op.abspath(path)
         if skip and any(pattern.match(path) for pattern in skip):
             LOGGER.info('Skip path: %s', path)
             continue
@@ -162,10 +164,6 @@ def prepare_params(section):
     params = dict(section)
     params['lint'] = int(params.get('lint', 1))
     return params
-
-
-def __parse_options(args=None):
-    pass
 
 
 if __name__ == '__main__':

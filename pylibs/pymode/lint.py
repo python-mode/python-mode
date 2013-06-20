@@ -1,12 +1,15 @@
+""" Pylama support. """
 from __future__ import absolute_import
 
-import locale
+import fnmatch
 import json
+import locale
+from os import path as op
+from re import compile as re
 
 from pylama.core import run
-from pylama.main import prepare_params
 from pylama.inirama import Namespace
-from os import path as op
+from pylama.main import prepare_params
 
 from . import interface
 from .queue import add_task
@@ -19,6 +22,7 @@ except AttributeError:
 
 
 def check_file():
+    """ Check current buffer. """
     checkers = interface.get_option('lint_checker').split(',')
     buf = interface.get_current_buffer()
 
@@ -46,8 +50,13 @@ def check_file():
 
     complexity = int(interface.get_option('lint_mccabe_complexity') or 0)
 
-    params = None
+    params = dict()
     relpath = op.relpath(buf.name, curdir)
+    for mask in config.sections:
+        mask_re = re(fnmatch.translate(mask))
+        if mask_re.match(relpath):
+            params.update(prepare_params(config[mask]))
+
     if relpath in config:
         params = prepare_params(config[relpath])
 
@@ -64,7 +73,11 @@ def check_file():
 
 def run_checkers(checkers=None, ignore=None, buf=None, select=None,
                  complexity=None, callback=None, config=None):
+    """ Run pylama code.
 
+    :return list: errors
+
+    """
     pylint_options = '--rcfile={0} -r n'.format(
         interface.get_var('lint_config')).split()
 
@@ -74,6 +87,7 @@ def run_checkers(checkers=None, ignore=None, buf=None, select=None,
 
 
 def parse_result(result, buf=None, **kwargs):
+    """ Parse results. """
     interface.command('let g:qf_list = ' + json.dumps(result))
     interface.command('call pymode#lint#Parse({0})'.format(buf.number))
 

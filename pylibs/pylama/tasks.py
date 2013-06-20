@@ -91,10 +91,16 @@ def check_path(path, rootpath='.', ignore=None, select=None, linters=None,
 
     LOGGER.info("Parse file: %s", path)
     params = params or dict()
+    config = dict()
+
+    for mask in params:
+        if mask.match(path):
+            config.update(params[mask])
 
     errors = []
-    for error in run(path, ignore=ignore, select=select, linters=linters,
-                     complexity=complexity, config=params.get(path)):
+    for error in run(
+        path, ignore=ignore, select=select, linters=linters,
+            complexity=complexity, config=config):
         try:
             error['rel'] = op.relpath(
                 error['filename'], op.dirname(rootpath))

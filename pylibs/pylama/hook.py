@@ -1,4 +1,4 @@
-""" SCM hooks.
+""" SCM hooks. Integration with git and mercurial.
 """
 from __future__ import absolute_import
 
@@ -10,7 +10,7 @@ from .main import LOGGER
 
 
 try:
-    from configparser import ConfigParser # nolint
+    from configparser import ConfigParser  # noqa
 except ImportError:   # Python 2
     from ConfigParser import ConfigParser
 
@@ -95,11 +95,15 @@ def install_hook(path):
     git = op.join(path, '.git', 'hooks')
     hg = op.join(path, '.hg')
     if op.exists(git):
-        install_git(git) and LOGGER.warn('Git hook has been installed.') # nolint
+        install_git(git)
+        LOGGER.warn('Git hook has been installed.')
 
     elif op.exists(hg):
-        install_hg(git) and LOGGER.warn('Mercurial hook has been installed.') # nolint
+        install_hg(git)
+        LOGGER.warn('Mercurial hook has been installed.')
 
     else:
         LOGGER.error('VCS has not found. Check your path.')
         sys.exit(1)
+
+# lint_ignore=F0401

@@ -1,9 +1,15 @@
 """
     Inirama is a python module that parses INI files.
 
+    .. _badges:
     .. include:: ../README.rst
-       :start-line: 5
-       :end-line: 12
+        :start-after: .. _badges:
+        :end-before: .. _contents:
+
+    .. _description:
+    .. include:: ../README.rst
+        :start-after: .. _description:
+        :end-before: .. _badges:
 
     :copyright: 2013 by Kirill Klenov.
     :license: BSD, see LICENSE for more details.
@@ -20,7 +26,7 @@ except ImportError:
     from ordereddict import OrderedDict
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __project__ = 'Inirama'
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "BSD"
@@ -31,11 +37,14 @@ NS_LOGGER = logging.getLogger('inirama')
 
 class Scanner(object):
 
+    """ Split a code string on tokens. """
+
     def __init__(self, source, ignore=None, patterns=None):
         """ Init Scanner instance.
 
-            :param patterns: List of token patterns [(token, regexp)]
-            :param ignore: List of ignored tokens
+        :param patterns: List of token patterns [(token, regexp)]
+        :param ignore: List of ignored tokens
+
         """
         self.reset(source)
         if patterns:
@@ -47,17 +56,18 @@ class Scanner(object):
             self.ignore = ignore
 
     def reset(self, source):
-        """ Reset scanner.
+        """ Reset scanner's state.
 
-            :param source: Source for parsing
+        :param source: Source for parsing
+
         """
         self.tokens = []
         self.source = source
         self.pos = 0
 
     def scan(self):
-        """ Scan source and grab tokens.
-        """
+        """ Scan source and grab tokens. """
+
         self.pre_scan()
 
         token = None
@@ -98,18 +108,23 @@ class Scanner(object):
             self.tokens.append(token)
 
     def pre_scan(self):
-        """ Prepare source.
-        """
+        """ Prepare source. """
         pass
 
     def __repr__(self):
-        """ Print the last 5 tokens that have been scanned in
+        """ Print the last 5 tokens that have been scanned in.
+
+        :return str:
+
         """
         return '<Scanner: ' + ','.join(
             "{0}({2}:{3})".format(*t) for t in self.tokens[-5:]) + ">"
 
 
 class INIScanner(Scanner):
+
+    """ Get tokens for INI. """
+
     patterns = [
         ('SECTION', re.compile(r'\[[^]]+\]')),
         ('IGNORE', re.compile(r'[ \r\t\n]+')),
@@ -119,6 +134,7 @@ class INIScanner(Scanner):
     ignore = ['IGNORE']
 
     def pre_scan(self):
+        """ Prepare string for scaning. """
         escape_re = re.compile(r'\\\n[\t ]+')
         self.source = escape_re.sub('', self.source)
 
@@ -127,6 +143,8 @@ undefined = object()
 
 
 class Section(MutableMapping):
+
+    """ Representation of INI section. """
 
     def __init__(self, namespace, *args, **kwargs):
         super(Section, self).__init__(*args, **kwargs)
@@ -152,6 +170,7 @@ class Section(MutableMapping):
         return "<{0} {1}>".format(self.__class__.__name__, str(dict(self)))
 
     def iteritems(self):
+        """ Impletment iteritems. """
         for key in self.__storage__.keys():
             yield key, self[key]
 
@@ -160,9 +179,17 @@ class Section(MutableMapping):
 
 class InterpolationSection(Section):
 
+    """ INI section with interpolation support. """
+
     var_re = re.compile('{([^}]+)}')
 
     def get(self, name, default=None):
+        """ Get item by name.
+
+        :return object: value or None if name not exists
+
+        """
+
         if name in self:
             return self[name]
         return default
@@ -189,26 +216,28 @@ class InterpolationSection(Section):
 
 
 class Namespace(object):
+
     """ Default class for parsing INI.
 
-        :param **default_items: Default items for default section.
+    :param **default_items: Default items for default section.
 
-        Usage
-        -----
+    Usage
+    -----
 
-        ::
+    ::
 
-            from inirama import Namespace
+        from inirama import Namespace
 
-            ns = Namespace()
-            ns.read('config.ini')
+        ns = Namespace()
+        ns.read('config.ini')
 
-            print ns['section']['key']
+        print ns['section']['key']
 
-            ns['other']['new'] = 'value'
-            ns.write('new_config.ini')
+        ns['other']['new'] = 'value'
+        ns.write('new_config.ini')
 
     """
+
     #: Name of default section (:attr:`~inirama.Namespace.default`)
     default_section = 'DEFAULT'
 
@@ -226,16 +255,20 @@ class Namespace(object):
     @property
     def default(self):
         """ Return default section or empty dict.
+
+        :return :class:`inirama.Section`: section
+
         """
         return self.sections.get(self.default_section, dict())
 
     def read(self, *files, **params):
         """ Read and parse INI files.
 
-            :param *files: Files for reading
-            :param **params: Params for parsing
+        :param *files: Files for reading
+        :param **params: Params for parsing
 
-            Set `update=False` for prevent values redefinition.
+        Set `update=False` for prevent values redefinition.
+
         """
         for f in files:
             try:
@@ -248,10 +281,10 @@ class Namespace(object):
                     raise
 
     def write(self, f):
-        """
-            Write namespace as INI file.
+        """ Write namespace as INI file.
 
-            :param f: File object or path to file.
+        :param f: File object or path to file.
+
         """
         if isinstance(f, str):
             f = io.open(f, 'w', encoding='utf-8')
@@ -270,8 +303,9 @@ class Namespace(object):
     def parse(self, source, update=True, **params):
         """ Parse INI source as string.
 
-            :param source: Source of INI
-            :param update: Replace alredy defined items
+        :param source: Source of INI
+        :param update: Replace alredy defined items
+
         """
         scanner = INIScanner(source)
         scanner.scan()
@@ -291,6 +325,9 @@ class Namespace(object):
 
     def __getitem__(self, name):
         """ Look name in self sections.
+
+        :return :class:`inirama.Section`: section
+
         """
         if not name in self.sections:
             self.sections[name] = self.section_type(self)
@@ -304,6 +341,7 @@ class Namespace(object):
 
 
 class InterpolationNamespace(Namespace):
+
     """ That implements the interpolation feature.
 
     ::
@@ -323,4 +361,4 @@ class InterpolationNamespace(Namespace):
 
     section_type = InterpolationSection
 
-# lint_ignore=W0201,R0924
+# lint_ignore=W0201,R0924,F0401
