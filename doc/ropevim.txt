@@ -151,7 +151,7 @@ those under ``ropetest`` folder.
 The find occurrences command ("<C-c> f" by default) can be used to
 find the occurrences of a python name.  If ``unsure`` option is
 ``yes``, it will also show unsure occurrences; unsure occurrences are
-indicated with a ``?`` mark in the end. 
+indicated with a ``?`` mark in the end.
 
         Note:
         That ropevim uses the quickfix feature of vim for
@@ -183,7 +183,7 @@ values you can use: >
   name2
    line3
 <
-Each line of the definition should start with a space or a tab. 
+Each line of the definition should start with a space or a tab.
     Note:
     That blank lines before the name of config definitions are ignored.
 
@@ -222,7 +222,7 @@ restructuring can be: >
                                                                  *RopeVariables*
 
 *'pymode_rope_codeassist_maxfixes'*     The maximum number of syntax errors
-                                  to fix for code assists. 
+                                  to fix for code assists.
                                   The default value is `1`.
 
 *'pymode_rope_local_prefix'*            The prefix for ropevim refactorings.
