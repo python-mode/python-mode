@@ -104,13 +104,13 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_syntax_print_as_function'| Hightlight `print` as function
 
-|'pymode_syntax_highlight_equal_operator'| Hightlight `=` 
+|'pymode_syntax_highlight_equal_operator'| Hightlight `=`
 
-|'pymode_syntax_highlight_stars_operator'| Hightlight `*` 
+|'pymode_syntax_highlight_stars_operator'| Hightlight `*`
 
-|'pymode_syntax_highlight_self'|    Hightlight `self` 
+|'pymode_syntax_highlight_self'|    Hightlight `self`
 
-|'pymode_syntax_indent_errors'|     Hightlight indentation errors 
+|'pymode_syntax_indent_errors'|     Hightlight indentation errors
 
 |'pymode_syntax_space_errors'|      Hightlight trailing spaces as errors
 
@@ -152,7 +152,7 @@ To enable any of the options below you should put the given line in your
 2.2. Modeline ~
                                                       *PythonModeModeline*
 
-The VIM modeline `:help modeline` feature allows you to change pymode 
+The VIM modeline `:help modeline` feature allows you to change pymode
 options for the current file. Pymode modeline should always be the
 last line in the vimrc file and look like:
 
@@ -393,28 +393,28 @@ Hightlight `print` as function
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `=` 
+Hightlight `=`
 
 ------------------------------------------------------------------------------
                                       *'pymode_syntax_highlight_stars_operator'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `*` 
+Hightlight `*`
 
 ------------------------------------------------------------------------------
                                                  *'pymode_syntax_highlight_self'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `self` 
+Hightlight `self`
 
 ------------------------------------------------------------------------------
                                                  *'pymode_syntax_indent_errors'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight indentation errors 
+Hightlight indentation errors
 
 ------------------------------------------------------------------------------
                                                   *'pymode_syntax_space_errors'*
@@ -576,7 +576,7 @@ iM                Operation with inner function or method.
 
 *:PyLintAuto*                                                         *PyLintAuto*
     Automatically fix PEP8 errors in the current buffer
-                                 
+
 *:Pyrun*                                                                   *Pyrun*
     Run current buffer
 
@@ -599,7 +599,7 @@ To work, rope_ creates a service directory: `.ropeproject`.  If
 |'pymode_rope_guess_project'| is set on (as it is by default) and
 `.ropeproject` is not found in the current dir, rope will scan for
 `.ropeproject` in every dir in the parent path.  If rope finds `.ropeproject`
-in parent dirs, rope sets projectis for all child dirs and the scan may be 
+in parent dirs, rope sets projectis for all child dirs and the scan may be
 slow for many dirs and files.
 
 Solutions:
@@ -621,7 +621,7 @@ modules if possible.  Try using pyflakes: see |'pymode_lint_checker'|.
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings
 from `.vimrc` from your projects directories.
 >
-    Example: On Flask projects I automatically set 
+    Example: On Flask projects I automatically set
              'g:pymode_lint_checker = "pyflakes"'.
              On Django 'g:pymode_lint_checker = "pylint"'
 <
@@ -643,7 +643,7 @@ The sequence of commands that fixed this:
 
 ==============================================================================
 6. Credits ~
-                                                             *PythonModeCredits* 
+                                                             *PythonModeCredits*
     Kirill Klenov
         http://klen.github.com/
         http://github.com/klen/
@@ -684,7 +684,7 @@ The sequence of commands that fixed this:
 Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
 
-If you like this plugin, you can send me a postcard :) 
+If you like this plugin, you can send me a postcard :)
 My address is: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 Thanks for your support!
 

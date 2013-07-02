@@ -191,7 +191,7 @@ Default values: ::
     let g:pymode_lint_maxheight = 6
 
 
-.. note:: 
+.. note::
     Pylint options (ex. disable messages) may be defined in ``$HOME/pylint.rc``
     See pylint documentation: http://pylint-messages.wikidot.com/all-codes
 
@@ -511,7 +511,7 @@ License
 
 Licensed under a `GNU lesser general public license`_.
 
-If you like this plugin, you can send me postcard :) 
+If you like this plugin, you can send me postcard :)
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 **Thanks for support!**
 
