@@ -3,7 +3,8 @@ Changelog
 
 * Added `g:pymode_rope_autocomplete_map` option;
 * Removed `g:pymode_rope_map_space` option;
-* Added PEP257 checker
+* Added PEP257 checker;
+* Support 'pudb' in breakpoints;
 
 ## 2013-05-15 0.6.18
 --------------------
