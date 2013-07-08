@@ -110,8 +110,8 @@ def prepare_params(*configs, **params):
     :return dict:
 
     """
-    params['ignore'] = params.get('ignore') or []
-    params['select'] = params.get('select') or []
+    params['ignore'] = list(params.get('ignore') or [])
+    params['select'] = list(params.get('select') or [])
 
     for config in filter(None, configs):
         for key in ('ignore', 'select'):
