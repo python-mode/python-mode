@@ -192,6 +192,10 @@ class FunctionScope(Scope):
                 yield name, binding
 
 
+class GeneratorScope(Scope):
+    pass
+
+
 class ModuleScope(Scope):
     pass
 
@@ -319,11 +323,14 @@ class Checker(object):
                         self.report(messages.UnusedImport,
                                     importation.source, importation.name)
 
-    def pushFunctionScope(self):
-        self.scopeStack.append(FunctionScope())
+    def pushScope(self, scopeClass=FunctionScope):
+        self.scopeStack.append(scopeClass())
 
-    def pushClassScope(self):
-        self.scopeStack.append(ClassScope())
+    def pushFunctionScope(self):    # XXX Deprecated
+        self.pushScope(FunctionScope)
+
+    def pushClassScope(self):       # XXX Deprecated
+        self.pushScope(ClassScope)
 
     def report(self, messageClass, *args, **kwargs):
         self.messages.append(messageClass(self.filename, *args, **kwargs))
@@ -437,27 +444,21 @@ class Checker(object):
         else:
             return
 
-        # try enclosing function scopes
+        scopes = [scope for scope in self.scopeStack[:-1]
+                  if isinstance(scope, (FunctionScope, ModuleScope))]
+        if isinstance(self.scope, GeneratorScope) and scopes[-1] != self.scopeStack[-2]:
+            scopes.append(self.scopeStack[-2])
+
+        # try enclosing function scopes and global scope
         importStarred = self.scope.importStarred
-        for scope in self.scopeStack[-2:0:-1]:
+        for scope in reversed(scopes):
             importStarred = importStarred or scope.importStarred
-            if not isinstance(scope, FunctionScope):
-                continue
             try:
                 scope[name].used = (self.scope, node)
             except KeyError:
                 pass
             else:
                 return
-
-        # try global scope
-        importStarred = importStarred or self.scopeStack[0].importStarred
-        try:
-            self.scopeStack[0][name].used = (self.scope, node)
-        except KeyError:
-            pass
-        else:
-            return
 
         # look in the built-ins
         if importStarred or name in self.builtIns:
@@ -570,7 +571,7 @@ class Checker(object):
             # leading whitespace: ...
             return
         node_offset = self.offset or (0, 0)
-        self.pushFunctionScope()
+        self.pushScope()
         for example in examples:
             try:
                 tree = compile(example.source, "<doctest>", "exec", ast.PyCF_ONLY_AST)
@@ -632,7 +633,7 @@ class Checker(object):
         self.handleNode(node.elt, node)
 
     def GENERATOREXP(self, node):
-        self.pushFunctionScope()
+        self.pushScope(GeneratorScope)
         # handle generators before element
         for gen in node.generators:
             self.handleNode(gen, node)
@@ -642,7 +643,7 @@ class Checker(object):
     SETCOMP = GENERATOREXP
 
     def DICTCOMP(self, node):
-        self.pushFunctionScope()
+        self.pushScope(GeneratorScope)
         for gen in node.generators:
             self.handleNode(gen, node)
         self.handleNode(node.key, node)
@@ -742,7 +743,7 @@ class Checker(object):
 
         def runFunction():
 
-            self.pushFunctionScope()
+            self.pushScope()
             for name in args:
                 self.addBinding(node, Argument(name, node), reportRedef=False)
             if isinstance(node.body, list):
@@ -777,7 +778,7 @@ class Checker(object):
         if not PY2:
             for keywordNode in node.keywords:
                 self.handleNode(keywordNode, node)
-        self.pushClassScope()
+        self.pushScope(ClassScope)
         if self.withDoctest:
             self.deferFunction(lambda: self.handleDoctests(node))
         for stmt in node.body:
@@ -847,5 +848,3 @@ class Checker(object):
         if isinstance(node.name, str):
             self.handleNodeStore(node)
         self.handleChildren(node)
-
-# pymode:lint=0

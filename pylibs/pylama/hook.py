@@ -36,20 +36,21 @@ def git_hook():
     check_files([f for f in map(str, files_modified) if f.endswith('.py')])
 
 
-def hg_hook(ui, repo, **kwargs):
+def hg_hook(ui, repo, node=None, **kwargs):
     """ Run pylama after mercurial commit. """
 
     from .main import check_files
     seen = set()
     paths = []
-    for rev in range(repo[kwargs['node']], len(repo)):
-        for file_ in repo[rev].files():
-            file_ = op.join(repo.root, file_)
-            if file_ in seen or not op.exists(file_):
-                continue
-            seen.add(file_)
-            if file_.endswith('.py'):
-                paths.append(file_)
+    if len(repo):
+        for rev in range(repo[node], len(repo)):
+            for file_ in repo[rev].files():
+                file_ = op.join(repo.root, file_)
+                if file_ in seen or not op.exists(file_):
+                    continue
+                seen.add(file_)
+                if file_.endswith('.py'):
+                    paths.append(file_)
     LOGGER.setLevel('WARN')
     check_files(paths)
 
@@ -57,7 +58,7 @@ def hg_hook(ui, repo, **kwargs):
 def install_git(path):
     """ Install hook in Git repository. """
     hook = op.join(path, 'pre-commit')
-    with open(hook, 'w+') as fd:
+    with open(hook, 'w') as fd:
         fd.write("""#!/usr/bin/env python
 import sys
 from pylama.hook import git_hook

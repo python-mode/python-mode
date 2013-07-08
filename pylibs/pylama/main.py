@@ -16,9 +16,17 @@ from .core import DEFAULT_LINTERS, LOGGER, STREAM
 DEFAULT_COMPLEXITY = 10
 
 
-def shell():
-    """ Endpoint for console. """
+def shell(args=None, error=True):
+    """ Endpoint for console.
+
+    :return list: list of errors
+    :raise SystemExit:
+
+    """
     curdir = getcwd()
+    if args is None:
+        args = sys.argv[1:]
+
     parser = ArgumentParser(description="Code audit tool for python.")
     parser.add_argument("path", nargs='?', default=curdir,
                         help="Path on file or directory.")
@@ -64,7 +72,7 @@ def shell():
     parser.add_argument(
         "--options", "-o", default=op.join(curdir, 'pylama.ini'),
         help="Select configuration file. By default is '<CURDIR>/pylama.ini'")
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     actions = dict((a.dest, a) for a in parser._actions)
 
     # Read options from configuration file
@@ -106,7 +114,7 @@ def shell():
                     op.relpath(op.join(root, f), curdir)
                     for f in files if f.endswith('.py')]
 
-        check_files(
+        return check_files(
             paths,
             async=options.async,
             rootpath=curdir,
@@ -117,13 +125,19 @@ def shell():
             linters=options.linters,
             complexity=options.complexity,
             config=config,
+            error=error,
         )
 
 
 def check_files(paths, rootpath=None, skip=None, frmt="pep8", async=False,
                 select=None, ignore=None, linters=DEFAULT_LINTERS,
-                complexity=DEFAULT_COMPLEXITY, config=None):
-    """ Check files. """
+                complexity=DEFAULT_COMPLEXITY, config=None, error=True):
+    """ Check files.
+
+    :return list: list of errors
+    :raise SystemExit:
+
+    """
     from .tasks import async_check_files
 
     rootpath = rootpath or getcwd()
@@ -149,10 +163,13 @@ def check_files(paths, rootpath=None, skip=None, frmt="pep8", async=False,
         work_paths, async=async, rootpath=rootpath, ignore=ignore,
         select=select, linters=linters, complexity=complexity, params=params)
 
-    for error in errors:
-        LOGGER.warning(pattern, error)
+    for er in errors:
+        LOGGER.warning(pattern, er)
 
-    sys.exit(int(bool(errors)))
+    if error:
+        sys.exit(int(bool(errors)))
+
+    return errors
 
 
 def prepare_params(section):

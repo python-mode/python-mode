@@ -1,4 +1,4 @@
-""" Pylama core functionality. Get params and runs a checkers.
+""" Pylama core functionality. Get params and runs the checkers.
 """
 import logging
 import re
@@ -6,13 +6,19 @@ import re
 from . import utils
 
 
+#: A default checkers
 DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
-LOGGER = logging.getLogger('pylama')
-MODERE = re.compile(r'^\s*#\s+(?:pymode\:)?((?:lint[\w_]*=[^:\n\s]+:?)+)',
-                    re.I | re.M)
-SKIP_PATTERN = '# noqa'
-STREAM = logging.StreamHandler()
 
+#: The skip pattern
+SKIP_PATTERN = '# noqa'
+
+# Parse a modelines
+MODELINE_RE = re.compile(
+    r'^\s*#\s+(?:pymode\:)?((?:lint[\w_]*=[^:\n\s]+:?)+)', re.I | re.M)
+
+# Setup a logger
+LOGGER = logging.getLogger('pylama')
+STREAM = logging.StreamHandler()
 LOGGER.addHandler(STREAM)
 
 
@@ -24,46 +30,42 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
 
     """
     errors = []
-    ignore = ignore and list(ignore) or []
-    select = select and list(select) or []
 
     try:
         with open(path, 'rU') as f:
             code = f.read() + '\n\n'
-            params = config or __parse_modeline(code)
-            params['skip'] = [False]
+
+            params = prepare_params(
+                parse_modeline(code), config, ignore=ignore, select=select
+            )
 
             for line in code.split('\n'):
                 params['skip'].append(line.endswith(SKIP_PATTERN))
 
-            if params.get('lint_ignore'):
-                ignore += params.get('lint_ignore').split(',')
+            if not params['lint']:
+                return errors
 
-            if params.get('lint_select'):
-                select += params.get('lint_select').split(',')
+            for lint in linters:
+                try:
+                    linter = getattr(utils, lint)
+                except AttributeError:
+                    LOGGER.warning("Linter `%s` not found.", lint)
+                    continue
 
-            if params.get('lint'):
-                for lint in linters:
+                result = linter(path, code=code, **meta)
+                for e in result:
+                    e['col'] = e.get('col') or 0
+                    e['lnum'] = e.get('lnum') or 0
+                    e['type'] = e.get('type') or 'E'
+                    e['text'] = "{0} [{1}]".format((e.get(
+                        'text') or '').strip()
+                        .replace("'", "\"").split('\n')[0], lint)
+                    e['filename'] = path or ''
                     try:
-                        linter = getattr(utils, lint)
-                    except AttributeError:
-                        LOGGER.warning("Linter `%s` not found.", lint)
+                        if not params['skip'][e['lnum']]:
+                            errors.append(e)
+                    except IndexError:
                         continue
-
-                    result = linter(path, code=code, **meta)
-                    for e in result:
-                        e['col'] = e.get('col') or 0
-                        e['lnum'] = e.get('lnum') or 0
-                        e['type'] = e.get('type') or 'E'
-                        e['text'] = "{0} [{1}]".format((e.get(
-                            'text') or '').strip()
-                            .replace("'", "\"").split('\n')[0], lint)
-                        e['filename'] = path or ''
-                        try:
-                            if not params['skip'][e['lnum']]:
-                                errors.append(e)
-                        except IndexError:
-                            continue
 
     except IOError as e:
         errors.append(dict(
@@ -85,29 +87,62 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
         import traceback
         logging.debug(traceback.format_exc())
 
-    errors = [er for er in errors if __ignore_error(er, select, ignore)]
+    errors = [er for er in errors if filter_errors(er, **params)]
     return sorted(errors, key=lambda x: x['lnum'])
 
 
-def __parse_modeline(code):
+def parse_modeline(code):
     """ Parse modeline params from file.
 
     :return dict: Linter params.
 
     """
-    seek = MODERE.search(code)
-    params = dict(lint=1)
+    seek = MODELINE_RE.search(code)
     if seek:
-        params = dict(v.split('=') for v in seek.group(1).split(':'))
-        params['lint'] = int(params.get('lint', 1))
+        return dict(v.split('=') for v in seek.group(1).split(':'))
+
+    return dict()
+
+
+def prepare_params(*configs, **params):
+    """ Prepare and merge a params from modeline or config.
+
+    :return dict:
+
+    """
+    params['ignore'] = params.get('ignore') or []
+    params['select'] = params.get('select') or []
+
+    for config in filter(None, configs):
+        for key in ('ignore', 'select'):
+            config.setdefault(key, config.get('lint_' + key, []))
+            if not isinstance(config[key], list):
+                config[key] = config[key].split(',')
+            params[key] += config[key]
+        params['lint'] = config.get('lint', 1)
+
+    params['ignore'] = set(params['ignore'])
+    params['select'] = set(params['select'])
+    params['skip'] = [False]
+    params.setdefault('lint', 1)
     return params
 
 
-def __ignore_error(e, select, ignore):
-    for s in select:
-        if e['text'].startswith(s):
-            return True
-    for i in ignore:
-        if e['text'].startswith(i):
-            return False
+def filter_errors(e, select=None, ignore=None, **params):
+    """ Filter a erros by select and ignore lists.
+
+    :return bool:
+
+    """
+
+    if select:
+        for s in select:
+            if e['text'].startswith(s):
+                return True
+
+    if ignore:
+        for s in ignore:
+            if e['text'].startswith(s):
+                return False
+
     return True

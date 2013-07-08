@@ -45,7 +45,7 @@ W warnings
 700 statements
 900 syntax error
 """
-__version__ = '1.4.6a0'
+__version__ = '1.4.6'
 
 import os
 import sys
@@ -63,7 +63,7 @@ except ImportError:
     from ConfigParser import RawConfigParser
 
 DEFAULT_EXCLUDE = '.svn,CVS,.bzr,.hg,.git,__pycache__'
-DEFAULT_IGNORE = 'E226,E24'
+DEFAULT_IGNORE = 'E123,E226,E24'
 if sys.platform == 'win32':
     DEFAULT_CONFIG = os.path.expanduser(r'~\.pep8')
 else:
@@ -381,7 +381,8 @@ def indentation(logical_line, previous_logical, indent_char,
         yield 0, "E113 unexpected indentation"
 
 
-def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
+def continued_indentation(logical_line, tokens, indent_level, hang_closing,
+                          noqa, verbose):
     r"""
     Continuation lines should align wrapped elements either vertically using
     Python's implicit line joining inside parentheses, brackets and braces, or
@@ -458,7 +459,8 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                 open_row = 0
             hang = rel_indent[row] - rel_indent[open_row]
             close_bracket = (token_type == tokenize.OP and text in ']})')
-            visual_indent = not close_bracket and indent_chances.get(start[1])
+            visual_indent = (not close_bracket and hang > 0 and
+                             indent_chances.get(start[1]))
 
             if close_bracket and indent[depth]:
                 # closing bracket for visual indent
@@ -467,7 +469,8 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                            "visual indentation")
             elif close_bracket and not hang:
                 # closing bracket matches indentation of opening bracket's line
-                pass
+                if hang_closing:
+                    yield start, "E133 closing bracket is missing indentation"
             elif visual_indent is True:
                 # visual indent is verified
                 if not indent[depth]:
@@ -481,7 +484,7 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                        "under-indented for visual indent")
             elif hang == 4 or (indent_next and rel_indent[row] == 8):
                 # hanging indent is verified
-                if close_bracket:
+                if close_bracket and not hang_closing:
                     yield (start, "E123 closing bracket does not match "
                            "indentation of opening bracket's line")
             else:
@@ -535,6 +538,7 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
                 for idx in range(row, -1, -1):
                     if parens[idx]:
                         parens[idx] -= 1
+                        rel_indent[row] = rel_indent[idx]
                         break
             assert len(indent) == depth + 1
             if start[1] not in indent_chances:
@@ -543,7 +547,7 @@ def continued_indentation(logical_line, tokens, indent_level, noqa, verbose):
 
         last_token_multiline = (start[0] != end[0])
 
-    if indent_next and rel_indent[-1] == 4:
+    if indent_next and expand_indent(line) == indent_level + 4:
         yield (last_indent, "E125 continuation line does not distinguish "
                "itself from next logical line")
 
@@ -1183,6 +1187,7 @@ class Checker(object):
         self._logical_checks = options.logical_checks
         self._ast_checks = options.ast_checks
         self.max_line_length = options.max_line_length
+        self.hang_closing = options.hang_closing
         self.verbose = options.verbose
         self.filename = filename
         if filename is None:
@@ -1693,8 +1698,9 @@ def get_parser(prog='pep8', version=__version__):
     parser = OptionParser(prog=prog, version=version,
                           usage="%prog [options] input ...")
     parser.config_options = [
-        'exclude', 'filename', 'select', 'ignore', 'max-line-length', 'count',
-        'format', 'quiet', 'show-pep8', 'show-source', 'statistics', 'verbose']
+        'exclude', 'filename', 'select', 'ignore', 'max-line-length',
+        'hang-closing', 'count', 'format', 'quiet', 'show-pep8',
+        'show-source', 'statistics', 'verbose']
     parser.add_option('-v', '--verbose', default=0, action='count',
                       help="print status messages, or debug with -vv")
     parser.add_option('-q', '--quiet', default=0, action='count',
@@ -1729,6 +1735,9 @@ def get_parser(prog='pep8', version=__version__):
                       default=MAX_LINE_LENGTH,
                       help="set maximum allowed line length "
                            "(default: %default)")
+    parser.add_option('--hang-closing', action='store_true',
+                      help="hang closing bracket instead of matching "
+                           "indentation of opening bracket's line")
     parser.add_option('--format', metavar='format', default='default',
                       help="set the error format [default|pylint|<custom>]")
     parser.add_option('--diff', action='store_true',

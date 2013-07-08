@@ -102,8 +102,7 @@ def check_path(path, rootpath='.', ignore=None, select=None, linters=None,
         path, ignore=ignore, select=select, linters=linters,
             complexity=complexity, config=config):
         try:
-            error['rel'] = op.relpath(
-                error['filename'], op.dirname(rootpath))
+            error['rel'] = op.relpath(error['filename'], rootpath)
             error['col'] = error.get('col', 1)
             errors.append(error)
         except KeyError:
