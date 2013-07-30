@@ -1,4 +1,5 @@
-""" Pylama core functionality. Get params and runs the checkers.
+""" Pylama's core functionality. Prepare params, check a modeline and run the
+    checkers.
 """
 import logging
 import re
@@ -24,12 +25,13 @@ LOGGER.addHandler(STREAM)
 
 def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
         **meta):
-    """ Run code checking for path.
+    """ Run a code checkers with given params.
 
     :return errors: list of dictionaries with error's information
 
     """
     errors = []
+    params = dict(ignore=ignore, select=select)
 
     try:
         with open(path, 'rU') as f:
@@ -92,7 +94,7 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
 
 
 def parse_modeline(code):
-    """ Parse modeline params from file.
+    """ Parse params from file's modeline.
 
     :return dict: Linter params.
 
@@ -105,7 +107,7 @@ def parse_modeline(code):
 
 
 def prepare_params(*configs, **params):
-    """ Prepare and merge a params from modeline or config.
+    """ Prepare and merge a params from modelines and configs.
 
     :return dict:
 
@@ -129,7 +131,7 @@ def prepare_params(*configs, **params):
 
 
 def filter_errors(e, select=None, ignore=None, **params):
-    """ Filter a erros by select and ignore lists.
+    """ Filter a erros by select and ignore options.
 
     :return bool:
 

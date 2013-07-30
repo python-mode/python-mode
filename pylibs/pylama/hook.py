@@ -7,6 +7,7 @@ from os import path as op, chmod
 from subprocess import Popen, PIPE
 
 from .main import LOGGER
+from .config import parse_options, setup_logger
 
 
 try:
@@ -32,8 +33,12 @@ def git_hook():
 
     from .main import check_files
     _, files_modified, _ = run("git diff-index --cached --name-only HEAD")
-    LOGGER.setLevel('WARN')
-    check_files([f for f in map(str, files_modified) if f.endswith('.py')])
+
+    options = parse_options()
+    setup_logger(options)
+    check_files(
+        [f for f in map(str, files_modified) if f.endswith('.py')], options
+    )
 
 
 def hg_hook(ui, repo, node=None, **kwargs):
@@ -51,8 +56,10 @@ def hg_hook(ui, repo, node=None, **kwargs):
                 seen.add(file_)
                 if file_.endswith('.py'):
                     paths.append(file_)
-    LOGGER.setLevel('WARN')
-    check_files(paths)
+
+    options = parse_options()
+    setup_logger(options)
+    check_files(paths, options)
 
 
 def install_git(path):

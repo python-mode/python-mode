@@ -1,16 +1,6 @@
 """
     Inirama is a python module that parses INI files.
 
-    .. _badges:
-    .. include:: ../README.rst
-        :start-after: .. _badges:
-        :end-before: .. _contents:
-
-    .. _description:
-    .. include:: ../README.rst
-        :start-after: .. _description:
-        :end-before: .. _badges:
-
     :copyright: 2013 by Kirill Klenov.
     :license: BSD, see LICENSE for more details.
 """

@@ -40,7 +40,7 @@ class Worker(threading.Thread):
             self.path_queue.task_done()
 
 
-def async_check_files(paths, async=False, linters=None, **params):
+def async_check_files(paths, options, rootpath=None):
     """ Check paths.
 
     :return list: list of errors
@@ -50,12 +50,11 @@ def async_check_files(paths, async=False, linters=None, **params):
     errors = []
 
     # Disable async if pylint enabled
-    async = async and not 'pylint' in linters
-    params['linters'] = linters
+    async = options.async and not 'pylint' in options.linters
 
     if not async:
         for path in paths:
-            errors += check_path(path, **params)
+            errors += check_path(path, options=options, rootpath=rootpath)
         return errors
 
     LOGGER.info('Async code checking is enabled.')
@@ -68,7 +67,7 @@ def async_check_files(paths, async=False, linters=None, **params):
         worker.start()
 
     for path in paths:
-        path_queue.put((path, params))
+        path_queue.put((path, dict(options=options, rootpath=rootpath)))
 
     path_queue.join()
 
@@ -81,8 +80,7 @@ def async_check_files(paths, async=False, linters=None, **params):
     return errors
 
 
-def check_path(path, rootpath='.', ignore=None, select=None, linters=None,
-               complexity=None, params=None):
+def check_path(path, options=None, rootpath=None, **meta):
     """ Check path.
 
     :return list: list of errors
@@ -90,17 +88,19 @@ def check_path(path, rootpath='.', ignore=None, select=None, linters=None,
     """
 
     LOGGER.info("Parse file: %s", path)
-    params = params or dict()
     config = dict()
+    if rootpath is None:
+        rootpath = '.'
 
-    for mask in params:
+    for mask in options.file_params:
         if mask.match(path):
-            config.update(params[mask])
+            config.update(options.file_params[mask])
 
     errors = []
     for error in run(
-        path, ignore=ignore, select=select, linters=linters,
-            complexity=complexity, config=config):
+        path, ignore=options.ignore, select=options.select,
+        linters=options.linters, complexity=options.complexity,
+            config=config, **meta):
         try:
             error['rel'] = op.relpath(error['filename'], rootpath)
             error['col'] = error.get('col', 1)
