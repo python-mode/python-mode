@@ -71,7 +71,6 @@ fun! pymode#troubleshooting#Test() "{{{
             call append('$', 'let pymode_rope_autocomplete_map = ' . string(g:pymode_rope_autocomplete_map))
             call append('$', 'let pymode_rope_auto_project = ' . string(g:pymode_rope_auto_project))
             call append('$', 'let pymode_rope_auto_project_open = ' . string(g:pymode_rope_auto_project_open))
-            call append('$', 'let pymode_rope_auto_session_manage = ' . string(g:pymode_rope_auto_session_manage))
         end
         call append('$', 'let pymode_folding = ' . string(g:pymode_folding))
         call append('$', 'let pymode_breakpoint = ' . string(g:pymode_breakpoint))
