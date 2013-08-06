@@ -21,7 +21,7 @@ There is no need to install the pylint_, rope_ or any used python library on you
 - Powerful customization
 - And more, more ...
 
-See (very old) screencast here: http://t.co/3b0bzeXA (sorry for quality, this is my first screencast)
+See (very old) screencast here: http://www.youtube.com/watch?v=67OZNp9Z0CQ (sorry for quality, this is my first screencast)
 Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
 
 
