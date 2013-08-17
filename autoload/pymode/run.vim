@@ -17,7 +17,18 @@ fun! pymode#run#Run(line1, line2) "{{{
     try
         py context = globals()
         py context['raw_input'] = context['input'] = lambda s: vim.eval('input("{0}")'.format(s))
-        py execfile(vim.eval('expand("%:p")'), context)
+python << ENDPYTHON
+try:
+    execfile(vim.eval('expand("%:p")'), context)
+# Vim cannot handle a SystemExit error raised by Python, so we need to trap it here, and
+# handle it specially
+except SystemExit as e:
+    if e.code:
+        # A non-false code indicates abnormal termination. A false code will be treated as a
+        # successful run, and the error will be hidden from Vim
+        vim.command('echohl Error | echo "Script exited with code {0}" | echohl none'.format(e.code))
+        vim.command('return')
+ENDPYTHON
         py out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()
         py sys.stdout, sys.stderr = stdout_, stderr_
 
@@ -38,7 +49,7 @@ else:
 EOF
 
     catch /.*/
-
+        
         echohl Error | echo "Run-time error." | echohl none
         
     endtry
