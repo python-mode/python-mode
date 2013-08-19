@@ -31,11 +31,23 @@ except SystemExit as e:
 ENDPYTHON
         py out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()
         py sys.stdout, sys.stderr = stdout_, stderr_
-
         cexpr ""
-        py for x in err.strip().split('\n'): vim.command('caddexpr "' + x.replace('"', r'\"') + '"')
+        let l:traceback = []
         let l:oldefm = &efm
-        set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
+        let &efm  = '%E  File "%f"\, line %l\,%m,' 
+        let &efm .= '%E  File "%f"\, line %l,'
+        let &efm .= '%C%p^,'
+        let &efm .= '%+C    %.%#,'
+        let &efm .= '%+C  %.%#,'
+        let &efm .= '%Z%m,'
+        let &efm .= '%-G%.%#'
+
+python << ENDPYTHON2
+for x in [i for i in err.splitlines() if "<string>" not in i]:
+    vim.command("call add(l:traceback, '{}')".format(x))
+ENDPYTHON2
+
+        cgetexpr(l:traceback)
         call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
         let &efm = l:oldefm
 
@@ -49,8 +61,8 @@ else:
 EOF
 
     catch /.*/
-        
+
         echohl Error | echo "Run-time error." | echohl none
-        
+
     endtry
 endfunction "}}}
