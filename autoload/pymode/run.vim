@@ -1,25 +1,30 @@
 " DESC: Save file if it modified and run python code
 fun! pymode#run#Run(line1, line2) "{{{
-    if &modifiable && &modified
-        try
-            noautocmd write
-        catch /E212/
-            echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
-            return 0
-        endtry
-    endif
+    " There is no need to save the file first. We will load the code to be run
+    " directly from the buffer, as a string, below
     py import StringIO
     py sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
     py sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
     py enc = vim.eval('&enc')
     call setqflist([])
     call pymode#WideMessage("Code running.")
+    " Get the lines to be executed from the current buffer
+    let l:code = getline(a:line1, a:line2)
     try
         py context = globals()
+        " do we really want to use globals here? This passes the whole of
+        " vim's current context to the python script.  Perhaps an empty dict
+        " would be better
         py context['raw_input'] = context['input'] = lambda s: vim.eval('input("{0}")'.format(s))
+
 python << ENDPYTHON
 try:
-    execfile(vim.eval('expand("%:p")'), context)
+        # Compiling the code here allows us to associate a filename with it, so that any
+        # error messages that are raised refer to the correct file, rather than <string>. A
+        # syntax error in the code will still appear to come from a file called <string>, but
+        # we deal with that later.
+        code = compile('\n'.join(vim.eval('l:code')) + '\n', vim.current.buffer.name, 'exec')
+        exec(code, context)
 # Vim cannot handle a SystemExit error raised by Python, so we need to trap it here, and
 # handle it specially
 except SystemExit as e:
@@ -64,6 +69,7 @@ ENDPYTHON
         " match. A pointer (^) identifies the column in which the error occurs
         " (but will not be entirely accurate due to indention of Python code).
         let &efm .= '%C%p^,'
+
         " Any text, indented by more than two spaces contain useful information.
         " We want this to appear in the quickfix window, hence %+.
         let &efm .= '%+C    %.%#,'
@@ -78,8 +84,10 @@ ENDPYTHON
         let &efm .= '%-G%.%#'
 
 python << ENDPYTHON2
-# Remove any error lines containing '<string>'. We don't need them.
-# Add the rest to a Vim list.
+# Remove any lines from the error output which contain the line
+# "<string>". In this way a traceback from a syntax error will
+# look just like a normal python traceback Add the other lines
+# to a Vim list.
 for x in [i for i in err.splitlines() if "<string>" not in i]:
     vim.command("call add(l:traceback, '{}')".format(x))
 ENDPYTHON2
