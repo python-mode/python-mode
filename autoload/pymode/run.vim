@@ -34,7 +34,8 @@ ENDPYTHON
         cexpr ""
         let l:traceback = []
         let l:oldefm = &efm
-        let &efm  = '%E  File "%f"\, line %l\,%m,' 
+        let &efm  = '%+GTraceback%.%#,'
+        let &efm .= '%E  File "%f"\, line %l\,%m,'
         let &efm .= '%E  File "%f"\, line %l,'
         let &efm .= '%C%p^,'
         let &efm .= '%+C    %.%#,'
