@@ -1,5 +1,9 @@
 runtime ftplugin/python/init-pymode.vim
 
+if pymode#Default('g:pymode', 1) || !g:pymode
+    finish
+endif
+
 if pymode#Default('b:pymode', 1)
     finish
 endif
