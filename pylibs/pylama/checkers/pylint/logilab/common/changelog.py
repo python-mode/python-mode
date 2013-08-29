@@ -224,7 +224,7 @@ class ChangeLog(object):
     def save(self):
         """write back change log"""
         # filetutils isn't importable in appengine, so import locally
-        from logilab.common.fileutils import ensure_fs_mode
+        from .fileutils import ensure_fs_mode
         ensure_fs_mode(self.file, S_IWRITE)
         self.write(open(self.file, 'w'))
 

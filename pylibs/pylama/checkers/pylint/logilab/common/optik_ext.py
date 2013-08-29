@@ -168,13 +168,13 @@ def check_color(option, opt, value):
     raise OptionValueError(msg % (opt, value))
 
 def check_time(option, opt, value):
-    from logilab.common.textutils import TIME_UNITS, apply_units
+    from .textutils import TIME_UNITS, apply_units
     if isinstance(value, (int, long, float)):
         return value
     return apply_units(value, TIME_UNITS)
 
 def check_bytes(option, opt, value):
-    from logilab.common.textutils import BYTE_UNITS, apply_units
+    from .textutils import BYTE_UNITS, apply_units
     if hasattr(value, '__int__'):
         return value
     return apply_units(value, BYTE_UNITS)

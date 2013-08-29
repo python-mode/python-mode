@@ -1,6 +1,7 @@
 # Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
-# Copyright (c) 2009-2010 Arista Networks, Inc.
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2009-2010 Arista Networks, Inc.
+#
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
 # Foundation; either version 2 of the License, or (at your option) any later
@@ -15,23 +16,27 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """basic checker for Python code"""
 
-
-from ..logilab import astng
+import sys
+from .. import astroid
 from ..logilab.common.ureports import Table
-from ..logilab.astng import are_exclusive
+from ..astroid import are_exclusive, bases
 
-from ..interfaces import IASTNGChecker
+from ..interfaces import IAstroidChecker
+from ..utils import EmptyReport
 from ..reporters import diff_string
-from ..checkers import BaseChecker, EmptyReport
-from ..checkers.utils import (
+from . import BaseChecker
+from .utils import (
     check_messages,
     clobber_in_except,
+    is_builtin_object,
     is_inside_except,
+    overrides_a_method,
     safe_infer,
     )
 
 
 import re
+
 
 # regex for class/function/variable/constant name
 CLASS_NAME_RGX = re.compile('[A-Z_][a-zA-Z0-9]+$')
@@ -39,6 +44,7 @@ MOD_NAME_RGX = re.compile('(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$')
 CONST_NAME_RGX = re.compile('(([A-Z_][A-Z0-9_]*)|(__.*__))$')
 COMP_VAR_RGX = re.compile('[A-Za-z_][A-Za-z0-9_]*$')
 DEFAULT_NAME_RGX = re.compile('[a-z_][a-z0-9_]{2,30}$')
+CLASS_ATTRIBUTE_RGX = re.compile(r'([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$')
 # do not require a doc string on system methods
 NO_REQUIRED_DOC_RGX = re.compile('__.*__')
 
@@ -48,8 +54,8 @@ def in_loop(node):
     """return True if the node is inside a kind of for loop"""
     parent = node.parent
     while parent is not None:
-        if isinstance(parent, (astng.For, astng.ListComp, astng.SetComp,
-                               astng.DictComp, astng.GenExpr)):
+        if isinstance(parent, (astroid.For, astroid.ListComp, astroid.SetComp,
+                               astroid.DictComp, astroid.GenExpr)):
             return True
         parent = parent.parent
     return False
@@ -68,15 +74,46 @@ def in_nested_list(nested_list, obj):
 
 def _loop_exits_early(loop):
     """Returns true if a loop has a break statement in its body."""
-    loop_nodes = (astng.For, astng.While)
+    loop_nodes = (astroid.For, astroid.While)
     # Loop over body explicitly to avoid matching break statements
     # in orelse.
     for child in loop.body:
         if isinstance(child, loop_nodes):
             continue
-        for _ in child.nodes_of_class(astng.Break, skip_klass=loop_nodes):
+        for _ in child.nodes_of_class(astroid.Break, skip_klass=loop_nodes):
             return True
     return False
+
+
+
+def _determine_function_name_type(node):
+    """Determine the name type whose regex the a function's name should match.
+
+    :param node: A function node.
+    :returns: One of ('function', 'method', 'attr')
+    """
+    if not node.is_method():
+        return 'function'
+    if node.decorators:
+        decorators = node.decorators.nodes
+    else:
+        decorators = []
+    for decorator in decorators:
+        # If the function is a property (decorated with @property
+        # or @abc.abstractproperty), the name type is 'attr'.
+        if (isinstance(decorator, astroid.Name) or
+            (isinstance(decorator, astroid.Getattr) and
+             decorator.attrname == 'abstractproperty')):
+            infered = safe_infer(decorator)
+            if (infered and
+                infered.qname() in ('__builtin__.property', 'abc.abstractproperty')):
+                return 'attr'
+        # If the function is decorated using the prop_method.{setter,getter}
+        # form, treat it like an attribute as well.
+        elif (isinstance(decorator, astroid.Getattr) and
+              decorator.attrname in ('setter', 'deleter')):
+            return 'attr'
+    return 'method'
 
 
 def report_by_type_stats(sect, stats, old_stats):
@@ -130,13 +167,13 @@ def redefined_by_decorator(node):
     """
     if node.decorators:
         for decorator in node.decorators.nodes:
-            if (isinstance(decorator, astng.Getattr) and
+            if (isinstance(decorator, astroid.Getattr) and
                 getattr(decorator.expr, 'name', None) == node.name):
                 return True
     return False
 
 class _BasicChecker(BaseChecker):
-    __implements__ = IASTNGChecker
+    __implements__ = IAstroidChecker
     name = 'basic'
 
 class BasicErrorChecker(_BasicChecker):
@@ -187,79 +224,85 @@ class BasicErrorChecker(_BasicChecker):
     def __init__(self, linter):
         _BasicChecker.__init__(self, linter)
 
-    @check_messages('E0102')
+    @check_messages('function-redefined')
     def visit_class(self, node):
         self._check_redefinition('class', node)
 
-    @check_messages('E0100', 'E0101', 'E0102', 'E0106', 'E0108')
+    @check_messages('init-is-generator', 'return-in-init',
+                    'function-redefined', 'return-arg-in-generator',
+                    'duplicate-argument-name')
     def visit_function(self, node):
         if not redefined_by_decorator(node):
             self._check_redefinition(node.is_method() and 'method' or 'function', node)
         # checks for max returns, branch, return in __init__
-        returns = node.nodes_of_class(astng.Return,
-                                      skip_klass=(astng.Function, astng.Class))
+        returns = node.nodes_of_class(astroid.Return,
+                                      skip_klass=(astroid.Function, astroid.Class))
         if node.is_method() and node.name == '__init__':
             if node.is_generator():
-                self.add_message('E0100', node=node)
+                self.add_message('init-is-generator', node=node)
             else:
                 values = [r.value for r in returns]
-                if  [v for v in values if not (v is None or
-                    (isinstance(v, astng.Const) and v.value is None)
-                    or  (isinstance(v, astng.Name) and v.name == 'None'))]:
-                    self.add_message('E0101', node=node)
+                # Are we returning anything but None from constructors
+                if  [v for v in values if
+                     not (v is None or
+                          (isinstance(v, astroid.Const) and v.value is None) or
+                          (isinstance(v, astroid.Name)  and v.name == 'None')
+                         ) ]:
+                    self.add_message('return-in-init', node=node)
         elif node.is_generator():
             # make sure we don't mix non-None returns and yields
             for retnode in returns:
-                if isinstance(retnode.value, astng.Const) and \
+                if isinstance(retnode.value, astroid.Const) and \
                        retnode.value.value is not None:
-                    self.add_message('E0106', node=node,
+                    self.add_message('return-arg-in-generator', node=node,
                                      line=retnode.fromlineno)
+        # Check for duplicate names
         args = set()
         for name in node.argnames():
             if name in args:
-                self.add_message('E0108', node=node, args=(name,))
+                self.add_message('duplicate-argument-name', node=node, args=(name,))
             else:
                 args.add(name)
 
 
-    @check_messages('E0104')
+    @check_messages('return-outside-function')
     def visit_return(self, node):
-        if not isinstance(node.frame(), astng.Function):
-            self.add_message('E0104', node=node)
+        if not isinstance(node.frame(), astroid.Function):
+            self.add_message('return-outside-function', node=node)
 
-    @check_messages('E0105')
+    @check_messages('yield-outside-function')
     def visit_yield(self, node):
-        if not isinstance(node.frame(), (astng.Function, astng.Lambda)):
-            self.add_message('E0105', node=node)
+        if not isinstance(node.frame(), (astroid.Function, astroid.Lambda)):
+            self.add_message('yield-outside-function', node=node)
 
-    @check_messages('E0103')
+    @check_messages('not-in-loop')
     def visit_continue(self, node):
         self._check_in_loop(node, 'continue')
 
-    @check_messages('E0103')
+    @check_messages('not-in-loop')
     def visit_break(self, node):
         self._check_in_loop(node, 'break')
 
-    @check_messages('W0120')
+    @check_messages('useless-else-on-loop')
     def visit_for(self, node):
         self._check_else_on_loop(node)
 
-    @check_messages('W0120')
+    @check_messages('useless-else-on-loop')
     def visit_while(self, node):
         self._check_else_on_loop(node)
 
-    @check_messages('E0107')
+    @check_messages('nonexistent-operator')
     def visit_unaryop(self, node):
-        """check use of the non-existent ++ adn -- operator operator"""
+        """check use of the non-existent ++ and -- operator operator"""
         if ((node.op in '+-') and
-            isinstance(node.operand, astng.UnaryOp) and
+            isinstance(node.operand, astroid.UnaryOp) and
             (node.operand.op == node.op)):
-            self.add_message('E0107', node=node, args=node.op*2)
+            self.add_message('nonexistent-operator', node=node, args=node.op*2)
 
     def _check_else_on_loop(self, node):
         """Check that any loop with an else clause has a break statement."""
         if node.orelse and not _loop_exits_early(node):
-            self.add_message('W0120', node=node,
+            self.add_message('useless-else-on-loop', node=node,
                              # This is not optimal, but the line previous
                              # to the first statement in the else clause
                              # will usually be the one that contains the else:.
@@ -269,17 +312,17 @@ class BasicErrorChecker(_BasicChecker):
         """check that a node is inside a for or while loop"""
         _node = node.parent
         while _node:
-            if isinstance(_node, (astng.For, astng.While)):
+            if isinstance(_node, (astroid.For, astroid.While)):
                 break
             _node = _node.parent
         else:
-            self.add_message('E0103', node=node, args=node_name)
+            self.add_message('not-in-loop', node=node, args=node_name)
 
     def _check_redefinition(self, redeftype, node):
         """check for redefinition of a function / method / class name"""
         defined_self = node.parent.frame()[node.name]
         if defined_self is not node and not are_exclusive(node, defined_self):
-            self.add_message('E0102', node=node,
+            self.add_message('function-redefined', node=node,
                              args=(redeftype, defined_self.fromlineno))
 
 
@@ -287,7 +330,6 @@ class BasicErrorChecker(_BasicChecker):
 class BasicChecker(_BasicChecker):
     """checks for :
     * doc strings
-    * modules / classes / functions / methods / arguments / variables name
     * number of arguments, local variables, branches, returns and statements in
 functions, methods
     * required module attributes
@@ -296,7 +338,7 @@ functions, methods
     * uses of the global statement
     """
 
-    __implements__ = IASTNGChecker
+    __implements__ = IAstroidChecker
 
     name = 'basic'
     msgs = {
@@ -332,11 +374,10 @@ functions, methods
               'duplicate-key',
               "Used when a dictionary expression binds the same key multiple \
               times."),
-    'W0122': ('Use of the exec statement',
-              'exec-statement',
-              'Used when you use the "exec" statement, to discourage its \
+    'W0122': ('Use of exec',
+              'exec-used',
+              'Used when you use the "exec" statement (function for Python 3), to discourage its \
               usage. That doesn\'t mean you can not use it !'),
-
     'W0141': ('Used builtin function %r',
               'bad-builtin',
               'Used when a black listed builtin function is used (see the '
@@ -359,11 +400,15 @@ functions, methods
               'A call of assert on a tuple will always evaluate to true if '
               'the tuple is not empty, and will always evaluate to false if '
               'it is.'),
+    'W0121': ('Use raise ErrorClass(args) instead of raise ErrorClass, args.',
+              'old-raise-syntax',
+              "Used when the alternate raise syntax 'raise foo, bar' is used "
+              "instead of 'raise foo(bar)'.",
+              {'maxversion': (3, 0)}),
 
     'C0121': ('Missing required attribute "%s"', # W0103
               'missing-module-attribute',
               'Used when an attribute required for modules is missing.'),
-
     }
 
     options = (('required-attributes',
@@ -392,14 +437,14 @@ functions, methods
         self._tryfinallys = []
         self.stats = self.linter.add_stats(module=0, function=0,
                                            method=0, class_=0)
-
+    @check_messages('missing-module-attribute')
     def visit_module(self, node):
         """check module name, docstring and required arguments
         """
         self.stats['module'] += 1
         for attr in self.config.required_attributes:
             if attr not in node:
-                self.add_message('C0121', node=node, args=attr)
+                self.add_message('missing-module-attribute', node=node, args=attr)
 
     def visit_class(self, node):
         """check module name, docstring and redefinition
@@ -407,31 +452,32 @@ functions, methods
         """
         self.stats['class'] += 1
 
-    @check_messages('W0104', 'W0105')
+    @check_messages('pointless-statement', 'pointless-string-statement',
+                    'expression-not-assigned')
     def visit_discard(self, node):
         """check for various kind of statements without effect"""
         expr = node.value
-        if isinstance(expr, astng.Const) and isinstance(expr.value,
+        if isinstance(expr, astroid.Const) and isinstance(expr.value,
                                                         basestring):
             # treat string statement in a separated message
-            self.add_message('W0105', node=node)
+            self.add_message('pointless-string-statement', node=node)
             return
         # ignore if this is :
         # * a direct function call
         # * the unique child of a try/except body
         # * a yield (which are wrapped by a discard node in _ast XXX)
         # warn W0106 if we have any underlying function call (we can't predict
-        # side effects), else W0104
-        if (isinstance(expr, (astng.Yield, astng.CallFunc)) or
-            (isinstance(node.parent, astng.TryExcept) and
+        # side effects), else pointless-statement
+        if (isinstance(expr, (astroid.Yield, astroid.CallFunc)) or
+            (isinstance(node.parent, astroid.TryExcept) and
              node.parent.body == [node])):
             return
-        if any(expr.nodes_of_class(astng.CallFunc)):
-            self.add_message('W0106', node=node, args=expr.as_string())
+        if any(expr.nodes_of_class(astroid.CallFunc)):
+            self.add_message('expression-not-assigned', node=node, args=expr.as_string())
         else:
-            self.add_message('W0104', node=node)
+            self.add_message('pointless-statement', node=node)
 
-    @check_messages('W0108')
+    @check_messages('unnecessary-lambda')
     def visit_lambda(self, node):
         """check whether or not the lambda is suspicious
         """
@@ -446,11 +492,11 @@ functions, methods
             # of the lambda.
             return
         call = node.body
-        if not isinstance(call, astng.CallFunc):
+        if not isinstance(call, astroid.CallFunc):
             # The body of the lambda must be a function call expression
             # for the lambda to be unnecessary.
             return
-        # XXX are lambda still different with astng >= 0.18 ?
+        # XXX are lambda still different with astroid >= 0.18 ?
         # *args and **kwargs need to be treated specially, since they
         # are structured differently between the lambda and the function
         # call (in the lambda they appear in the args.args list and are
@@ -460,14 +506,14 @@ functions, methods
         ordinary_args = list(node.args.args)
         if node.args.kwarg:
             if (not call.kwargs
-                or not isinstance(call.kwargs, astng.Name)
+                or not isinstance(call.kwargs, astroid.Name)
                 or node.args.kwarg != call.kwargs.name):
                 return
         elif call.kwargs:
             return
         if node.args.vararg:
             if (not call.starargs
-                or not isinstance(call.starargs, astng.Name)
+                or not isinstance(call.starargs, astroid.Name)
                 or node.args.vararg != call.starargs.name):
                 return
         elif call.starargs:
@@ -477,12 +523,13 @@ functions, methods
         if len(ordinary_args) != len(call.args):
             return
         for i in xrange(len(ordinary_args)):
-            if not isinstance(call.args[i], astng.Name):
+            if not isinstance(call.args[i], astroid.Name):
                 return
             if node.args.args[i].name != call.args[i].name:
                 return
-        self.add_message('W0108', line=node.fromlineno, node=node)
+        self.add_message('unnecessary-lambda', line=node.fromlineno, node=node)
 
+    @check_messages('dangerous-default-value')
     def visit_function(self, node):
         """check function name, docstring, arguments, redefinition,
         variable names, max locals
@@ -492,19 +539,20 @@ functions, methods
         for default in node.args.defaults:
             try:
                 value = default.infer().next()
-            except astng.InferenceError:
+            except astroid.InferenceError:
                 continue
-            if (isinstance(value, astng.Instance) and
-                value.qname() in ('__builtin__.set', '__builtin__.dict', '__builtin__.list')):
+            builtins = bases.BUILTINS
+            if (isinstance(value, astroid.Instance) and
+                value.qname() in ['.'.join([builtins, x]) for x in ('set', 'dict', 'list')]):
                 if value is default:
                     msg = default.as_string()
-                elif type(value) is astng.Instance:
+                elif type(value) is astroid.Instance:
                     msg = '%s (%s)' % (default.as_string(), value.qname())
                 else:
                     msg = '%s (%s)' % (default.as_string(), value.as_string())
-                self.add_message('W0102', node=node, args=(msg,))
+                self.add_message('dangerous-default-value', node=node, args=(msg,))
 
-    @check_messages('W0101', 'W0150')
+    @check_messages('unreachable', 'lost-exception')
     def visit_return(self, node):
         """1 - check is the node has a right sibling (if so, that's some
         unreachable code)
@@ -513,16 +561,16 @@ functions, methods
         """
         self._check_unreachable(node)
         # Is it inside final body of a try...finally bloc ?
-        self._check_not_in_finally(node, 'return', (astng.Function,))
+        self._check_not_in_finally(node, 'return', (astroid.Function,))
 
-    @check_messages('W0101')
+    @check_messages('unreachable')
     def visit_continue(self, node):
         """check is the node has a right sibling (if so, that's some unreachable
         code)
         """
         self._check_unreachable(node)
 
-    @check_messages('W0101', 'W0150')
+    @check_messages('unreachable', 'lost-exception')
     def visit_break(self, node):
         """1 - check is the node has a right sibling (if so, that's some
         unreachable code)
@@ -532,36 +580,42 @@ functions, methods
         # 1 - Is it right sibling ?
         self._check_unreachable(node)
         # 2 - Is it inside final body of a try...finally bloc ?
-        self._check_not_in_finally(node, 'break', (astng.For, astng.While,))
+        self._check_not_in_finally(node, 'break', (astroid.For, astroid.While,))
 
-    @check_messages('W0101')
+    @check_messages('unreachable', 'old-raise-syntax')
     def visit_raise(self, node):
-        """check is the node has a right sibling (if so, that's some unreachable
+        """check if the node has a right sibling (if so, that's some unreachable
         code)
         """
         self._check_unreachable(node)
+        if sys.version_info >= (3, 0):
+            return
+        if node.exc is not None and node.inst is not None and node.tback is None:
+            self.add_message('old-raise-syntax', node=node)
 
-    @check_messages('W0122')
+    @check_messages('exec-used')
     def visit_exec(self, node):
         """just print a warning on exec statements"""
-        self.add_message('W0122', node=node)
+        self.add_message('exec-used', node=node)
 
-    @check_messages('W0141', 'W0142')
+    @check_messages('bad-builtin', 'star-args', 'exec-used')
     def visit_callfunc(self, node):
         """visit a CallFunc node -> check if this is not a blacklisted builtin
         call and check for * or ** use
         """
-        if isinstance(node.func, astng.Name):
+        if isinstance(node.func, astroid.Name):
             name = node.func.name
             # ignore the name if it's not a builtin (i.e. not defined in the
             # locals nor globals scope)
             if not (name in node.frame() or
                     name in node.root()):
+                if name == 'exec':
+                    self.add_message('exec-used', node=node)
                 if name in self.config.bad_functions:
-                    self.add_message('W0141', node=node, args=name)
+                    self.add_message('bad-builtin', node=node, args=name)
         if node.starargs or node.kwargs:
             scope = node.scope()
-            if isinstance(scope, astng.Function):
+            if isinstance(scope, astroid.Function):
                 toprocess = [(n, vn) for (n, vn) in ((node.starargs, scope.args.vararg),
                                                      (node.kwargs, scope.args.kwarg)) if n]
                 if toprocess:
@@ -569,25 +623,25 @@ functions, methods
                         if getattr(cfnode, 'name', None) == fargname:
                             toprocess.remove((cfnode, fargname))
                     if not toprocess:
-                        return # W0142 can be skipped
-            self.add_message('W0142', node=node.func)
+                        return # star-args can be skipped
+            self.add_message('star-args', node=node.func)
 
-    @check_messages('W0199')
+    @check_messages('assert-on-tuple')
     def visit_assert(self, node):
         """check the use of an assert statement on a tuple."""
-        if node.fail is None and isinstance(node.test, astng.Tuple) and \
+        if node.fail is None and isinstance(node.test, astroid.Tuple) and \
            len(node.test.elts) == 2:
-            self.add_message('W0199', node=node)
+            self.add_message('assert-on-tuple', node=node)
 
-    @check_messages('W0109')
+    @check_messages('duplicate-key')
     def visit_dict(self, node):
         """check duplicate key in dictionary"""
         keys = set()
         for k, _ in node.items:
-            if isinstance(k, astng.Const):
+            if isinstance(k, astroid.Const):
                 key = k.value
                 if key in keys:
-                    self.add_message('W0109', node=node, args=key)
+                    self.add_message('duplicate-key', node=node, args=key)
                 keys.add(key)
 
     def visit_tryfinally(self, node):
@@ -602,7 +656,7 @@ functions, methods
         """check unreachable code"""
         unreach_stmt = node.next_sibling()
         if unreach_stmt is not None:
-            self.add_message('W0101', node=unreach_stmt)
+            self.add_message('unreachable', node=unreach_stmt)
 
     def _check_not_in_finally(self, node, node_name, breaker_classes=()):
         """check that a node is not inside a finally clause of a
@@ -617,11 +671,10 @@ functions, methods
         _node = node
         while _parent and not isinstance(_parent, breaker_classes):
             if hasattr(_parent, 'finalbody') and _node in _parent.finalbody:
-                self.add_message('W0150', node=node, args=node_name)
+                self.add_message('lost-exception', node=node, args=node_name)
                 return
             _node = _parent
             _parent = _node.parent
-
 
 
 class NameChecker(_BasicChecker):
@@ -630,12 +683,12 @@ class NameChecker(_BasicChecker):
               'blacklisted-name',
               'Used when the name is listed in the black list (unauthorized \
               names).'),
-    'C0103': ('Invalid name "%s" for type %s (should match %s)',
+    'C0103': ('Invalid %s name "%s"',
               'invalid-name',
               'Used when the name doesn\'t match the regular expression \
               associated to its type (constant, variable, class...).'),
-
     }
+
     options = (('module-rgx',
                 {'default' : MOD_NAME_RGX,
                  'type' :'regexp', 'metavar' : '<regexp>',
@@ -683,6 +736,12 @@ class NameChecker(_BasicChecker):
                  'help' : 'Regular expression which should only match correct '
                           'variable names'}
                 ),
+               ('class-attribute-rgx',
+                {'default' : CLASS_ATTRIBUTE_RGX,
+                 'type' :'regexp', 'metavar' : '<regexp>',
+                 'help' : 'Regular expression which should only match correct '
+                          'attribute names in class bodies'}
+                ),
                ('inlinevar-rgx',
                 {'default' : COMP_VAR_RGX,
                  'type' :'regexp', 'metavar' : '<regexp>',
@@ -712,48 +771,65 @@ class NameChecker(_BasicChecker):
                                            badname_const=0,
                                            badname_variable=0,
                                            badname_inlinevar=0,
-                                           badname_argument=0)
+                                           badname_argument=0,
+                                           badname_class_attribute=0)
 
-    @check_messages('C0102', 'C0103')
+    @check_messages('blacklisted-name', 'invalid-name')
     def visit_module(self, node):
         self._check_name('module', node.name.split('.')[-1], node)
 
-    @check_messages('C0102', 'C0103')
+    @check_messages('blacklisted-name', 'invalid-name')
     def visit_class(self, node):
         self._check_name('class', node.name, node)
         for attr, anodes in node.instance_attrs.iteritems():
-            self._check_name('attr', attr, anodes[0])
+            if not list(node.instance_attr_ancestors(attr)):
+                self._check_name('attr', attr, anodes[0])
 
-    @check_messages('C0102', 'C0103')
+    @check_messages('blacklisted-name', 'invalid-name')
     def visit_function(self, node):
-        self._check_name(node.is_method() and 'method' or 'function',
+        # Do not emit any warnings if the method is just an implementation
+        # of a base class method.
+        if node.is_method() and overrides_a_method(node.parent.frame(), node.name):
+            return
+        self._check_name(_determine_function_name_type(node),
                          node.name, node)
-        # check arguments name
+        # Check argument names
         args = node.args.args
         if args is not None:
             self._recursive_check_names(args, node)
 
-    @check_messages('C0102', 'C0103')
+    @check_messages('blacklisted-name', 'invalid-name')
+    def visit_global(self, node):
+        for name in node.names:
+            self._check_name('const', name, node)
+
+    @check_messages('blacklisted-name', 'invalid-name')
     def visit_assname(self, node):
         """check module level assigned names"""
         frame = node.frame()
         ass_type = node.ass_type()
-        if isinstance(ass_type, (astng.Comprehension, astng.Comprehension)):
+        if isinstance(ass_type, astroid.Comprehension):
             self._check_name('inlinevar', node.name, node)
-        elif isinstance(frame, astng.Module):
-            if isinstance(ass_type, astng.Assign) and not in_loop(ass_type):
-                self._check_name('const', node.name, node)
-            elif isinstance(ass_type, astng.ExceptHandler):
+        elif isinstance(frame, astroid.Module):
+            if isinstance(ass_type, astroid.Assign) and not in_loop(ass_type):
+                if isinstance(safe_infer(ass_type.value), astroid.Class):
+                    self._check_name('class', node.name, node)
+                else:
+                    self._check_name('const', node.name, node)
+            elif isinstance(ass_type, astroid.ExceptHandler):
                 self._check_name('variable', node.name, node)
-        elif isinstance(frame, astng.Function):
+        elif isinstance(frame, astroid.Function):
             # global introduced variable aren't in the function locals
-            if node.name in frame:
+            if node.name in frame and node.name not in frame.argnames():
                 self._check_name('variable', node.name, node)
+        elif isinstance(frame, astroid.Class):
+            if not list(frame.local_attr_ancestors(node.name)):
+                self._check_name('class_attribute', node.name, node)
 
     def _recursive_check_names(self, args, node):
         """check names in a possibly recursive list <arg>"""
         for arg in args:
-            if isinstance(arg, astng.AssName):
+            if isinstance(arg, astroid.AssName):
                 self._check_name('argument', arg.name, node)
             else:
                 self._recursive_check_names(arg.elts, node)
@@ -768,26 +844,27 @@ class NameChecker(_BasicChecker):
             return
         if name in self.config.bad_names:
             self.stats['badname_' + node_type] += 1
-            self.add_message('C0102', node=node, args=name)
+            self.add_message('blacklisted-name', node=node, args=name)
             return
         regexp = getattr(self.config, node_type + '_rgx')
         if regexp.match(name) is None:
             type_label = {'inlinedvar': 'inlined variable',
                           'const': 'constant',
                           'attr': 'attribute',
+                          'class_attribute': 'class attribute'
                           }.get(node_type, node_type)
-            self.add_message('C0103', node=node, args=(name, type_label, regexp.pattern))
+            self.add_message('invalid-name', node=node, args=(type_label, name))
             self.stats['badname_' + node_type] += 1
 
 
 class DocStringChecker(_BasicChecker):
     msgs = {
-    'C0111': ('Missing docstring', # W0131
+    'C0111': ('Missing %s docstring', # W0131
               'missing-docstring',
               'Used when a module, function, class or method has no docstring.\
               Some special methods like __init__ doesn\'t necessary require a \
               docstring.'),
-    'C0112': ('Empty docstring', # W0132
+    'C0112': ('Empty %s docstring', # W0132
               'empty-docstring',
               'Used when a module, function, class or method has an empty \
               docstring (it would be too easy ;).'),
@@ -796,33 +873,41 @@ class DocStringChecker(_BasicChecker):
                 {'default' : NO_REQUIRED_DOC_RGX,
                  'type' : 'regexp', 'metavar' : '<regexp>',
                  'help' : 'Regular expression which should only match '
-                          'functions or classes name which do not require a '
-                          'docstring'}
+                          'function or class names that do not require a '
+                          'docstring.'}
+                ),
+               ('docstring-min-length',
+                {'default' : -1,
+                 'type' : 'int', 'metavar' : '<int>',
+                 'help': ('Minimum line length for functions/classes that'
+                          ' require docstrings, shorter ones are exempt.')}
                 ),
                )
+
 
     def open(self):
         self.stats = self.linter.add_stats(undocumented_module=0,
                                            undocumented_function=0,
                                            undocumented_method=0,
                                            undocumented_class=0)
-
+    @check_messages('missing-docstring', 'empty-docstring')
     def visit_module(self, node):
         self._check_docstring('module', node)
 
+    @check_messages('missing-docstring', 'empty-docstring')
     def visit_class(self, node):
         if self.config.no_docstring_rgx.match(node.name) is None:
             self._check_docstring('class', node)
-
+    @check_messages('missing-docstring', 'empty-docstring')
     def visit_function(self, node):
         if self.config.no_docstring_rgx.match(node.name) is None:
             ftype = node.is_method() and 'method' or 'function'
-            if isinstance(node.parent.frame(), astng.Class):
+            if isinstance(node.parent.frame(), astroid.Class):
                 overridden = False
                 # check if node is from a method overridden by its ancestor
                 for ancestor in node.parent.frame().ancestors():
                     if node.name in ancestor and \
-                       isinstance(ancestor[node.name], astng.Function):
+                       isinstance(ancestor[node.name], astroid.Function):
                         overridden = True
                         break
                 if not overridden:
@@ -834,24 +919,32 @@ class DocStringChecker(_BasicChecker):
         """check the node has a non empty docstring"""
         docstring = node.doc
         if docstring is None:
+            if node.body:
+                lines = node.body[-1].lineno - node.body[0].lineno + 1
+            else:
+                lines = 0
+            max_lines = self.config.docstring_min_length
+
+            if node_type != 'module' and max_lines > -1 and lines < max_lines:
+                return
             self.stats['undocumented_'+node_type] += 1
-            self.add_message('C0111', node=node)
+            self.add_message('missing-docstring', node=node, args=(node_type,))
         elif not docstring.strip():
             self.stats['undocumented_'+node_type] += 1
-            self.add_message('C0112', node=node)
+            self.add_message('empty-docstring', node=node, args=(node_type,))
 
 
 class PassChecker(_BasicChecker):
-    """check is the pass statement is really necessary"""
+    """check if the pass statement is really necessary"""
     msgs = {'W0107': ('Unnecessary pass statement',
                       'unnecessary-pass',
                       'Used when a "pass" statement that can be avoided is '
                       'encountered.'),
             }
-
+    @check_messages('unnecessary-pass')
     def visit_pass(self, node):
         if len(node.parent.child_sequence(node)) > 1:
-            self.add_message('W0107', node=node)
+            self.add_message('unnecessary-pass', node=node)
 
 
 class LambdaForComprehensionChecker(_BasicChecker):
@@ -865,23 +958,23 @@ class LambdaForComprehensionChecker(_BasicChecker):
                       'deprecated-lambda',
                       'Used when a lambda is the first argument to "map" or '
                       '"filter". It could be clearer as a list '
-                      'comprehension or generator expression.'),
+                      'comprehension or generator expression.',
+                      {'maxversion': (3, 0)}),
             }
 
-    @check_messages('W0110')
+    @check_messages('deprecated-lambda')
     def visit_callfunc(self, node):
         """visit a CallFunc node, check if map or filter are called with a
         lambda
         """
         if not node.args:
             return
-        if not isinstance(node.args[0], astng.Lambda):
+        if not isinstance(node.args[0], astroid.Lambda):
             return
         infered = safe_infer(node.func)
-        if (infered
-            and infered.parent.name == '__builtin__'
+        if (is_builtin_object(infered)
             and infered.name in ['map', 'filter']):
-            self.add_message('W0110', node=node)
+            self.add_message('deprecated-lambda', node=node)
 
 
 def register(linter):

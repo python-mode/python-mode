@@ -1,21 +1,21 @@
 # copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of logilab-astng.
+# This file is part of astroid.
 #
-# logilab-astng is free software: you can redistribute it and/or modify it
+# astroid is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 2.1 of the License, or (at your
 # option) any later version.
 #
-# logilab-astng is distributed in the hope that it will be useful, but
+# astroid is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License along
-# with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
-"""The ASTNGBuilder makes astng from living object and / or from _ast
+# with astroid. If not, see <http://www.gnu.org/licenses/>.
+"""The AstroidBuilder makes astroid from living object and / or from _ast
 
 The builder is not thread safe and can't be used to parse different sources
 at the same time.
@@ -26,12 +26,12 @@ __docformat__ = "restructuredtext en"
 import sys
 from os.path import splitext, basename, exists, abspath
 
-from ..common.modutils import modpath_from_file
+from ..logilab.common.modutils import modpath_from_file
 
-from .exceptions import ASTNGBuildingException, InferenceError
+from .exceptions import AstroidBuildingException, InferenceError
 from .raw_building import InspectBuilder
 from .rebuilder import TreeRebuilder
-from .manager import ASTNGManager
+from .manager import AstroidManager
 from .bases import YES, Instance
 
 from _ast import PyCF_ONLY_AST
@@ -50,7 +50,7 @@ if sys.version_info >= (3, 0):
         except UnicodeError, uex: # wrong encodingg
             # detect_encoding returns utf-8 if no encoding specified
             msg = 'Wrong (%s) or no encoding specified' % encoding
-            raise ASTNGBuildingException(msg)
+            raise AstroidBuildingException(msg)
         return stream, encoding, data
 
 else:
@@ -79,18 +79,17 @@ else:
 
 # ast NG builder ##############################################################
 
-MANAGER = ASTNGManager()
+MANAGER = AstroidManager()
 
-class ASTNGBuilder(InspectBuilder):
-    """provide astng building methods"""
-    rebuilder = TreeRebuilder()
+class AstroidBuilder(InspectBuilder):
+    """provide astroid building methods"""
 
     def __init__(self, manager=None):
         InspectBuilder.__init__(self)
         self._manager = manager or MANAGER
 
     def module_build(self, module, modname=None):
-        """build an astng from a living module instance
+        """build an astroid from a living module instance
         """
         node = None
         path = getattr(module, '__file__', None)
@@ -105,7 +104,7 @@ class ASTNGBuilder(InspectBuilder):
         return node
 
     def file_build(self, path, modname=None):
-        """build astng from a source code file (i.e. from an ast)
+        """build astroid from a source code file (i.e. from an ast)
 
         path is expected to be a python source file
         """
@@ -113,35 +112,32 @@ class ASTNGBuilder(InspectBuilder):
             stream, encoding, data = open_source_file(path)
         except IOError, exc:
             msg = 'Unable to load file %r (%s)' % (path, exc)
-            raise ASTNGBuildingException(msg)
+            raise AstroidBuildingException(msg)
         except SyntaxError, exc: # py3k encoding specification error
-            raise ASTNGBuildingException(exc)
+            raise AstroidBuildingException(exc)
         except LookupError, exc: # unknown encoding
-            raise ASTNGBuildingException(exc)
+            raise AstroidBuildingException(exc)
         # get module name if necessary
         if modname is None:
             try:
                 modname = '.'.join(modpath_from_file(path))
             except ImportError:
                 modname = splitext(basename(path))[0]
-        # build astng representation
+        # build astroid representation
         node = self.string_build(data, modname, path)
         node.file_encoding = encoding
         return node
 
     def string_build(self, data, modname='', path=None):
-        """build astng from source code string and return rebuilded astng"""
+        """build astroid from source code string and return rebuilded astroid"""
         module = self._data_build(data, modname, path)
-        self._manager.astng_cache[module.name] = module
+        self._manager.astroid_cache[module.name] = module
         # post tree building steps after we stored the module in the cache:
         for from_node in module._from_nodes:
             self.add_from_names_to_locals(from_node)
         # handle delayed assattr nodes
         for delayed in module._delayed_assattr:
             self.delayed_assattr(delayed)
-        if modname:
-            for transformer in self._manager.transformers:
-                transformer(module)
         return module
 
     def _data_build(self, data, modname, path):
@@ -157,11 +153,11 @@ class ASTNGBuilder(InspectBuilder):
             package = True
         else:
             package = path and path.find('__init__.py') > -1 or False
-        self.rebuilder.init()
-        module = self.rebuilder.visit_module(node, modname, package)
+        rebuilder = TreeRebuilder(self._manager)
+        module = rebuilder.visit_module(node, modname, package)
         module.file = module.path = node_file
-        module._from_nodes = self.rebuilder._from_nodes
-        module._delayed_assattr = self.rebuilder._delayed_assattr
+        module._from_nodes = rebuilder._from_nodes
+        module._delayed_assattr = rebuilder._delayed_assattr
         return module
 
     def add_from_names_to_locals(self, node):
@@ -176,7 +172,7 @@ class ASTNGBuilder(InspectBuilder):
             if name == '*':
                 try:
                     imported = node.root().import_module(node.modname)
-                except ASTNGBuildingException:
+                except AstroidBuildingException:
                     continue
                 for name in imported.wildcard_import_names():
                     node.parent.set_local(name, node)

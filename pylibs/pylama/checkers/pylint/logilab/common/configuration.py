@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of logilab-common.
@@ -1055,13 +1055,8 @@ def read_old_config(newconfig, changes, configfile):
             newconfig.set_option(optname, oldconfig[optname], optdict=optdef)
 
 
-def merge_options(options, optgroup=None):
-    """preprocess a list of options and remove duplicates, returning a new list
-    (tuple actually) of options.
-
-    Options dictionaries are copied to avoid later side-effect. Also, if
-    `otpgroup` argument is specified, ensure all options are in the given group.
-    """
+def merge_options(options):
+    """preprocess options to remove duplicate"""
     alloptions = {}
     options = list(options)
     for i in range(len(options)-1, -1, -1):
@@ -1070,9 +1065,5 @@ def merge_options(options, optgroup=None):
             options.pop(i)
             alloptions[optname].update(optdict)
         else:
-            optdict = optdict.copy()
-            options[i] = (optname, optdict)
             alloptions[optname] = optdict
-        if optgroup is not None:
-            alloptions[optname]['group'] = optgroup
     return tuple(options)

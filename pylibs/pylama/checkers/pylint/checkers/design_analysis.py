@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -13,17 +13,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""check for signs of poor design
+"""check for signs of poor design"""
 
+from ..astroid import Function, If, InferenceError
 
- see http://intranet.logilab.fr/jpl/view?rql=Any%20X%20where%20X%20eid%201243
- FIXME: missing 13, 15, 16
-"""
-
-from ..logilab.astng import Function, If, InferenceError
-
-from ..interfaces import IASTNGChecker
-from ..checkers import BaseChecker
+from ..interfaces import IAstroidChecker
+from . import BaseChecker
+from .utils import check_messages
 
 import re
 
@@ -33,10 +29,9 @@ IGNORED_ARGUMENT_NAMES = re.compile('_.*')
 SPECIAL_METHODS = [('Context manager', set(('__enter__',
                                             '__exit__',))),
                    ('Container', set(('__len__',
-                                      '__getitem__',
-                                      '__setitem__',
-                                      '__delitem__',))),
-                   ('Callable', set(('__call__',))),
+                                      '__getitem__',))),
+                   ('Mutable container', set(('__setitem__',
+                                              '__delitem__',))),
                    ]
 
 class SpecialMethodChecker(object):
@@ -60,8 +55,8 @@ class SpecialMethodChecker(object):
         required_methods_found = methods_required & self.methods_found
         if required_methods_found == methods_required:
             return True
-        if required_methods_found != set():
-            required_methods_missing  = methods_required - self.methods_found
+        if required_methods_found:
+            required_methods_missing = methods_required - self.methods_found
             self.on_error((protocol,
                            ', '.join(sorted(required_methods_found)),
                            ', '.join(sorted(required_methods_missing))))
@@ -83,11 +78,11 @@ MSGS = {
     'R0901': ('Too many ancestors (%s/%s)',
               'too-many-ancestors',
               'Used when class has too many parent classes, try to reduce \
-              this to get a more simple (and so easier to use) class.'),
+              this to get a simpler (and so easier to use) class.'),
     'R0902': ('Too many instance attributes (%s/%s)',
               'too-many-instance-attributes',
               'Used when class has too many instance attributes, try to reduce \
-              this to get a more simple (and so easier to use) class.'),
+              this to get a simpler (and so easier to use) class.'),
     'R0903': ('Too few public methods (%s/%s)',
               'too-few-public-methods',
               'Used when class has too few public methods, so be sure it\'s \
@@ -95,7 +90,7 @@ MSGS = {
     'R0904': ('Too many public methods (%s/%s)',
               'too-many-public-methods',
               'Used when class has too many public methods, try to reduce \
-              this to get a more simple (and so easier to use) class.'),
+              this to get a simpler (and so easier to use) class.'),
 
     'R0911': ('Too many return statements (%s/%s)',
               'too-many-return-statements',
@@ -139,7 +134,7 @@ class MisdesignChecker(BaseChecker):
     * size, complexity of functions, methods
     """
 
-    __implements__ = (IASTNGChecker,)
+    __implements__ = (IAstroidChecker,)
 
     # configuration section name
     name = 'design'
@@ -166,7 +161,7 @@ class MisdesignChecker(BaseChecker):
                  'help': 'Maximum number of return / yield for function / '
                          'method body'}
                 ),
-               ('max-branchs',
+               ('max-branches',
                 {'default' : 12, 'type' : 'int', 'metavar' : '<int>',
                  'help': 'Maximum number of branch for function / method body'}
                 ),
@@ -208,7 +203,7 @@ class MisdesignChecker(BaseChecker):
         BaseChecker.__init__(self, linter)
         self.stats = None
         self._returns = None
-        self._branchs = None
+        self._branches = None
         self._used_abstracts = None
         self._used_ifaces = None
         self._abstracts = None
@@ -219,12 +214,13 @@ class MisdesignChecker(BaseChecker):
         """initialize visit variables"""
         self.stats = self.linter.add_stats()
         self._returns = []
-        self._branchs = []
+        self._branches = []
         self._used_abstracts = {}
         self._used_ifaces = {}
         self._abstracts = []
         self._ifaces = []
 
+    # Check 'R0921', 'R0922', 'R0923'
     def close(self):
         """check that abstract/interface classes are used"""
         for abstract in self._abstracts:
@@ -237,6 +233,7 @@ class MisdesignChecker(BaseChecker):
             if not iface in self._used_ifaces:
                 self.add_message('R0923', node=iface)
 
+    @check_messages('R0901', 'R0902', 'R0903', 'R0904', 'R0921', 'R0922', 'R0923')
     def visit_class(self, node):
         """check size of inheritance hierarchy and number of instance attributes
         """
@@ -274,6 +271,7 @@ class MisdesignChecker(BaseChecker):
             except KeyError:
                 self._used_abstracts[parent] = 1
 
+    @check_messages('R0901', 'R0902', 'R0903', 'R0904', 'R0921', 'R0922', 'R0923')
     def leave_class(self, node):
         """check number of public methods"""
         nb_public_methods = 0
@@ -304,6 +302,7 @@ class MisdesignChecker(BaseChecker):
                              args=(nb_public_methods,
                                    self.config.min_public_methods))
 
+    @check_messages('R0911', 'R0912', 'R0913', 'R0914', 'R0915')
     def visit_function(self, node):
         """check function name, docstring, arguments, redefinition,
         variable names, max locals
@@ -311,7 +310,7 @@ class MisdesignChecker(BaseChecker):
         self._inc_branch()
         # init branch and returns counters
         self._returns.append(0)
-        self._branchs.append(0)
+        self._branches.append(0)
         # check number of arguments
         args = node.args.args
         if args is not None:
@@ -332,6 +331,7 @@ class MisdesignChecker(BaseChecker):
         # init statements counter
         self._stmts = 1
 
+    @check_messages('R0911', 'R0912', 'R0913', 'R0914', 'R0915')
     def leave_function(self, node):
         """most of the work is done here on close:
         checks for max returns, branch, return in __init__
@@ -340,10 +340,10 @@ class MisdesignChecker(BaseChecker):
         if returns > self.config.max_returns:
             self.add_message('R0911', node=node,
                              args=(returns, self.config.max_returns))
-        branchs = self._branchs.pop()
-        if branchs > self.config.max_branchs:
+        branches = self._branches.pop()
+        if branches > self.config.max_branches:
             self.add_message('R0912', node=node,
-                             args=(branchs, self.config.max_branchs))
+                             args=(branches, self.config.max_branches))
         # check number of statements
         if self._stmts > self.config.max_statements:
             self.add_message('R0915', node=node,
@@ -363,42 +363,42 @@ class MisdesignChecker(BaseChecker):
             self._stmts += 1
 
     def visit_tryexcept(self, node):
-        """increments the branchs counter"""
-        branchs = len(node.handlers)
+        """increments the branches counter"""
+        branches = len(node.handlers)
         if node.orelse:
-            branchs += 1
-        self._inc_branch(branchs)
-        self._stmts += branchs
+            branches += 1
+        self._inc_branch(branches)
+        self._stmts += branches
 
     def visit_tryfinally(self, _):
-        """increments the branchs counter"""
+        """increments the branches counter"""
         self._inc_branch(2)
         self._stmts += 2
 
     def visit_if(self, node):
-        """increments the branchs counter"""
-        branchs = 1
+        """increments the branches counter"""
+        branches = 1
         # don't double count If nodes coming from some 'elif'
         if node.orelse and (len(node.orelse)>1 or
                             not isinstance(node.orelse[0], If)):
-            branchs += 1
-        self._inc_branch(branchs)
-        self._stmts += branchs
+            branches += 1
+        self._inc_branch(branches)
+        self._stmts += branches
 
     def visit_while(self, node):
-        """increments the branchs counter"""
-        branchs = 1
+        """increments the branches counter"""
+        branches = 1
         if node.orelse:
-            branchs += 1
-        self._inc_branch(branchs)
+            branches += 1
+        self._inc_branch(branches)
 
     visit_for = visit_while
 
-    def _inc_branch(self, branchsnum=1):
-        """increments the branchs counter"""
-        branchs = self._branchs
-        for i in xrange(len(branchs)):
-            branchs[i] += branchsnum
+    def _inc_branch(self, branchesnum=1):
+        """increments the branches counter"""
+        branches = self._branches
+        for i in xrange(len(branches)):
+            branches[i] += branchesnum
 
     # FIXME: make a nice report...
 

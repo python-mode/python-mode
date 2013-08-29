@@ -1,21 +1,21 @@
 # copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of logilab-astng.
+# This file is part of astroid.
 #
-# logilab-astng is free software: you can redistribute it and/or modify it
+# astroid is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 2.1 of the License, or (at your
 # option) any later version.
 #
-# logilab-astng is distributed in the hope that it will be useful, but
+# astroid is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License along
-# with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
-"""this module contains a set of functions to create astng trees from scratch
+# with astroid. If not, see <http://www.gnu.org/licenses/>.
+"""this module contains a set of functions to create astroid trees from scratch
 (build_* functions) or from living object (object_build_* functions)
 """
 
@@ -30,8 +30,8 @@ from .node_classes import CONST_CLS
 from .nodes import (Module, Class, Const, const_factory, From,
     Function, EmptyNode, Name, Arguments)
 from .bases import BUILTINS, Generator
-from .manager import ASTNGManager
-MANAGER = ASTNGManager()
+from .manager import AstroidManager
+MANAGER = AstroidManager()
 
 _CONSTANTS = tuple(CONST_CLS) # the keys of CONST_CLS eg python builtin types
 
@@ -67,14 +67,14 @@ def attach_import_node(node, modname, membername):
 
 
 def build_module(name, doc=None):
-    """create and initialize a astng Module node"""
+    """create and initialize a astroid Module node"""
     node = Module(name, doc, pure_python=False)
     node.package = False
     node.parent = None
     return node
 
 def build_class(name, basenames=(), doc=None):
-    """create and initialize a astng Class node"""
+    """create and initialize a astroid Class node"""
     node = Class(name, doc)
     for base in basenames:
         basenode = Name()
@@ -84,7 +84,7 @@ def build_class(name, basenames=(), doc=None):
     return node
 
 def build_function(name, args=None, defaults=None, flag=0, doc=None):
-    """create and initialize a astng Function node"""
+    """create and initialize a astroid Function node"""
     args, defaults = args or [], defaults or []
     # first argument is now a list of decorators
     func = Function(name, doc)
@@ -107,7 +107,7 @@ def build_function(name, args=None, defaults=None, flag=0, doc=None):
 
 
 def build_from_import(fromname, names):
-    """create and initialize an astng From import statement"""
+    """create and initialize an astroid From import statement"""
     return From(fromname, [(name, None) for name in names])
 
 def register_arguments(func, args=None):
@@ -129,13 +129,13 @@ def register_arguments(func, args=None):
             register_arguments(func, arg.elts)
 
 def object_build_class(node, member, localname):
-    """create astng for a living class object"""
+    """create astroid for a living class object"""
     basenames = [base.__name__ for base in member.__bases__]
     return _base_class_object_build(node, member, basenames,
                                     localname=localname)
 
 def object_build_function(node, member, localname):
-    """create astng for a living function object"""
+    """create astroid for a living function object"""
     args, varargs, varkw, defaults = getargspec(member)
     if varargs is not None:
         args.append(varargs)
@@ -146,11 +146,11 @@ def object_build_function(node, member, localname):
     node.add_local_node(func, localname)
 
 def object_build_datadescriptor(node, member, name):
-    """create astng for a living data descriptor object"""
+    """create astroid for a living data descriptor object"""
     return _base_class_object_build(node, member, [], name)
 
 def object_build_methoddescriptor(node, member, localname):
-    """create astng for a living method descriptor object"""
+    """create astroid for a living method descriptor object"""
     # FIXME get arguments ?
     func = build_function(getattr(member, '__name__', None) or localname,
                           doc=member.__doc__)
@@ -160,7 +160,7 @@ def object_build_methoddescriptor(node, member, localname):
     node.add_local_node(func, localname)
 
 def _base_class_object_build(node, member, basenames, name=None, localname=None):
-    """create astng for a living class object, with a given set of base names
+    """create astroid for a living class object, with a given set of base names
     (e.g. ancestors)
     """
     klass = build_class(name or getattr(member, '__name__', None) or localname,
@@ -197,14 +197,14 @@ class InspectBuilder(object):
     Function and Class nodes and some others as guessed.
     """
 
-    # astng from living objects ###############################################
+    # astroid from living objects ###############################################
 
     def __init__(self):
         self._done = {}
         self._module = None
 
     def inspect_build(self, module, modname=None, path=None):
-        """build astng from a living module (i.e. using inspect)
+        """build astroid from a living module (i.e. using inspect)
         this is used when there is no python source code available (either
         because it's a built-in module or because the .py is not available)
         """
@@ -217,7 +217,7 @@ class InspectBuilder(object):
             # in jython, java modules have no __doc__ (see #109562)
             node = build_module(modname)
         node.file = node.path = path and abspath(path) or path
-        MANAGER.astng_cache[modname] = node
+        MANAGER.astroid_cache[modname] = node
         node.package = hasattr(module, '__path__')
         self._done = {}
         self.object_build(node, module)
@@ -289,7 +289,7 @@ class InspectBuilder(object):
             modname = getattr(member, '__module__', None)
         except:
             # XXX use logging
-            print 'unexpected error while building astng from living object'
+            print 'unexpected error while building astroid from living object'
             import traceback
             traceback.print_exc()
             modname = None
@@ -315,28 +315,28 @@ class InspectBuilder(object):
         return False
 
 
-### astng boot strapping ################################################### ###
-ASTNG_BUILDER = InspectBuilder()
+### astroid boot strapping ################################################### ###
+Astroid_BUILDER = InspectBuilder()
 
 _CONST_PROXY = {}
-def astng_boot_strapping():
-    """astng boot strapping the builtins module"""
+def astroid_boot_strapping():
+    """astroid boot strapping the builtins module"""
     # this boot strapping is necessary since we need the Const nodes to
     # inspect_build builtins, and then we can proxy Const
-    from ..common.compat import builtins
-    astng_builtin = ASTNG_BUILDER.inspect_build(builtins)
+    from ..logilab.common.compat import builtins
+    astroid_builtin = Astroid_BUILDER.inspect_build(builtins)
     for cls, node_cls in CONST_CLS.items():
         if cls is type(None):
             proxy = build_class('NoneType')
-            proxy.parent = astng_builtin
+            proxy.parent = astroid_builtin
         else:
-            proxy = astng_builtin.getattr(cls.__name__)[0]
+            proxy = astroid_builtin.getattr(cls.__name__)[0]
         if cls in (dict, list, set, tuple):
             node_cls._proxied = proxy
         else:
             _CONST_PROXY[cls] = proxy
 
-astng_boot_strapping()
+astroid_boot_strapping()
 
 # TODO : find a nicer way to handle this situation;
 # However __proxied introduced an
@@ -347,5 +347,5 @@ Const._proxied = property(_set_proxied)
 
 from types import GeneratorType
 Generator._proxied = Class(GeneratorType.__name__, GeneratorType.__doc__)
-ASTNG_BUILDER.object_build(Generator._proxied, GeneratorType)
+Astroid_BUILDER.object_build(Generator._proxied, GeneratorType)
 

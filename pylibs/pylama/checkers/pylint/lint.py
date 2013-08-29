@@ -31,7 +31,6 @@ from .checkers import utils
 
 import sys
 import os
-import re
 import tokenize
 from warnings import warn
 
@@ -43,29 +42,23 @@ from .logilab.common.textutils import splitstrip
 from .logilab.common.ureports import Table, Text, Section
 from .logilab.common.__pkginfo__ import version as common_version
 
-from .logilab.astng import MANAGER, nodes, ASTNGBuildingException
-from .logilab.astng.__pkginfo__ import version as astng_version
+from .astroid import MANAGER, nodes, AstroidBuildingException
+from .astroid.__pkginfo__ import version as astroid_version
 
-from .utils import (PyLintASTWalker, UnknownMessage, MessagesHandlerMixIn,
-                          ReportsHandlerMixIn, MSG_TYPES, expand_modules,
-                          WarningScope)
-from .interfaces import ILinter, IRawChecker, IASTNGChecker
-from .checkers import (BaseRawChecker, EmptyReport,
-                             table_lines_from_stats)
-from .reporters.text import (TextReporter, ParseableTextReporter,
-                                   VSTextReporter, ColorizedTextReporter)
-from .reporters.html import HTMLReporter
+from .utils import (
+    MSG_TYPES, OPTION_RGX,
+    PyLintASTWalker, UnknownMessage, MessagesHandlerMixIn, ReportsHandlerMixIn,
+    EmptyReport, WarningScope,
+    expand_modules, tokenize_module)
+from .interfaces import IRawChecker, ITokenChecker, IAstroidChecker
+from .checkers import (BaseTokenChecker,
+                             table_lines_from_stats,
+                             initialize as checkers_initialize)
+from .reporters import initialize as reporters_initialize
 from . import config
 
 from .__pkginfo__ import version
 
-
-OPTION_RGX = re.compile(r'\s*#.*\bpylint:(.*)')
-REPORTER_OPT_MAP = {'text': TextReporter,
-                    'parseable': ParseableTextReporter,
-                    'msvs': VSTextReporter,
-                    'colorized': ColorizedTextReporter,
-                    'html': HTMLReporter,}
 
 
 def _get_python_path(filepath):
@@ -88,8 +81,8 @@ MSGS = {
               'Used when an error occurred preventing the analysis of a \
               module (unable to find it for instance).'),
     'F0002': ('%s: %s',
-              'astng-error',
-              'Used when an unexpected error occurred while building the ASTNG \
+              'astroid-error',
+              'Used when an unexpected error occurred while building the Astroid \
               representation. This is usually accompanied by a traceback. \
               Please report such errors !'),
     'F0003': ('ignored builtin module %s',
@@ -102,8 +95,8 @@ MSGS = {
               inferred.'),
     'F0010': ('error while code parsing: %s',
               'parse-error',
-              'Used when an exception occured while building the ASTNG \
-               representation which could be handled by astng.'),
+              'Used when an exception occured while building the Astroid \
+               representation which could be handled by astroid.'),
 
     'I0001': ('Unable to run raw checkers on built-in module %s',
               'raw-checker-failed',
@@ -157,21 +150,21 @@ MSGS = {
 
 
 class PyLinter(OptionsManagerMixIn, MessagesHandlerMixIn, ReportsHandlerMixIn,
-               BaseRawChecker):
+               BaseTokenChecker):
     """lint Python modules using external checkers.
 
     This is the main checker controlling the other ones and the reports
-    generation. It is itself both a raw checker and an astng checker in order
+    generation. It is itself both a raw checker and an astroid checker in order
     to:
     * handle message activation / deactivation at the module level
     * handle some basic but necessary stats'data (number of classes, methods...)
 
     IDE plugins developpers: you may have to call
-    `logilab.astng.builder.MANAGER.astng_cache.clear()` accross run if you want
+    `astroid.builder.MANAGER.astroid_cache.clear()` accross run if you want
     to ensure the latest code version is actually checked.
     """
 
-    __implements__ = (ILinter, IRawChecker)
+    __implements__ = (ITokenChecker,)
 
     name = 'master'
     priority = 0
@@ -205,18 +198,6 @@ python modules names) to load, usually to register additional checkers.'}),
                   ' parseable, colorized, msvs (visual studio) and html. You '
                   'can also give a reporter class, eg mypackage.mymodule.'
                   'MyReporterClass.'}),
-
-                ('include-ids',
-                 {'type' : 'yn', 'metavar' : '<y_or_n>', 'default' : 0,
-                  'short': 'i',
-                  'group': 'Reports',
-                  'help' : 'Include message\'s id in output'}),
-
-                ('symbols',
-                 {'type' : 'yn', 'metavar' : '<y_or_n>', 'default' : 0,
-                  'short': 's',
-                  'group': 'Reports',
-                  'help' : 'Include symbolic ids of messages in output'}),
 
                 ('files-output',
                  {'default': 0, 'type' : 'yn', 'metavar' : '<y_or_n>',
@@ -274,6 +255,16 @@ This is used by the global evaluation report (RP0004).'}),
                   'If you want to run only the classes checker, but have no '
                   'Warning level messages displayed, use'
                   '"--disable=all --enable=classes --disable=W"'}),
+
+                ('msg-template',
+                 {'type' : 'string', 'metavar': '<template>',
+                 #'short': 't',
+                  'group': 'Reports',
+                  'help' : ('Template used to display messages. '
+                            'This is a python new-style format string '
+                            'used to format the massage information. '
+                            'See doc for all details')
+                  }), # msg-template
                )
 
     option_groups = (
@@ -281,12 +272,13 @@ This is used by the global evaluation report (RP0004).'}),
         ('Reports', 'Options related to output formating and reporting'),
         )
 
-    def __init__(self, options=(), reporter=None, option_groups=(),
-                 pylintrc=None):
+    def __init__(self, options=(), reporter=None, option_groups=(), pylintrc=None):
         # some stuff has to be done before ancestors initialization...
         #
-        # checkers / reporter / astng manager
+        # checkers / reporter / astroid manager
         self.reporter = None
+        self._reporter_name = None
+        self._reporters = {}
         self._checkers = {}
         self._ignore_file = False
         # visit variables
@@ -303,14 +295,14 @@ This is used by the global evaluation report (RP0004).'}),
             'disable': self.disable}
         self._bw_options_methods = {'disable-msg': self.disable,
                                     'enable-msg': self.enable}
-        full_version = '%%prog %s, \nastng %s, common %s\nPython %s' % (
-            version, astng_version, common_version, sys.version)
+        full_version = '%%prog %s, \nastroid %s, common %s\nPython %s' % (
+            version, astroid_version, common_version, sys.version)
         OptionsManagerMixIn.__init__(self, usage=__doc__,
                                      version=full_version,
                                      config_file=pylintrc or config.PYLINTRC)
         MessagesHandlerMixIn.__init__(self)
         ReportsHandlerMixIn.__init__(self)
-        BaseRawChecker.__init__(self)
+        BaseTokenChecker.__init__(self)
         # provided reports
         self.reports = (('RP0001', 'Messages by category',
                          report_total_messages_stats),
@@ -322,13 +314,18 @@ This is used by the global evaluation report (RP0004).'}),
                          self.report_evaluation),
                         )
         self.register_checker(self)
-        self._dynamic_plugins = []
+        self._dynamic_plugins = set()
         self.load_provider_defaults()
-        self.set_reporter(reporter or TextReporter(sys.stdout))
+        if reporter:
+            self.set_reporter(reporter)
 
     def load_default_plugins(self):
-        from . import checkers
-        checkers.initialize(self)
+        checkers_initialize(self)
+        reporters_initialize(self)
+        # Make sure to load the default reporter, because
+        # the option has been set before the plugins had been loaded.
+        if not self.reporter:
+            self._load_reporter()
 
     def prepare_import_path(self, args):
         """Prepare sys.path for running the linter checks."""
@@ -348,9 +345,20 @@ This is used by the global evaluation report (RP0004).'}),
         for modname in modnames:
             if modname in self._dynamic_plugins:
                 continue
-            self._dynamic_plugins.append(modname)
+            self._dynamic_plugins.add(modname)
             module = load_module_from_name(modname)
             module.register(self)
+
+    def _load_reporter(self):
+        name = self._reporter_name.lower()
+        if name in self._reporters:
+            self.set_reporter(self._reporters[name]())
+        else:
+            qname = self._reporter_name
+            module = load_module_from_name(get_module_part(qname))
+            class_name = qname.split('.')[-1]
+            reporter_class = getattr(module, class_name)
+            self.set_reporter(reporter_class())
 
     def set_reporter(self, reporter):
         """set the reporter used to display messages and reports"""
@@ -376,26 +384,26 @@ This is used by the global evaluation report (RP0004).'}),
                 else :
                     meth(value)
         elif optname == 'output-format':
-            if value.lower() in REPORTER_OPT_MAP:
-                self.set_reporter(REPORTER_OPT_MAP[value.lower()]())
-            else:
-                module = load_module_from_name(get_module_part(value))
-                class_name = value.split('.')[-1]
-                reporter_class = getattr(module, class_name)
-                self.set_reporter(reporter_class())
-
+            self._reporter_name = value
+            # If the reporters are already available, load
+            # the reporter class.
+            if self._reporters:
+                self._load_reporter()
         try:
-            BaseRawChecker.set_option(self, optname, value, action, optdict)
+            BaseTokenChecker.set_option(self, optname, value, action, optdict)
         except UnsupportedAction:
             print >> sys.stderr, 'option %s can\'t be read from config file' % \
                   optname
+
+    def register_reporter(self, reporter_class):
+        self._reporters[reporter_class.name] = reporter_class
 
     # checkers manipulation methods ############################################
 
     def register_checker(self, checker):
         """register a new checker
 
-        checker is an object implementing IRawChecker or / and IASTNGChecker
+        checker is an object implementing IRawChecker or / and IAstroidChecker
         """
         assert checker.priority <= 0, 'checker priority can\'t be >= 0'
         self._checkers.setdefault(checker.name, []).append(checker)
@@ -559,18 +567,17 @@ This is used by the global evaluation report (RP0004).'}),
         """main checking entry: check a list of files or modules from their
         name.
         """
-        self.reporter.include_ids = self.config.include_ids
-        self.reporter.symbols = self.config.symbols
         if not isinstance(files_or_modules, (list, tuple)):
             files_or_modules = (files_or_modules,)
         walker = PyLintASTWalker(self)
         checkers = self.prepare_checkers()
-        rawcheckers = [c for c in checkers if implements(c, IRawChecker)
-                       and c is not self]
+        tokencheckers = [c for c in checkers if implements(c, ITokenChecker)
+                         and c is not self]
+        rawcheckers = [c for c in checkers if implements(c, IRawChecker)]
         # notify global begin
         for checker in checkers:
             checker.open()
-            if implements(checker, IASTNGChecker):
+            if implements(checker, IAstroidChecker):
                 walker.add_checker(checker)
         # build ast and check modules or packages
         for descr in self.expand_files(files_or_modules):
@@ -580,16 +587,16 @@ This is used by the global evaluation report (RP0004).'}),
                 self.reporter.set_output(open(reportfile, 'w'))
             self.set_current_module(modname, filepath)
             # get the module representation
-            astng = self.get_astng(filepath, modname)
-            if astng is None:
+            astroid = self.get_astroid(filepath, modname)
+            if astroid is None:
                 continue
             self.base_name = descr['basename']
             self.base_file = descr['basepath']
             self._ignore_file = False
             # fix the current file (if the source file was not available or
             # if it's actually a c extension)
-            self.current_file = astng.file
-            self.check_astng_module(astng, walker, rawcheckers)
+            self.current_file = astroid.file
+            self.check_astroid_module(astroid, walker, rawcheckers, tokencheckers)
             self._add_suppression_messages()
         # notify global end
         self.set_current_module('')
@@ -632,29 +639,35 @@ This is used by the global evaluation report (RP0004).'}),
             self._raw_module_msgs_state = {}
             self._ignored_msgs = {}
 
-    def get_astng(self, filepath, modname):
-        """return a astng representation for a module"""
+    def get_astroid(self, filepath, modname):
+        """return a astroid representation for a module"""
         try:
-            return MANAGER.astng_from_file(filepath, modname, source=True)
+            return MANAGER.ast_from_file(filepath, modname, source=True)
         except SyntaxError, ex:
             self.add_message('E0001', line=ex.lineno, args=ex.msg)
-        except ASTNGBuildingException, ex:
+        except AstroidBuildingException, ex:
             self.add_message('F0010', args=ex)
         except Exception, ex:
             import traceback
             traceback.print_exc()
             self.add_message('F0002', args=(ex.__class__, ex))
 
-    def check_astng_module(self, astng, walker, rawcheckers):
-        """check a module from its astng representation, real work"""
+    def check_astroid_module(self, astroid, walker, rawcheckers, tokencheckers):
+        """check a module from its astroid representation, real work"""
         # call raw checkers if possible
-        if not astng.pure_python:
-            self.add_message('I0001', args=astng.name)
+        try:
+            tokens = tokenize_module(astroid)
+        except tokenize.TokenError, ex:
+            self.add_message('E0001', line=ex.args[1][0], args=ex.args[0])
+            return
+
+        if not astroid.pure_python:
+            self.add_message('I0001', args=astroid.name)
         else:
-            #assert astng.file.endswith('.py')
-            # invoke IRawChecker interface on self to fetch module/block
+            #assert astroid.file.endswith('.py')
+            # invoke ITokenChecker interface on self to fetch module/block
             # level options
-            self.process_module(astng)
+            self.process_tokens(tokens)
             if self._ignore_file:
                 return False
             # walk ast to collect line numbers
@@ -663,14 +676,16 @@ This is used by the global evaluation report (RP0004).'}),
             orig_state = self._module_msgs_state.copy()
             self._module_msgs_state = {}
             self._suppression_mapping = {}
-            self.collect_block_lines(astng, orig_state)
+            self.collect_block_lines(astroid, orig_state)
             for checker in rawcheckers:
-                checker.process_module(astng)
-        # generate events to astng checkers
-        walker.walk(astng)
+                checker.process_module(astroid)
+            for checker in tokencheckers:
+                checker.process_tokens(tokens)
+        # generate events to astroid checkers
+        walker.walk(astroid)
         return True
 
-    # IASTNGChecker interface #################################################
+    # IAstroidChecker interface #################################################
 
     def open(self):
         """initialize counters"""
@@ -732,8 +747,9 @@ This is used by the global evaluation report (RP0004).'}),
         else:
             stats['global_note'] = note
             msg = 'Your code has been rated at %.2f/10' % note
-            if 'global_note' in previous_stats:
-                msg += ' (previous run: %.2f/10)' % previous_stats['global_note']
+            pnote = previous_stats.get('global_note')
+            if pnote is not None:
+                msg += ' (previous run: %.2f/10, %+.2f)' % (pnote, note - pnote)
             if self.config.comment:
                 msg = '%s\n%s' % (msg, config.get_note_message(note))
         sect.append(Text(msg))
@@ -840,7 +856,7 @@ def preprocess_options(args, search_for):
         else:
             i += 1
 
-class Run:
+class Run(object):
     """helper class to use as main for pylint :
 
     run(*sys.argv[1:])
@@ -919,8 +935,7 @@ are done by default'''}),
               'default': False, 'hide': True,
               'help' : 'Profiled execution.'}),
 
-            ), option_groups=self.option_groups,
-               reporter=reporter, pylintrc=self._rcfile)
+            ), option_groups=self.option_groups, pylintrc=self._rcfile)
         # register standard checkers
         linter.load_default_plugins()
         # load command line plugins

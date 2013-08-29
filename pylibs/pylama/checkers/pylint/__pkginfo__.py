@@ -18,10 +18,10 @@
 
 modname = distname = 'pylint'
 
-numversion = (0, 28, 0)
+numversion = (1, 0, 0)
 version = '.'.join([str(num) for num in numversion])
 
-install_requires = ['logilab-common >= 0.53.0', 'logilab-astng >= 0.24.3']
+install_requires = ['logilab-common >= 0.53.0', 'astroid >= 0.24.3']
 
 license = 'GPL'
 description = "python code static checker"
@@ -66,3 +66,4 @@ scripts = [join('bin', filename)
            for filename in ('pylint', 'pylint-gui', "symilar", "epylint",
                             "pyreverse")]
 
+include_dirs = ['test']

@@ -38,15 +38,16 @@ messages nor reports. XXX not true, emit a 07 report !
 
 """
 
+import sys
 import tokenize
-from os import listdir
-from os.path import dirname, join, isdir, splitext
+import warnings
+from os.path import dirname
 
-from ..logilab.astng.utils import ASTWalker
-from ..logilab.common.modutils import load_module_from_file
+from ..astroid.utils import ASTWalker
 from ..logilab.common.configuration import OptionsProviderMixIn
 
-from ..reporters import diff_string, EmptyReport
+from ..reporters import diff_string
+from ..utils import register_plugins
 
 def table_lines_from_stats(stats, old_stats, columns):
     """get values listed in <columns> from <stats> and <old_stats>,
@@ -121,43 +122,31 @@ class BaseRawChecker(BaseChecker):
 
         stream must implement the readline method
         """
+        warnings.warn("Modules that need access to the tokens should "
+                      "use the ITokenChecker interface.",
+                      DeprecationWarning)
         stream = node.file_stream
-        stream.seek(0) # XXX may be removed with astng > 0.23
-        self.process_tokens(tokenize.generate_tokens(stream.readline))
+        stream.seek(0) # XXX may be removed with astroid > 0.23
+        if sys.version_info <= (3, 0):
+            self.process_tokens(tokenize.generate_tokens(stream.readline))
+        else:
+            self.process_tokens(tokenize.tokenize(stream.readline))
 
     def process_tokens(self, tokens):
         """should be overridden by subclasses"""
         raise NotImplementedError()
 
 
-PY_EXTS = ('.py', '.pyc', '.pyo', '.pyw', '.so', '.dll')
+class BaseTokenChecker(BaseChecker):
+    """Base class for checkers that want to have access to the token stream."""
+
+    def process_tokens(self, tokens):
+        """Should be overridden by subclasses."""
+        raise NotImplementedError()
+
 
 def initialize(linter):
     """initialize linter with checkers in this package """
-    package_load(linter, __path__[0])
+    register_plugins(linter, __path__[0])
 
-def package_load(linter, directory):
-    """load all module and package in the given directory, looking for a
-    'register' function in each one, used to register pylint checkers
-    """
-    imported = {}
-    for filename in listdir(directory):
-        basename, extension = splitext(filename)
-        if basename in imported or basename == '__pycache__':
-            continue
-        if extension in PY_EXTS and basename != '__init__' or (
-             not extension and isdir(join(directory, basename))):
-            try:
-                module = load_module_from_file(join(directory, filename))
-            except ValueError:
-                # empty module name (usually emacs auto-save files)
-                continue
-            except ImportError, exc:
-                import sys
-                print >> sys.stderr, "Problem importing module %s: %s" % (filename, exc)
-            else:
-                if hasattr(module, 'register'):
-                    module.register(linter)
-                    imported[basename] = 1
-
-__all__ = ('BaseChecker', 'initialize', 'package_load')
+__all__ = ('BaseChecker', 'initialize')

@@ -17,25 +17,31 @@
 main pylint class
 """
 
+import re
 import sys
+import tokenize
 from warnings import warn
+import os
 from os.path import dirname, basename, splitext, exists, isdir, join, normpath
 
 from .logilab.common.interface import implements
 from .logilab.common.modutils import modpath_from_file, get_module_files, \
-                                     file_from_modpath
+                                    file_from_modpath, load_module_from_file
 from .logilab.common.textutils import normalize_text
 from .logilab.common.configuration import rest_format_section
 from .logilab.common.ureports import Section
 
-from .logilab.astng import nodes, Module
+from .astroid import nodes, Module
 
-from .checkers import EmptyReport
-from .interfaces import IRawChecker
+from .interfaces import IRawChecker, ITokenChecker
 
 
 class UnknownMessage(Exception):
     """raised when a unregistered message id is encountered"""
+
+class EmptyReport(Exception):
+    """raised when a report is empty and so should not be displayed"""
+
 
 
 MSG_TYPES = {
@@ -61,6 +67,7 @@ _MSG_ORDER = 'EWRCIF'
 MSG_STATE_SCOPE_CONFIG = 0
 MSG_STATE_SCOPE_MODULE = 1
 
+OPTION_RGX = re.compile(r'\s*#.*\bpylint:(.*)')
 
 # The line/node distinction does not apply to fatal errors and reports.
 _SCOPE_EXEMPT = 'FR'
@@ -104,7 +111,19 @@ def category_id(id):
     return MSG_TYPES_LONG.get(id)
 
 
-class Message:
+def tokenize_module(module):
+    stream = module.file_stream
+    stream.seek(0)
+    readline = stream.readline
+    if sys.version_info < (3, 0):
+        if module.file_encoding is not None:
+            readline = lambda: stream.readline().decode(module.file_encoding,
+                                                    'replace')
+        return list(tokenize.generate_tokens(readline))
+    return list(tokenize.tokenize(readline))
+
+
+class MessageDefinition(object):
     def __init__(self, checker, msgid, msg, descr, symbol, scope):
         assert len(msgid) == 5, 'Invalid message id %s' % msgid
         assert msgid[0] in MSG_TYPES, \
@@ -116,7 +135,7 @@ class Message:
         self.symbol = symbol
         self.scope = scope
 
-class MessagesHandlerMixIn:
+class MessagesHandlerMixIn(object):
     """a mix-in class containing all the messages related methods for the main
     lint class
     """
@@ -147,7 +166,7 @@ class MessagesHandlerMixIn:
         chkid = None
 
         for msgid, msg_tuple in msgs_dict.iteritems():
-            if implements(checker, IRawChecker):
+            if implements(checker, (IRawChecker, ITokenChecker)):
                 scope = WarningScope.LINE
             else:
                 scope = WarningScope.NODE
@@ -155,8 +174,19 @@ class MessagesHandlerMixIn:
                 (msg, msgsymbol, msgdescr) = msg_tuple[:3]
                 assert msgsymbol not in self._messages_by_symbol, \
                     'Message symbol %r is already defined' % msgsymbol
-                if len(msg_tuple) > 3 and 'scope' in msg_tuple[3]:
-                    scope = msg_tuple[3]['scope']
+                if len(msg_tuple) > 3:
+                    if 'scope' in msg_tuple[3]:
+                        scope = msg_tuple[3]['scope']
+                    if 'minversion' in msg_tuple[3]:
+                        minversion = msg_tuple[3]['minversion']
+                        if minversion > sys.version_info:
+                            self._msgs_state[msgid] = False
+                            continue
+                    if 'maxversion' in msg_tuple[3]:
+                        maxversion = msg_tuple[3]['maxversion']
+                        if maxversion <= sys.version_info:
+                            self._msgs_state[msgid] = False
+                            continue
             else:
                 # messages should have a symbol, but for backward compatibility
                 # they may not.
@@ -170,7 +200,7 @@ class MessagesHandlerMixIn:
             assert chkid is None or chkid == msgid[1:3], \
                    'Inconsistent checker part in message id %r' % msgid
             chkid = msgid[1:3]
-            msg = Message(checker, msgid, msg, msgdescr, msgsymbol, scope)
+            msg = MessageDefinition(checker, msgid, msg, msgdescr, msgsymbol, scope)
             self._messages[msgid] = msg
             self._messages_by_symbol[msgsymbol] = msg
             self._msgs_by_category.setdefault(msgid[0], []).append(msgid)
@@ -210,7 +240,8 @@ class MessagesHandlerMixIn:
         if msgid.lower() in self._checkers:
             for checker in self._checkers[msgid.lower()]:
                 for _msgid in checker.msgs:
-                    self.disable(_msgid, scope, line)
+                    if _msgid in self._messages:
+                        self.disable(_msgid, scope, line)
             return
         # msgid is report id?
         if msgid.lower().startswith('rp'):
@@ -246,8 +277,8 @@ class MessagesHandlerMixIn:
         # msgid is a checker name?
         if msgid.lower() in self._checkers:
             for checker in self._checkers[msgid.lower()]:
-                for msgid in checker.msgs:
-                    self.enable(msgid, scope, line)
+                for msgid_ in checker.msgs:
+                    self.enable(msgid_, scope, line)
             return
         # msgid is report id?
         if msgid.lower().startswith('rp'):
@@ -288,11 +319,7 @@ class MessagesHandlerMixIn:
 
         Can be just the message ID or the ID and the symbol.
         """
-        if self.config.symbols:
-            symbol = self.check_message_id(msgid).symbol
-            if symbol:
-                msgid += '(%s)' % symbol
-        return msgid
+        return repr(self.check_message_id(msgid).symbol)
 
     def get_message_state_scope(self, msgid, line=None):
         """Returns the scope at which a message was enabled/disabled."""
@@ -331,15 +358,17 @@ class MessagesHandlerMixIn:
             except KeyError:
                 pass
 
-    def add_message(self, msgid, line=None, node=None, args=None):
-        """add the message corresponding to the given id.
+    def add_message(self, msg_descr, line=None, node=None, args=None):
+        """Adds a message given by ID or name.
 
-        If provided, msg is expanded using args
+        If provided, the message string is expanded using args
 
-        astng checkers should provide the node argument, raw checkers should
-        provide the line argument.
+        AST checkers should must the node argument (but may optionally
+        provide line if the line number is different), raw and token checkers
+        must provide the line argument.
         """
-        msg_info = self._messages[msgid]
+        msg_info = self.check_message_id(msg_descr)
+        msgid = msg_info.msgid
         # Fatal messages and reports are special, the node/scope distinction
         # does not apply to them.
         if msgid[0] not in _SCOPE_EXEMPT:
@@ -453,16 +482,15 @@ class MessagesHandlerMixIn:
     def list_messages(self):
         """output full messages list documentation in ReST format"""
         msgids = []
-        for checker in self.get_checkers():
-            for msgid in checker.msgs.iterkeys():
-                msgids.append(msgid)
+        for msgid in self._messages:
+            msgids.append(msgid)
         msgids.sort()
         for msgid in msgids:
             print self.get_message_help(msgid, False)
         print
 
 
-class ReportsHandlerMixIn:
+class ReportsHandlerMixIn(object):
     """a mix-in class containing all the reports and stats manipulation
     related methods for the main lint class
     """
@@ -579,6 +607,15 @@ class PyLintASTWalker(object):
         self.leave_events = {}
         self.linter = linter
 
+    def _is_method_enabled(self, method):
+        if not hasattr(method, 'checks_msgs'):
+            return True
+
+        for msg_desc in method.checks_msgs:
+            if self.linter.is_message_enabled(msg_desc):
+                return True
+        return False
+
     def add_checker(self, checker):
         """walk to the checker's dir and collect visit and leave methods"""
         # XXX : should be possible to merge needed_checkers and add_checker
@@ -586,7 +623,6 @@ class PyLintASTWalker(object):
         lcids = set()
         visits = self.visit_events
         leaves = self.leave_events
-        msgs = self.linter._msgs_state
         for member in dir(checker):
             cid = member[6:]
             if cid == 'default':
@@ -594,19 +630,15 @@ class PyLintASTWalker(object):
             if member.startswith('visit_'):
                 v_meth = getattr(checker, member)
                 # don't use visit_methods with no activated message:
-                if hasattr(v_meth, 'checks_msgs'):
-                    if not any(msgs.get(m, True) for m in v_meth.checks_msgs):
-                        continue
-                visits.setdefault(cid, []).append(v_meth)
-                vcids.add(cid)
+                if self._is_method_enabled(v_meth):
+                    visits.setdefault(cid, []).append(v_meth)
+                    vcids.add(cid)
             elif member.startswith('leave_'):
                 l_meth = getattr(checker, member)
                 # don't use leave_methods with no activated message:
-                if hasattr(l_meth, 'checks_msgs'):
-                    if not any(msgs.get(m, True) for m in l_meth.checks_msgs):
-                        continue
-                leaves.setdefault(cid, []).append(l_meth)
-                lcids.add(cid)
+                if self._is_method_enabled(l_meth):
+                    leaves.setdefault(cid, []).append(l_meth)
+                    lcids.add(cid)
         visit_default = getattr(checker, 'visit_default', None)
         if visit_default:
             for cls in nodes.ALL_NODE_CLASSES:
@@ -615,18 +647,45 @@ class PyLintASTWalker(object):
                     visits.setdefault(cid, []).append(visit_default)
         # for now we have no "leave_default" method in Pylint
 
-    def walk(self, astng):
-        """call visit events of astng checkers for the given node, recurse on
+    def walk(self, astroid):
+        """call visit events of astroid checkers for the given node, recurse on
         its children, then leave events.
         """
-        cid = astng.__class__.__name__.lower()
-        if astng.is_statement:
+        cid = astroid.__class__.__name__.lower()
+        if astroid.is_statement:
             self.nbstatements += 1
         # generate events for this node on each checker
         for cb in self.visit_events.get(cid, ()):
-            cb(astng)
+            cb(astroid)
         # recurse on children
-        for child in astng.get_children():
+        for child in astroid.get_children():
             self.walk(child)
         for cb in self.leave_events.get(cid, ()):
-            cb(astng)
+            cb(astroid)
+
+
+PY_EXTS = ('.py', '.pyc', '.pyo', '.pyw', '.so', '.dll')
+
+def register_plugins(linter, directory):
+    """load all module and package in the given directory, looking for a
+    'register' function in each one, used to register pylint checkers
+    """
+    imported = {}
+    for filename in os.listdir(directory):
+        base, extension = splitext(filename)
+        if base in imported or base == '__pycache__':
+            continue
+        if extension in PY_EXTS and base != '__init__' or (
+             not extension and isdir(join(directory, base))):
+            try:
+                module = load_module_from_file(join(directory, filename))
+            except ValueError:
+                # empty module name (usually emacs auto-save files)
+                continue
+            except ImportError, exc:
+                print >> sys.stderr, "Problem importing module %s: %s" % (filename, exc)
+            else:
+                if hasattr(module, 'register'):
+                    module.register(linter)
+                    imported[base] = 1
+

@@ -1,4 +1,3 @@
-# Copyright (c) 2003-2010 Sylvain Thenault (thenault@gmail.com).
 # Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -14,7 +13,11 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """utilities methods and classes for reporters"""
 
-import sys, locale
+import sys
+import locale
+import os
+
+from .. import utils
 
 CMPS = ['=', '-', '+']
 
@@ -32,10 +35,28 @@ def diff_string(old, new):
     return diff_str
 
 
-class EmptyReport(Exception):
-    """raised when a report is empty and so should not be displayed"""
+class Message(object):
+    """This class represent a message to be issued by the reporters"""
 
-class BaseReporter:
+    def __init__(self, reporter, msg_id, location, msg):
+        self.msg_id = msg_id
+        self.abspath, self.module, self.obj, self.line, self.column = location
+        self.path = self.abspath.replace(reporter.path_strip_prefix, '')
+        self.msg = msg
+        self.C = msg_id[0]
+        self.category = utils.MSG_TYPES[msg_id[0]]
+        self.symbol = reporter.linter.check_message_id(msg_id).symbol
+
+    def format(self, template):
+        """Format the message according to the given template.
+
+        The template format is the one of the format method :
+        cf. http://docs.python.org/2/library/string.html#formatstrings
+        """
+        return template.format(**(self.__dict__))
+
+
+class BaseReporter(object):
     """base class for reporters
 
     symbols: show short symbolic names for messages.
@@ -45,28 +66,20 @@ class BaseReporter:
 
     def __init__(self, output=None):
         self.linter = None
-        self.include_ids = None
-        self.symbols = None
+        # self.include_ids = None # Deprecated
+        # self.symbols = None # Deprecated
         self.section = 0
         self.out = None
         self.out_encoding = None
+        self.encode = None
         self.set_output(output)
+        # Build the path prefix to strip to get relative paths
+        self.path_strip_prefix = os.getcwd() + os.sep
 
-    def make_sigle(self, msg_id):
-        """generate a short prefix for a message.
-
-        The sigle can include the id, the symbol, or both, or it can just be
-        the message class.
-        """
-        if self.include_ids:
-            sigle = msg_id
-        else:
-            sigle = msg_id[0]
-        if self.symbols:
-            symbol = self.linter.check_message_id(msg_id).symbol
-            if symbol:
-                sigle += '(%s)' % symbol
-        return sigle
+    def add_message(self, msg_id, location, msg):
+        """Client API to send a message"""
+        # Shall we store the message objects somewhere, do some validity checking ?
+        raise NotImplementedError
 
     def set_output(self, output=None):
         """set output stream"""
@@ -95,7 +108,7 @@ class BaseReporter:
     def display_results(self, layout):
         """display results encapsulated in the layout tree"""
         self.section = 0
-        if self.include_ids and hasattr(layout, 'report_id'):
+        if hasattr(layout, 'report_id'):
             layout.children[0].children[0].data += ' (%s)' % layout.report_id
         self._display(layout)
 
@@ -114,3 +127,6 @@ class BaseReporter:
         pass
 
 
+def initialize(linter):
+    """initialize linter with reporters in this package """
+    utils.register_plugins(linter, __path__[0])

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of logilab-common.
@@ -22,7 +22,93 @@ __docformat__ = "restructuredtext en"
 import sys
 from warnings import warn
 
-from .changelog import Version
+class class_deprecated(type):
+    """metaclass to print a warning on instantiation of a deprecated class"""
+
+    def __call__(cls, *args, **kwargs):
+        msg = getattr(cls, "__deprecation_warning__",
+                      "%(cls)s is deprecated") % {'cls': cls.__name__}
+        warn(msg, DeprecationWarning, stacklevel=2)
+        return type.__call__(cls, *args, **kwargs)
+
+
+def class_renamed(old_name, new_class, message=None):
+    """automatically creates a class which fires a DeprecationWarning
+    when instantiated.
+
+    >>> Set = class_renamed('Set', set, 'Set is now replaced by set')
+    >>> s = Set()
+    sample.py:57: DeprecationWarning: Set is now replaced by set
+      s = Set()
+    >>>
+    """
+    clsdict = {}
+    if message is None:
+        message = '%s is deprecated, use %s' % (old_name, new_class.__name__)
+    clsdict['__deprecation_warning__'] = message
+    try:
+        # new-style class
+        return class_deprecated(old_name, (new_class,), clsdict)
+    except (NameError, TypeError):
+        # old-style class
+        class DeprecatedClass(new_class):
+            """FIXME: There might be a better way to handle old/new-style class
+            """
+            def __init__(self, *args, **kwargs):
+                warn(message, DeprecationWarning, stacklevel=2)
+                new_class.__init__(self, *args, **kwargs)
+        return DeprecatedClass
+
+
+def class_moved(new_class, old_name=None, message=None):
+    """nice wrapper around class_renamed when a class has been moved into
+    another module
+    """
+    if old_name is None:
+        old_name = new_class.__name__
+    if message is None:
+        message = 'class %s is now available as %s.%s' % (
+            old_name, new_class.__module__, new_class.__name__)
+    return class_renamed(old_name, new_class, message)
+
+def deprecated(reason=None, stacklevel=2, name=None, doc=None):
+    """Decorator that raises a DeprecationWarning to print a message
+    when the decorated function is called.
+    """
+    def deprecated_decorator(func):
+        message = reason or 'The function "%s" is deprecated'
+        if '%s' in message:
+            message = message % func.func_name
+        def wrapped(*args, **kwargs):
+            warn(message, DeprecationWarning, stacklevel=stacklevel)
+            return func(*args, **kwargs)
+        try:
+            wrapped.__name__ = name or func.__name__
+        except TypeError: # readonly attribute in 2.3
+            pass
+        wrapped.__doc__ = doc or func.__doc__
+        return wrapped
+    return deprecated_decorator
+
+def moved(modpath, objname):
+    """use to tell that a callable has been moved to a new module.
+
+    It returns a callable wrapper, so that when its called a warning is printed
+    telling where the object can be found, import is done (and not before) and
+    the actual object is called.
+
+    NOTE: the usage is somewhat limited on classes since it will fail if the
+    wrapper is use in a class ancestors list, use the `class_moved` function
+    instead (which has no lazy import feature though).
+    """
+    def callnew(*args, **kwargs):
+        from .modutils import load_module_from_name
+        message = "object %s has been moved to module %s" % (objname, modpath)
+        warn(message, DeprecationWarning, stacklevel=2)
+        m = load_module_from_name(modpath)
+        return getattr(m, objname)(*args, **kwargs)
+    return callnew
+
 
 
 class DeprecationWrapper(object):
@@ -42,147 +128,3 @@ class DeprecationWrapper(object):
         else:
             warn(self._msg, DeprecationWarning, stacklevel=2)
             setattr(self._proxied, attr, value)
-
-
-class DeprecationManager(object):
-    """Manage the deprecation message handling. Messages are dropped for
-    versions more recent than the 'compatible' version. Example::
-
-        deprecator = deprecation.DeprecationManager("module_name")
-        deprecator.compatibility('1.3')
-
-        deprecator.warn('1.2', "message.")
-
-        @deprecator.deprecated('1.2', 'Message')
-        def any_func():
-            pass
-
-        class AnyClass(object):
-            __metaclass__ = deprecator.class_deprecated('1.2')
-    """
-    def __init__(self, module_name=None):
-        """
-        """
-        self.module_name = module_name
-        self.compatible_version = None
-
-    def compatibility(self, compatible_version):
-        """Set the compatible version.
-        """
-        self.compatible_version = compatible_version
-
-    def deprecated(self, version=None, reason=None, stacklevel=2, name=None, doc=None):
-        """Display a deprecation message only if the version is older than the
-        compatible version.
-        """
-        def decorator(func):
-            message = reason or 'The function "%s" is deprecated'
-            if '%s' in message:
-                message %= func.func_name
-            def wrapped(*args, **kwargs):
-                self.warn(version, message, stacklevel)
-                return func(*args, **kwargs)
-            return wrapped
-        return decorator
-
-    def class_deprecated(self, version=None):
-        class metaclass(type):
-            """metaclass to print a warning on instantiation of a deprecated class"""
-
-            def __call__(cls, *args, **kwargs):
-                msg = getattr(cls, "__deprecation_warning__",
-                              "%(cls)s is deprecated") % {'cls': cls.__name__}
-                self.warn(version, msg)
-                return type.__call__(cls, *args, **kwargs)
-        return metaclass
-
-    def moved(self, version, modpath, objname):
-        """use to tell that a callable has been moved to a new module.
-
-        It returns a callable wrapper, so that when its called a warning is printed
-        telling where the object can be found, import is done (and not before) and
-        the actual object is called.
-
-        NOTE: the usage is somewhat limited on classes since it will fail if the
-        wrapper is use in a class ancestors list, use the `class_moved` function
-        instead (which has no lazy import feature though).
-        """
-        def callnew(*args, **kwargs):
-            from logilab.common.modutils import load_module_from_name
-            message = "object %s has been moved to module %s" % (objname, modpath)
-            self.warn(version, message)
-            m = load_module_from_name(modpath)
-            return getattr(m, objname)(*args, **kwargs)
-        return callnew
-
-    def class_renamed(self, version, old_name, new_class, message=None):
-        clsdict = {}
-        if message is None:
-            message = '%s is deprecated, use %s' % (old_name, new_class.__name__)
-        clsdict['__deprecation_warning__'] = message
-        try:
-            # new-style class
-            return self.class_deprecated(version)(old_name, (new_class,), clsdict)
-        except (NameError, TypeError):
-            # old-style class
-            class DeprecatedClass(new_class):
-                """FIXME: There might be a better way to handle old/new-style class
-                """
-                def __init__(self, *args, **kwargs):
-                    self.warn(version, message)
-                    new_class.__init__(self, *args, **kwargs)
-            return DeprecatedClass
-
-    def class_moved(self, version, new_class, old_name=None, message=None):
-        """nice wrapper around class_renamed when a class has been moved into
-        another module
-        """
-        if old_name is None:
-            old_name = new_class.__name__
-        if message is None:
-            message = 'class %s is now available as %s.%s' % (
-                old_name, new_class.__module__, new_class.__name__)
-        return self.class_renamed(version, old_name, new_class, message)
-
-    def warn(self, version=None, reason="", stacklevel=2):
-        """Display a deprecation message only if the version is older than the
-        compatible version.
-        """
-        if self.module_name and version:
-            reason = '[%s %s] %s' % (self.module_name, version, reason)
-        elif self.module_name:
-            reason = '[%s] %s' % (self.module_name, reason)
-        elif version:
-            reason = '[%s] %s' % (version, reason)
-        if (self.compatible_version is None
-            or version is None
-            or Version(version) < Version(self.compatible_version)):
-            warn(reason, DeprecationWarning, stacklevel=stacklevel)
-
-_defaultdeprecator = DeprecationManager()
-
-def deprecated(reason=None, stacklevel=2, name=None, doc=None):
-    return _defaultdeprecator.deprecated(None, reason, stacklevel, name, doc)
-
-class_deprecated = _defaultdeprecator.class_deprecated()
-
-def moved(modpath, objname):
-    return _defaultdeprecator.moved(None, modpath, objname)
-moved.__doc__ = _defaultdeprecator.moved.__doc__
-
-def class_renamed(old_name, new_class, message=None):
-    """automatically creates a class which fires a DeprecationWarning
-    when instantiated.
-
-    >>> Set = class_renamed('Set', set, 'Set is now replaced by set')
-    >>> s = Set()
-    sample.py:57: DeprecationWarning: Set is now replaced by set
-    s = Set()
-    >>>
-    """
-    return _defaultdeprecator.class_renamed(None, old_name, new_class, message)
-
-def class_moved(new_class, old_name=None, message=None):
-    return _defaultdeprecator.class_moved(None, new_class, old_name, message)
-class_moved.__doc__ = _defaultdeprecator.class_moved.__doc__
-

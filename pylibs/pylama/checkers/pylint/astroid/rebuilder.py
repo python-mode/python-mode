@@ -1,25 +1,26 @@
 # copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of logilab-astng.
+# This file is part of astroid.
 #
-# logilab-astng is free software: you can redistribute it and/or modify it
+# astroid is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 2.1 of the License, or (at your
 # option) any later version.
 #
-# logilab-astng is distributed in the hope that it will be useful, but
+# astroid is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License along
-# with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
+# with astroid. If not, see <http://www.gnu.org/licenses/>.
 """this module contains utilities for rebuilding a _ast tree in
-order to get a single ASTNG representation
+order to get a single Astroid representation
 """
 
 import sys
+from warnings import warn
 from _ast import (Expr as Discard, Str,
     # binary operators
     Add, Div, FloorDiv,  Mod, Mult, Pow, Sub, BitAnd, BitOr, BitXor,
@@ -117,29 +118,56 @@ def _set_infos(oldnode, newnode, parent):
 
 
 class TreeRebuilder(object):
-    """Rebuilds the _ast tree to become an ASTNG tree"""
+    """Rebuilds the _ast tree to become an Astroid tree"""
 
-    _visit_meths = {}
-    def __init__(self):
-        self.init()
-
-    def init(self):
+    def __init__(self, manager):
+        self._manager = manager
         self.asscontext = None
         self._metaclass = ['']
         self._global_names = []
         self._from_nodes = []
         self._delayed_assattr = []
+        self._visit_meths = {}
+
+    def _transform(self, node):
+        try:
+            transforms = self._manager.transforms[type(node)]
+        except KeyError:
+            return node # no transform registered for this class of node
+        orig_node = node # copy the reference
+        for transform_func, predicate in transforms:
+            if predicate is None or predicate(node):
+                ret = transform_func(node)
+                # if the transformation function returns something, it's
+                # expected to be a replacement for the node
+                if ret is not None:
+                    if node is not orig_node:
+                        # node has already be modified by some previous
+                        # transformation, warn about it
+                        warn('node %s substitued multiple times' % node)
+                    node = ret
+        return node
+
+    def visit_module(self, node, modname, package):
+        """visit a Module node by returning a fresh instance of it"""
+        newnode = new.Module(modname, None)
+        newnode.package = package
+        _lineno_parent(node, newnode, parent=None)
+        _init_set_doc(node, newnode)
+        newnode.body = [self.visit(child, newnode) for child in node.body]
+        newnode.set_line_info(newnode.last_child())
+        return self._transform(newnode)
 
     def visit(self, node, parent):
         cls = node.__class__
         if cls in self._visit_meths:
-            return self._visit_meths[cls](node, parent)
+            visit_method = self._visit_meths[cls]
         else:
             cls_name = cls.__name__
             visit_name = 'visit_' + REDIRECT.get(cls_name, cls_name).lower()
             visit_method = getattr(self, visit_name)
             self._visit_meths[cls] = visit_method
-            return visit_method(node, parent)
+        return self._transform(visit_method(node, parent))
 
     def _save_assignment(self, node, name=None):
         """save assignement situation since node.parent is not available yet"""
@@ -157,6 +185,8 @@ class TreeRebuilder(object):
         newnode.args = [self.visit(child, newnode) for child in node.args]
         self.asscontext = None
         newnode.defaults = [self.visit(child, newnode) for child in node.defaults]
+        newnode.kwonlyargs = []
+        newnode.kw_defaults = []
         newnode.vararg = node.vararg
         newnode.kwarg = node.kwarg
         # save argument names in locals:
@@ -287,7 +317,7 @@ class TreeRebuilder(object):
         return newnode
 
     def visit_class(self, node, parent):
-        """visit a Class node to become astng"""
+        """visit a Class node to become astroid"""
         self._metaclass.append(self._metaclass[-1])
         newnode = new.Class(node.name, None)
         _lineno_parent(node, newnode, parent)
@@ -342,7 +372,7 @@ class TreeRebuilder(object):
     def visit_decorators(self, node, parent):
         """visit a Decorators node by returning a fresh instance of it"""
         # /!\ node is actually a _ast.Function node while
-        # parent is a astng.nodes.Function node
+        # parent is a astroid.nodes.Function node
         newnode = new.Decorators()
         _lineno_parent(node, newnode, parent)
         if 'decorators' in node._fields: # py < 2.6, i.e. 2.5
@@ -461,7 +491,7 @@ class TreeRebuilder(object):
         return newnode
 
     def visit_function(self, node, parent):
-        """visit an Function node to become astng"""
+        """visit an Function node to become astroid"""
         self._global_names.append({})
         newnode = new.Function(node.name, None)
         _lineno_parent(node, newnode, parent)
@@ -523,7 +553,7 @@ class TreeRebuilder(object):
         return newnode
 
     def visit_global(self, node, parent):
-        """visit an Global node to become astng"""
+        """visit an Global node to become astroid"""
         newnode = new.Global(node.names)
         _set_infos(node, newnode, parent)
         if self._global_names: # global at the module level, no effect
@@ -603,16 +633,6 @@ class TreeRebuilder(object):
         newnode.elt = self.visit(node.elt, newnode)
         newnode.generators = [self.visit(child, newnode)
                               for child in node.generators]
-        newnode.set_line_info(newnode.last_child())
-        return newnode
-
-    def visit_module(self, node, modname, package):
-        """visit a Module node by returning a fresh instance of it"""
-        newnode = new.Module(modname, None)
-        newnode.package = package
-        _lineno_parent(node, newnode, parent=None)
-        _init_set_doc(node, newnode)
-        newnode.body = [self.visit(child, newnode) for child in node.body]
         newnode.set_line_info(newnode.last_child())
         return newnode
 
@@ -787,12 +807,14 @@ class TreeRebuilder(object):
     def visit_with(self, node, parent):
         newnode = new.With()
         _lineno_parent(node, newnode, parent)
-        _node = getattr(node, 'items', [node])[0] # python 3.3 XXX
-        newnode.expr = self.visit(_node.context_expr, newnode)
+        expr = self.visit(node.context_expr, newnode)
         self.asscontext = "Ass"
-        if _node.optional_vars is not None:
-            newnode.vars = self.visit(_node.optional_vars, newnode)
+        if node.optional_vars is not None:
+            vars = self.visit(node.optional_vars, newnode)
+        else:
+            vars = None
         self.asscontext = None
+        newnode.items = [(expr, vars)]
         newnode.body = [self.visit(child, newnode) for child in node.body]
         newnode.set_line_info(newnode.last_child())
         return newnode
@@ -813,8 +835,16 @@ class TreeRebuilder3k(TreeRebuilder):
     def visit_arg(self, node, parent):
         """visit a arg node by returning a fresh AssName instance"""
         # the <arg> node is coming from py>=3.0, but we use AssName in py2.x
-        # XXX or we should instead introduce a Arg node in astng ?
+        # XXX or we should instead introduce a Arg node in astroid ?
         return self.visit_assname(node, parent, node.arg)
+
+    def visit_arguments(self, node, parent):
+        newnode = super(TreeRebuilder3k, self).visit_arguments(node, parent)
+        self.asscontext = "Ass"
+        newnode.kwonlyargs = [self.visit(child, newnode) for child in node.kwonlyargs]
+        self.asscontext = None
+        newnode.kw_defaults = [self.visit(child, newnode) if child else None for child in node.kw_defaults]
+        return newnode
 
     def visit_excepthandler(self, node, parent):
         """visit an ExceptHandler node by returning a fresh instance of it"""
@@ -862,10 +892,11 @@ class TreeRebuilder3k(TreeRebuilder):
             newnode.finalbody = [self.visit(n, newnode) for n in node.finalbody]
             if node.handlers:
                 excnode = new.TryExcept()
-                _lineno_parent(node, excnode, parent)
-                excnode.body = [self.visit(child, newnode) for child in node.body]
-                excnode.handlers = [self.visit(child, newnode) for child in node.handlers]
-                excnode.orelse = [self.visit(child, newnode) for child in node.orelse]
+                _lineno_parent(node, excnode, newnode)
+                excnode.body = [self.visit(child, excnode) for child in node.body]
+                excnode.handlers = [self.visit(child, excnode) for child in node.handlers]
+                excnode.orelse = [self.visit(child, excnode) for child in node.orelse]
+                excnode.set_line_info(excnode.last_child())
                 newnode.body = [excnode]
             else:
                 newnode.body = [self.visit(child, newnode) for child in node.body]
@@ -875,6 +906,28 @@ class TreeRebuilder3k(TreeRebuilder):
             newnode.body = [self.visit(child, newnode) for child in node.body]
             newnode.handlers = [self.visit(child, newnode) for child in node.handlers]
             newnode.orelse = [self.visit(child, newnode) for child in node.orelse]
+        newnode.set_line_info(newnode.last_child())
+        return newnode
+
+    def visit_with(self, node, parent):
+        if 'items' not in node._fields:
+            # python < 3.3
+            return super(TreeRebuilder3k, self).visit_with(node, parent)
+
+        newnode = new.With()
+        _lineno_parent(node, newnode, parent)
+        def visit_child(child):
+            expr = self.visit(child.context_expr, newnode)
+            self.asscontext = 'Ass'
+            if child.optional_vars:
+                var = self.visit(child.optional_vars, newnode)
+            else:
+                var = None
+            self.asscontext = None
+            return expr, var
+        newnode.items = [visit_child(child)
+                         for child in node.items]
+        newnode.body = [self.visit(child, newnode) for child in node.body]
         newnode.set_line_info(newnode.last_child())
         return newnode
 

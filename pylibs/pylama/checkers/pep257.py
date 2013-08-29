@@ -54,6 +54,7 @@ are integers specifying where in `context` the failure occured.
 Also, see examples in "Check functions" section.
 
 """
+__version__ = '0.2.4'
 
 from curses.ascii import isascii
 import inspect
@@ -150,6 +151,23 @@ def rel_pos(abs_pos, source):
     return len(lines) + 1, abs_pos - len(''.join(lines))
 
 
+def get_summary_line_info(thedocstring):
+    """Get the (summary_line, line_number) tuple for the given docstring.
+
+    The returned 'summary_line' is the pep257 summary line and 'line_number' is
+    the zero-based docstring line number containing the summary line, which
+    will be either 0 (zeroth line) or 1 (first line). Any docstring checks
+    relating to the summary line should use this method to ensure consistent
+    treatment of the summary line.
+
+    """
+    lines = eval(thedocstring).split('\n')
+    first_line = lines[0].strip()
+    if len(lines) == 1 or len(first_line) > 0:
+        return first_line, 0
+    return lines[1].strip(), 1
+
+
 #
 # Parsing
 #
@@ -167,8 +185,11 @@ def parse_module_docstring(source):
 
 def parse_docstring(source, what=''):
     """Parse docstring given `def` or `class` source."""
+    module_docstring = parse_module_docstring(source)
     if what.startswith('module'):
-        return parse_module_docstring(source)
+        return module_docstring
+    if module_docstring:
+        return module_docstring
     token_gen = tk.generate_tokens(StringIO(source).readline)
     try:
         kind = None
@@ -249,7 +270,7 @@ def parse_contexts(source, kind):
     if kind == 'def_docstring':
         return parse_functions(source) + parse_methods(source)
     if kind == 'docstring':
-        return ([source] + parse_functions(source) +
+        return ([parse_module_docstring(source)] + parse_functions(source) +
                 parse_classes(source) + parse_methods(source))
 
 
@@ -378,7 +399,7 @@ def check_files(filenames):
 
 
 def parse_options():
-    parser = OptionParser()
+    parser = OptionParser(version=__version__)
     parser.add_option('-e', '--explain', action='store_true',
                       help='show explanation of each error')
     parser.add_option('-r', '--range', action='store_true',
@@ -418,6 +439,7 @@ def main(options, arguments):
                 f.close()
     for error in sorted(errors):
         print_error(str(error))
+    return 1 if errors else 0
 
 
 #
@@ -546,7 +568,10 @@ def check_ends_with_period(docstring, context, is_script):
     The [first line of a] docstring is a phrase ending in a period.
 
     """
-    if docstring and not eval(docstring).split('\n')[0].strip().endswith('.'):
+    if not docstring:
+        return
+    (summary_line, line_number) = get_summary_line_info(docstring)
+    if not summary_line.endswith('.'):
         return True
 
 
@@ -610,8 +635,10 @@ def check_blank_after_summary(docstring, context, is_script):
     if not docstring:
         return
     lines = eval(docstring).split('\n')
-    if len(lines) > 1 and lines[1].strip() != '':
-        return True
+    if len(lines) > 1:
+        (summary_line, line_number) = get_summary_line_info(docstring)
+        if len(lines) <= (line_number+1) or lines[line_number+1].strip() != '':
+            return True
 
 
 def check_indent(docstring, context, is_script):
@@ -645,7 +672,7 @@ def check_blank_before_after_class(class_docstring, context, is_script):
     """
     if not class_docstring:
         return
-    before, after = context.split(class_docstring)
+    before, after = context.split(class_docstring)[:2]
     before_blanks = [not line.strip() for line in before.split('\n')]
     after_blanks = [not line.strip() for line in after.split('\n')]
     if before_blanks[-3:] != [False, True, True]:
@@ -671,6 +698,6 @@ def check_blank_after_last_paragraph(docstring, context, is_script):
 
 if __name__ == '__main__':
     try:
-        main(*parse_options())
+        sys.exit(main(*parse_options()))
     except KeyboardInterrupt:
         pass

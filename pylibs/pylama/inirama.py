@@ -1,6 +1,16 @@
 """
     Inirama is a python module that parses INI files.
 
+    .. _badges:
+    .. include:: ../README.rst
+        :start-after: .. _badges:
+        :end-before: .. _contents:
+
+    .. _description:
+    .. include:: ../README.rst
+        :start-after: .. _description:
+        :end-before: .. _badges:
+
     :copyright: 2013 by Kirill Klenov.
     :license: BSD, see LICENSE for more details.
 """
@@ -13,10 +23,51 @@ from collections import MutableMapping
 try:
     from collections import OrderedDict
 except ImportError:
-    from ordereddict import OrderedDict
+    from UserDict import DictMixin
+
+    class OrderedDict(dict, DictMixin):
+
+        null = object()
+
+        def __init__(self, *args, **kwargs):
+            self.clear()
+            self.update(*args, **kwargs)
+
+        def clear(self):
+            self.__map = dict()
+            self.__order = list()
+            dict.clear(self)
+
+    def __setitem__(self, key, value):
+        if key not in self:
+            self.__map[key] = len(self.__order)
+            self.__order.append(key)
+        dict.__setitem__(self, key, value)
+
+    def __delitem__(self, key):
+        dict.__delitem__(self, key)
+        ix = self.__map.pop(key)
+        self.__order = self.null
+
+    def __iter__(self):
+        for key in self.__order:
+            if not key is self.null:
+                yield key
+
+    def keys(self):
+        return list(self)
+
+    setdefault = DictMixin.setdefault
+    update = DictMixin.update
+    pop = DictMixin.pop
+    values = DictMixin.values
+    items = DictMixin.items
+    iterkeys = DictMixin.iterkeys
+    itervalues = DictMixin.itervalues
+    iteritems = DictMixin.iteritems
 
 
-__version__ = '0.4.1'
+__version__ = '0.5.0'
 __project__ = 'Inirama'
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "BSD"

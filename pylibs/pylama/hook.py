@@ -1,5 +1,4 @@
-""" SCM hooks. Integration with git and mercurial.
-"""
+""" SCM hooks. Integration with git and mercurial. """
 from __future__ import absolute_import
 
 import sys
@@ -114,4 +113,4 @@ def install_hook(path):
         LOGGER.error('VCS has not found. Check your path.')
         sys.exit(1)
 
-# lint_ignore=F0401
+# lint_ignore=F0401,E1103

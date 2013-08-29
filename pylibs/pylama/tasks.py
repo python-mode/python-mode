@@ -1,5 +1,4 @@
-""" Async code checking.
-"""
+""" Async code checking. """
 import logging
 import threading
 from os import path as op

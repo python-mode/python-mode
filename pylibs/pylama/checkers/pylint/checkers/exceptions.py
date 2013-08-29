@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2007 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -18,12 +18,12 @@ import sys
 
 from ..logilab.common.compat import builtins
 BUILTINS_NAME = builtins.__name__
-from ..logilab import astng
-from ..logilab.astng import YES, Instance, unpack_infer
+from  .. import astroid
+from ..astroid import YES, Instance, unpack_infer
 
-from ..checkers import BaseChecker
-from ..checkers.utils import is_empty, is_raising
-from ..interfaces import IASTNGChecker
+from . import BaseChecker
+from .utils import is_empty, is_raising, check_messages
+from ..interfaces import IAstroidChecker
 
 
 OVERGENERAL_EXCEPTIONS = ('Exception',)
@@ -71,6 +71,12 @@ MSGS = {
               'Used when the exception to catch is of the form \
               "except A or B:".  If intending to catch multiple, \
               rewrite as "except (A, B):"'),
+    'W0712': ('Implicit unpacking of exceptions is not supported in Python 3',
+              'unpacking-in-except',
+              'Python3 will not allow implicit unpacking of exceptions in except '
+              'clauses. '
+              'See http://www.python.org/dev/peps/pep-3110/',
+              {'maxversion': (3, 0)}),
     }
 
 
@@ -85,7 +91,7 @@ class ExceptionsChecker(BaseChecker):
     * type of raise argument : string, Exceptions, other values
     """
 
-    __implements__ = IASTNGChecker
+    __implements__ = IAstroidChecker
 
     name = 'exceptions'
     msgs = MSGS
@@ -99,6 +105,7 @@ class ExceptionsChecker(BaseChecker):
                 ),
                )
 
+    @check_messages('W0701', 'W0710', 'E0702', 'E0710', 'E0711')
     def visit_raise(self, node):
         """visit raise possibly inferring value"""
         # ignore empty raise
@@ -110,7 +117,7 @@ class ExceptionsChecker(BaseChecker):
         else:
             try:
                 value = unpack_infer(expr).next()
-            except astng.InferenceError:
+            except astroid.InferenceError:
                 return
             self._check_raise_value(node, value)
 
@@ -118,29 +125,29 @@ class ExceptionsChecker(BaseChecker):
         """check for bad values, string exception and class inheritance
         """
         value_found = True
-        if isinstance(expr, astng.Const):
+        if isinstance(expr, astroid.Const):
             value = expr.value
             if isinstance(value, str):
                 self.add_message('W0701', node=node)
             else:
                 self.add_message('E0702', node=node,
                                  args=value.__class__.__name__)
-        elif (isinstance(expr, astng.Name) and \
+        elif (isinstance(expr, astroid.Name) and \
                  expr.name in ('None', 'True', 'False')) or \
-                 isinstance(expr, (astng.List, astng.Dict, astng.Tuple,
-                                   astng.Module, astng.Function)):
+                 isinstance(expr, (astroid.List, astroid.Dict, astroid.Tuple,
+                                   astroid.Module, astroid.Function)):
             self.add_message('E0702', node=node, args=expr.name)
-        elif ( (isinstance(expr, astng.Name) and expr.name == 'NotImplemented')
-               or (isinstance(expr, astng.CallFunc) and
-                   isinstance(expr.func, astng.Name) and
+        elif ( (isinstance(expr, astroid.Name) and expr.name == 'NotImplemented')
+               or (isinstance(expr, astroid.CallFunc) and
+                   isinstance(expr.func, astroid.Name) and
                    expr.func.name == 'NotImplemented') ):
             self.add_message('E0711', node=node)
-        elif isinstance(expr, astng.BinOp) and expr.op == '%':
+        elif isinstance(expr, astroid.BinOp) and expr.op == '%':
             self.add_message('W0701', node=node)
-        elif isinstance(expr, (Instance, astng.Class)):
+        elif isinstance(expr, (Instance, astroid.Class)):
             if isinstance(expr, Instance):
                 expr = expr._proxied
-            if (isinstance(expr, astng.Class) and
+            if (isinstance(expr, astroid.Class) and
                     not inherit_from_std_ex(expr) and
                     expr.root().name != BUILTINS_NAME):
                 if expr.newstyle:
@@ -154,6 +161,12 @@ class ExceptionsChecker(BaseChecker):
         return value_found
 
 
+    @check_messages('W0712')
+    def visit_excepthandler(self, node):
+        """Visit an except handler block and check for exception unpacking."""
+        if isinstance(node.name, (astroid.Tuple, astroid.List)):
+            self.add_message('W0712', node=node)
+    @check_messages('W0702', 'W0703', 'W0704', 'W0711', 'E0701')
     def visit_tryexcept(self, node):
         """check for empty except"""
         exceptions_classes = []
@@ -171,19 +184,19 @@ class ExceptionsChecker(BaseChecker):
                     msg = 'empty except clause should always appear last'
                     self.add_message('E0701', node=node, args=msg)
 
-            elif isinstance(handler.type, astng.BoolOp):
+            elif isinstance(handler.type, astroid.BoolOp):
                 self.add_message('W0711', node=handler, args=handler.type.op)
             else:
                 try:
                     excs = list(unpack_infer(handler.type))
-                except astng.InferenceError:
+                except astroid.InferenceError:
                     continue
                 for exc in excs:
                     # XXX skip other non class nodes
-                    if exc is YES or not isinstance(exc, astng.Class):
+                    if exc is YES or not isinstance(exc, astroid.Class):
                         continue
                     exc_ancestors = [anc for anc in exc.ancestors()
-                                     if isinstance(anc, astng.Class)]
+                                     if isinstance(anc, astroid.Class)]
                     for previous_exc in exceptions_classes:
                         if previous_exc in exc_ancestors:
                             msg = '%s is an ancestor class of %s' % (

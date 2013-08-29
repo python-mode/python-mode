@@ -10,13 +10,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-""" Copyright (c) 2002-2003 LOGILAB S.A. (Paris, FRANCE).
- http://www.logilab.fr/ -- mailto:contact@logilab.fr
-
-Interfaces for PyLint objects
-"""
-
-__revision__ = "$Id: interfaces.py,v 1.9 2004-04-24 12:14:53 syt Exp $"
+"""Interfaces for PyLint objects"""
 
 from .logilab.common.interface import Interface
 
@@ -32,51 +26,31 @@ class IChecker(Interface):
     def close(self):
         """called after visiting project (i.e set of modules)"""
 
-##     def open_module(self):
-##         """called before visiting a module"""
-
-##     def close_module(self):
-##         """called after visiting a module"""
-
 
 class IRawChecker(IChecker):
     """interface for checker which need to parse the raw file
     """
 
-    def process_module(self, astng):
+    def process_module(self, astroid):
         """ process a module
 
-        the module's content is accessible via astng.file_stream
+        the module's content is accessible via astroid.file_stream
         """
 
 
-class IASTNGChecker(IChecker):
+class ITokenChecker(IChecker):
+    """Interface for checkers that need access to the token list."""
+    def process_tokens(self, tokens):
+        """Process a module.
+
+        tokens is a list of all source code tokens in the file.
+        """
+
+
+class IAstroidChecker(IChecker):
     """ interface for checker which prefers receive events according to
     statement type
     """
-
-
-class ILinter(Interface):
-    """interface for the linter class
-
-    the linter class will generate events to its registered checkers.
-    Each checker may interact with the linter instance using this API
-    """
-
-    def register_checker(self, checker):
-        """register a new checker class
-
-        checker is a class implementing IrawChecker or / and IASTNGChecker
-        """
-
-    def add_message(self, msg_id, line=None, node=None, args=None):
-        """add the message corresponding to the given id.
-
-        If provided, msg is expanded using args
-
-        astng checkers should provide the node argument,
-        raw checkers should provide the line argument.
-        """
 
 
 class IReporter(Interface):
@@ -95,4 +69,4 @@ class IReporter(Interface):
         """
 
 
-__all__ = ('IRawChecker', 'ILinter', 'IReporter')
+__all__ = ('IRawChecker', 'IAstroidChecker', 'ITokenChecker', 'IReporter')

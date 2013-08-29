@@ -20,19 +20,25 @@ Check source code is ascii only or has an encoding declaration (PEP 263)
 import re
 
 from ..interfaces import IRawChecker
-from ..checkers import BaseChecker
+from . import BaseChecker
 
 
 MSGS = {
     'W0511': ('%s',
               'fixme',
               'Used when a warning note as FIXME or XXX is detected.'),
+    'W0512': ('Cannot decode using encoding "%s", unexpected byte at position %d',
+              'invalid-encoded-data',
+              'Used when a source line cannot be decoded using the specified '
+              'source file encoding.',
+              {'maxversion': (3, 0)}),
     }
+
 
 class EncodingChecker(BaseChecker):
     """checks for:
     * warning notes in the code like FIXME, XXX
-    * PEP 263: source code with non ascii character but no encoding declaration
+    * encoding issues.
     """
     __implements__ = IRawChecker
 
@@ -48,30 +54,36 @@ separated by a comma.'
                  }),
                )
 
-    def __init__(self, linter=None):
-        BaseChecker.__init__(self, linter)
+    def _check_note(self, notes, lineno, line):
+        match = notes.search(line)
+        if match:
+            self.add_message('W0511', args=line[match.start():-1], line=lineno)
 
-    def process_module(self, node):
-        """inspect the source file to found encoding problem or fixmes like
+    def _check_encoding(self, lineno, line, file_encoding):
+        try:
+            return unicode(line, file_encoding)
+        except UnicodeDecodeError, ex:
+            self.add_message('W0512', line=lineno,
+                             args=(file_encoding, ex.args[2]))
+
+    def process_module(self, module):
+        """inspect the source file to find encoding problem or fixmes like
         notes
         """
-        stream = node.file_stream
-        stream.seek(0) # XXX may be removed with astng > 0.23
-        # warning notes in the code
-        notes = []
-        for note in self.config.notes:
-            notes.append(re.compile(note))
-        linenum = 1
-        for line in stream.readlines():
-            for note in notes:
-                match = note.search(line)
-                if match:
-                    self.add_message('W0511', args=line[match.start():-1],
-                                     line=linenum)
-                    break
-            linenum += 1
-
-
+        stream = module.file_stream
+        stream.seek(0) # XXX may be removed with astroid > 0.23
+        if self.config.notes:
+            notes = re.compile('|'.join(self.config.notes))
+        else:
+            notes = None
+        if module.file_encoding:
+            encoding = module.file_encoding
+        else:
+            encoding = 'ascii'
+        for lineno, line in enumerate(stream):
+            line = self._check_encoding(lineno+1, line, encoding)
+            if line is not None and notes:
+                self._check_note(notes, lineno+1, line)
 
 def register(linter):
     """required method to auto register this checker"""

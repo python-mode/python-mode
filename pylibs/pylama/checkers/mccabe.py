@@ -3,17 +3,18 @@
     http://nedbatchelder.com/blog/200803/python_code_complexity_microtool.html
     MIT License.
 """
-from __future__ import absolute_import, with_statement
+from __future__ import with_statement
 
-import sys
-
-import ast
 import optparse
-from ast import iter_child_nodes
+import sys
 from collections import defaultdict
+try:
+    import ast
+    from ast import iter_child_nodes
+except ImportError:   # Python 2.5
+    from flake8.util import ast, iter_child_nodes
 
-
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 
 class ASTVisitor(object):
@@ -263,14 +264,13 @@ def get_code_complexity(code, threshold=7, filename='stdin'):
 
     complx = []
     McCabeChecker.max_complexity = threshold
-    for lineno, offset, text, _ in McCabeChecker(tree, filename).run():
-        complx.append(dict(
-            type=McCabeChecker._code,
-            lnum=lineno,
-            text=text,
-        ))
+    for lineno, offset, text, check in McCabeChecker(tree, filename).run():
+        complx.append('%s:%d:1: %s' % (filename, lineno, text))
 
-    return complx
+    if len(complx) == 0:
+        return 0
+    print('\n'.join(complx))
+    return len(complx)
 
 
 def get_module_complexity(module_path, threshold=7):
@@ -310,5 +310,3 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-
-# lint=0

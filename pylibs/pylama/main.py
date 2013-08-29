@@ -1,5 +1,4 @@
-""" Pylama's shell support.
-"""
+""" Pylama's shell support. """
 from __future__ import absolute_import, with_statement
 
 import sys

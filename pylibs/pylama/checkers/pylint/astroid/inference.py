@@ -1,21 +1,21 @@
 # copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of logilab-astng.
+# This file is part of astroid.
 #
-# logilab-astng is free software: you can redistribute it and/or modify it
+# astroid is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 2.1 of the License, or (at your
 # option) any later version.
 #
-# logilab-astng is distributed in the hope that it will be useful, but
+# astroid is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License along
-# with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
-"""this module contains a set of functions to handle inference on astng trees
+# with astroid. If not, see <http://www.gnu.org/licenses/>.
+"""this module contains a set of functions to handle inference on astroid trees
 """
 
 __doctype__ = "restructuredtext en"
@@ -24,14 +24,14 @@ from itertools import chain
 
 from . import nodes
 
-from .manager import ASTNGManager
-from .exceptions import (ASTNGError,
+from .manager import AstroidManager
+from .exceptions import (AstroidError,
     InferenceError, NoDefault, NotFoundError, UnresolvableName)
 from .bases import YES, Instance, InferenceContext, \
      _infer_stmts, copy_context, path_wrapper, raise_if_nothing_infered
 from .protocols import _arguments_infer_argname
 
-MANAGER = ASTNGManager()
+MANAGER = AstroidManager()
 
 
 class CallContext:
@@ -55,7 +55,7 @@ class CallContext:
         try:
             return self.nargs[name].infer(context)
         except KeyError:
-            # Function.args.args can be None in astng (means that we don't have
+            # Function.args.args can be None in astroid (means that we don't have
             # information on argnames)
             argindex = funcnode.args.find_argname(name)[0]
             if argindex is not None:
@@ -126,15 +126,15 @@ def infer_end(self, context=None):
     """inference's end for node such as Module, Class, Function, Const...
     """
     yield self
-nodes.Module.infer = infer_end
-nodes.Class.infer = infer_end
-nodes.Function.infer = infer_end
-nodes.Lambda.infer = infer_end
-nodes.Const.infer = infer_end
-nodes.List.infer = infer_end
-nodes.Tuple.infer = infer_end
-nodes.Dict.infer = infer_end
-nodes.Set.infer = infer_end
+nodes.Module._infer = infer_end
+nodes.Class._infer = infer_end
+nodes.Function._infer = infer_end
+nodes.Lambda._infer = infer_end
+nodes.Const._infer = infer_end
+nodes.List._infer = infer_end
+nodes.Tuple._infer = infer_end
+nodes.Dict._infer = infer_end
+nodes.Set._infer = infer_end
 
 def infer_name(self, context=None):
     """infer a Name: use name lookup rules"""
@@ -144,7 +144,7 @@ def infer_name(self, context=None):
     context = context.clone()
     context.lookupname = self.name
     return _infer_stmts(stmts, context, frame)
-nodes.Name.infer = path_wrapper(infer_name)
+nodes.Name._infer = path_wrapper(infer_name)
 nodes.AssName.infer_lhs = infer_name # won't work with a path wrapper
 
 
@@ -164,7 +164,7 @@ def infer_callfunc(self, context=None):
         except InferenceError:
             ## XXX log error ?
             continue
-nodes.CallFunc.infer = path_wrapper(raise_if_nothing_infered(infer_callfunc))
+nodes.CallFunc._infer = path_wrapper(raise_if_nothing_infered(infer_callfunc))
 
 
 def infer_import(self, context=None, asname=True):
@@ -176,7 +176,7 @@ def infer_import(self, context=None, asname=True):
         yield self.do_import_module(self.real_name(name))
     else:
         yield self.do_import_module(name)
-nodes.Import.infer = path_wrapper(infer_import)
+nodes.Import._infer = path_wrapper(infer_import)
 
 def infer_name_module(self, name):
     context = InferenceContext()
@@ -199,7 +199,7 @@ def infer_from(self, context=None, asname=True):
         return _infer_stmts(module.getattr(name, ignore_locals=module is self.root()), context)
     except NotFoundError:
         raise InferenceError(name)
-nodes.From.infer = path_wrapper(infer_from)
+nodes.From._infer = path_wrapper(infer_from)
 
 
 def infer_getattr(self, context=None):
@@ -219,7 +219,7 @@ def infer_getattr(self, context=None):
         except AttributeError:
             # XXX method / function
             context.boundnode = None
-nodes.Getattr.infer = path_wrapper(raise_if_nothing_infered(infer_getattr))
+nodes.Getattr._infer = path_wrapper(raise_if_nothing_infered(infer_getattr))
 nodes.AssAttr.infer_lhs = raise_if_nothing_infered(infer_getattr) # # won't work with a path wrapper
 
 
@@ -230,7 +230,7 @@ def infer_global(self, context=None):
         return _infer_stmts(self.root().getattr(context.lookupname), context)
     except NotFoundError:
         raise InferenceError()
-nodes.Global.infer = path_wrapper(infer_global)
+nodes.Global._infer = path_wrapper(infer_global)
 
 
 def infer_subscript(self, context=None):
@@ -257,7 +257,7 @@ def infer_subscript(self, context=None):
             yield infered
     else:
         raise InferenceError()
-nodes.Subscript.infer = path_wrapper(infer_subscript)
+nodes.Subscript._infer = path_wrapper(infer_subscript)
 nodes.Subscript.infer_lhs = raise_if_nothing_infered(infer_subscript)
 
 
@@ -287,7 +287,7 @@ def infer_unaryop(self, context=None):
                     raise
                 except:
                     yield YES
-nodes.UnaryOp.infer = path_wrapper(infer_unaryop)
+nodes.UnaryOp._infer = path_wrapper(infer_unaryop)
 
 
 BIN_OP_METHOD = {'+':  '__add__',
@@ -332,7 +332,7 @@ def infer_binop(self, context=None):
         for rhs in self.right.infer(context):
             for val in _infer_binop(self.op, rhs, lhs, context):
                 yield val
-nodes.BinOp.infer = path_wrapper(infer_binop)
+nodes.BinOp._infer = path_wrapper(infer_binop)
 
 
 def infer_arguments(self, context=None):
@@ -340,7 +340,7 @@ def infer_arguments(self, context=None):
     if name is None:
         raise InferenceError()
     return _arguments_infer_argname(self, name, context)
-nodes.Arguments.infer = infer_arguments
+nodes.Arguments._infer = infer_arguments
 
 
 def infer_ass(self, context=None):
@@ -352,8 +352,8 @@ def infer_ass(self, context=None):
         return stmt.infer(context)
     stmts = list(self.assigned_stmts(context=context))
     return _infer_stmts(stmts, context)
-nodes.AssName.infer = path_wrapper(infer_ass)
-nodes.AssAttr.infer = path_wrapper(infer_ass)
+nodes.AssName._infer = path_wrapper(infer_ass)
+nodes.AssAttr._infer = path_wrapper(infer_ass)
 
 def infer_augassign(self, context=None):
     failures = []
@@ -364,7 +364,7 @@ def infer_augassign(self, context=None):
         for rhs in self.value.infer(context):
             for val in _infer_binop(self.op, rhs, lhs, context):
                 yield val
-nodes.AugAssign.infer = path_wrapper(infer_augassign)
+nodes.AugAssign._infer = path_wrapper(infer_augassign)
 
 
 # no infer method on DelName and DelAttr (expected InferenceError)
@@ -375,14 +375,14 @@ def infer_empty_node(self, context=None):
         yield YES
     else:
         try:
-            for infered in MANAGER.infer_astng_from_something(self.object,
+            for infered in MANAGER.infer_ast_from_something(self.object,
                                                               context=context):
                 yield infered
-        except ASTNGError:
+        except AstroidError:
             yield YES
-nodes.EmptyNode.infer = path_wrapper(infer_empty_node)
+nodes.EmptyNode._infer = path_wrapper(infer_empty_node)
 
 
 def infer_index(self, context=None):
     return self.value.infer(context)
-nodes.Index.infer = infer_index
+nodes.Index._infer = infer_index

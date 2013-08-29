@@ -1,27 +1,27 @@
 # copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of logilab-astng.
+# This file is part of astroid.
 #
-# logilab-astng is free software: you can redistribute it and/or modify it
+# astroid is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 2.1 of the License, or (at your
 # option) any later version.
 #
-# logilab-astng is distributed in the hope that it will be useful, but
+# astroid is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License along
-# with logilab-astng. If not, see <http://www.gnu.org/licenses/>.
+# with astroid. If not, see <http://www.gnu.org/licenses/>.
 """this module contains some utilities to navigate in the tree or to
 extract information from it
 """
 
 __docformat__ = "restructuredtext en"
 
-from .exceptions import ASTNGBuildingException
+from .exceptions import AstroidBuildingException
 from .builder import parse
 
 
@@ -123,12 +123,12 @@ def _check_children(node):
         if not ok:
             print "lines;", node.lineno, child.lineno
             print "of module", node.root(), node.root().name
-            raise ASTNGBuildingException
+            raise AstroidBuildingException
         _check_children(child)
 
 
 class TreeTester(object):
-    '''A helper class to see _ast tree and compare with astng tree
+    '''A helper class to see _ast tree and compare with astroid tree
 
     indent: string for tree indent representation
     lineno: bool to tell if we should print the line numbers
@@ -141,7 +141,7 @@ class TreeTester(object):
     .   <Print>
     .   .   nl = True
     .   ]
-    >>> print tester.astng_tree_repr()
+    >>> print tester.astroid_tree_repr()
     Module()
         body = [
         Print()
@@ -219,16 +219,16 @@ class TreeTester(object):
                 self._string += '\n' + indent + field + " = " + repr(attr)
 
 
-    def build_astng_tree(self):
-        """build astng tree from the _ast tree
+    def build_astroid_tree(self):
+        """build astroid tree from the _ast tree
         """
-        from logilab.astng.builder import ASTNGBuilder
-        tree = ASTNGBuilder().string_build(self.sourcecode)
+        from .builder import AstroidBuilder
+        tree = AstroidBuilder().string_build(self.sourcecode)
         return tree
 
-    def astng_tree_repr(self, ids=False):
-        """build the astng tree and return a nice tree representation"""
-        mod = self.build_astng_tree()
+    def astroid_tree_repr(self, ids=False):
+        """build the astroid tree and return a nice tree representation"""
+        mod = self.build_astroid_tree()
         return mod.repr_tree(ids)
 
 

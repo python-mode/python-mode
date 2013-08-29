@@ -45,7 +45,7 @@ W warnings
 700 statements
 900 syntax error
 """
-__version__ = '1.4.6'
+__version__ = '1.4.7a0'
 
 import os
 import sys
@@ -1678,6 +1678,9 @@ class StyleGuide(object):
         return False.  Else, if 'options.ignore' contains a prefix of
         the error code, return True.
         """
+        if len(code) < 4 and any(s.startswith(code)
+                                 for s in self.options.select):
+            return False
         return (code.startswith(self.options.ignore) and
                 not code.startswith(self.options.select))
 

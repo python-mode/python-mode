@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,11 +19,13 @@ from ..logilab.common.graph import get_cycles, DotBackend
 from ..logilab.common.modutils import is_standard_module
 from ..logilab.common.ureports import VerbatimText, Paragraph
 
-from ..logilab import astng
-from ..logilab.astng import are_exclusive
+from .. import astroid
+from ..astroid import are_exclusive
 
-from ..interfaces import IASTNGChecker
-from ..checkers import BaseChecker, EmptyReport
+from ..interfaces import IAstroidChecker
+from ..utils import EmptyReport
+from . import BaseChecker
+from .utils import check_messages
 
 
 def get_first_import(node, context, name, base, level):
@@ -38,11 +40,11 @@ def get_first_import(node, context, name, base, level):
             continue
         if first.scope() is node.scope() and first.fromlineno > node.fromlineno:
             continue
-        if isinstance(first, astng.Import):
+        if isinstance(first, astroid.Import):
             if any(fullname == iname[0] for iname in first.names):
                 found = True
                 break
-        elif isinstance(first, astng.From):
+        elif isinstance(first, astroid.From):
             if level == first.level and any(
                 fullname == '%s.%s' % (first.modname, iname[0]) for iname in first.names):
                 found = True
@@ -157,15 +159,14 @@ class ImportsChecker(BaseChecker):
     * uses of deprecated modules
     """
 
-    __implements__ = IASTNGChecker
+    __implements__ = IAstroidChecker
 
     name = 'imports'
     msgs = MSGS
     priority = -2
 
     options = (('deprecated-modules',
-                {'default' : ('regsub', 'string', 'TERMIOS',
-                              'Bastion', 'rexec'),
+                {'default' : ('regsub', 'TERMIOS', 'Bastion', 'rexec'),
                  'type' : 'csv',
                  'metavar' : '<modules>',
                  'help' : 'Deprecated modules which should not be used, \
@@ -232,7 +233,9 @@ given file (report RP0402 must not be disabled)'}
             self._check_deprecated_module(node, name)
             self._check_reimport(node, name)
 
-
+    # TODO This appears to be the list of all messages of the checker...
+    # @check_messages('W0410', 'W0401', 'W0403', 'W0402', 'W0404', 'W0406', 'F0401')
+    @check_messages(*(MSGS.keys()))
     def visit_from(self, node):
         """triggered when a from statement is seen"""
         basename = node.modname
@@ -241,7 +244,7 @@ given file (report RP0402 must not be disabled)'}
             prev = node.previous_sibling()
             if prev:
                 # consecutive future statements are possible
-                if not (isinstance(prev, astng.From)
+                if not (isinstance(prev, astroid.From)
                        and prev.modname == '__future__'):
                     self.add_message('W0410', node=node)
             return
@@ -261,7 +264,7 @@ given file (report RP0402 must not be disabled)'}
     def get_imported_module(self, modnode, importnode, modname):
         try:
             return importnode.do_import_module(modname)
-        except astng.InferenceError, ex:
+        except astroid.InferenceError, ex:
             if str(ex) != modname:
                 args = '%r (%s)' % (modname, ex)
             else:

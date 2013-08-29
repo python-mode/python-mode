@@ -20,7 +20,7 @@ __docformat__ = "restructuredtext en"
 
 from cgi import escape
 
-from ..ureports import BaseWriter
+from . import BaseWriter
 
 
 class HTMLWriter(BaseWriter):

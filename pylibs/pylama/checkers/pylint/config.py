@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""utilities for PyLint configuration :
+"""utilities for Pylint configuration :
 
 * pylintrc
 * pylint.d (PYLINTHOME)
@@ -105,13 +105,13 @@ def find_pylintrc():
 PYLINTRC = find_pylintrc()
 
 ENV_HELP = '''
-The following environment variables are used:
-    * PYLINTHOME
-    path to the directory where data of persistent run will be stored. If not
-found, it defaults to ~/.pylint.d/ or .pylint.d (in the current working
-directory).
-    * PYLINTRC
-    path to the configuration file. If not found, it will use the first
+The following environment variables are used:                                   
+    * PYLINTHOME                                                                
+    path to the directory where data of persistent run will be stored. If not 
+found, it defaults to ~/.pylint.d/ or .pylint.d (in the current working 
+directory).                                                                     
+    * PYLINTRC                                                                  
+    path to the configuration file. If not found, it will use the first         
 existing file among (~/.pylintrc, /etc/pylintrc).
 ''' % globals()
 

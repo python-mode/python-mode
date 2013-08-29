@@ -6,6 +6,7 @@ Changelog
 * Added PEP257 checker;
 * Support 'pudb' in breakpoints;
 * Pyrun can now operate on a range of lines, and does not need to save (c) lawrenceakka
+* Update pylama to version 1.5.0
 
 ## 2013-05-15 0.6.18
 --------------------

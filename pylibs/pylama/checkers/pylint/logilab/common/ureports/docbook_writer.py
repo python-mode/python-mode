@@ -19,7 +19,7 @@
 from __future__ import generators
 __docformat__ = "restructuredtext en"
 
-from ..ureports import HTMLWriter
+from logilab.common.ureports import HTMLWriter
 
 class DocbookWriter(HTMLWriter):
     """format layouts as HTML"""

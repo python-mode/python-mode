@@ -18,19 +18,19 @@
 """logilab.common packaging information"""
 __docformat__ = "restructuredtext en"
 import sys
-import os
 
 distname = 'logilab-common'
 modname = 'common'
 subpackage_of = 'logilab'
 subpackage_master = True
 
-numversion = (0, 58, 3)
+numversion = (0, 58, 0)
 version = '.'.join([str(num) for num in numversion])
 
 license = 'LGPL' # 2.1 or later
 description = "collection of low-level Python packages and modules used by Logilab projects"
 web = "http://www.logilab.org/project/%s" % distname
+ftp = "ftp://ftp.logilab.org/pub/%s" % modname
 mailinglist = "mailto://python-projects@lists.logilab.org"
 author = "Logilab"
 author_email = "contact@logilab.fr"
@@ -40,11 +40,8 @@ from os.path import join
 scripts = [join('bin', 'pytest')]
 include_dirs = [join('test', 'data')]
 
-install_requires = []
 if sys.version_info < (2, 7):
-    install_requires.append('unittest2 >= 0.5.1')
-if os.name == 'nt':
-    install_requires.append('colorama')
+    install_requires = ['unittest2 >= 0.5.1']
 
 classifiers = ["Topic :: Utilities",
                "Programming Language :: Python",

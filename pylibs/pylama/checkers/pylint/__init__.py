@@ -17,7 +17,7 @@ import sys
 
 def run_pylint():
     """run pylint"""
-    from .lint import Run
+    from pylint.lint import Run
     Run(sys.argv[1:])
 
 def run_pylint_gui():
@@ -40,6 +40,5 @@ def run_pyreverse():
 
 def run_symilar():
     """run symilar"""
-    from .checkers.similar import Run
+    from pylint.checkers.similar import Run
     Run(sys.argv[1:])
-

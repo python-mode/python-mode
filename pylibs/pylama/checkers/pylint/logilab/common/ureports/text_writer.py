@@ -19,7 +19,7 @@
 __docformat__ = "restructuredtext en"
 
 from ..textutils import linesep
-from ..ureports import BaseWriter
+from . import BaseWriter
 
 
 TITLE_UNDERLINES = ['', '=', '-', '`', '.', '~', '^']

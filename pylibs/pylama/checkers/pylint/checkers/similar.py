@@ -1,5 +1,5 @@
 # pylint: disable=W0622
-# Copyright (c) 2004-2012 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2004-2013 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,10 +22,10 @@ from itertools import izip
 from ..logilab.common.ureports import Table
 
 from ..interfaces import IRawChecker
-from ..checkers import BaseChecker, table_lines_from_stats
+from . import BaseChecker, table_lines_from_stats
 
 
-class Similar:
+class Similar(object):
     """finds copy-pasted lines of code in a project"""
 
     def __init__(self, min_lines=4, ignore_comments=False,
@@ -36,14 +36,21 @@ class Similar:
         self.ignore_imports = ignore_imports
         self.linesets = []
 
-    def append_stream(self, streamid, stream):
+    def append_stream(self, streamid, stream, encoding=None):
         """append a file to search for similarities"""
-        stream.seek(0) # XXX may be removed with astng > 0.23
-        self.linesets.append(LineSet(streamid,
-                                     stream.readlines(),
-                                     self.ignore_comments,
-                                     self.ignore_docstrings,
-                                     self.ignore_imports))
+        stream.seek(0) # XXX may be removed with astroid > 0.23
+        if encoding is None:
+            readlines = stream.readlines
+        else:
+            readlines = lambda: [line.decode(encoding) for line in stream]
+        try:
+            self.linesets.append(LineSet(streamid,
+                                         readlines(),
+                                         self.ignore_comments,
+                                         self.ignore_docstrings,
+                                         self.ignore_imports))
+        except UnicodeDecodeError:
+            pass
 
     def run(self):
         """start looking for similarities and display results on stdout"""
@@ -80,7 +87,7 @@ class Similar:
                 print "==%s:%s" % (lineset.name, idx)
             # pylint: disable=W0631
             for line in lineset._real_lines[idx:idx+num]:
-                print "  ", line,
+                print "  ", line.rstrip()
             nb_lignes_dupliquees += num * (len(couples)-1)
         nb_total_lignes = sum([len(lineset) for lineset in self.linesets])
         print "TOTAL lines=%s duplicates=%s percent=%.2f" \
@@ -153,7 +160,8 @@ def stripped_lines(lines, ignore_comments, ignore_docstrings, ignore_imports):
         strippedlines.append(line)
     return strippedlines
 
-class LineSet:
+
+class LineSet(object):
     """Holds and indexes all the lines of a single source file"""
     def __init__(self, name, lines, ignore_comments=False,
                  ignore_docstrings=False, ignore_imports=False):
@@ -288,7 +296,7 @@ class SimilarChecker(BaseChecker, Similar):
 
         stream must implement the readlines method
         """
-        self.append_stream(self.linter.current_name, node.file_stream)
+        self.append_stream(self.linter.current_name, node.file_stream, node.file_encoding)
 
     def close(self):
         """compute and display similarities on closing (i.e. end of parsing)"""
