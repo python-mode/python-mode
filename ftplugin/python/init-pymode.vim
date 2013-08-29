@@ -42,15 +42,7 @@ endif
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 
     call pymode#Default('g:pymode_paths', [])
-
-python << EOF
-import sys, vim, os
-
-curpath = vim.eval("getcwd()")
-libpath = os.path.join(vim.eval("expand('<sfile>:p:h:h:h')"), 'pylibs')
-
-sys.path = [libpath, curpath] + vim.eval("g:pymode_paths") + sys.path
-EOF
+    call pymode#path#Activate(expand("<sfile>:p:h:h:h"))
 
 endif " }}}
 
@@ -130,9 +122,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/pylint.ini"
     endif
 
-    py from pymode import queue
+    call pymode#Execute("from pymode import queue")
 
-    au VimLeavePre * py queue.stop_queue()
+    au VimLeavePre * call pymode#Execute("queue.stop_queue()")
 
 endif
 
@@ -252,7 +244,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     call pymode#Default("g:pymode_rope_always_show_complete_menu", 0)
 
     " DESC: Init Rope
-    py import ropevim
+    call pymode#Execute("import ropevim")
 
     fun! RopeCodeAssistInsertMode() "{{{
         call RopeCodeAssist()
@@ -263,7 +255,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         if isdirectory(getcwd() . '/.ropeproject')
             " In order to pass it the quiet kwarg I need to open the project
             " using python and not vim, which should be no major issue
-            py ropevim._interface.open_project(quiet=True)
+            call pymode#Execute("ropevim._interface.open_project(quiet=True)")
             return ""
         endif
     endfunction "}}}
@@ -275,7 +267,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
     fun! RopeOmni(findstart, base) "{{{
         if a:findstart
-            py ropevim._interface._find_start()
+            call pymode#Execute("ropevim._interface._find_start()")
             return g:pymode_offset
         else
             call RopeOmniComplete()
