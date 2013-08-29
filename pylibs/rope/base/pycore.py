@@ -258,7 +258,6 @@ class PyCore(object):
         if followed_calls is None:
             followed_calls = self.project.prefs.get('soa_followed_calls', 0)
         pymodule = self.resource_to_pyobject(resource)
-        self.module_cache.forget_all_data()
         rope.base.oi.soa.analyze_module(
             self, pymodule, should_analyze, search_subscopes, followed_calls)
 
@@ -306,7 +305,7 @@ class _ModuleCache(object):
 
     def _invalidate_resource(self, resource):
         if resource in self.module_map:
-            self.forget_all_data()
+            self.module_map[resource]._forget_concluded_data()
             self.observer.remove_resource(resource)
             del self.module_map[resource]
 
