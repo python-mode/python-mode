@@ -1,6 +1,8 @@
 |logo| Python-mode, Python in VIM
 #################################
 
+.. image:: https://travis-ci.org/klen/python-mode.png?branch=develop   :target: https://travis-ci.org/klen/python-mode
+
 Python-mode is a vim plugin that allows you to use the pylint_, rope_, pydoc_, pyflakes_, pep8_, mccabe_ libraries in vim to provide
 features like python code looking for bugs, refactoring and some other useful things.
 
