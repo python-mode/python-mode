@@ -165,7 +165,7 @@ Default values: ::
     " Check code every save
     let g:pymode_lint_write = 1
 
-    " Auto open cwindow if errors be finded
+    " Auto open cwindow if errors were found
     let g:pymode_lint_cwindow = 1
 
     " Show error message if cursor placed at the error line
