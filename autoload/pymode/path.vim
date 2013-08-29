@@ -5,8 +5,8 @@ import sys, vim, os
 
 pymode_lib = 'pylibs'
 
-if sys.version >= (3, 0, 0):
-    pymode_lib = 'pylibs3'
+# if sys.version >= (3, 0, 0):
+#    pymode_lib = 'pylibs3'
 
 curpath = vim.eval("getcwd()")
 libpath = os.path.join(vim.eval("a:plugin_root"), pymode_lib)
