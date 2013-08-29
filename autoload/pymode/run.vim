@@ -8,21 +8,24 @@ fun! pymode#run#Run(line1, line2) "{{{
             return 0
         endtry
     endif
-    py import StringIO
-    py sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
-    py sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
-    py enc = vim.eval('&enc')
+    call pymode#Execute("import StringIO")
+    call pymode#Execute("sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout")
+    call pymode#Execute("sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr")
+    call pymode#Execute("enc = vim.eval('&enc')")
     call setqflist([])
     call pymode#WideMessage("Code running.")
     try
-        py context = globals()
-        py context['raw_input'] = context['input'] = lambda s: vim.eval('input("{0}")'.format(s))
-        py execfile(vim.eval('expand("%:p")'), context)
-        py out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()
-        py sys.stdout, sys.stderr = stdout_, stderr_
+        call pymode#Execute("context = globals()")
+        call pymode#Execute("context['raw_input'] = context['input'] = lambda s: vim.eval('input(\"{0}\")'.format(s))")
+        call pymode#Execute("execfile(vim.eval('expand(\"%:p\")'), context)")
+        call pymode#Execute("out, err = sys.stdout.getvalue().strip(), sys.stderr.getvalue()")
+        call pymode#Execute("sys.stdout, sys.stderr = stdout_, stderr_")
 
         cexpr ""
-        py for x in err.strip().split('\n'): vim.command('caddexpr "' + x.replace('"', r'\"') + '"')
+python << EOF
+for x in err.strip().split('\n'):
+    vim.command('caddexpr "' + x.replace('"', r'\"') + '"')
+EOF
         let l:oldefm = &efm
         set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
         call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)

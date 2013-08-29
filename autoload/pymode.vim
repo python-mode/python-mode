@@ -12,6 +12,13 @@ fun! pymode#Default(name, default) "{{{
 endfunction "}}}
 
 
+fun! pymode#Execute(expression) "{{{
+    " DESC: Execute an expression in the default python interpreter
+    "
+    execute 'python '.a:expression
+endfunction "}}}
+
+
 fun! pymode#Option(name) "{{{
 
     let name = 'b:pymode_' . a:name
