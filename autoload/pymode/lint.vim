@@ -14,8 +14,8 @@ fun! pymode#lint#Check() "{{{
 
     let g:pymode_lint_buffer = bufnr('%')
 
-    call pymode#Execute("from pymode import lint")
-    call pymode#Execute("lint.check_file()")
+    Python from pymode import lint
+    Python lint.check_file()
 
 endfunction " }}}
 
@@ -100,8 +100,8 @@ fun! pymode#lint#Auto() "{{{
             return 0
         endtry
     endif
-    call pymode#Execute("from pymode import auto")
-    call pymode#Execute("auto.fix_current_file()")
+    Python from pymode import auto
+    Python auto.fix_current_file()
     cclose
     edit
     call pymode#WideMessage("AutoPep8 done.")

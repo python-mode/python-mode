@@ -1,3 +1,4 @@
+" Quick set or delete a breakpoints
 fun! pymode#breakpoint#Set(lnum) "{{{
     let line = getline(a:lnum)
     if strridx(line, g:pymode_breakpoint_cmd) != -1
@@ -8,7 +9,7 @@ fun! pymode#breakpoint#Set(lnum) "{{{
         normal k
     endif
 
-    " Save file
+    " Save file without any events
     if &modifiable && &modified | noautocmd write | endif	
 
 endfunction "}}}

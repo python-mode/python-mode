@@ -12,7 +12,7 @@ fun! pymode#virtualenv#Activate() "{{{
 
     call add(g:pymode_virtualenv_enabled, $VIRTUAL_ENV)
 
-python << EOF
+Python << EOF
 import sys, vim, os
 
 ve_dir = vim.eval('$VIRTUAL_ENV')
