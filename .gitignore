@@ -1,8 +1,14 @@
 *.py[cod]
-.vimrc
 *.sw?
 *~
 .DS_Store
+.bundle
 .ropeproject
+.vim-flavor
+.vimrc
+Gemfile.lock
+VimFlavor.lock
 tags
+test.py
 todo.txt
+vendor
