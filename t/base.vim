@@ -1,4 +1,5 @@
 filetype plugin indent on
+set hidden
 
 describe 'pymode'
 
@@ -18,7 +19,6 @@ describe 'pymode'
         e test.py
         Python vim.current.buffer.append('Python is working.', 0)
         Expect getline(1) == 'Python is working.'
-        w
     end
 
 end

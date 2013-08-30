@@ -21,6 +21,7 @@ def check_file():
     """ Check current buffer. """
     buf = interface.get_current_buffer()
 
+    async = int(interface.get_option('lint_async'))
     linters = interface.get_option('lint_checker')
     ignore = interface.get_option('lint_ignore')
     select = interface.get_option('lint_select')
@@ -29,10 +30,15 @@ def check_file():
     options = parse_options(
         ignore=ignore, select=select, complexity=complexity, linters=linters)
 
-    add_task(
-        run_checkers, callback=parse_result, title='Code checking', buf=buf,
-        options=options,
-    )
+    if async:
+        add_task(
+            run_checkers, callback=parse_result, title='Code checking',
+            buf=buf, options=options,
+        )
+
+    else:
+        result = run_checkers(buf=buf, options=options)
+        parse_result(result, buf=buf)
 
 
 def run_checkers(callback=None, buf=None, options=None):
