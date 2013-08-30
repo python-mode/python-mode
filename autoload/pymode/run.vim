@@ -60,8 +60,18 @@ context = dict(__name__='__main__', input=_input, raw_input=_input)
 out, errors = "", []
 sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
 sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
+
+lines = [l.rstrip() for l in vim.eval('l:code')]
+indent = 0
+for line in lines:
+    if line:
+        indent = len(line) - len(line.lstrip())
+        break
+
+lines = [l[indent:] for l in lines]
+
 try:
-    code = compile('\n'.join(vim.eval('l:code')) + '\n', vim.current.buffer.name, 'exec')
+    code = compile('\n'.join(lines) + '\n', vim.current.buffer.name, 'exec')
     exec(code, context)
 
 except SystemExit as e:
