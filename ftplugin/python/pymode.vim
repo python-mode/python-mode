@@ -74,9 +74,11 @@ if pymode#Option('lint')
     endif
 
     " DESC: Run queue
-    let &l:updatetime = g:pymode_updatetime
-    au CursorHold <buffer> call pymode#queue#Poll()
-    au BufLeave <buffer> Python queue.stop_queue()
+    if pymode#Option('lint_async')
+        let &l:updatetime = g:pymode_updatetime
+        au CursorHold <buffer> call pymode#queue#Poll()
+        au BufLeave <buffer> Python queue.stop_queue()
+    endif
 
 endif
 

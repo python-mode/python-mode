@@ -23,6 +23,7 @@ def parse_options(
     :return argparse.Namespace:
 
     """
+    # Parse args from command string
     parser = get_parser()
     actions = dict((a.dest, a) for a in parser._actions)
     options = Options(
@@ -35,8 +36,10 @@ def parse_options(
     if not (args is None):
         options = parser.parse_args(args)
 
+    # Parse options from ini file
     config = get_config(str(options.options))
 
+    # Compile options from ini
     for k, v in config.default.items():
         value = getattr(options, k, _Default(None))
         if not isinstance(value, _Default):
@@ -50,6 +53,7 @@ def parse_options(
             value = bool(int(value))
         setattr(options, name, value)
 
+    # Postprocess options
     opts = dict(options.__dict__.items())
     for name, value in opts.items():
         if isinstance(value, _Default):
@@ -59,6 +63,7 @@ def parse_options(
 
             setattr(options, name, value.value)
 
+    # Parse file related options
     options.file_params = dict()
     for k, s in config.sections.items():
         if k != config.default_section:

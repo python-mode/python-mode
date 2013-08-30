@@ -25,6 +25,7 @@ def shell(args=None, error=True):
 
     options = parse_options(args)
     setup_logger(options)
+    LOGGER.info(options)
 
     # Install VSC hook
     if options.hook:
