@@ -7,9 +7,12 @@ describe 'docs'
         let g:pymode_test = 1
     end
 
-    it 'pymode show docs'
-        Pydoc def
-        Expect getline(1) == 'Function definitions'
+    it 'pymode indent loaded'
+        Expect &indentexpr == 'pymode#indent#Indent(v:lnum)'
+    end
+
+    after
+        close
     end
 
 end

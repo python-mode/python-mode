@@ -1,8 +1,4 @@
-if pymode#Default('g:pymode', 1) || !g:pymode
-    finish
-endif
-
-if pymode#Default('b:pymode_indent', 1) || !g:pymode_indent
+if !g:pymode || !g:pymode_indent
     finish
 endif
 
