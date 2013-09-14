@@ -113,6 +113,17 @@ EOF
         let &efm = s:efm
 
         cgetexpr(l:traceback)
+" If a range is run (starting other than at line 1), fix the reported error line numbers for
+" the current buffer
+        if a:line1 > 1
+            let qflist = getqflist()
+            for i in qflist
+                if i.bufnr == bufnr("")
+                    let i.lnum = i.lnum - 1 + a:line1
+                endif
+            endfor
+            call setqflist(qflist)
+        endif
 
         call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
         let &efm = l:_efm
