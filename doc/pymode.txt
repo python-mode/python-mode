@@ -76,6 +76,18 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_signs'|               Place signs
 
+|'pymode_lint_todo_symbol'|         Todo symbol
+
+|'pymode_lint_comment_symbol'|      Comment symbol
+
+|'pymode_lint_visual_symbol'|       Visual symbol
+
+|'pymode_lint_error_symbol'|        Error symbol
+
+|'pymode_lint_info_symbol'|         Info symbol
+
+|'pymode_lint_pyflakes_symbol'|     PyFlakes' info symbol
+
 |'pymode_lint_jump'|                Auto jump to first error
 
 |'pymode_lint_hold'|                Hold cursor in current window
@@ -295,6 +307,49 @@ Values: 0 or 1.
 Default: 1.
 
 If this option is set to 0 then pylint will not place error signs.
+
+------------------------------------------------------------------------------
+                                                     *'pymode_lint_todo_symbol'*
+Values: Symbol for todo signs.
+Default: "WW".
+
+This option sets the symbol to use in the gutter to display todo signs.
+
+------------------------------------------------------------------------------
+                                                  *'pymode_lint_comment_symbol'*
+Values: Symbol for comment signs.
+Default: "CC".
+
+This option sets the symbol to use in the gutter to display comment signs.
+
+------------------------------------------------------------------------------
+                                                   *'pymode_lint_visual_symbol'*
+Values: Symbol for visual signs.
+Default: "RR".
+
+This option sets the symbol to use in the gutter to display visual signs.
+
+------------------------------------------------------------------------------
+                                                    *'pymode_lint_error_symbol'*
+Values: Symbol for error signs.
+Default: "EE".
+
+This option sets the symbol to use in the gutter to display error signs.
+
+------------------------------------------------------------------------------
+                                                     *'pymode_lint_info_symbol'*
+Values: Symbol for info signs.
+Default: "II".
+
+This option sets the symbol to use in the gutter to display info signs.
+
+------------------------------------------------------------------------------
+                                                 *'pymode_lint_pyflakes_symbol'*
+Values: Symbol for PyFlakes' info signs.
+Default: "FF".
+
+This option sets the symbol to use in the gutter to display PyFlakes' info
+signs.
 
 ------------------------------------------------------------------------------
                                                             *'pymode_lint_jump'*
