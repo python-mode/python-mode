@@ -108,16 +108,34 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " errors ruller, even if there's no errors.
     call pymode#Default("g:pymode_lint_signs_always_visible", 0)
 
+    " OPTION: g:pymode_lint_todo_symbol -- string. Todo symbol.
+    call pymode#Default("g:pymode_lint_todo_symbol", "WW")
+
+    " OPTION: g:pymode_lint_comment_symbol -- string. Comment symbol.
+    call pymode#Default("g:pymode_lint_comment_symbol", "CC")
+
+    " OPTION: g:pymode_lint_visual_symbol -- string. Visual symbol.
+    call pymode#Default("g:pymode_lint_visual_symbol", "RR")
+
+    " OPTION: g:pymode_lint_error_symbol -- string. Error symbol.
+    call pymode#Default("g:pymode_lint_error_symbol", "EE")
+
+    " OPTION: g:pymode_lint_info_symbol -- string. Info symbol.
+    call pymode#Default("g:pymode_lint_info_symbol", "II")
+
+    " OPTION: g:pymode_lint_pyflakes_symbol -- string. PyFlakes' info symbol.
+    call pymode#Default("g:pymode_lint_pyflakes_symbol", "FF")
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
         " DESC: Signs definition
-        sign define PymodeW text=WW texthl=Todo
-        sign define PymodeC text=CC texthl=Comment
-        sign define PymodeR text=RR texthl=Visual
-        sign define PymodeE text=EE texthl=Error
-        sign define PymodeI text=II texthl=Info
-        sign define PymodeF text=FF texthl=Info
+        execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
+        execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
+        execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
+        execute 'sign define PymodeE text=' . g:pymode_lint_error_symbol    . " texthl=Error"
+        execute 'sign define PymodeI text=' . g:pymode_lint_info_symbol     . " texthl=Info"
+        execute 'sign define PymodeF text=' . g:pymode_lint_pyflakes_symbol . " texthl=Info"
 
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             " Show the sign's ruller if asked for, even it there's no error to show
