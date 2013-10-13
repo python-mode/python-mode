@@ -193,6 +193,13 @@ Default values: ::
     " Maximal height of pylint error window
     let g:pymode_lint_maxheight = 6
 
+    " Symbol definition
+    let g:pymode_lint_todo_symbol = 'WW'
+    let g:pymode_lint_comment_symbol = 'CC'
+    let g:pymode_lint_visual_symbol = 'RR'
+    let g:pymode_lint_error_symbol = 'EE'
+    let g:pymode_lint_info_symbol = 'II'
+    let g:pymode_lint_pyflakes_symbol = 'FF'
 
 .. note::
     Pylint options (ex. disable messages) may be defined in ``$HOME/pylint.rc``
