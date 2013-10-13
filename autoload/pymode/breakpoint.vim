@@ -23,6 +23,7 @@ for module in ('pudb', 'ipdb'):
     try:
         find_module(module)
         vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
+        break
     except ImportError:
         continue
 EOF
