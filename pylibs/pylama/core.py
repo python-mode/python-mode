@@ -5,12 +5,7 @@ Prepare params, check a modeline and run the checkers.
 """
 import logging
 import re
-
-from . import utils
-
-
-#: A default checkers
-DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
+from .lint import LINTERS
 
 #: The skip pattern
 SKIP_PATTERN = re.compile(r'# *noqa\b', re.I).search
@@ -25,14 +20,14 @@ STREAM = logging.StreamHandler()
 LOGGER.addHandler(STREAM)
 
 
-def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
-        **meta):
+def run(path, ignore=None, select=None, linters=None, config=None, **meta):
     """ Run a code checkers with given params.
 
     :return errors: list of dictionaries with error's information
 
     """
     errors = []
+    linters = linters or LINTERS.items()
     params = dict(ignore=ignore, select=select)
     code = None
     try:
@@ -46,21 +41,24 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
             if not params['lint']:
                 return errors
 
-            for lint in linters:
-                try:
-                    linter = getattr(utils, lint)
-                except AttributeError:
-                    LOGGER.warning("Linter `%s` not found.", lint)
+            for item in linters:
+
+                if not isinstance(item, tuple):
+                    item = (item, LINTERS.get(item))
+
+                name, linter = item
+
+                if not linter or not linter.allow(path):
                     continue
 
-                result = linter(path, code=code, **meta)
+                result = linter.run(path, code=code, **meta)
                 for e in result:
                     e['col'] = e.get('col') or 0
                     e['lnum'] = e.get('lnum') or 0
                     e['type'] = e.get('type') or 'E'
                     e['text'] = "{0} [{1}]".format((e.get(
                         'text') or '').strip()
-                        .replace("'", "\"").split('\n')[0], lint)
+                        .replace("'", "\"").split('\n')[0], name)
                     e['filename'] = path or ''
                     errors.append(e)
 
@@ -71,7 +69,7 @@ def run(path, ignore=None, select=None, linters=DEFAULT_LINTERS, config=None,
     except SyntaxError as e:
         errors.append(dict(
             lnum=e.lineno or 0, type='E', col=e.offset or 0,
-            text=e.args[0] + ' [%s]' % lint, filename=path or ''
+            text=e.args[0] + ' [%s]' % name, filename=path or ''
         ))
 
     except Exception:
@@ -128,7 +126,6 @@ def filter_errors(e, select=None, ignore=None, **params):
     :return bool:
 
     """
-
     if select:
         for s in select:
             if e['text'].startswith(s):

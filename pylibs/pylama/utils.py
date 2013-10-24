@@ -7,7 +7,7 @@ from os import path as op, environ
 from .checkers.pep8 import BaseReport, StyleGuide
 
 
-__all__ = 'pep8', 'pep257', 'mccabe', 'pyflakes', 'pylint'
+__all__ = 'pep8', 'pep257', 'mccabe', 'pyflakes', 'pylint', 'gjslint'
 
 PYLINT_RC = op.abspath(op.join(op.dirname(__file__), 'pylint.rc'))
 
@@ -152,5 +152,33 @@ def pep257(path, **meta):
         ))
     return errors
 
+
+def gjslint(path, code=None, **meta):
+    """ gjslint code checking.
+
+    :return list: List of errors.
+
+    """
+    from .checkers.closure_linter import gjslint as lint
+
+    errors = []
+    records_iter = lint.main(["", path])
+
+    import re
+    regExErrStr = re.compile(r'Line\s(\d+),\s(E:\d+):\s(.*)')
+    for record in records_iter:
+        matchErrStr = re.match(regExErrStr, record.error_string)
+        if matchErrStr:
+            errors.append(
+                dict(
+                    type=matchErrStr.group(2),
+                    lnum=matchErrStr.group(1),
+                    # due to errors filtering type is combined with the
+                    # text
+                    text=" ".join([matchErrStr.group(
+                        2), matchErrStr.group(3)])
+                ))
+
+    return errors
 
 # pymode:lint_ignore=W0231

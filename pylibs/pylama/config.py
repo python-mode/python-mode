@@ -1,16 +1,23 @@
 """ Parse arguments from command line and configuration files. """
 import fnmatch
-import logging
-from argparse import ArgumentParser, Namespace as Options
 from os import getcwd, path
 from re import compile as re
 
-from . import version, utils
-from .core import DEFAULT_LINTERS, LOGGER, STREAM
+import logging
+from argparse import ArgumentParser, Namespace as Options
+
+from . import version
+from .core import LOGGER, STREAM
 from .inirama import Namespace
+from .lint import LINTERS
 
 
+#: A default checkers
+DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
+
+#: A default complexity for mccabe checker
 DEFAULT_COMPLEXITY = 10
+
 CURDIR = getcwd()
 DEFAULT_INI_PATH = path.join(CURDIR, 'pylama.ini')
 
@@ -30,7 +37,7 @@ def parse_options(
         async=_Default(async), format=_Default('pep8'),
         select=_Default(select), ignore=_Default(ignore),
         report=_Default(None), verbose=_Default(False),
-        linters=_Default(linters), complexity=_Default(complexity),
+        linters=_Default(','.join(linters)), complexity=_Default(complexity),
         options=_Default(options))
 
     if not (args is None):
@@ -114,12 +121,19 @@ def get_parser():
         "--select", "-s", default=_Default(''), type=split_csp_str,
         help="Select errors and warnings. (comma-separated)")
 
+    def parse_linters(csp_str):
+        result = list()
+        for name in split_csp_str(csp_str):
+            linter = LINTERS.get(name)
+            if linter:
+                result.append((name, linter))
+        return result
+
     parser.add_argument(
         "--linters", "-l", default=_Default(','.join(DEFAULT_LINTERS)),
-        type=split_csp_str,
-        help=(
+        type=parse_linters, help=(
             "Select linters. (comma-separated). Choices are %s."
-            % ','.join(s for s in utils.__all__)
+            % ','.join(s for s in LINTERS.keys())
         ))
 
     parser.add_argument(

@@ -39,7 +39,8 @@ def shell(args=None, error=True):
         for root, _, files in walk(options.path):
             paths += [
                 op.relpath(op.join(root, f), CURDIR)
-                for f in files if f.endswith('.py')]
+                for f in files
+                if any(l.allow(f) for _, l in options.linters)]
 
     return check_files(paths, options, error=error)
 
