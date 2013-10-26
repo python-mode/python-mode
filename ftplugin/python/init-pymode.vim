@@ -349,4 +349,9 @@ call pymode#Default("g:pymode_options", 1)
 " OPTION: g:pymode_updatetime -- int. Set updatetime for async pymode's operation
 call pymode#Default("g:pymode_updatetime", 1000)
 
+" OPTION: g:pymode_modeline -- int. Support pymode modeline.
+if pymode#Default('g:pymode_modeline', 1) || !g:pymode_modeline
+    au BufRead *.py call pymode#Modeline()
+endif
+
 " vim: fdm=marker:fdl=0

@@ -182,7 +182,6 @@ fun! pymode#Modeline() "{{{
             let {'b:pymode_'.name} = value
         endfor
     endif
-    au BufRead <buffer> call pymode#Modeline()
 endfunction "}}}
 
 
