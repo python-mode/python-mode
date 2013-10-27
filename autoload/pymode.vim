@@ -61,7 +61,8 @@ fun! pymode#PlaceSigns(bnum) "{{{
         endfor
         let b:pymode_signs = []
 
-        if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
+        if (!pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible) && \
+                (!pymode#Default("g:pymode_rope", 0) || g:pymode_rope)
             call RopeShowSignsRulerIfNeeded()
         endif
 

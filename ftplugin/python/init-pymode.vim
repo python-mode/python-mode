@@ -140,7 +140,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             " Show the sign's ruller if asked for, even it there's no error to show
             sign define __dummy__
-            autocmd BufRead,BufNew * call RopeShowSignsRulerIfNeeded()
+            if !pymode#Default("g:pymode_rope", 0) || g:pymode_rope
+                autocmd BufRead,BufNew * call RopeShowSignsRulerIfNeeded()
+            endif
         endif
 
     endif
