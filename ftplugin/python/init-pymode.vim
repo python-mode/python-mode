@@ -4,7 +4,7 @@ endif
 
 call pymode#Default('g:pymode_test', 0)
 
-let g:pymode_version = "0.6.18"
+let g:pymode_version = "0.6.19"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
