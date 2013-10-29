@@ -1,6 +1,15 @@
 Changelog
 =========
 
+* Added `g:pymode_rope_autocomplete_map` option;
+* Removed `g:pymode_rope_map_space` option;
+* Added PEP257 checker;
+* Support 'pudb' in breakpoints;
+* Pyrun can now operate on a range of lines, and does not need to save (c) lawrenceakka
+* Update pylama to version 1.5.0
+* Add a set of `g:pymode_lint_*_symbol` options (c) kdeldycke;
+* Support virtualenv for python3 (c) mlmoses;
+
 ## 2013-05-15 0.6.18
 --------------------
 * Fixed autopep8 (`PyLintAuto`) command;

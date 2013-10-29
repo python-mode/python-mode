@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import threading
 from Queue import Queue, Empty
 
@@ -7,13 +9,14 @@ from .interface import show_message
 MAX_LIFE = 60
 CHECK_INTERVAL = .2
 RESULTS = Queue()
+TEST = 1
 
 
 class Task(threading.Thread):
 
     def __init__(self, *args, **kwargs):
-        self.stop = threading.Event()
         threading.Thread.__init__(self, *args, **kwargs)
+        self.stop = threading.Event()
 
     def run(self):
         """ Run the task.
@@ -31,6 +34,11 @@ class Task(threading.Thread):
 
 def add_task(target, title=None, *args, **kwargs):
     " Add all tasks. "
+
+    # Only one task at time
+    for thread in threading.enumerate():
+        if isinstance(thread, Task):
+            return True
 
     task = Task(target=target, args=args, kwargs=kwargs)
     task.daemon = True

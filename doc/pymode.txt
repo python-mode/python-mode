@@ -6,7 +6,7 @@
    (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.6.18
+                          Version: 0.6.19
 
 ==============================================================================
 CONTENTS                                                  *Python-mode-contents*
@@ -76,6 +76,18 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_lint_signs'|               Place signs
 
+|'pymode_lint_todo_symbol'|         Todo symbol
+
+|'pymode_lint_comment_symbol'|      Comment symbol
+
+|'pymode_lint_visual_symbol'|       Visual symbol
+
+|'pymode_lint_error_symbol'|        Error symbol
+
+|'pymode_lint_info_symbol'|         Info symbol
+
+|'pymode_lint_pyflakes_symbol'|     PyFlakes' info symbol
+
 |'pymode_lint_jump'|                Auto jump to first error
 
 |'pymode_lint_hold'|                Hold cursor in current window
@@ -104,13 +116,13 @@ PythonMode. These options should be set in your vimrc.
 
 |'pymode_syntax_print_as_function'| Hightlight `print` as function
 
-|'pymode_syntax_highlight_equal_operator'| Hightlight `=` 
+|'pymode_syntax_highlight_equal_operator'| Hightlight `=`
 
-|'pymode_syntax_highlight_stars_operator'| Hightlight `*` 
+|'pymode_syntax_highlight_stars_operator'| Hightlight `*`
 
-|'pymode_syntax_highlight_self'|    Hightlight `self` 
+|'pymode_syntax_highlight_self'|    Hightlight `self`
 
-|'pymode_syntax_indent_errors'|     Hightlight indentation errors 
+|'pymode_syntax_indent_errors'|     Hightlight indentation errors
 
 |'pymode_syntax_space_errors'|      Hightlight trailing spaces as errors
 
@@ -152,7 +164,7 @@ To enable any of the options below you should put the given line in your
 2.2. Modeline ~
                                                       *PythonModeModeline*
 
-The VIM modeline `:help modeline` feature allows you to change pymode 
+The VIM modeline `:help modeline` feature allows you to change pymode
 options for the current file. Pymode modeline should always be the
 last line in the vimrc file and look like:
 
@@ -223,7 +235,7 @@ If this option is set to 0 then the pylint script is disabled.
 
 ------------------------------------------------------------------------------
                                                          *'pymode_lint_checker'*
-Values: "pylint", "pyflakes", "pep8", "mccabe"
+Values: "pylint", "pyflakes", "pep8", "mccabe", "pep257"
         You can set many checkers. E.g. "pyflakes,pep8,mccabe" ~
 
 Default: "pyflakes,pep8,mccabe".
@@ -295,6 +307,49 @@ Values: 0 or 1.
 Default: 1.
 
 If this option is set to 0 then pylint will not place error signs.
+
+------------------------------------------------------------------------------
+                                                     *'pymode_lint_todo_symbol'*
+Values: Symbol for todo signs.
+Default: "WW".
+
+This option sets the symbol to use in the gutter to display todo signs.
+
+------------------------------------------------------------------------------
+                                                  *'pymode_lint_comment_symbol'*
+Values: Symbol for comment signs.
+Default: "CC".
+
+This option sets the symbol to use in the gutter to display comment signs.
+
+------------------------------------------------------------------------------
+                                                   *'pymode_lint_visual_symbol'*
+Values: Symbol for visual signs.
+Default: "RR".
+
+This option sets the symbol to use in the gutter to display visual signs.
+
+------------------------------------------------------------------------------
+                                                    *'pymode_lint_error_symbol'*
+Values: Symbol for error signs.
+Default: "EE".
+
+This option sets the symbol to use in the gutter to display error signs.
+
+------------------------------------------------------------------------------
+                                                     *'pymode_lint_info_symbol'*
+Values: Symbol for info signs.
+Default: "II".
+
+This option sets the symbol to use in the gutter to display info signs.
+
+------------------------------------------------------------------------------
+                                                 *'pymode_lint_pyflakes_symbol'*
+Values: Symbol for PyFlakes' info signs.
+Default: "FF".
+
+This option sets the symbol to use in the gutter to display PyFlakes' info
+signs.
 
 ------------------------------------------------------------------------------
                                                             *'pymode_lint_jump'*
@@ -393,28 +448,28 @@ Hightlight `print` as function
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `=` 
+Hightlight `=`
 
 ------------------------------------------------------------------------------
                                       *'pymode_syntax_highlight_stars_operator'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `*` 
+Hightlight `*`
 
 ------------------------------------------------------------------------------
                                                  *'pymode_syntax_highlight_self'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight `self` 
+Hightlight `self`
 
 ------------------------------------------------------------------------------
                                                  *'pymode_syntax_indent_errors'*
 Values: 0 or 1.
 Default: |'pymode_syntax_all'|.
 
-Hightlight indentation errors 
+Hightlight indentation errors
 
 ------------------------------------------------------------------------------
                                                   *'pymode_syntax_space_errors'*
@@ -539,10 +594,10 @@ To redefine keys, see: |PythonModeOptions|
 ================  ============================
 Key               Command
 ================  ============================
-K                 Show python docs for current word under cursor
-C-Space           Rope code assist
-<leader>r         Run current buffer
-<leader>b         Set breakpoints
+K                 Show python docs for current word under cursor (`g:pymode_doc_key`)
+C-Space           Rope code assist (`g:pymode_rope_autocomplete_map`)
+<leader>r         Run current buffer (`g:pymode_run_key`)
+<leader>b         Set breakpoints (`g:pymode_breakpoint_key`)
 [[                Jump to previous class or function (normal, visual, operator modes)
 ]]                Jump to next class or function  (normal, visual, operator modes)
 [M                Jump to previous class or method (normal, visual, operator modes)
@@ -576,7 +631,7 @@ iM                Operation with inner function or method.
 
 *:PyLintAuto*                                                         *PyLintAuto*
     Automatically fix PEP8 errors in the current buffer
-                                 
+
 *:Pyrun*                                                                   *Pyrun*
     Run current buffer
 
@@ -599,7 +654,7 @@ To work, rope_ creates a service directory: `.ropeproject`.  If
 |'pymode_rope_guess_project'| is set on (as it is by default) and
 `.ropeproject` is not found in the current dir, rope will scan for
 `.ropeproject` in every dir in the parent path.  If rope finds `.ropeproject`
-in parent dirs, rope sets projectis for all child dirs and the scan may be 
+in parent dirs, rope sets projectis for all child dirs and the scan may be
 slow for many dirs and files.
 
 Solutions:
@@ -621,7 +676,7 @@ modules if possible.  Try using pyflakes: see |'pymode_lint_checker'|.
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings
 from `.vimrc` from your projects directories.
 >
-    Example: On Flask projects I automatically set 
+    Example: On Flask projects I automatically set
              'g:pymode_lint_checker = "pyflakes"'.
              On Django 'g:pymode_lint_checker = "pylint"'
 <
@@ -643,7 +698,7 @@ The sequence of commands that fixed this:
 
 ==============================================================================
 6. Credits ~
-                                                             *PythonModeCredits* 
+                                                             *PythonModeCredits*
     Kirill Klenov
         http://klen.github.com/
         http://github.com/klen/
@@ -684,7 +739,7 @@ The sequence of commands that fixed this:
 Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
 
-If you like this plugin, you can send me a postcard :) 
+If you like this plugin, you can send me a postcard :)
 My address is: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 Thanks for your support!
 

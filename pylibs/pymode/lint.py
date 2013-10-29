@@ -1,8 +1,14 @@
+""" Pylama support. """
+from __future__ import absolute_import
+
+import json
 import locale
 
-from pylama.main import run
+from os import path as op
+from pylama.main import parse_options
+from pylama.tasks import check_path
 
-from .interface import get_option, get_var, get_current_buffer, command
+from . import interface
 from .queue import add_task
 
 
@@ -13,51 +19,48 @@ except AttributeError:
 
 
 def check_file():
-    checkers = get_option('lint_checker').split(',')
+    """ Check current buffer. """
+    buf = interface.get_current_buffer()
+    rootpath = interface.eval_code('getcwd()')
 
-    ignore = set([
-        i for i in (
-            get_option('lint_ignore').split(',') +
-            get_var('lint_ignore').split(','))
-        if i
-    ])
-    select = set([
-        s for s in (
-            get_option('lint_select').split(',') +
-            get_var('lint_select').split(','))
-        if s
-    ])
+    async = int(interface.get_option('lint_async'))
+    linters = interface.get_option('lint_checker')
+    ignore = interface.get_option('lint_ignore')
+    select = interface.get_option('lint_select')
+    complexity = interface.get_option('lint_mccabe_complexity') or '0'
 
-    buf = get_current_buffer()
-    complexity = int(get_option('lint_mccabe_complexity') or 0)
+    options = parse_options(
+        ignore=ignore, select=select, complexity=complexity, linters=linters)
 
-    add_task(
-        run_checkers,
-        callback=parse_result,
-        title='Code checking',
+    if async:
+        add_task(
+            run_checkers, callback=parse_result, title='Code checking',
+            buf=buf, options=options, rootpath=rootpath,
+        )
 
-        checkers=checkers,
-        ignore=ignore,
-        buf=buf,
-        select=select,
-        complexity=complexity)
+    else:
+        result = run_checkers(buf=buf, options=options, rootpath=rootpath)
+        parse_result(result, buf=buf)
 
 
-def run_checkers(checkers=None, ignore=None, buf=None, select=None,
-                 complexity=None, callback=None):
+def run_checkers(callback=None, buf=None, options=None, rootpath=None):
+    """ Run pylama code.
 
-    filename = buf.name
-    result = []
+    :return list: errors
 
-    pylint_options = '--rcfile={0} -r n'.format(get_var('lint_config')).split()
+    """
+    pylint_options = '--rcfile={0} -r n'.format(
+        interface.get_var('lint_config')).split()
 
-    return run(filename, ignore=ignore, select=select, linters=checkers,
-                 pylint=pylint_options, complexity=complexity)
+    path = buf.name
+    if rootpath:
+        path = op.relpath(path, rootpath)
+    return check_path(path, options=options, pylint=pylint_options)
 
 
 def parse_result(result, buf=None, **kwargs):
-    command(('let g:qf_list = {0}'.format(repr(result)).replace(
-        '\': u', '\': ')))
-    command('call pymode#lint#Parse({0})'.format(buf.number))
+    """ Parse results. """
+    interface.command('let g:qf_list = ' + json.dumps(result))
+    interface.command('call pymode#lint#Parse({0})'.format(buf.number))
 
 # pymode:lint_ignore=W0622

@@ -2,7 +2,9 @@ if pymode#Default('g:pymode_init', 1)
     finish
 endif
 
-let g:pymode_version = "0.6.18"
+call pymode#Default('g:pymode_test', 0)
+
+let g:pymode_version = "0.6.19"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 
@@ -13,7 +15,7 @@ if pymode#Default('g:pymode', 1) || !g:pymode
 endif
 
 " DESC: Check python support
-if !has('python')
+if !has('python') && !has('python3')
     let g:pymode_virtualenv = 0
     let g:pymode_path       = 0
     let g:pymode_lint       = 0
@@ -23,6 +25,11 @@ if !has('python')
     let g:pymode_run        = 0
 endif
 
+if has('python')
+    command! -nargs=1 Python python <args>
+elseif has('python3')
+    command! -nargs=1 Python python3 <args>
+end
 
 " Virtualenv {{{
 
@@ -42,15 +49,7 @@ endif
 if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 
     call pymode#Default('g:pymode_paths', [])
-
-python << EOF
-import sys, vim, os
-
-curpath = vim.eval("getcwd()")
-libpath = os.path.join(vim.eval("expand('<sfile>:p:h:h:h')"), 'pylibs')
-
-sys.path = [libpath, curpath] + vim.eval("g:pymode_paths") + sys.path
-EOF
+    call pymode#path#Activate(expand("<sfile>:p:h:h:h"))
 
 endif " }}}
 
@@ -64,6 +63,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
 
     " OPTION: g:pymode_lint_write -- bool. Check code every save.
     call pymode#Default("g:pymode_lint_write", 1)
+
+    " OPTION: g:pymode_lint_async -- bool. Run a checkers asynchronously 
+    call pymode#Default("g:pymode_lint_async", 1)
 
     " OPTION: g:pymode_lint_onfly -- bool. Check code every save.
     call pymode#Default("g:pymode_lint_onfly", 0)
@@ -106,16 +108,34 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
     " errors ruller, even if there's no errors.
     call pymode#Default("g:pymode_lint_signs_always_visible", 0)
 
+    " OPTION: g:pymode_lint_todo_symbol -- string. Todo symbol.
+    call pymode#Default("g:pymode_lint_todo_symbol", "WW")
+
+    " OPTION: g:pymode_lint_comment_symbol -- string. Comment symbol.
+    call pymode#Default("g:pymode_lint_comment_symbol", "CC")
+
+    " OPTION: g:pymode_lint_visual_symbol -- string. Visual symbol.
+    call pymode#Default("g:pymode_lint_visual_symbol", "RR")
+
+    " OPTION: g:pymode_lint_error_symbol -- string. Error symbol.
+    call pymode#Default("g:pymode_lint_error_symbol", "EE")
+
+    " OPTION: g:pymode_lint_info_symbol -- string. Info symbol.
+    call pymode#Default("g:pymode_lint_info_symbol", "II")
+
+    " OPTION: g:pymode_lint_pyflakes_symbol -- string. PyFlakes' info symbol.
+    call pymode#Default("g:pymode_lint_pyflakes_symbol", "FF")
+
     " OPTION: g:pymode_lint_signs -- bool. Place error signs
     if (!pymode#Default("g:pymode_lint_signs", 1) || g:pymode_lint_signs) && has('signs')
 
         " DESC: Signs definition
-        sign define PymodeW text=WW texthl=Todo
-        sign define PymodeC text=CC texthl=Comment
-        sign define PymodeR text=RR texthl=Visual
-        sign define PymodeE text=EE texthl=Error
-        sign define PymodeI text=II texthl=Info
-        sign define PymodeF text=FF texthl=Info
+        execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
+        execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
+        execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
+        execute 'sign define PymodeE text=' . g:pymode_lint_error_symbol    . " texthl=Error"
+        execute 'sign define PymodeI text=' . g:pymode_lint_info_symbol     . " texthl=Info"
+        execute 'sign define PymodeF text=' . g:pymode_lint_pyflakes_symbol . " texthl=Info"
 
         if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
             " Show the sign's ruller if asked for, even it there's no error to show
@@ -130,9 +150,9 @@ if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
         let g:pymode_lint_config = expand("<sfile>:p:h:h:h") . "/pylint.ini"
     endif
 
-    py from pymode import queue
+    Python from pymode import queue
 
-    au VimLeavePre * py queue.stop_queue()
+    au VimLeavePre * Python queue.stop_queue()
 
 endif
 
@@ -155,14 +175,10 @@ endif
 
 if !pymode#Default("g:pymode_breakpoint", 1) || g:pymode_breakpoint
 
-    if !pymode#Default("g:pymode_breakpoint_cmd", "import ipdb; ipdb.set_trace()  # XXX BREAKPOINT")  && has("python")
-python << EOF
-from imp import find_module
-try:
-    find_module('ipdb')
-except ImportError:
-    vim.command('let g:pymode_breakpoint_cmd = "import pdb; pdb.set_trace()  # XXX BREAKPOINT"')
-EOF
+    if !pymode#Default("g:pymode_breakpoint_cmd", "import pdb; pdb.set_trace()  # XXX BREAKPOINT")  && has("python")
+
+        call pymode#breakpoint#SearchDebuger()
+
     endif
 
     " OPTION: g:pymode_breakpoint_key -- string. Key for set/unset breakpoint.
@@ -189,6 +205,10 @@ endif
 
 if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
+    " OPTION: g:pymode_rope_autocomplete_key -- str. Key for the rope
+    " autocompletion.
+    call pymode#Default("g:pymode_rope_autocomplete_map", "<C-Space>")
+
     " OPTION: g:pymode_rope_auto_project -- bool. Auto create ropeproject
     call pymode#Default("g:pymode_rope_auto_project", 1)
 
@@ -196,9 +216,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " Auto open existing projects, ie, if the current directory has a
     " `.ropeproject` subdirectory.
     call pymode#Default("g:pymode_rope_auto_project_open", 1)
-
-    " OPTION: g:pymode_rope_auto_session_manage -- bool
-    call pymode#Default("g:pymode_rope_auto_session_manage", 0)
 
     " OPTION: g:pymode_rope_enable_autoimport -- bool. Enable autoimport
     call pymode#Default("g:pymode_rope_enable_autoimport", 1)
@@ -233,9 +250,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     " OPTION: g:pymode_rope_short_prefix -- string.
     call pymode#Default("g:pymode_rope_short_prefix", "<C-c>")
 
-    " OPTION: g:pymode_rope_map_space -- string.
-    call pymode#Default("g:pymode_rope_map_space", 1)
-
     " OPTION: g:pymode_rope_vim_completion -- bool.
     call pymode#Default("g:pymode_rope_vim_completion", 1)
 
@@ -249,7 +263,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
     call pymode#Default("g:pymode_rope_always_show_complete_menu", 0)
 
     " DESC: Init Rope
-    py import ropevim
+    Python import ropevim
 
     fun! RopeCodeAssistInsertMode() "{{{
         call RopeCodeAssist()
@@ -260,7 +274,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         if isdirectory(getcwd() . '/.ropeproject')
             " In order to pass it the quiet kwarg I need to open the project
             " using python and not vim, which should be no major issue
-            py ropevim._interface.open_project(quiet=True)
+            Python ropevim._interface.open_project(quiet=True)
             return ""
         endif
     endfunction "}}}
@@ -272,7 +286,7 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
 
     fun! RopeOmni(findstart, base) "{{{
         if a:findstart
-            py ropevim._interface._find_start()
+            Python ropevim._interface._find_start()
             return g:pymode_offset
         else
             call RopeOmniComplete()
@@ -312,11 +326,6 @@ if !pymode#Default("g:pymode_rope", 1) || g:pymode_rope
         call RopeOpenExistingProject()
     endif
 
-     if !pymode#Default("g:pymode_rope_auto_session_manage", 0) || g:pymode_rope_auto_session_manage
-        autocmd VimLeave * call RopeSaveSession()
-        autocmd VimEnter * call RopeRestoreSession()
-     endif
-
 endif
 
 " }}}
@@ -339,5 +348,10 @@ call pymode#Default("g:pymode_options", 1)
 
 " OPTION: g:pymode_updatetime -- int. Set updatetime for async pymode's operation
 call pymode#Default("g:pymode_updatetime", 1000)
+
+" OPTION: g:pymode_modeline -- int. Support pymode modeline.
+if pymode#Default('g:pymode_modeline', 1) || !g:pymode_modeline
+    au BufRead *.py call pymode#Modeline()
+endif
 
 " vim: fdm=marker:fdl=0
