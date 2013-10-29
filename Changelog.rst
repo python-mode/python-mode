@@ -1,6 +1,8 @@
 Changelog
 =========
 
+## 2013-10-29 0.6.19
+--------------------
 * Added `g:pymode_rope_autocomplete_map` option;
 * Removed `g:pymode_rope_map_space` option;
 * Added PEP257 checker;
