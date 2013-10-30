@@ -4,6 +4,9 @@ if !g:pymode
     finish
 endif
 
+" Group autocommands and remove them on reload
+augroup pymode_ftplugin
+    au!
 
 " Parse pymode modeline
 call pymode#Modeline()
@@ -156,5 +159,7 @@ if pymode#Option('folding')
 endif
 
 " }}}
+
+augroup END
 
 " vim: fdm=marker:fdl=0
