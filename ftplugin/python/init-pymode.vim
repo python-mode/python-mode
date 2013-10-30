@@ -54,6 +54,10 @@ if !pymode#Default('g:pymode_path', 1) || g:pymode_path
 endif " }}}
 
 
+" Group autocommands and remove them on reload
+augroup pymode_init
+    au!
+
 " Lint {{{
 
 if !pymode#Default("g:pymode_lint", 1) || g:pymode_lint
@@ -353,5 +357,7 @@ call pymode#Default("g:pymode_updatetime", 1000)
 if pymode#Default('g:pymode_modeline', 1) || !g:pymode_modeline
     au BufRead *.py call pymode#Modeline()
 endif
+
+augroup END
 
 " vim: fdm=marker:fdl=0
