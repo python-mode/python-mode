@@ -177,6 +177,13 @@ call pymode#Default('g:pymode_syntax_all', 1)
         syn region pythonDocTest2   start="^\s*>>>" end=+"""+he=s-1 end="^\s*$" contained
     endif
 
+    " DocStrings
+    if !pymode#Default('g:pymode_syntax_docstrings', g:pymode_syntax_all) || g:pymode_syntax_docstrings
+        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?"""+ end=+"""+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+    endif
+
+
 " }}}
 
 " Numbers {{{
