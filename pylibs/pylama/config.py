@@ -37,7 +37,7 @@ def parse_options(
         async=_Default(async), format=_Default('pep8'),
         select=_Default(select), ignore=_Default(ignore),
         report=_Default(None), verbose=_Default(False),
-        linters=_Default(','.join(linters)), complexity=_Default(complexity),
+        linters=_Default(linters), complexity=_Default(complexity),
         options=_Default(options))
 
     if not (args is None):
