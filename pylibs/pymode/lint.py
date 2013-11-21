@@ -11,11 +11,36 @@ from pylama.tasks import check_path
 from . import interface
 from .queue import add_task
 
+from contextlib import contextmanager
+import sys
+import threading
 
 try:
     locale.setlocale(locale.LC_CTYPE, "C")
 except AttributeError:
     pass
+
+
+class DevNull(object):
+    def write(self, what):
+        pass
+
+
+_sys_lock = threading.Lock()
+
+
+@contextmanager
+def silence_stderr():
+    # I don't know whether the locking is necessary but better safe than
+    # sorry...
+    with _sys_lock:
+        old_stderr = sys.stderr
+        sys.stderr = DevNull()
+
+    yield
+
+    with _sys_lock:
+        sys.stderr = old_stderr
 
 
 def check_file():
@@ -55,7 +80,9 @@ def run_checkers(callback=None, buf=None, options=None, rootpath=None):
     path = buf.name
     if rootpath:
         path = op.relpath(path, rootpath)
-    return check_path(path, options=options, pylint=pylint_options)
+
+    with silence_stderr():
+        return check_path(path, options=options, pylint=pylint_options)
 
 
 def parse_result(result, buf=None, **kwargs):
