@@ -1,31 +1,45 @@
-" Quick set or delete a breakpoints
-fun! pymode#breakpoint#Set(lnum) "{{{
-    let line = getline(a:lnum)
-    if strridx(line, g:pymode_breakpoint_cmd) != -1
-        normal dd
-    else
-        let plnum = prevnonblank(a:lnum)
-        call append(line('.')-1, repeat(' ', indent(plnum)).g:pymode_breakpoint_cmd)
-        normal k
+fun! pymode#breakpoint#init() "{{{
+
+    if !g:pymode_breakpoint
+        return
     endif
 
-    " Save file without any events
-    if &modifiable && &modified | noautocmd write | endif	
+    if g:pymode_breakpoint_template == ''
+        let g:pymode_breakpoint_template = 'import pdb; pdb.set_trace()  # XXX BREAKPOINT'
 
-endfunction "}}}
+        if g:pymode_python == 'disable'
+            return
+        endif
 
-fun! pymode#breakpoint#SearchDebuger() "{{{
+        PymodePython << EOF
 
-Python << EOF
 from imp import find_module
 
 for module in ('pudb', 'ipdb'):
     try:
         find_module(module)
-        vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
+        vim.command('let g:pymode_breakpoint_template = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
         break
     except ImportError:
         continue
+
 EOF
+
+    endif
+
+endfunction "}}}
+
+fun! pymode#breakpoint#operate(lnum) "{{{
+    let line = getline(a:lnum)
+    if strridx(line, g:pymode_breakpoint_template) != -1
+        normal dd
+    else
+        let plnum = prevnonblank(a:lnum)
+        call append(line('.')-1, repeat(' ', indent(plnum)).g:pymode_breakpoint_template)
+        normal k
+    endif
+
+    " Save file without any events
+    call pymode#save()
 
 endfunction "}}}

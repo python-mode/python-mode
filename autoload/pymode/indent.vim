@@ -7,7 +7,7 @@
 " License:          Public Domainlet
 
 
-function! pymode#indent#Indent(lnum)
+function! pymode#indent#get_indent(lnum)
 
     " First line has indent 0
     if a:lnum == 1
@@ -66,21 +66,23 @@ function! pymode#indent#Indent(lnum)
         return -1
     endif
 
-    " If this line is explicitly joined, try to find an indentation that looks
-    " good.
+    " If this line is explicitly joined, find the first indentation that is a
+    " multiple of four and will distinguish itself from next logical line.
     if pline =~ '\\$'
-        let compound_statement = '^\s*\(if\|while\|for\s.*\sin\|except\)\s*'
-        let maybe_indent = matchend(getline(sslnum), compound_statement)
-        if maybe_indent != -1
-            return maybe_indent
+        let maybe_indent = indent(sslnum) + &sw
+        let control_structure = '^\s*\(if\|while\|for\s.*\sin\|except\)\s*'
+        if match(getline(sslnum), control_structure) != -1
+            " add extra indent to avoid E125
+            return maybe_indent + &sw
         else
-            return indent(sslnum) + &sw * 2
+            " control structure not found
+            return maybe_indent
         endif
     endif
 
     " If the previous line ended with a colon and is not a comment, indent
     " relative to statement start.
-    if pline =~ ':\s*$' && pline !~ '^\s*#'
+    if pline =~ '^[^#]*:\s*\(#.*\)\?$'
         return indent(sslnum) + &sw
     endif
 
@@ -101,7 +103,7 @@ endfunction
 
 
 " Find backwards the closest open parenthesis/bracket/brace.
-function! s:SearchParensPair()
+function! s:SearchParensPair() " {{{
     let line = line('.')
     let col = col('.')
 
@@ -140,11 +142,11 @@ function! s:SearchParensPair()
         call cursor(parlnum, parcol)
     endif
     return parlnum
-endfunction
+endfunction " }}}
 
 
 " Find the start of a multi-line statement
-function! s:StatementStart(lnum)
+function! s:StatementStart(lnum) " {{{
     let lnum = a:lnum
     while 1
         if getline(lnum - 1) =~ '\\$'
@@ -159,11 +161,11 @@ function! s:StatementStart(lnum)
             endif
         endif
     endwhile
-endfunction
+endfunction " }}}
 
 
 " Find the block starter that matches the current line
-function! s:BlockStarter(lnum, block_start_re)
+function! s:BlockStarter(lnum, block_start_re) " {{{
     let lnum = a:lnum
     let maxindent = 10000       " whatever
     while lnum > 1
@@ -181,4 +183,4 @@ function! s:BlockStarter(lnum, block_start_re)
         endif
     endwhile
     return -1
-endfunction
+endfunction " }}}

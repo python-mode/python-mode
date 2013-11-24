@@ -1,6 +1,17 @@
 Changelog
 =========
 
+## 2013-??-??
+-------------
+    * Update indentation support
+    * Python3 support
+    * Variables changes:
+        'pymode_run_key' -> 'pymode_run_bind'
+        'pymode_lint_write' -> 'pymode_lint_on_write'
+        'pymode_lint_onfly' -> 'pymode_lint_on_fly'
+        'pymode_lint_message' -> 'pymode_lint_status'
+        'pymode_lint_checker' -> 'pymode_lint_checkers'
+
 ## 2013-10-29 0.6.19
 --------------------
 * Added `g:pymode_rope_autocomplete_map` option;
