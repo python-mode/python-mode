@@ -41,9 +41,9 @@ if g:pymode_rope && g:pymode_rope_completion
 
     setlocal omnifunc=pymode#rope#completions
 
-    exe "inoremap <silent> <buffer> " . g:pymode_rope_completion_bind . " <C-R>=pymode#rope#complete()<CR>"
+    exe "inoremap <silent> <buffer> " . g:pymode_rope_completion_bind . " <C-R>=pymode#rope#complete(0)<CR>"
     if tolower(g:pymode_rope_completion_bind) == '<c-space>'
-        exe "inoremap <silent> <buffer> <Nul> <C-R>=pymode#rope#complete()<CR>"
+        exe "inoremap <silent> <buffer> <Nul> <C-R>=pymode#rope#complete(0)<CR>"
     endif
 
 end

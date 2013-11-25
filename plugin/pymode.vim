@@ -170,6 +170,12 @@ call pymode#default('g:pymode_rope', 1)
 " Enable Rope completion
 call pymode#default('g:pymode_rope_completion', 1)
 
+" Complete keywords from not imported modules (could make completion slower)
+call pymode#default('g:pymode_rope_autoimport', 1)
+
+" Autoimported modules
+call pymode#default('g:pymode_rope_autoimport_modules', ['os', 'shutil', 'datetime'])
+
 " Automatic completion on dot
 call pymode#default('g:pymode_rope_complete_on_dot', 1)
 
@@ -208,6 +214,9 @@ call pymode#default('g:pymode_rope_extract_variable_bind', '<C-c>rl')
 
 " Inline refactoring
 call pymode#default('g:pymode_rope_inline_bind', '<C-c>ri')
+
+" Move refactoring
+call pymode#default('g:pymode_rope_move_bind', '<C-c>rv')
 
 " Tries to find the places in which a function can be used and changes the
 " code to call it instead

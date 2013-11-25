@@ -76,9 +76,9 @@ if g:pymode_lint
     endif
 
     if g:pymode_lint_async
-        let &l:updatetime = g:pymode_lint_async_updatetime
-        au! pymode BufEnter <buffer> call pymode#lint#start()
-        au! pymode BufLeave <buffer> call pymode#lint#stop()
+        " let &l:updatetime = g:pymode_lint_async_updatetime
+        " au! pymode BufEnter <buffer> call pymode#lint#start()
+        " au! pymode BufLeave <buffer> call pymode#lint#stop()
     end
 
 endif
@@ -129,6 +129,10 @@ if g:pymode_rope
 
     if g:pymode_rope_inline_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_inline_bind . " :call pymode#rope#inline()<CR>"
+    end
+
+    if g:pymode_rope_move_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_move_bind . " :call pymode#rope#move()<CR>"
     end
 
     if g:pymode_rope_use_function_bind != ""

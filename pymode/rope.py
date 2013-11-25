@@ -8,6 +8,7 @@ import os.path
 import sys
 import re
 import json
+import multiprocessing
 from .utils import (
     message, PY2, error, pymode_input, pymode_inputlist, pymode_y_n)
 
@@ -19,7 +20,7 @@ else:
 from rope.base import project, libutils, exceptions, change # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
 from rope.contrib import autoimport, codeassist, findit # noqa
-from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction # noqa
+from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move # noqa
 from rope.base.taskhandle import TaskHandle # noqa
 
 
@@ -85,7 +86,7 @@ def completions():
     vim.command("return %s" % json.dumps(proposals))
 
 
-def complete():
+def complete(dot=False):
     """ Ctrl+Space completion.
 
     :return bool: success
@@ -93,7 +94,7 @@ def complete():
     """
     row, column = vim.current.window.cursor
     source, offset = get_assist_params((row, column))
-    proposals = get_proporsals(source, offset)
+    proposals = get_proporsals(source, offset, dot=dot)
     if not proposals:
         return False
 
@@ -116,7 +117,7 @@ def complete():
     return True
 
 
-def get_proporsals(source, offset, base=''):
+def get_proporsals(source, offset, base='', dot=False):
     """ Code assist.
 
     :return str:
@@ -136,7 +137,7 @@ def get_proporsals(source, offset, base=''):
         proposals = sorted(proposals, key=_sort_proporsals)
 
         out = []
-        preview = 'preview' in ctx.completeopt
+        preview = 'preview' in ctx.options.get('completeopt')
         for p in proposals:
             out.append(dict(
                 word=p.name,
@@ -144,6 +145,8 @@ def get_proporsals(source, offset, base=''):
                 kind=p.scope + ':',
                 info=p.get_doc() or "No docs." if preview else "",
             ))
+
+        out = _get_autoimport_proposals(out, ctx, source, offset, dot=dot)
 
     return out
 
@@ -334,17 +337,22 @@ class RopeContext(object):
         update_python_path(self.project.prefs.get('python_path', []))
 
         self.resource = None
-        self.completeopt = vim.eval('&completeopt')
         self.options = dict(
-            goto_definition_cmd=vim.eval('g:pymode_rope_goto_definition_cmd')
+            completeopt=vim.eval('&completeopt'),
+            autoimport=vim.eval('g:pymode_rope_autoimport'),
+            autoimport_modules=vim.eval('g:pymode_rope_autoimport_modules'),
+            goto_definition_cmd=vim.eval('g:pymode_rope_goto_definition_cmd'),
         )
-        self.encoding = vim.eval('&encoding')
 
         if os.path.exists("%s/__init__.py" % project_path):
             sys.path.append(project_path)
 
+        if self.options.get('autoimport') == '1':
+            self.generate_autoimport_cache()
+
     def __enter__(self):
         self.project.validate(self.project.root)
+        self.options['encoding'] = vim.eval('&encoding')
         self.resource = libutils.path_to_resource(
             self.project, vim.current.buffer.name, 'file')
         return self
@@ -353,11 +361,19 @@ class RopeContext(object):
         if t is None:
             self.project.close()
 
-    def generate_modules_cache(self, modules):
-        """ Generate modules cache. """
-        message("Generate Modules cache ...")
-        self.importer.generate_modules_cache(modules)
-        self.project.sync()
+    def generate_autoimport_cache(self):
+        """ Update autoimport cache. """
+
+        def _update_cache(importer, modules=None):
+
+            importer.generate_cache()
+            if modules:
+                importer.generate_modules_cache(modules)
+            importer.project.sync()
+
+        process = multiprocessing.Process(target=_update_cache, args=(
+            self.importer, self.options.get('autoimport_modules')))
+        process.start()
 
 
 class ProgressHandler(object):
@@ -397,6 +413,7 @@ class Refactoring(object): # noqa
 
         with RopeContext() as ctx:
             try:
+                message(self.__doc__)
                 refactor = self.get_refactor(ctx)
                 input_str = self.get_input_str(refactor, ctx)
                 if not input_str:
@@ -435,15 +452,24 @@ class Refactoring(object): # noqa
 
     @staticmethod
     def get_input_str(refactor, ctx):
-        """ Get user input. """
+        """ Get user input. Skip by default.
 
-        raise NotImplementedError
+        :return bool: True
+
+        """
+
+        return True
 
     @staticmethod
-    def get_changes(refactor, ctx):
-        """ Get changes. """
+    def get_changes(refactor, input_str):
+        """ Get changes.
 
-        raise NotImplementedError
+        :return Changes:
+
+        """
+        progress = ProgressHandler('Calculate changes ...')
+        return refactor.get_changes(
+            input_str, task_handle=progress.handle)
 
 
 class RenameRefactoring(Refactoring):
@@ -479,18 +505,6 @@ class RenameRefactoring(Refactoring):
             return False
 
         return newname
-
-    @staticmethod
-    def get_changes(refactor, input_str):
-        """ Get changes.
-
-        :return Changes:
-
-        """
-
-        progress = ProgressHandler('Calculate changes ...')
-        return refactor.get_changes(
-            input_str, task_handle=progress.handle)
 
 
 class ExtractMethodRefactoring(Refactoring):
@@ -568,12 +582,6 @@ class InlineRefactoring(Refactoring):
     """ Inline variable/method. """
 
     @staticmethod
-    def get_input_str(refactor, ctx):
-        """ Return user input. """
-
-        return True
-
-    @staticmethod
     def get_refactor(ctx):
         """ Function description.
 
@@ -597,12 +605,6 @@ class InlineRefactoring(Refactoring):
 class UseFunctionRefactoring(Refactoring):
 
     """ Use selected function as possible. """
-
-    @staticmethod
-    def get_input_str(refactor, ctx):
-        """ Return user input. """
-
-        return True
 
     @staticmethod
     def get_refactor(ctx):
@@ -631,12 +633,6 @@ class ModuleToPackageRefactoring(Refactoring):
     """ Convert module to package. """
 
     @staticmethod
-    def get_input_str(refactor, ctx):
-        """ Return user input. """
-
-        return True
-
-    @staticmethod
     def get_refactor(ctx):
         """ Function description.
 
@@ -653,6 +649,33 @@ class ModuleToPackageRefactoring(Refactoring):
 
         """
         return refactor.get_changes()
+
+
+class MoveRefactoring(Refactoring):
+
+    """ Move method/module to other class/global. """
+
+    @staticmethod
+    def get_input_str(refactor, ctx):
+        """ Get destination.
+
+        :return str:
+
+        """
+
+        return pymode_input('Enter destination:')
+
+    @staticmethod
+    def get_refactor(ctx):
+        """ Function description.
+
+        :return Rename:
+
+        """
+        _, offset = get_assist_params()
+        if offset == 0:
+            offset = None
+        return move.create_move(ctx.project, ctx.resource, offset)
 
 
 def reload_changes(changes):
@@ -693,3 +716,31 @@ def _get_moved_resources(changes):
         moved[changes.resource] = changes.new_resource
 
     return moved
+
+
+def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
+
+    if not ctx.options.get('autoimport') or dot:
+        return out
+
+    if '.' in codeassist.starting_expression(source, offset):
+        return out
+
+    current_offset = offset - 1
+    while current_offset >= 0 and (
+            source[current_offset].isalnum() or source[current_offset] == '_'):
+        current_offset -= 1
+    starting = source[current_offset:offset]
+    starting = starting.strip()
+
+    if not starting:
+        return out
+
+    for assist in ctx.importer.import_assist(starting):
+        out.append(dict(
+            abbr=' : '.join(assist),
+            word=assist[0],
+            kind='autoimport:',
+        ))
+
+    return out

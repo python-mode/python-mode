@@ -7,11 +7,15 @@ fun! pymode#rope#completions(findstart, base)
     PymodePython rope.completions()
 endfunction
 
-fun! pymode#rope#complete()
+fun! pymode#rope#complete(dot)
     if pumvisible()
         return "\<C-n>"
     end
-    PymodePython rope.complete()
+    if a:dot
+        PymodePython rope.complete(True)
+    else
+        PymodePython rope.complete()
+    end
     return pumvisible() ? "\<C-p>\<Down>" : ""
 endfunction
 
@@ -26,7 +30,7 @@ fun! pymode#rope#complete_on_dot() "{{{
             endif
         endfor
     endfor
-    return pymode#rope#complete()
+    return pymode#rope#complete(1)
 endfunction "}}}
 
 fun! pymode#rope#goto_definition()
@@ -119,6 +123,13 @@ fun! pymode#rope#inline() "{{{
         return 0
     endif
     PymodePython rope.InlineRefactoring().run()
+endfunction "}}}
+
+fun! pymode#rope#move() "{{{
+    if !pymode#save()
+        return 0
+    endif
+    PymodePython rope.MoveRefactoring().run()
 endfunction "}}}
 
 fun! pymode#rope#use_function() "{{{
