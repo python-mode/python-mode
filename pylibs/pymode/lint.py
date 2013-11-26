@@ -24,10 +24,11 @@ def check_file():
     rootpath = interface.eval_code('getcwd()')
 
     async = int(interface.get_option('lint_async'))
-    linters = interface.get_option('lint_checker')
+    linters = interface.get_option('lint_checker').split(',')
     ignore = interface.get_option('lint_ignore')
     select = interface.get_option('lint_select')
     complexity = interface.get_option('lint_mccabe_complexity') or '0'
+    config = interface.get_var('lint_config')
 
     options = parse_options(
         ignore=ignore, select=select, complexity=complexity, linters=linters)
@@ -35,7 +36,7 @@ def check_file():
     if async:
         add_task(
             run_checkers, callback=parse_result, title='Code checking',
-            buf=buf, options=options, rootpath=rootpath,
+            buf=buf, options=options, rootpath=rootpath, config=config
         )
 
     else:
@@ -43,15 +44,14 @@ def check_file():
         parse_result(result, buf=buf)
 
 
-def run_checkers(callback=None, buf=None, options=None, rootpath=None):
+def run_checkers(callback=None, buf=None, options=None, rootpath=None,
+                 config=None):
     """ Run pylama code.
 
     :return list: errors
 
     """
-    pylint_options = '--rcfile={0} -r n'.format(
-        interface.get_var('lint_config')).split()
-
+    pylint_options = '--rcfile={0} -r n'.format(config).split()
     path = buf.name
     if rootpath:
         path = op.relpath(path, rootpath)
