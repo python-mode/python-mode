@@ -24,7 +24,7 @@ def check_file():
     rootpath = interface.eval_code('getcwd()')
 
     async = int(interface.get_option('lint_async'))
-    linters = interface.get_option('lint_checker')
+    linters = interface.get_option('lint_checker').split(',')
     ignore = interface.get_option('lint_ignore')
     select = interface.get_option('lint_select')
     complexity = interface.get_option('lint_mccabe_complexity') or '0'
