@@ -4,29 +4,29 @@
 .. image:: https://travis-ci.org/klen/python-mode.png?branch=develop
     :target: https://travis-ci.org/klen/python-mode
 
-Python-mode is a vim plugin that helps you to
-create python code very quickly by utilizing libraries including 
-pylint_, rope_, pydoc_, pyflakes_, pep8_, and mccabe_  
-for features like static analysis, refactoring, folding,
-completion, documentation, and more.
+Python-mode is a vim plugin that helps you to create python code very quickly
+by utilizing libraries including pylint_, rope_, pydoc_, pyflakes_, pep8_, and
+mccabe_  for features like static analysis, refactoring, folding, completion,
+documentation, and more.
 
-There is no need to install pylint_, rope_
-or any other Python libraries on your system.
+There is no need to install pylint_, rope_ or any other Python libraries on
+your system.
 
-- `Python motions and operators`_ (``]]``, ``3[[``, ``]]M``, ``vaC``, ``viM``, ``daC``, ``ciM``, ...)
-- `Python code folding`_
-- `Virtualenv support`_
+- `Support Python version 2 and 3`_
 - `Syntax highlighting`_
-- Highlight and auto fix unused imports
-- Many static analysis linters (pylint_, pyflakes_, pylama_, ...) that can be run simultaneously
+- `Virtualenv support`_
+- `Run python code`_ (``<leader>r``)
+- `Add/remove breakpoints`_ (``<leader>b``)
+- `Improved Python indentation`_
+- `Python folding`_
+- `Python motions and operators`_ (``]]``, ``3[[``, ``]]M``, ``vaC``, ``viM``, ``daC``, ``ciM``, ...)
+- `Code checking`_  (pylint_, pyflakes_, pylama_, ...) that can be run simultaneously (``:PymodeLint``)
+- `Autofix PEP8 errors`_ (``:PymodeLintAuto``)
+- `Search in python documentation`_ (``K``)
 - `Code refactoring <rope refactoring library>`_ (rope_)
-- Strong code completion (rope_)
-- Go to definition (``<C-c>g`` for `:RopeGotoDefinition`)
-- `Show documentation`_ (``K``)
-- Run python code (``<leader>r``)
-- Powerful customization settings_
+- `Strong code completion`_ (rope_)
+- `Go to definition` (``<C-c>g`` for `:RopeGotoDefinition`)
 - And more, more ...
-
 
 See (very old) screencast here: http://www.youtube.com/watch?v=67OZNp9Z0CQ (sorry for quality, this is my first screencast)
 Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
@@ -40,14 +40,12 @@ Another old presentation here: http://www.youtube.com/watch?v=YhqsjUUHj6g
 Requirements
 ============
 
-- VIM >= 7.0 with python support
+- VIM >= 7.3 (mostly features needed `+python` or `+python3` support)
   (also ``--with-features=big`` if you want ``g:pymode_lint_signs``)
-
 
 
 How to install
 ==============
-
 
 Using pathogen (recomended)
 ----------------------------
@@ -93,10 +91,11 @@ Troubleshooting
 
 If your python-mode doesn't work: open any python file and type: ::
 
-    :call pymode#troubleshooting#Test()
+    :call pymode#troubleshooting#test()
 
-And fix any warnings or copy the output and send it to me.
-(For example, by creating a `new github issue <https://github.com/klen/python-mode/issues/new>`_ if one does not already exist for the problem).
+And fix any warnings or copy the output and send it to me. (For example, by
+creating a `new github issue <https://github.com/klen/python-mode/issues/new>`_
+if one does not already exist for the problem).
 
 
 Settings
