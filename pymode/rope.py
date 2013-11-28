@@ -10,7 +10,7 @@ import re
 import json
 import multiprocessing
 from .utils import (
-    message, PY2, error, pymode_input, pymode_inputlist, pymode_y_n)
+    pymode_message, PY2, pymode_error, pymode_input, pymode_inputlist, pymode_y_n)
 
 if PY2:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
@@ -19,7 +19,7 @@ else:
 
 from rope.base import project, libutils, exceptions, change # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
-from rope.contrib import autoimport, codeassist, findit # noqa
+from rope.contrib import autoimport as rope_autoimport, codeassist, findit # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move # noqa
 from rope.base.taskhandle import TaskHandle # noqa
 
@@ -193,7 +193,7 @@ def show_doc():
                 raise exceptions.BadIdentifierError
             vim.command('let l:output = %s' % json.dumps(doc.split('\n')))
         except exceptions.BadIdentifierError:
-            error("No documentation found.")
+            pymode_error("No documentation found.")
 
 
 def find_it():
@@ -259,7 +259,7 @@ def new():
     root = vim.eval('input("Enter project root: ", getcwd())')
     prj = project.Project(projectroot=root)
     prj.close()
-    message("Project is opened: %s" % root)
+    pymode_message("Project is opened: %s" % root)
 
 
 def undo():
@@ -272,7 +272,7 @@ def undo():
     with RopeContext() as ctx:
         changes = ctx.project.history.tobe_undone
         if changes is None:
-            error('Nothing to undo!')
+            pymode_error('Nothing to undo!')
             return False
 
         if pymode_y_n(yes=False, msg='Undo [%s]?' % str(changes)):
@@ -291,7 +291,7 @@ def redo():
     with RopeContext() as ctx:
         changes = ctx.project.history.tobe_redone
         if changes is None:
-            error('Nothing to redo!')
+            pymode_error('Nothing to redo!')
             return False
 
         if pymode_y_n(yes=False, msg='Redo [%s]?' % str(changes)):
@@ -318,6 +318,41 @@ def cache_project(cls):
     return get_ctx
 
 
+def autoimport():
+    """ Autoimport modules.
+
+    :return bool:
+
+    """
+    word = vim.eval('a:word')
+    if not word:
+        pymode_error("Should be word under cursor.")
+        return False
+
+    def insert_import(name, module, ctx, source):
+        linenum = int(ctx.importer.find_insertion_line(source))
+        line = 'from %s insert %s' % (module, name)
+        vim.current.buffer[linenum - 1:linenum - 1] = [line]
+
+    with RopeContext() as ctx:
+        if not ctx.importer.names:
+            ctx.generate_autoimport_cache()
+        modules = ctx.importer.get_modules(word)
+        if not modules:
+            pymode_message('Global name %s not found.' % word)
+            return False
+
+        source, _ = get_assist_params()
+        if len(modules) == 1:
+            insert_import(word, modules[0], ctx, source)
+
+        else:
+            module = pymode_inputlist('Wich module to import:', modules)
+            insert_import(word, module, ctx, source)
+
+        return True
+
+
 @cache_project
 class RopeContext(object):
 
@@ -331,8 +366,8 @@ class RopeContext(object):
         self.project = project.Project(
             project_path, fscommands=FileSystemCommands())
 
-        self.importer = autoimport.AutoImport(project=self.project,
-                                              observe=False)
+        self.importer = rope_autoimport.AutoImport(
+            project=self.project, observe=False)
 
         update_python_path(self.project.prefs.get('python_path', []))
 
@@ -388,7 +423,7 @@ class ProgressHandler(object):
     def __call__(self):
         """ Show current progress. """
         percent_done = self.handle.current_jobset().get_percent_done()
-        message('%s - done %s%%' % (self.message, percent_done))
+        pymode_message('%s - done %s%%' % (self.message, percent_done))
 
 
 _scope_weight = {
@@ -413,7 +448,7 @@ class Refactoring(object): # noqa
 
         with RopeContext() as ctx:
             try:
-                message(self.__doc__)
+                pymode_message(self.__doc__)
                 refactor = self.get_refactor(ctx)
                 input_str = self.get_input_str(refactor, ctx)
                 if not input_str:
@@ -439,10 +474,10 @@ class Refactoring(object): # noqa
                 ctx.project.do(changes, task_handle=progress.handle)
                 reload_changes(changes)
             except exceptions.RefactoringError as e:
-                error(str(e))
+                pymode_error(str(e))
 
             except Exception as e:
-                error('Unhandled exception in Pymode: %s' % e)
+                pymode_error('Unhandled exception in Pymode: %s' % e)
 
     @staticmethod
     def get_refactor(ctx):
@@ -501,7 +536,7 @@ class RenameRefactoring(Refactoring):
         newname = pymode_input(msg, oldname)
 
         if newname == oldname:
-            message("Nothing to do.")
+            pymode_message("Nothing to do.")
             return False
 
         return newname

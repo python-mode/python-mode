@@ -50,6 +50,7 @@ if g:pymode_options
     setlocal nowrap
     setlocal textwidth=79
     setlocal commentstring=#%s
+    setlocal define=^\s*\\(def\\\\|class\\)
 endif
 
 if g:pymode_lint
@@ -154,5 +155,9 @@ if g:pymode_rope
     command! -buffer PymodeRopeRedo call pymode#rope#redo()
     command! -buffer PymodeRopeRenameModule call pymode#rope#rename_module()
     command! -buffer PymodeRopeModuleToPackage call pymode#rope#module_to_package()
+
+    if g:pymode_rope_autoimport
+        command! -buffer PymodeRopeAutoImport call pymode#rope#autoimport(expand('<cword>'))
+    end
 
 end

@@ -3,7 +3,7 @@
 import os.path
 import vim # noqa
 
-from .utils import message
+from .utils import pymode_message
 
 
 def enable_virtualenv():
@@ -30,7 +30,7 @@ def enable_virtualenv():
         source = f.read()
         exec(compile(  # noqa
             source, activate_this, 'exec'), dict(__file__=activate_this))
-        message('Activate virtualenv: ' + path)
+        pymode_message('Activate virtualenv: ' + path)
         vim.command('let g:pymode_virtualenv_enabled = "%s"' % path)
         return True
     finally:

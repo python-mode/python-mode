@@ -9,7 +9,7 @@ import json
 import sys
 import vim # noqa
 
-from .utils import error
+from .utils import pymode_error
 
 
 VIM_INPUT = lambda s: vim.eval('input("%s")' % s)
@@ -37,7 +37,7 @@ def run_code():
             # A non-false code indicates abnormal termination.
             # A false code will be treated as a
             # successful run, and the error will be hidden from Vim
-            error("Script exited with code %s" % e.code)
+            pymode_error("Script exited with code %s" % e.code)
             vim.command('return')
 
     except Exception:

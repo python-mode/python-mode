@@ -20,7 +20,7 @@ def args_from_vim(func):
     return __wrapper
 
 
-def message(content):
+def pymode_message(content):
     """ Show message. """
 
     vim.command('call pymode#wide_message("%s")' % str(content))
@@ -51,13 +51,13 @@ def pymode_inputlist(msg, opts):
         input_str = 0
 
     if not input_str:
-        message('Cancelled!')
+        pymode_message('Cancelled!')
         return False
 
     try:
         return opts[input_str - 1]
     except (IndexError, ValueError):
-        error('Invalid option: %s' % input_str)
+        pymode_error('Invalid option: %s' % input_str)
         return pymode_inputlist(msg, opts)
 
 
@@ -81,7 +81,7 @@ def pymode_input(umsg, udefault='', opts=None):
     return input_str or default
 
 
-def error(content):
+def pymode_error(content):
     """ Show error. """
 
     vim.command('call pymode#error("%s")' % str(content))
@@ -117,6 +117,6 @@ def catch_and_print_exceptions(func):
         try:
             return func(*args, **kwargs)
         except (Exception, vim.error): # noqa
-            error(traceback.format_exc())
+            pymode_error(traceback.format_exc())
             return None
     return wrapper
