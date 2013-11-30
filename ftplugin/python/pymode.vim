@@ -9,6 +9,10 @@ if !pymode#default('g:pymode_init', 1)
     call pymode#breakpoint#init()
 endif
 
+" Setup events for pymode
+au pymode BufWritePre <buffer> call pymode#buffer_pre_write()
+au pymode BufWritePost <buffer> call pymode#buffer_post_write()
+
 " Run python code
 if g:pymode_run
 
@@ -62,10 +66,6 @@ if g:pymode_lint
     let b:pymode_error_line = -1
     let b:pymode_errors = {}
     let b:pymode_signs = []
-
-    if g:pymode_lint_on_write
-        au pymode BufWritePost <buffer> PymodeLint
-    endif
 
     if g:pymode_lint_on_fly
         au pymode InsertLeave <buffer> PymodeLint
@@ -148,13 +148,12 @@ if g:pymode_rope
         inoremap <silent> <buffer> . .<C-R>=pymode#rope#complete_on_dot()<CR>
     end
 
-    au pymode BufWritePost <buffer> call pymode#rope#regenerate()
-
     command! -buffer PymodeRopeNewProject call pymode#rope#new()
     command! -buffer PymodeRopeUndo call pymode#rope#undo()
     command! -buffer PymodeRopeRedo call pymode#rope#redo()
     command! -buffer PymodeRopeRenameModule call pymode#rope#rename_module()
     command! -buffer PymodeRopeModuleToPackage call pymode#rope#module_to_package()
+    command! -buffer PymodeRopeRegenerate call pymode#rope#regenerate()
 
     if g:pymode_rope_autoimport
         command! -buffer PymodeRopeAutoImport call pymode#rope#autoimport(expand('<cword>'))

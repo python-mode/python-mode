@@ -43,7 +43,7 @@ fun! pymode#error(msg) "{{{
 endfunction "}}}
 
 " DESC: Open quickfix window
-fun! pymode#quickfix_open(onlyRecognized, holdCursor, maxHeight, minHeight, jumpError) "{{{
+fun! pymode#quickfix_open(onlyRecognized, maxHeight, minHeight, jumpError) "{{{
     let numErrors = len(filter(getqflist(), 'v:val.valid'))
     let numOthers = len(getqflist()) - numErrors
     if numErrors > 0 || (!a:onlyRecognized && numOthers > 0)
@@ -51,7 +51,7 @@ fun! pymode#quickfix_open(onlyRecognized, holdCursor, maxHeight, minHeight, jump
         exe max([min([line("$"), a:maxHeight]), a:minHeight]) . "wincmd _"
         if a:jumpError
             cc
-        elseif !a:holdCursor
+        else
             wincmd p
         endif
     else
@@ -102,4 +102,17 @@ fun! pymode#reload_buf_by_nr(nr) "{{{
     endtry
     exe "e!"
     exe "buffer " . cur
+endfunction "}}}
+
+fun! pymode#buffer_pre_write() "{{{
+    let b:pymode_modified = &modified
+endfunction
+
+fun! pymode#buffer_post_write() "{{{
+    if b:pymode_modified && g:pymode_rope_regenerate_on_write
+        call pymode#rope#regenerate()
+    endif
+    if b:pymode_modified && g:pymode_lint_on_write
+        call pymode#lint#check()
+    endif
 endfunction "}}}
