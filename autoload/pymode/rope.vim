@@ -54,7 +54,7 @@ fun! pymode#rope#find_it()
     call pymode#wide_message('')
     if !empty(l:output)
         call setqflist(l:output)
-        call pymode#quickfix_open(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
     end
 endfunction
 
@@ -73,6 +73,7 @@ endfunction
 
 
 fun! pymode#rope#regenerate() "{{{
+    call pymode#wide_message('Regenerate Rope cache ... ')
     PymodePython rope.regenerate()
 endfunction "}}}
 

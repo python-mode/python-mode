@@ -59,7 +59,7 @@ fun! pymode#lint#check() "{{{
     endif
 
     if g:pymode_lint_cwindow
-        call pymode#quickfix_open(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
     endif
 
     if g:pymode_lint_signs

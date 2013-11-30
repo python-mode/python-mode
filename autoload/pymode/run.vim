@@ -86,7 +86,7 @@ fun! pymode#run#code_run(line1, line2) "{{{
             call setqflist(qflist)
         endif
 
-        call pymode#quickfix_open(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_maxheight, 0)
         let &efm = l:_efm
 
     catch /E234/
