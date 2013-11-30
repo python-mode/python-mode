@@ -14,7 +14,7 @@ The plugin containts all you need to develop python applications in Vim.
 There is no need to install pylint_, rope_ or any other Python libraries on
 your system.
 
-- Support Python version 2 and 3
+- Support Python version 2.6+ and 3.2+
 - Syntax highlighting
 - Virtualenv support
 - Run python code (``<leader>r``)
@@ -298,7 +298,7 @@ Check code on every insert: ::
 
     let g:pymode_lint_on_fly = 1
 
-Show error message if cursor placed at the error line
+Show error message if cursor placed at the error line: ::
 
     let g:pymode_lint_message = 1
 
