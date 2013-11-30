@@ -88,7 +88,7 @@ endif
 if g:pymode_doc
 
     " Set commands
-    command! -buffer -nargs=1 PymodeDocumentation call pymode#doc#show("<args>")
+    command! -buffer -nargs=1 PymodeDoc call pymode#doc#show("<args>")
 
     " Set keys
     exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#show(expand('<cword>'))<CR>"

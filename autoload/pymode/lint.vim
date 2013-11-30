@@ -79,6 +79,7 @@ fun! pymode#lint#check() "{{{
 
     let b:pymode_error_line = -1
     call pymode#lint#show_errormessage()
+    call pymode#wide_message('Found errors and warnings: ' . len(errors))
 
 endfunction " }}}
 

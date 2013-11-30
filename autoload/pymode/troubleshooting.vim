@@ -89,10 +89,7 @@ EOF
             " call append('$', 'let pymode_lint_error_symbol = ' . string(g:pymode_lint_error_symbol))
             " call append('$', 'let pymode_lint_info_symbol = ' . string(g:pymode_lint_info_symbol))
             " call append('$', 'let pymode_lint_pyflakes_symbol = ' . string(g:pymode_lint_pyflakes_symbol))
-            " call append('$', 'let pymode_lint_jump = ' . string(g:pymode_lint_jump))
             " call append('$', 'let pymode_lint_hold = ' . string(g:pymode_lint_hold))
-            " call append('$', 'let pymode_lint_minheight = ' .  string(g:pymode_lint_minheight))
-            " call append('$', 'let pymode_lint_maxheight = ' .  string(g:pymode_lint_maxheight)) 
         " endif
 
         " call append('$', 'let pymode_rope = ' . string(g:pymode_rope))

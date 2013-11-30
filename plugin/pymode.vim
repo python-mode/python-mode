@@ -1,5 +1,5 @@
 " vi: fdl=1 
-let g:pymode_version = "0.6.19"
+let g:pymode_version = "0.7.0"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 com! PymodeTroubleshooting call pymode#troubleshooting#test()
@@ -19,9 +19,6 @@ call pymode#default('g:pymode_python', 'python')
 
 " Disable pymode warnings
 call pymode#default('g:pymode_warning', 1)
-
-" Modify sys.path for pymode modules loading
-call pymode#default('g:pymode_path', 1)
 
 " Additional python paths
 call pymode#default('g:pymode_paths', [])
@@ -44,6 +41,12 @@ call pymode#default("g:pymode_trim_whitespaces", 1)
 
 " Set recomended python options
 call pymode#default("g:pymode_options", 1)
+
+" Minimal height of pymode quickfix window
+call pymode#default('g:pymode_quickfix_maxheight', 6)
+
+" Maximal height of pymode quickfix window
+call pymode#default('g:pymode_quickfix_minheight', 3)
 
 " LOAD VIRTUALENV {{{
 "
@@ -83,60 +86,34 @@ call pymode#default("g:pymode_lint_on_write", 1)
 " Check code on fly
 call pymode#default("g:pymode_lint_on_fly", 0)
 
-" Show current line error message
+" Show message about error in command line
 call pymode#default("g:pymode_lint_message", 1)
 
-" Hold cursor on current window when quickfix open
-call pymode#default('g:pymode_lint_hold', 0)
-
-" Minimal height of pymode quickfix window
-call pymode#default('g:pymode_lint_maxheight', 6)
-
-" Maximal height of pymode quickfix window
-call pymode#default('g:pymode_lint_minheight', 3)
-
-" Show message about error in command line
-call pymode#default("g:pymode_lint_status", 1)
-
 " Choices are: pylint, pyflakes, pep8, mccabe
-call pymode#default("g:pymode_lint_checkers", "pyflakes,pep8,mccabe")
+call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pep8', 'mccabe'])
 
 " Skip errors and warnings (e.g. E4,W)
 call pymode#default("g:pymode_lint_ignore", "")
 
-" Auto open cwindow if errors find
-call pymode#default("g:pymode_lint_cwindow", 1)
-
 " Select errors and warnings (e.g. E4,W)
 call pymode#default("g:pymode_lint_select", "")
+
+" Auto open cwindow if any errors has been finded
+call pymode#default("g:pymode_lint_cwindow", 1)
 
 " Place error signs
 call pymode#default("g:pymode_lint_signs", 1)
 
-" Always show the errors ruller, even if there's no errors.
-call pymode#default("g:pymode_lint_signs_always_visible", 0)
-
-" Todo symbol.
+" Symbol's definitions
 call pymode#default("g:pymode_lint_todo_symbol", "WW")
-
-" Comment symbol.
 call pymode#default("g:pymode_lint_comment_symbol", "CC")
-
-" Visual symbol.
 call pymode#default("g:pymode_lint_visual_symbol", "RR")
-
-" Error symbol.
 call pymode#default("g:pymode_lint_error_symbol", "EE")
-
-" Info symbol.
 call pymode#default("g:pymode_lint_info_symbol", "II")
-
-" PyFlakes' info symbol.
 call pymode#default("g:pymode_lint_pyflakes_symbol", "FF")
 
 if g:pymode_lint_signs && has('signs')
 
-    " Signs definition
     execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
     execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
     execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
@@ -158,7 +135,7 @@ call pymode#default('g:pymode_breakpoint', 1)
 call pymode#default('g:pymode_breakpoint_bind', '<leader>b')
 
 " Default pattern for making breakpoints. Leave this empty for auto search available debuggers (pdb, ipdb, ...)
-call pymode#default('g:pymode_breakpoint_template', '')
+call pymode#default('g:pymode_breakpoint_cmd', '')
 
 " }}}
 
@@ -171,6 +148,7 @@ call pymode#default('g:pymode_rope', 1)
 call pymode#default('g:pymode_rope_completion', 1)
 
 " Complete keywords from not imported modules (could make completion slower)
+" Enable autoimport used modules
 call pymode#default('g:pymode_rope_autoimport', 1)
 
 " Autoimported modules
@@ -185,7 +163,7 @@ call pymode#default('g:pymode_rope_completion_bind', '<C-Space>')
 " Bind keys for goto definition (leave empty for disable)
 call pymode#default('g:pymode_rope_goto_definition_bind', '<C-c>g')
 
-" set commend for open definition (e, new, vnew)
+" set command for open definition (e, new, vnew)
 call pymode#default('g:pymode_rope_goto_definition_cmd', 'new')
 
 " Bind keys for show documentation (leave empty for disable)
@@ -222,6 +200,9 @@ call pymode#default('g:pymode_rope_move_bind', '<C-c>rv')
 " code to call it instead
 call pymode#default('g:pymode_rope_use_function_bind', '<C-c>ru')
 
+" Regenerate project cache on every save
+call pymode#default('g:pymode_rope_regenerate_on_write', 1)
+
 " }}}
 
 " }}}
@@ -255,7 +236,7 @@ else
 
 endif
 
-com! PymodeVersion echomsg "Pymode version: " . g:pymode_version . " interpreter: " . g:pymode_python . " lint: " . g:pymode_lint . " rope: " . g:pymode_rope
+command! PymodeVersion echomsg "Pymode version: " . g:pymode_version . " interpreter: " . g:pymode_python . " lint: " . g:pymode_lint . " rope: " . g:pymode_rope
 
 augroup pymode
 
