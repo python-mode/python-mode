@@ -1,16 +1,60 @@
 Changelog
 =========
 
-## 2013-??-??
--------------
-    * Update indentation support
-    * Python3 support
-    * Variables changes:
+## 2013-??-?? 0.7.0
+-------------------
+    * Update indentation support;
+    * Python3 support;
+    * Removed pymode modeline support;
+    * Disabled async code checking support;
+    * Options changes:
+        'pymode_doc_key' -> 'pymode_doc_bind'
         'pymode_run_key' -> 'pymode_run_bind'
+        'pymode_breakpoint_key' -> 'pymode_breakpoint_bind'
+        'pymode_breakpoint_template' -> 'pymode_breakpoint_cmd'
         'pymode_lint_write' -> 'pymode_lint_on_write'
         'pymode_lint_onfly' -> 'pymode_lint_on_fly'
-        'pymode_lint_message' -> 'pymode_lint_status'
         'pymode_lint_checker' -> 'pymode_lint_checkers'
+        'pymode_lint_minheight' -> 'pymode_quickfix_minheight'
+        'pymode_lint_maxheight' -> 'pymode_quickfix_maxheight'
+        'pymode_rope_autocomplete_map' -> 'pymode_rope_completion_bind'
+        'pymode_rope_enable_autoimport' -> 'pymode_rope_autoimport'
+
+    * Options removed:
+        'pymode_lint_hold', 'pymode_lint_config', 'pymode_lint_jump',
+        'pymode_lint_signs_always_visible', 'pymode_rope_extended_complete',
+        'pymode_rope_auto_project', 'pymode_rope_autoimport_generate',
+        'pymode_rope_autoimport_underlines', 'pymode_rope_codeassist_maxfixes',
+        'pymode_rope_sorted_completions', 'pymode_rope_extended_complete',
+        'pymode_rope_confirm_saving', 'pymode_rope_global_prefix',
+        'pymode_rope_local_prefix', 'pymode_rope_vim_completion', 'pymode_rope_guess_project',
+        'pymode_rope_goto_def_newwin', 'pymode_rope_always_show_complete_menu'
+
+    * Options added:
+        'pymode_rope_regenerate_on_write', 'pymode_rope_completion', 'pymode_rope_complete_on_dot'
+
+    * Commands changed:
+        'PyDoc' -> 'PymodeDoc'
+        'Pyrun' -> 'PymodeRun'
+        'PyLintToggle' -> 'PymodeLintToggle'
+        'PyLint' -> 'PymodeLint'
+        'PyLintAuto' -> 'PymodeLintAuto'
+        'RopeOpenProject' -> 'PymodeRopeNewProject'
+        'RopeUndo' -> 'PymodeRopeUndo'
+        'RopeRedo' -> 'PymodeRopeRedo'
+        'RopeRenameCurrentModule' -> 'PymodeRopeRenameModule'
+        'RopeModuleToPackage' -> 'PymodeRopeModuleToPackage'
+        'RopeGenerateAutoimportCache' -> 'PymodeRopeRegenerate'
+        'RopeOrgamizeImports' -> 'PymodeRopeAutoImport'
+
+    * Commands removed:
+        'PyLintCheckerToggle', 'RopeCloseProject', 'RopeProjectConfig',
+        'RopeRename', 'RopeCreate<...>', 'RopeWriteProject', 'RopeRename',
+        'RopeExtractVariable', 'RopeExtractMethod', 'RopeInline', 'RopeMove',
+        'RopeRestructure', 'RopeUseFunction', 'RopeIntroduceFactory',
+        'RopeChangeSignature', 'RopeMoveCurrentModule',
+        'RopeGenerate<...>', 'RopeAnalizeModule', 'RopeAutoImport',
+
 
 ## 2013-10-29 0.6.19
 --------------------
