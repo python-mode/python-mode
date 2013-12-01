@@ -774,6 +774,7 @@ def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
     return out
 
 
+@catch_and_print_exceptions
 def complete_check():
     """ Function description. """
 
@@ -805,8 +806,12 @@ def complete_check():
             if module:
                 _insert_import(name, module, ctx, source)
 
+        vim.command('call pymode#save()')
+        regenerate()
+
 
 def _insert_import(name, module, ctx, source):
     linenum = int(ctx.importer.find_insertion_line(source))
     line = 'from %s import %s' % (module, name)
     vim.current.buffer[linenum - 1:linenum - 1] = [line]
+    vim.current.buffer[linenum:linenum] = ['']

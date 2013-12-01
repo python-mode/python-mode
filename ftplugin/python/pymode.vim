@@ -76,6 +76,7 @@ if g:pymode_lint
         au! pymode CursorMoved <buffer> call pymode#lint#show_errormessage()
     endif
 
+    " Disabled for current release
     if g:pymode_lint_async
         " let &l:updatetime = g:pymode_lint_async_updatetime
         " au! pymode BufEnter <buffer> call pymode#lint#start()

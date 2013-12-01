@@ -35,7 +35,7 @@ def pymode_confirm(yes=True, msg='Do the changes:'):
     """
     default = 'yes' if yes else 'no'
     action = pymode_input(msg, default)
-    return 'yes'.startswith(action)
+    return action and 'yes'.startswith(action)
 
 
 def pymode_inputlist(msg, opts):
