@@ -2,7 +2,7 @@
 
 from os import path as op, environ
 
-from .. import Linter as BaseLinter # noqa
+from pylama.lint import Linter as BaseLinter # noqa
 
 
 PYLINT_RC = op.abspath(op.join(op.dirname(__file__), 'pylint.rc'))

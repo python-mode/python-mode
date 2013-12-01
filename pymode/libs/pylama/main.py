@@ -37,10 +37,7 @@ def shell(args=None, error=True):
     if op.isdir(options.path):
         paths = []
         for root, _, files in walk(options.path):
-            paths += [
-                op.relpath(op.join(root, f), CURDIR)
-                for f in files
-                if any(l.allow(f) for _, l in options.linters)]
+            paths += [op.relpath(op.join(root, f), CURDIR) for f in files]
 
     return check_files(paths, options, error=error)
 
@@ -63,6 +60,13 @@ def check_files(paths, options, rootpath=None, error=True):
 
     work_paths = []
     for path in paths:
+
+        if not any(l.allow(path) for _, l in options.linters):
+            continue
+
+        if not op.exists(path):
+            continue
+
         if options.skip and any(p.match(path) for p in options.skip):
             LOGGER.info('Skip path: %s', path)
             continue

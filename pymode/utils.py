@@ -1,17 +1,18 @@
 """ Pymode utils. """
-import sys
-
 import json
+import os.path
+import sys
+import threading
+from contextlib import contextmanager
 
 import vim # noqa
+
 
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
 
-from contextlib import contextmanager
-import threading
 
 
 PY2 = sys.version_info[0] == 2
@@ -146,3 +147,14 @@ def silence_stderr():
 
     with threading.Lock():
         sys.stderr = stderr
+
+
+def patch_paths():
+    """ Function description. """
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
+
+    if PY2:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs2'))
+    else:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs3'))

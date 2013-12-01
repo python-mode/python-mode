@@ -1,28 +1,23 @@
 """ Rope support in pymode. """
-
 from __future__ import absolute_import, print_function
 
-import vim # noqa
-import site
-import os.path
-import sys
-import re
 import json
 import multiprocessing
-from .utils import (
-    pymode_message, PY2, pymode_error, pymode_input, pymode_inputlist,
-    pymode_confirm, catch_and_print_exceptions)
-
-if PY2:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
-else:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs3'))
+import os.path
+import re
+import site
+import sys
 
 from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
+from rope.base.taskhandle import TaskHandle # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature, importutils # noqa
-from rope.base.taskhandle import TaskHandle # noqa
+
+import vim # noqa
+from .utils import (
+    pymode_message, pymode_error, pymode_input, pymode_inputlist,
+    pymode_confirm, catch_and_print_exceptions)
 
 
 def get_assist_params(cursor=None, base=''):

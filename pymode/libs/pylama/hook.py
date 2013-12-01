@@ -29,15 +29,13 @@ def run(command):
 
 def git_hook():
     """ Run pylama after git commit. """
-
     from .main import check_files
+
     _, files_modified, _ = run("git diff-index --cached --name-only HEAD")
 
     options = parse_options()
     setup_logger(options)
-    check_files(
-        [f for f in map(str, files_modified) if f.endswith('.py')], options
-    )
+    check_files([f for f in map(str, files_modified)], options)
 
 
 def hg_hook(ui, repo, node=None, **kwargs):
@@ -53,8 +51,7 @@ def hg_hook(ui, repo, node=None, **kwargs):
                 if file_ in seen or not op.exists(file_):
                     continue
                 seen.add(file_)
-                if file_.endswith('.py'):
-                    paths.append(file_)
+                paths.append(file_)
 
     options = parse_options()
     setup_logger(options)
