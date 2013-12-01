@@ -4,6 +4,10 @@
 .. image:: https://travis-ci.org/klen/python-mode.png?branch=develop
     :target: https://travis-ci.org/klen/python-mode
 
+.. image:: https://dl.dropboxusercontent.com/u/487440/reformal/donate.png
+    :target: https://www.gittip.com/klen/
+    :alt: Donate
+
 Python-mode is a vim plugin that helps you to create python code very quickly
 by utilizing libraries including pylint_, rope_, pydoc_, pyflakes_, pep8_, and
 mccabe_  for features like static analysis, refactoring, folding, completion,
