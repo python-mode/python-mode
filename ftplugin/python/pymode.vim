@@ -7,6 +7,8 @@ if !pymode#default('g:pymode_init', 1)
     call pymode#init(expand('<sfile>:p:h:h:h'), g:pymode_paths)
     call pymode#virtualenv#init()
     call pymode#breakpoint#init()
+    PymodePython from pymode.utils import patch_paths
+    PymodePython patch_paths()
 endif
 
 augroup pymode

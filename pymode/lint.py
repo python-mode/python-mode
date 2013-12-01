@@ -9,8 +9,8 @@ import os.path
 def code_check():
     """ Run pylama and check current file. """
 
-    from .pylama.main import parse_options
-    from .pylama.tasks import check_path
+    from pylama.main import parse_options
+    from pylama.tasks import check_path
     import json
 
     b = vim.current.buffer
@@ -31,8 +31,10 @@ def code_check():
         vim.command('return')
         return False
 
+    code = '\n'.join(vim.current.buffer)
+
     with silence_stderr():
-        errors = check_path(path, options=options)
+        errors = check_path(path, options=options, code=code)
     sort_rules = vim.eval('g:pymode_lint_sort')
 
     def sort(e):

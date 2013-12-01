@@ -79,7 +79,7 @@ def async_check_files(paths, options, rootpath=None):
     return errors
 
 
-def check_path(path, options=None, rootpath=None, **meta):
+def check_path(path, options=None, rootpath=None, code=None, **meta):
     """ Check path.
 
     :return list: list of errors
@@ -99,7 +99,7 @@ def check_path(path, options=None, rootpath=None, **meta):
     for error in run(
         path, ignore=options.ignore, select=options.select,
         linters=options.linters, complexity=options.complexity,
-            config=config, **meta):
+            config=config, code=code,  **meta):
         try:
             error['rel'] = op.relpath(error['filename'], rootpath)
             error['col'] = error.get('col', 1)

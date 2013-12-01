@@ -46,10 +46,6 @@ fun! pymode#lint#check() "{{{
 
     let b:pymode_errors = {}
 
-    if !pymode#save()
-        return 0
-    endif
-
     call pymode#wide_message('Code checking is running ...')
 
     PymodePython code_check()
