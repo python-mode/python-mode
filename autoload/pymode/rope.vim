@@ -70,6 +70,9 @@ fun! pymode#rope#show_doc()
     if !empty(l:output)
         call pymode#tempbuffer_open('__doc____rope__')
         call append(0, l:output)
+        setlocal nomodifiable
+        setlocal nomodified
+        setlocal filetype=rst
         wincmd p
     end
 endfunction

@@ -8,6 +8,9 @@ fun! pymode#doc#show(word) "{{{
     else
         call pymode#tempbuffer_open('__doc__')
         PymodePython pymode.get_documentation()
+        setlocal nomodifiable
+        setlocal nomodified
+        setlocal filetype=rst
         wincmd p
     endif
 endfunction "}}}
