@@ -4,7 +4,8 @@ fun! pymode#lint#auto() "{{{
     if !pymode#save()
         return 0
     endif
-    PymodePython pymode.auto()
+    PymodePython from pymode import auto
+    PymodePython auto()
     cclose
     edit
     call pymode#wide_message("AutoPep8 done.")

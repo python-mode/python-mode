@@ -15,12 +15,12 @@ def auto():
         aggressive = 0
         line_range = None
         diff = False
-        ignore = ''
+        ignore = vim.eval('g:pymode_lint_ignore')
         in_place = True
         max_line_length = 79
         pep8_passes = 100
         recursive = False
-        select = ''
+        select = vim.eval('g:pymode_lint_select')
         verbose = 0
 
     fix_file(vim.current.buffer.name, Options)
