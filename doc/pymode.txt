@@ -25,14 +25,10 @@ CONTENTS                                                       *pymode-contents*
     4. Rope support................................................|pymode-rope|
         4.1 Code completion..................................|pymode-completion|
         4.2 Find definition.................................|pymode-rope-findit|
-
-    2.Options.................................|PythonModeOptions|
-        2.1.Customisation details.............|PythonModeOptionsDetails|
-    3.Default Keys............................|PythonModeKeys|
-    4.Commands................................|PythonModeCommands|
-    5.FAQ.....................................|PythonModeFAQ|
-    6.Credits.................................|PythonModeCredits|
-    7.License.................................|PythonModeLicense|
+        4.3 Refactoring................................|pymode-rope-refactoring|
+    5.FAQ...........................................................|pymode-faq|
+    6.Credits...................................................|pymode-credits|
+    7.License...................................................|pymode-license|
 
 ==============================================================================
 1. Intro ~
@@ -314,6 +310,11 @@ Turn on the rope script                                        *'g:pymode_rope'*
 >
     let g:pymode_rope = 1
 
+Show documentation for object under cursor.      *'g:pymode_rope_show_doc_bind'*
+Leave empty for disable key binding.
+>
+    let g:pymode_rope_show_doc_bind = '<C-c>d'
+
 ------------------------------------------------------------------------------
 4.1 Completion ~
                                                              *pymode-completion*
@@ -337,12 +338,27 @@ Keymap for autocomplete                        *'g:pymode_rope_completion_bind'*
 >
     let g:pymode_rope_completion_bind = '<C-Space>'
 
+Extended autocompletion (rope could complete objects wich hasnt be imported)
+from project                                        *'g:pymode_rope_autoimport'*
+>
+    let g:pymode_rope_autoimport = 1
+
+Load modules to autoimport by default      *'g:pymode_rope_autoimport_modules'*
+>
+    let g:pymode_rope_autoimport_modules = ['os', 'shutil', 'datetime'])
+
+Offer to unresolved import object after completion.
+>
+    let g:pymode_rope_autoimport_import_after_complete = 1
+
+
 ------------------------------------------------------------------------------
 4.2 Find definition ~
                                                             *pymode-rope-findit*
 
 By default when you press *<C-C>g* on any object in your code you will be moved
-to definition.                            *'g:pymode_rope_goto_definition_bind'*
+to definition. 
+Leave empty for disable key binding.      *'g:pymode_rope_goto_definition_bind'*
 >
     let g:pymode_rope_goto_definition_bind = '<C-c>g'
 
@@ -350,6 +366,40 @@ Command for open window when definition has been finded *'g:pymode_rope_goto_def
 Values are (`e`, `new`, `vnew`)
 >
     let g:pymode_rope_goto_definition_cmd = 'new'
+
+------------------------------------------------------------------------------
+4.3 Refactoring ~
+                                                       *pymode-rope-refactoring*
+
+Rename method/function/class/variable in the project ~
+
+Pymode can rename everything: classes, functions, modules, packages, methods,
+variables and keyword arguments.
+
+Keymap for rename method/function/class/variables under cursor
+                                                   *'g:pymode_rope_rename_bind'*
+>
+    let g:pymode_rope_rename_bind = '<C-c>rr'
+
+Rename a current module/package ~
+
+*:PymodeRopeRenameModule* -- Rename current module
+
+Keymap for rename current module            *'g:pymode_rope_rename_module_bind'*
+>
+    let g:pymode_rope_rename_bind = '<C-c>rr'
+
+Imports ~
+
+Organize imports in current file (drop unused imports, sort imports)
+Keymap                                   *'g:pymode_rope_organize_imports_bind'*
+>
+    let g:pymode_rope_organize_imports_bind = '<C-c>ro'
+
+Insert import for current word under cursor    *'g:pymode_rope_autoimport_bind'*
+Should be enabled |'g:pymode_rope_autoimport'|
+>
+    let g:pymode_rope_autoimport_bind = '<C-c>ra'
 
 
 
