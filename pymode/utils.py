@@ -5,6 +5,14 @@ import json
 
 import vim # noqa
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+from contextlib import contextmanager
+import threading
+
 
 PY2 = sys.version_info[0] == 2
 
@@ -123,3 +131,18 @@ def catch_and_print_exceptions(func):
             pymode_error(e)
             return None
     return wrapper
+
+
+@contextmanager
+def silence_stderr():
+
+    """ Redirect stderr. """
+
+    with threading.Lock():
+        stderr = sys.stderr
+        sys.stderr = StringIO()
+
+    yield
+
+    with threading.Lock():
+        sys.stderr = stderr

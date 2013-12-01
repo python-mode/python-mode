@@ -1,7 +1,7 @@
 """ Pylama integration. """
 
 import vim # noqa
-from .utils import pymode_message
+from .utils import pymode_message, silence_stderr
 
 import os.path
 
@@ -31,7 +31,8 @@ def code_check():
         vim.command('return')
         return False
 
-    errors = check_path(path, options=options)
+    with silence_stderr():
+        errors = check_path(path, options=options)
     sort_rules = vim.eval('g:pymode_lint_sort')
 
     def sort(e):
