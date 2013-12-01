@@ -1,19 +1,69 @@
 " vim: ft=vim:fdm=marker
-"
-runtime ftplugin/python/init-pymode.vim
+
+" Enable pymode syntax for python files
+call pymode#default('g:pymode', 1)
+call pymode#default('g:pymode_syntax', g:pymode)
 
 " DESC: Disable script loading
-if !pymode#Option('syntax') || pymode#Default('b:current_syntax', 'python')
+if !g:pymode || !g:pymode_syntax || pymode#default('b:current_syntax', 'pymode')
     finish
 endif
+
+" OPTIONS: {{{
+
+" Highlight all by default
+call pymode#default('g:pymode_syntax_all', 1)
+
+" Highlight 'print' as function
+call pymode#default("g:pymode_syntax_print_as_function", 0)
+
+" Highlight '=' operator
+call pymode#default('g:pymode_syntax_highlight_equal_operator', g:pymode_syntax_all)
+
+" Highlight '*' operator
+call pymode#default('g:pymode_syntax_highlight_stars_operator', g:pymode_syntax_all)
+
+" Highlight 'self' keyword
+call pymode#default('g:pymode_syntax_highlight_self', g:pymode_syntax_all)
+
+" Highlight indent's errors
+call pymode#default('g:pymode_syntax_indent_errors', g:pymode_syntax_all)
+
+" Highlight space's errors
+call pymode#default('g:pymode_syntax_space_errors', g:pymode_syntax_all)
+
+" Highlight string formatting
+call pymode#default('g:pymode_syntax_string_formatting', g:pymode_syntax_all)
+call pymode#default('g:pymode_syntax_string_format', g:pymode_syntax_all)
+call pymode#default('g:pymode_syntax_string_templates', g:pymode_syntax_all)
+call pymode#default('g:pymode_syntax_doctests', g:pymode_syntax_all)
+
+" Support docstrings in syntax highlighting
+call pymode#default('g:pymode_syntax_docstrings', 1)
+
+" Highlight builtin objects (True, False, ...)
+call pymode#default('g:pymode_syntax_builtin_objs', g:pymode_syntax_all)
+
+" Highlight builtin types (str, list, ...)
+call pymode#default('g:pymode_syntax_builtin_types', g:pymode_syntax_all)
+
+" Highlight builtin types (div, eval, ...)
+call pymode#default('g:pymode_syntax_builtin_funcs', g:pymode_syntax_all)
+
+" Highlight exceptions (TypeError, ValueError, ...)
+call pymode#default('g:pymode_syntax_highlight_exceptions', g:pymode_syntax_all)
+
+" More slow synchronizing. Disable on the slow machine, but code in docstrings
+" could be broken.
+call pymode#default('g:pymode_syntax_slow_sync', 1)
+
+" }}}
+
 
 " For version 5.x: Clear all syntax items
 if version < 600
     syntax clear
 endif
-
-" Highlight all
-call pymode#Default('g:pymode_syntax_all', 1)
 
 " Keywords {{{
 " ============
@@ -22,15 +72,16 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn keyword pythonStatement exec return
     syn keyword pythonStatement pass raise
     syn keyword pythonStatement global nonlocal assert
-    syn keyword pythonStatement lambda yield
+    syn keyword pythonStatement yield
+    syn keyword pythonLambdaExpr lambda
     syn keyword pythonStatement with as
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
     syn match pythonFunction "\%(\%(def\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonVars
     syn region pythonVars start="(" end=")" contained contains=pythonParameters transparent keepend
-    syn match pythonParameters "[^,]*" contained contains=pythonExtraOperator,pythonParam skipwhite
-    syn match pythonParam "=[^,]*" contained contains=pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonStatement,pythonNumber,pythonString,pythonNumber,pythonBrackets skipwhite
-    syn match pythonBrackets "[(|)]" contained skipwhite
+    syn match pythonParameters "[^,]*" contained contains=pythonParam skipwhite
+    syn match pythonParam "[^,]*" contained contains=pythonExtraOperator,pythonLambdaExpr,pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonString,pythonNumber,pythonBrackets,pythonSelf skipwhite
+    syn match pythonBrackets "{[(|)]}" contained skipwhite
 
     syn keyword pythonStatement class nextgroup=pythonClass skipwhite
     syn match pythonClass "\%(\%(class\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonClassVars
@@ -46,19 +97,19 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn match pythonExtraOperator "\%([~!^&|/%+-]\|\%(class\s*\)\@<!<<\|<=>\|<=\|\%(<\|\<class\s\+\u\w*\s*\)\@<!<[^<]\@=\|===\|==\|=\~\|>>\|>=\|=\@<!>\|\.\.\.\|\.\.\|::\)"
     syn match pythonExtraPseudoOperator "\%(-=\|/=\|\*\*=\|\*=\|&&=\|&=\|&&\|||=\||=\|||\|%=\|+=\|!\~\|!=\)"
 
-    if !pymode#Default("g:pymode_syntax_print_as_function", 0) || !g:pymode_syntax_print_as_function
+    if !g:pymode_syntax_print_as_function
         syn keyword pythonStatement print
     endif
 
-    if !pymode#Default('g:pymode_syntax_highlight_equal_operator', g:pymode_syntax_all) || g:pymode_syntax_highlight_equal_operator
+    if g:pymode_syntax_highlight_equal_operator
         syn match pythonExtraOperator "\%(=\)"
     endif
 
-    if !pymode#Default('g:pymode_syntax_highlight_stars_operator', g:pymode_syntax_all) || g:pymode_syntax_highlight_stars_operator
+    if g:pymode_syntax_highlight_stars_operator
         syn match pythonExtraOperator "\%(\*\|\*\*\)"
     endif
     
-    if !pymode#Default('g:pymode_syntax_highlight_self', g:pymode_syntax_all) || g:pymode_syntax_highlight_self
+    if g:pymode_syntax_highlight_self
         syn keyword pythonSelf self cls
     endif
 
@@ -95,12 +146,12 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn match pythonError       "[=]\{3,}" display
 
     " Indent errors (mix space and tabs)
-    if !pymode#Default('g:pymode_syntax_indent_errors', g:pymode_syntax_all) || g:pymode_syntax_indent_errors
+    if g:pymode_syntax_indent_errors
         syn match pythonIndentError "^\s*\( \t\|\t \)\s*\S"me=e-1 display
     endif
 
     " Trailing space errors
-    if !pymode#Default('g:pymode_syntax_space_errors', g:pymode_syntax_all) || g:pymode_syntax_space_errors
+    if g:pymode_syntax_space_errors
         syn match pythonSpaceError  "\s\+$" display
     endif
 
@@ -153,29 +204,36 @@ call pymode#Default('g:pymode_syntax_all', 1)
     syn match  pythonUniRawEscapeError  "\([^\\]\(\\\\\)*\)\@<=\\u\x\{,3}\X" display contained
 
     " String formatting
-    if !pymode#Default('g:pymode_syntax_string_formatting', g:pymode_syntax_all) || g:pymode_syntax_string_formatting
+    if g:pymode_syntax_string_formatting
         syn match pythonStrFormatting   "%\(([^)]\+)\)\=[-#0 +]*\d*\(\.\d\+\)\=[hlL]\=[diouxXeEfFgGcrs%]" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
         syn match pythonStrFormatting   "%[-#0 +]*\(\*\|\d\+\)\=\(\.\(\*\|\d\+\)\)\=[hlL]\=[diouxXeEfFgGcrs%]" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
     endif
 
     " Str.format syntax
-    if !pymode#Default('g:pymode_syntax_string_format', g:pymode_syntax_all) || g:pymode_syntax_string_format
+    if g:pymode_syntax_string_format
         syn match pythonStrFormat "{{\|}}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
         syn match pythonStrFormat "{\([a-zA-Z0-9_]*\|\d\+\)\(\.[a-zA-Z_][a-zA-Z0-9_]*\|\[\(\d\+\|[^!:\}]\+\)\]\)*\(![rs]\)\=\(:\({\([a-zA-Z_][a-zA-Z0-9_]*\|\d\+\)}\|\([^}]\=[<>=^]\)\=[ +-]\=#\=0\=\d*\(\.\d\+\)\=[bcdeEfFgGnoxX%]\=\)\=\)\=}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
     endif
 
     " String templates
-    if !pymode#Default('g:pymode_syntax_string_templates', g:pymode_syntax_all) || g:pymode_syntax_string_templates
+    if g:pymode_syntax_string_templates
         syn match pythonStrTemplate "\$\$" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
         syn match pythonStrTemplate "\${[a-zA-Z_][a-zA-Z0-9_]*}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
         syn match pythonStrTemplate "\$[a-zA-Z_][a-zA-Z0-9_]*" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
     endif
 
     " DocTests
-    if !pymode#Default('g:pymode_syntax_doctests', g:pymode_syntax_all) || g:pymode_syntax_doctests
+    if g:pymode_syntax_doctests
         syn region pythonDocTest    start="^\s*>>>" end=+'''+he=s-1 end="^\s*$" contained
         syn region pythonDocTest2   start="^\s*>>>" end=+"""+he=s-1 end="^\s*$" contained
     endif
+
+    " DocStrings
+    if g:pymode_syntax_docstrings
+        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?"""+ end=+"""+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+    endif
+
 
 " }}}
 
@@ -199,12 +257,12 @@ call pymode#Default('g:pymode_syntax_all', 1)
 " ============
 
     " Builtin objects and types
-    if !pymode#Default('g:pymode_syntax_builtin_objs', g:pymode_syntax_all) || g:pymode_syntax_builtin_objs
+    if g:pymode_syntax_builtin_objs
         syn keyword pythonBuiltinObj True False Ellipsis None NotImplemented
         syn keyword pythonBuiltinObj __debug__ __doc__ __file__ __name__ __package__
     endif
     
-    if !pymode#Default('g:pymode_syntax_builtin_types', g:pymode_syntax_all) || g:pymode_syntax_builtin_types    
+    if g:pymode_syntax_builtin_types    
         syn keyword pythonBuiltinType type object
         syn keyword pythonBuiltinType str basestring unicode buffer bytearray bytes chr unichr
         syn keyword pythonBuiltinType dict int long bool float complex set frozenset list tuple
@@ -212,7 +270,7 @@ call pymode#Default('g:pymode_syntax_all', 1)
     endif
 
     " Builtin functions
-    if !pymode#Default('g:pymode_syntax_builtin_funcs', g:pymode_syntax_all) || g:pymode_syntax_builtin_funcs
+    if g:pymode_syntax_builtin_funcs
         syn keyword pythonBuiltinFunc   __import__ abs all any apply
         syn keyword pythonBuiltinFunc   bin callable classmethod cmp coerce compile
         syn keyword pythonBuiltinFunc   delattr dir divmod enumerate eval execfile filter
@@ -222,14 +280,14 @@ call pymode#Default('g:pymode_syntax_all', 1)
         syn keyword pythonBuiltinFunc   raw_input reduce reload repr reversed round setattr
         syn keyword pythonBuiltinFunc   slice sorted staticmethod sum vars zip
 
-        if pymode#Default('g:pymode_syntax_print_as_function', 0) && g:pymode_syntax_print_as_function
+        if g:pymode_syntax_print_as_function
             syn keyword pythonBuiltinFunc   print
         endif
 
     endif
 
     " Builtin exceptions and warnings
-    if !pymode#Default('g:pymode_syntax_highlight_exceptions', g:pymode_syntax_all) || g:pymode_syntax_highlight_exceptions
+    if g:pymode_syntax_highlight_exceptions
         syn keyword pythonExClass   BaseException
         syn keyword pythonExClass   Exception StandardError ArithmeticError
         syn keyword pythonExClass   LookupError EnvironmentError
@@ -254,7 +312,7 @@ call pymode#Default('g:pymode_syntax_all', 1)
 " }}}
 
 
-if !pymode#Default('g:pymode_syntax_slow_sync', 0) || g:pymode_syntax_slow_sync
+if g:pymode_syntax_slow_sync
     syn sync minlines=2000
 else
     " This is fast but code inside triple quoted strings screws it up. It
@@ -268,6 +326,7 @@ endif
 " =============
 
     hi def link  pythonStatement    Statement
+    hi def link  pythonLambdaExpr   Statement
     hi def link  pythonInclude      Include
     hi def link  pythonFunction     Function
     hi def link  pythonClass        Type
@@ -298,6 +357,7 @@ endif
     hi def link  pythonSpaceError   Error
 
     hi def link  pythonString       String
+    hi def link  pythonDocstring    String
     hi def link  pythonUniString    String
     hi def link  pythonRawString    String
     hi def link  pythonUniRawString String

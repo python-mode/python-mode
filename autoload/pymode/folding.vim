@@ -1,8 +1,8 @@
 " Python-mode folding functions
 
 
+let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
-let s:def_regex = '^\s*\%(class\|def\) \w\+'
 let s:decorator_regex = '^\s*@'
 let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
@@ -35,29 +35,29 @@ fun! pymode#folding#expr(lnum) "{{{
 
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
-	let prev_line = getline(a:lnum - 1)
+    let prev_line = getline(a:lnum - 1)
 
     if line =~ s:def_regex || line =~ s:decorator_regex
-		if prev_line =~ s:decorator_regex
-			return '='
-		else
-			return ">".(indent / &shiftwidth + 1)
-		endif
+        if prev_line =~ s:decorator_regex
+            return '='
+        else
+            return ">".(indent / &shiftwidth + 1)
+        endif
     endif
 
-    if line =~ s:doc_begin_regex
-				\ && line !~ s:doc_line_regex
-				\ && prev_line =~ s:def_regex
-		return ">".(indent / &shiftwidth + 1)
+    if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && prev_line =~ s:def_regex
+        return ">".(indent / &shiftwidth + 1)
     endif
 
-    if line =~ s:doc_end_regex
-				\ && line !~ s:doc_line_regex
-		return "<".(indent / &shiftwidth + 1)
+    if line =~ s:doc_end_regex && line !~ s:doc_line_regex
+        return "<".(indent / &shiftwidth + 1)
     endif
 
     if line =~ s:blank_regex
         if prev_line =~ s:blank_regex
+            if indent(a:lnum + 1) == 0 && getline(a:lnum + 1) !~ s:blank_regex
+                return 0
+            endif
             return -1
         else
             return '='

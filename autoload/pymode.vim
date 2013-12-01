@@ -1,9 +1,7 @@
-" Python-mode base functions
+" Pymode core functions
 
-
-fun! pymode#Default(name, default) "{{{
-    " DESC: Set default value if it not exists
-    "
+" DESC: Check variable and set default value if it not exists
+fun! pymode#default(name, default) "{{{
     if !exists(a:name)
         let {a:name} = a:default
         return 0
@@ -11,23 +9,41 @@ fun! pymode#Default(name, default) "{{{
     return 1
 endfunction "}}}
 
+" DESC: Import python libs
+fun! pymode#init(plugin_root, paths) "{{{
 
-fun! pymode#Option(name) "{{{
-
-    let name = 'b:pymode_' . a:name
-    if exists(name)
-        return eval(name)
+    if g:pymode_python == 'disable'
+        if g:pymode_warning
+            call pymode#error("Pymode requires vim compiled with +python. Most of features will be disabled.")
+        endif
+        return
     endif
 
-    let name = 'g:pymode_' . a:name
-    return eval(name)
+    PymodePython import sys, vim
+    PymodePython sys.path.insert(0, vim.eval('a:plugin_root'))
+    PymodePython sys.path = vim.eval('a:paths') + sys.path
 
 endfunction "}}}
 
+" DESC: Show wide message
+fun! pymode#wide_message(msg) "{{{
+    let x=&ruler | let y=&showcmd
+    set noruler noshowcmd
+    redraw
+    echohl Debug | echo strpart("[Pymode] " . a:msg, 0, &columns-1) | echohl none
+    let &ruler=x | let &showcmd=y
+endfunction "}}}
 
-fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpError) "{{{
-    " DESC: Open quickfix window
-    "
+" DESC: Show error
+fun! pymode#error(msg) "{{{
+    execute "normal \<Esc>"
+    echohl ErrorMsg
+    echomsg "[Pymode]: error: " . a:msg
+    echohl None
+endfunction "}}}
+
+" DESC: Open quickfix window
+fun! pymode#quickfix_open(onlyRecognized, maxHeight, minHeight, jumpError) "{{{
     let numErrors = len(filter(getqflist(), 'v:val.valid'))
     let numOthers = len(getqflist()) - numErrors
     if numErrors > 0 || (!a:onlyRecognized && numOthers > 0)
@@ -35,7 +51,7 @@ fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpE
         exe max([min([line("$"), a:maxHeight]), a:minHeight]) . "wincmd _"
         if a:jumpError
             cc
-        elseif !a:holdCursor
+        else
             wincmd p
         endif
     else
@@ -43,153 +59,60 @@ fun! pymode#QuickfixOpen(onlyRecognized, holdCursor, maxHeight, minHeight, jumpE
     endif
     redraw
     if numOthers > 0
-        echo printf('Quickfix: %d(+%d)', numErrors, numOthers)
+        call pymode#wide_message(printf('Quickfix: %d(+%d)', numErrors, numOthers))
     else
-        echo printf('Quickfix: %d', numErrors)
+        call pymode#wide_message(printf('Quickfix: %d', numErrors))
     endif
 endfunction "}}}
 
-
-fun! pymode#PlaceSigns(bnum) "{{{
-    " DESC: Place error signs
-    "
-    if has('signs')
-        call pymode#Default('b:pymode_signs', [])
-
-        for item in b:pymode_signs
-            execute printf('sign unplace %d buffer=%d', item.lnum, item.bufnr)
-        endfor
-        let b:pymode_signs = []
-
-        if !pymode#Default("g:pymode_lint_signs_always_visible", 0) || g:pymode_lint_signs_always_visible
-            call RopeShowSignsRulerIfNeeded()
-        endif
-
-        for item in filter(getqflist(), 'v:val.bufnr != ""')
-            call add(b:pymode_signs, item)
-            execute printf('sign place %d line=%d name=%s buffer=%d', item.lnum, item.lnum, "Pymode".item.type, item.bufnr)
-        endfor
-
-    endif
-endfunction "}}}
-
-
-fun! pymode#CheckProgram(name, append) "{{{
-    " DESC: Check program is executable or redifined by user.
-    "
-    let name = 'g:' . a:name
-    if pymode#Default(name, a:name)
-        return 1
-    endif
-    if !executable(eval(l:name))
-        echoerr "Can't find '".eval(name)."'. Please set ".name .", or extend $PATH, ".a:append
-        return 0
-    endif
-    return 1
-endfunction "}}}
-
-
-fun! pymode#TempBuffer() "{{{
-    " DESC: Open temp buffer.
-    "
-    pclose | botright 8new
+" DESC: Open temp buffer.
+fun! pymode#tempbuffer_open(name) "{{{
+    pclose
+    exe "botright 8new " . a:name
     setlocal buftype=nofile bufhidden=delete noswapfile nowrap previewwindow
     redraw
 endfunction "}}}
 
-
-fun! pymode#ShowStr(str) "{{{
-    " DESC: Open temp buffer with `str`.
-    "
-    let g:pymode_curbuf = bufnr("%")
-    call pymode#TempBuffer()
-    put! =a:str
-    wincmd p
-    redraw
-endfunction "}}}
-
-
-fun! pymode#ShowCommand(cmd) "{{{
-    " DESC: Run command and open temp buffer with result
-    "
-    call pymode#TempBuffer()
-    try
-        silent exec 'r!' . a:cmd
-    catch /.*/
-        close
-        echoerr 'Command fail: '.a:cmd
-    endtry
-    redraw
-    normal gg
-    wincmd p
-endfunction "}}}
-
-
-fun! pymode#WideMessage(msg) "{{{
-    " DESC: Show wide message
-
-    let x=&ruler | let y=&showcmd
-    set noruler noshowcmd
-    redraw
-    echohl Debug | echo strpart(a:msg, 0, &columns-1) | echohl none
-    let &ruler=x | let &showcmd=y
-endfunction "}}}
-
-
-fun! pymode#BlockStart(lnum, ...) "{{{
-    let pattern = a:0 ? a:1 : '^\s*\(@\|class\s.*:\|def\s\)'
-    let lnum = a:lnum + 1
-    let indent = 100
-    while lnum
-        let lnum = prevnonblank(lnum - 1)
-        let test = indent(lnum)
-        let line = getline(lnum)
-        if line =~ '^\s*#' " Skip comments
-            continue
-        elseif !test " Zero-level regular line
-            return lnum
-        elseif test >= indent " Skip deeper or equal lines
-            continue
-        " Indent is strictly less at this point: check for def/class
-        elseif line =~ pattern && line !~ '^\s*@'
-            return lnum
-        endif
-        let indent = indent(lnum)
-    endwhile
-    return 0
-endfunction "}}}
-
-
-fun! pymode#BlockEnd(lnum, ...) "{{{
-    let indent = a:0 ? a:1 : indent(a:lnum)
-    let lnum = a:lnum
-    while lnum
-        let lnum = nextnonblank(lnum + 1)
-        if getline(lnum) =~ '^\s*#' | continue
-        elseif lnum && indent(lnum) <= indent
-            return lnum - 1
-        endif
-    endwhile
-    return line('$')
-endfunction "}}}
-
-
-fun! pymode#Modeline() "{{{
-    let modeline = getline(prevnonblank('$'))
-    if modeline =~ '^#\s\+pymode:'
-        for ex in split(modeline, ':')[1:]
-            let [name, value] = split(ex, '=')
-            let {'b:pymode_'.name} = value
-        endfor
-    endif
-endfunction "}}}
-
-
-fun! pymode#TrimWhiteSpace() "{{{
+" DESC: Remove unused whitespaces
+fun! pymode#trim_whitespaces() "{{{
     let cursor_pos = getpos('.')
     silent! %s/\s\+$//
     call setpos('.', cursor_pos)
 endfunction "}}}
 
 
-" vim: fdm=marker:fdl=0
+fun! pymode#save() "{{{
+    if &modifiable && &modified
+        try
+            noautocmd write
+        catch /E212/
+            call pymode#error("File modified and I can't save it. Cancel code checking.")
+            return 0
+        endtry
+    endif
+    return 1
+endfunction "}}}
+
+fun! pymode#reload_buf_by_nr(nr) "{{{
+    let cur = bufnr("")
+    try
+        exe "buffer " . a:nr
+    catch /E86/
+        return
+    endtry
+    exe "e!"
+    exe "buffer " . cur
+endfunction "}}}
+
+fun! pymode#buffer_pre_write() "{{{
+    let b:pymode_modified = &modified
+endfunction
+
+fun! pymode#buffer_post_write() "{{{
+    if b:pymode_modified && g:pymode_rope_regenerate_on_write
+        call pymode#rope#regenerate()
+    endif
+    if b:pymode_modified && g:pymode_lint_on_write
+        call pymode#lint#check()
+    endif
+endfunction "}}}

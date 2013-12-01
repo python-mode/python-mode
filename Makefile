@@ -4,6 +4,7 @@ clean:
 
 .PHONY: test
 test:
+	bundle install
 	rake test
 
 .PHONY: pylama
