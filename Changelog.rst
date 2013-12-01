@@ -1,8 +1,8 @@
 Changelog
 =========
 
-## 2013-??-?? 0.7.0
--------------------
+## 2013-12-?? 0.7.0b
+--------------------
     * Update indentation support;
     * Python3 support;
     * Removed pymode modeline support;
