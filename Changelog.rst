@@ -31,7 +31,8 @@ Changelog
         'pymode_rope_goto_def_newwin', 'pymode_rope_always_show_complete_menu'
 
     * Options added:
-        'pymode_rope_regenerate_on_write', 'pymode_rope_completion', 'pymode_rope_complete_on_dot'
+        'pymode_rope_regenerate_on_write', 'pymode_rope_completion', 'pymode_rope_complete_on_dot',
+        'pymode_lint_sort'
 
     * Commands added:
         'PymodeVirtualenv'

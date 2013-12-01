@@ -301,6 +301,13 @@ By example you disable all warnings starting from 'W', but want to see warning
 >
     let g:pymode_lint_select = "E501,W0011,W430"
 
+Sort errors by relevance                                  *'g:pymode_lint_sort'*
+If not emply, errors will be sort by defined relevance
+E.g. let g:pymode_lint_sort = ['E', 'C', 'I']  " Errors first 'E',
+after them 'C' and ...
+>
+    let g:pymode_lint_sort = []
+
 Auto open cwindow (quickfix) if any errors has been finded
                                                        *'g:pymode_lint_cwindow'*
 >

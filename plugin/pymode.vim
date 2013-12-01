@@ -103,6 +103,11 @@ call pymode#default("g:pymode_lint_select", "")
 " Auto open cwindow if any errors has been finded
 call pymode#default("g:pymode_lint_cwindow", 1)
 
+" If not emply, errors will be sort by defined relevance
+" E.g. let g:pymode_lint_sort = ['E', 'C', 'I']  " Errors first 'E',
+" after them 'C' and ...
+call pymode#default("g:pymode_lint_sort", [])
+
 " Place error signs
 call pymode#default("g:pymode_lint_signs", 1)
 
@@ -232,6 +237,10 @@ if &compatible
     set nocompatible
 endif
 filetype plugin on
+
+if exists('+shellslash')
+    set shellslash
+endif
 
 " Disable python-related functionality
 " let g:pymode_python = 'disable'

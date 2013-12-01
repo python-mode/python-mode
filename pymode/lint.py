@@ -32,4 +32,17 @@ def code_check():
         return False
 
     errors = check_path(path, options=options)
+    sort_rules = vim.eval('g:pymode_lint_sort')
+
+    def sort(e):
+        try:
+            print(e.get('type'))
+            return sort_rules.index(e.get('type'))
+        except ValueError:
+            return 999
+
+    if sort_rules:
+        print(sort_rules)
+        errors = sorted(errors, key=sort)
+
     vim.command('call setqflist(%s)' % json.dumps(errors))
