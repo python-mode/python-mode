@@ -4,6 +4,13 @@ endif
 
 if g:pymode_motion
 
+    if !&magic
+        if g:pymode_warning
+            call pymode#error("Pymode motion requires `&magic` option. Enable them or disable g:pymode_motion")
+        endif
+        finish
+    endif
+
     nnoremap <buffer> ]]  :<C-U>call pymode#motion#move('^\(class\\|def\)\s', '')<CR>
     nnoremap <buffer> [[  :<C-U>call pymode#motion#move('^\(class\\|def\)\s', 'b')<CR>
     nnoremap <buffer> ]C  :<C-U>call pymode#motion#move('^\(class\\|def\)\s', '')<CR>
@@ -41,9 +48,11 @@ if g:pymode_rope && g:pymode_rope_completion
 
     setlocal omnifunc=pymode#rope#completions
 
-    exe "inoremap <silent> <buffer> " . g:pymode_rope_completion_bind . " <C-R>=pymode#rope#complete(0)<CR>"
-    if tolower(g:pymode_rope_completion_bind) == '<c-space>'
-        exe "inoremap <silent> <buffer> <Nul> <C-R>=pymode#rope#complete(0)<CR>"
-    endif
+    if g:pymode_rope_completion_bind != ""
+        exe "inoremap <silent> <buffer> " . g:pymode_rope_completion_bind . " <C-R>=pymode#rope#complete(0)<CR>"
+        if tolower(g:pymode_rope_completion_bind) == '<c-space>'
+            exe "inoremap <silent> <buffer> <Nul> <C-R>=pymode#rope#complete(0)<CR>"
+        endif
+    end
 
 end

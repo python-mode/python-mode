@@ -596,7 +596,7 @@ Open any python file and run ":call pymode#troubleshooting#Test()",
 fix the warning or send me the output.
 
 
-Rope completion is very slow
+Rope completion is very slow                                   *pymode-rope-slow*
 ----------------------------
 
 Rope creates a project-level service directory in |.ropeproject|
