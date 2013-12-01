@@ -1,8 +1,8 @@
 " Python-mode folding functions
 
 
+let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
-let s:def_regex = '^\s*\%(class\|def\) \w\+'
 let s:decorator_regex = '^\s*@'
 let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
