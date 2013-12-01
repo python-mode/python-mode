@@ -151,8 +151,14 @@ call pymode#default('g:pymode_rope_completion', 1)
 " Enable autoimport used modules
 call pymode#default('g:pymode_rope_autoimport', 1)
 
+" Import object after complete (if that not be imported before)
+call pymode#default('g:pymode_rope_autoimport_import_after_complete', 1)
+
 " Autoimported modules
 call pymode#default('g:pymode_rope_autoimport_modules', ['os', 'shutil', 'datetime'])
+
+" Bind keys to autoimport module for object under cursor
+call pymode#default('g:pymode_rope_autoimport_bind', '<C-c>ra')
 
 " Automatic completion on dot
 call pymode#default('g:pymode_rope_complete_on_dot', 1)
@@ -173,7 +179,7 @@ call pymode#default('g:pymode_rope_show_doc_bind', '<C-c>d')
 call pymode#default('g:pymode_rope_find_it_bind', '<C-c>f')
 
 " Bind keys for organize imports (leave empty for disable)
-call pymode#default('g:pymode_rope_orgazine_imports_bind', '<C-c>ro')
+call pymode#default('g:pymode_rope_organize_imports_bind', '<C-c>ro')
 
 " Bind keys for rename variable/method/class in the project (leave empty for disable)
 call pymode#default('g:pymode_rope_rename_bind', '<C-c>rr')

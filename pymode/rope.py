@@ -10,14 +10,15 @@ import re
 import json
 import multiprocessing
 from .utils import (
-    pymode_message, PY2, pymode_error, pymode_input, pymode_inputlist, pymode_y_n)
+    pymode_message, PY2, pymode_error, pymode_input, pymode_inputlist,
+    pymode_confirm, catch_and_print_exceptions)
 
 if PY2:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
 else:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs3'))
 
-from rope.base import project, libutils, exceptions, change # noqa
+from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move # noqa
@@ -86,6 +87,7 @@ def completions():
     vim.command("return %s" % json.dumps(proposals))
 
 
+@catch_and_print_exceptions
 def complete(dot=False):
     """ Ctrl+Space completion.
 
@@ -151,25 +153,15 @@ def get_proporsals(source, offset, base='', dot=False):
     return out
 
 
+@catch_and_print_exceptions
 def goto():
     """ Goto definition. """
 
     with RopeContext() as ctx:
         source, offset = get_assist_params()
-        found_resource = None
 
-        try:
-            found_resource, line = codeassist.get_definition_location(
-                ctx.project, source, offset, ctx.resource, maxfixes=3)
-
-        except exceptions.BadIdentifierError as e:
-            pass
-
-        except Exception as e:
-            print(e)
-
-        if not found_resource:
-            return
+        found_resource, line = codeassist.get_definition_location(
+            ctx.project, source, offset, ctx.resource, maxfixes=3)
 
         if not os.path.abspath(found_resource.path) == vim.current.buffer.name:
             vim.command("%s +%s %s" % (
@@ -181,6 +173,7 @@ def goto():
                 line, int(vim.eval('indent(%s)' % line)))
 
 
+@catch_and_print_exceptions
 def show_doc():
     """ Show documentation. """
 
@@ -275,7 +268,7 @@ def undo():
             pymode_error('Nothing to undo!')
             return False
 
-        if pymode_y_n(yes=False, msg='Undo [%s]?' % str(changes)):
+        if pymode_confirm(yes=False, msg='Undo [%s]?' % str(changes)):
             progress = ProgressHandler('Undo %s' % str(changes))
             for c in ctx.project.history.undo(task_handle=progress.handle):
                 reload_changes(c)
@@ -294,7 +287,7 @@ def redo():
             pymode_error('Nothing to redo!')
             return False
 
-        if pymode_y_n(yes=False, msg='Redo [%s]?' % str(changes)):
+        if pymode_confirm(yes=False, msg='Redo [%s]?' % str(changes)):
             progress = ProgressHandler('Redo %s' % str(changes))
             for c in ctx.project.history.redo(task_handle=progress.handle):
                 reload_changes(c)
@@ -307,13 +300,18 @@ def cache_project(cls):
 
     """
     projects = dict()
+    resources = dict()
 
     def get_ctx(*args, **kwargs):
         path = vim.current.buffer.name
+        if resources.get(path):
+            return resources.get(path)
+
         project_path = look_ropeproject(os.path.dirname(path))
         ctx = projects.get(project_path)
         if not ctx:
             projects[project_path] = ctx = cls(path, project_path)
+        resources[path] = ctx
         return ctx
     return get_ctx
 
@@ -329,11 +327,6 @@ def autoimport():
         pymode_error("Should be word under cursor.")
         return False
 
-    def insert_import(name, module, ctx, source):
-        linenum = int(ctx.importer.find_insertion_line(source))
-        line = 'from %s insert %s' % (module, name)
-        vim.current.buffer[linenum - 1:linenum - 1] = [line]
-
     with RopeContext() as ctx:
         if not ctx.importer.names:
             ctx.generate_autoimport_cache()
@@ -344,11 +337,11 @@ def autoimport():
 
         source, _ = get_assist_params()
         if len(modules) == 1:
-            insert_import(word, modules[0], ctx, source)
+            _insert_import(word, modules[0], ctx, source)
 
         else:
             module = pymode_inputlist('Wich module to import:', modules)
-            insert_import(word, module, ctx, source)
+            _insert_import(word, module, ctx, source)
 
         return True
 
@@ -357,8 +350,6 @@ def autoimport():
 class RopeContext(object):
 
     """ A context manager to have a rope project context. """
-
-    projects = dict()
 
     def __init__(self, path, project_path):
 
@@ -399,15 +390,17 @@ class RopeContext(object):
     def generate_autoimport_cache(self):
         """ Update autoimport cache. """
 
-        def _update_cache(importer, modules=None):
+        pymode_message('Regenerate autoimport cache.')
+        modules = self.options.get('autoimport_modules', [])
 
+        def _update_cache(importer, modules=None):
             importer.generate_cache()
             if modules:
                 importer.generate_modules_cache(modules)
             importer.project.sync()
 
         process = multiprocessing.Process(target=_update_cache, args=(
-            self.importer, self.options.get('autoimport_modules')))
+            self.importer, modules))
         process.start()
 
 
@@ -467,7 +460,7 @@ class Refactoring(object): # noqa
                     print("-------------------------------")
                     print("\n%s\n" % changes.get_description())
                     print("-------------------------------\n\n")
-                    if not pymode_y_n(False):
+                    if not pymode_confirm(False):
                         return False
 
                 progress = ProgressHandler('Apply changes ...')
@@ -762,7 +755,7 @@ def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
         return out
 
     current_offset = offset - 1
-    while current_offset >= 0 and (
+    while current_offset > 0 and (
             source[current_offset].isalnum() or source[current_offset] == '_'):
         current_offset -= 1
     starting = source[current_offset:offset]
@@ -779,3 +772,41 @@ def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
         ))
 
     return out
+
+
+def complete_check():
+    """ Function description. """
+
+    row, column = vim.current.window.cursor
+    line = vim.current.buffer[row - 1]
+    word_finder = worder.Worder(line, True)
+    parent, name, _ = word_finder.get_splitted_primary_before(column - 1)
+    if parent:
+        return False
+
+    with RopeContext() as ctx:
+        modules = ctx.importer.get_modules(name)
+
+        if not modules:
+            return False
+
+        if name in ctx.project.pycore.resource_to_pyobject(ctx.resource):
+            return False
+
+        if not pymode_confirm(True, "Import %s?" % name):
+            return False
+
+        source, _ = get_assist_params()
+        if len(modules) == 1:
+            _insert_import(name, modules[0], ctx, source)
+
+        else:
+            module = pymode_inputlist('With module to import:', modules)
+            if module:
+                _insert_import(name, module, ctx, source)
+
+
+def _insert_import(name, module, ctx, source):
+    linenum = int(ctx.importer.find_insertion_line(source))
+    line = 'from %s import %s' % (module, name)
+    vim.current.buffer[linenum - 1:linenum - 1] = [line]

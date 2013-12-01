@@ -1,9 +1,10 @@
 """ Pymode utils. """
+import sys
+
+import json
 
 import vim # noqa
-import traceback
-import json
-import sys
+
 
 PY2 = sys.version_info[0] == 2
 
@@ -26,7 +27,7 @@ def pymode_message(content):
     vim.command('call pymode#wide_message("%s")' % str(content))
 
 
-def pymode_y_n(yes=True, msg='Do the changes:'):
+def pymode_confirm(yes=True, msg='Do the changes:'):
     """ Confirmation.
 
     :return bool:
@@ -74,7 +75,9 @@ def pymode_input(umsg, udefault='', opts=None):
         msg += '[%s] ' % default
 
     try:
+        vim.command('echohl Debug')
         input_str = vim.eval('input("%s> ")' % msg)
+        vim.command('echohl none')
     except KeyboardInterrupt:
         input_str = ''
 
@@ -116,7 +119,7 @@ def catch_and_print_exceptions(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (Exception, vim.error): # noqa
-            pymode_error(traceback.format_exc())
+        except (Exception, vim.error) as e: # noqa
+            pymode_error(e)
             return None
     return wrapper

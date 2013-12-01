@@ -30,6 +30,9 @@ fun! pymode#rope#complete_on_dot() "{{{
             endif
         endfor
     endfor
+    if g:pymode_rope_autoimport_import_after_complete
+        PymodePython rope.complete_check()
+    endif
     return pymode#rope#complete(1)
 endfunction "}}}
 

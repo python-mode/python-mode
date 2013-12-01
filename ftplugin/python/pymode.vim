@@ -108,8 +108,8 @@ if g:pymode_rope
     if g:pymode_rope_find_it_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_find_it_bind . " :call pymode#rope#find_it()<CR>"
     end
-    if g:pymode_rope_orgazine_imports_bind != ""
-        exe "noremap <silent> <buffer> " . g:pymode_rope_orgazine_imports_bind . " :call pymode#rope#organize_imports()<CR>"
+    if g:pymode_rope_organize_imports_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_organize_imports_bind . " :call pymode#rope#organize_imports()<CR>"
     end
 
     if g:pymode_rope_rename_bind != ""
@@ -142,6 +142,10 @@ if g:pymode_rope
 
     if g:pymode_rope_module_to_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_module_to_package_bind . " :call pymode#rope#module_to_package()<CR>"
+    end
+
+    if g:pymode_rope_autoimport_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_autoimport_bind . " :PymodeRopeAutoImport<CR>"
     end
 
     if g:pymode_rope_completion && g:pymode_rope_complete_on_dot
