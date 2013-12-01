@@ -334,16 +334,19 @@ Definitions for |signs|
 Pymode support Rope refactoring operations, code completion and code assists.
 
 Commands:
-*:PymodeRopeAutoImport* -- Autoimport used modules
-*:PymodeRopeModuleToPackage* -- Convert current module to package
-*:PymodeRopeNewProject* -- Open new Rope project in current working directory
-*:PymodeRopeRedo* -- Redo changes from last refactoring
-*:PymodeRopeRegenerate* -- Regenerate the project cache
-*:PymodeRopeRenameModule* -- Rename current module
-*:PymodeRopeUndo* -- Undo changes from last refactoring
+|:PymodeRopeAutoImport| -- Resolve import for element under cursor
+|:PymodeRopeModuleToPackage| -- Convert current module to package
+|:PymodeRopeNewProject| -- Open new Rope project in current working directory
+|:PymodeRopeRedo| -- Redo changes from last refactoring
+|:PymodeRopeRegenerate| -- Regenerate the project cache
+|:PymodeRopeRenameModule| -- Rename current module
+|:PymodeRopeUndo| -- Undo changes from last refactoring
 
 .roperoject Folder ~
                                                                   *.ropeproject*
+
+*:PymodeRopeNewProject* -- Open new Rope project in current working directory
+*:PymodeRopeRegenerate* -- Regenerate the project cache
 
 Rope uses a folder inside projects for holding project configuration and data.
 Its default name is `.ropeproject` If the folder doesnt exists in current
@@ -451,6 +454,8 @@ Keymap for rename current module            *'g:pymode_rope_rename_module_bind'*
 
 
 Imports ~
+
+*:PymodeRopeAutoImport* -- Resolve import for element under cursor
 
 Organize imports sorts imports, too. It does that according to PEP8. Unused
 imports will be dropped.
