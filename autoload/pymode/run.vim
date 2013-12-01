@@ -27,6 +27,7 @@ let s:efm .= '%E  File "%f"\, line %l%\C,'
 " match. A pointer (^) identifies the column in which the error occurs
 " (but will not be entirely accurate due to indention of Python code).
 let s:efm .= '%C%p^,'
+
 " Any text, indented by more than two spaces contain useful information.
 " We want this to appear in the quickfix window, hence %+.
 let s:efm .= '%+C    %.%#,'
@@ -40,71 +41,30 @@ let s:efm .= '%Z%\S%\&%m,'
 " We can ignore any other lines (%-G)
 let s:efm .= '%-G%.%#'
 
+PymodePython from pymode.run import run_code
 
-" DESC: Save file if it modified and run python code
-fun! pymode#run#Run(line1, line2) "{{{
-    let l:code = getline(a:line1, a:line2)
+
+" DESC: Run python code
+fun! pymode#run#code_run(line1, line2) "{{{
+
+    let l:output = []
     let l:traceback = []
-
     call setqflist([])
-    call pymode#WideMessage("Code running.")
+
+    call pymode#wide_message("Code running ...")
 
     try
 
-        Python << EOF
+        PymodePython run_code()
 
-import StringIO, json
-
-_input = lambda s: vim.eval('input("%s")' % s)
-context = dict(__name__='__main__', input=_input, raw_input=_input)
-out, errors = "", []
-sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
-sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
-
-lines = [l.rstrip() for l in vim.eval('l:code')]
-indent = 0
-for line in lines:
-    if line:
-        indent = len(line) - len(line.lstrip())
-        break
-
-lines = [l[indent:] for l in lines]
-
-try:
-    code = compile('\n'.join(lines) + '\n', vim.current.buffer.name, 'exec')
-    exec(code, context)
-
-except SystemExit as e:
-    errors.append('test')
-    if e.code:
-        # A non-false code indicates abnormal termination. A false code will be treated as a
-        # successful run, and the error will be hidden from Vim
-        vim.command('echohl Error | echo "Script exited with code {0}" | echohl none'.format(e.code))
-        vim.command('return')
-
-except Exception as e:
-    import traceback
-    err = traceback.format_exc()
-
-else:
-    err = sys.stderr.getvalue()
-
-out = sys.stdout.getvalue().strip()
-errors += [e for e in err.splitlines() if e and "<string>" not in e]
-
-sys.stdout, sys.stderr = stdout_, stderr_
-
-for e in errors:
-    vim.command("call add(l:traceback, %s)" % json.dumps(e))
-
-if out:
-    vim.command("call pymode#TempBuffer()")
-    vim.current.buffer.append([x.decode("utf-8").encode(vim.eval('&enc')) for x in out.split('\n')], 0)
-    vim.command("wincmd p")
-else:
-    vim.command('call pymode#WideMessage("No output.")')
-
-EOF
+        if len(l:output)
+            call pymode#tempbuffer_open('__run__')
+            call append(line('$'), l:output)
+            normal dd
+            wincmd p
+        else
+            call pymode#wide_message("No output.")
+        endif
 
         cexpr ""
 
@@ -113,8 +73,9 @@ EOF
         let &efm = s:efm
 
         cgetexpr(l:traceback)
-" If a range is run (starting other than at line 1), fix the reported error line numbers for
-" the current buffer
+
+        " If a range is run (starting other than at line 1), fix the reported error line numbers for
+        " the current buffer
         if a:line1 > 1
             let qflist = getqflist()
             for i in qflist
@@ -125,7 +86,7 @@ EOF
             call setqflist(qflist)
         endif
 
-        call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, 0)
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_maxheight, 0)
         let &efm = l:_efm
 
     catch /E234/

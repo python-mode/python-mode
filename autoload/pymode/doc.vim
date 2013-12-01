@@ -1,21 +1,17 @@
 " Python-mode search by documentation
+"
+PymodePython import pymode
 
-
-fun! pymode#doc#Show(word) "{{{
+fun! pymode#doc#show(word) "{{{
     if a:word == ''
-        echoerr "No name/symbol under cursor!"
+        call pymode#error("No name/symbol under cursor!")
     else
-        Python import StringIO
-        Python sys.stdout, _ = StringIO.StringIO(), sys.stdout
-        Python help(vim.eval('a:word'))
-        Python sys.stdout, out = _, sys.stdout.getvalue()
-        if !g:pymode_test
-            call pymode#TempBuffer()
-        endif
-        Python vim.current.buffer.append(str(out).splitlines(), 0)
+        call pymode#tempbuffer_open('__doc__')
+        PymodePython pymode.get_documentation()
+        setlocal nomodifiable
+        setlocal nomodified
+        setlocal filetype=rst
         wincmd p
     endif
 endfunction "}}}
 
-
-" vim: fdm=marker:fdl=0

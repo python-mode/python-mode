@@ -8,6 +8,7 @@
 .vimrc
 Gemfile.lock
 VimFlavor.lock
+_
 tags
 test.py
 todo.txt

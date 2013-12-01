@@ -1,108 +1,109 @@
-fun! pymode#lint#Check() "{{{
-    " DESC: Run checkers on current file.
-    "
-    if !g:pymode_lint | return | endif
+PymodePython from pymode.lint import code_check
 
-    if &modifiable && &modified
-        try
-            noautocmd write
-        catch /E212/
-            echohl Error | echo "File modified and I can't save it. Cancel code checking." | echohl None
-            return 0
-        endtry
+fun! pymode#lint#auto() "{{{
+    if !pymode#save()
+        return 0
     endif
-
-    let g:pymode_lint_buffer = bufnr('%')
-
-    Python from pymode import lint
-    Python lint.check_file()
-
-endfunction " }}}
-
-
-fun! pymode#lint#Parse(bnum)
-    " DESC: Parse result of code checking.
-    "
-    call setqflist(g:qf_list, 'r')
-
-    if g:pymode_lint_signs
-        call pymode#PlaceSigns(a:bnum)
-    endif
-
-    if g:pymode_lint_cwindow
-        call pymode#QuickfixOpen(0, g:pymode_lint_hold, g:pymode_lint_maxheight, g:pymode_lint_minheight, g:pymode_lint_jump)
-    endif
-
-    if !len(g:qf_list)
-        call pymode#WideMessage('Code checking is completed. No errors found.')
-    endif
-
-endfunction
-
-
-fun! pymode#lint#Toggle() "{{{
-    let g:pymode_lint = g:pymode_lint ? 0 : 1
-    call pymode#lint#toggle_win(g:pymode_lint, "Pymode lint")
-endfunction "}}}
-
-
-fun! pymode#lint#ToggleWindow() "{{{
-    let g:pymode_lint_cwindow = g:pymode_lint_cwindow ? 0 : 1
-    call pymode#lint#toggle_win(g:pymode_lint_cwindow, "Pymode lint cwindow")
-endfunction "}}}
-
-
-fun! pymode#lint#ToggleChecker() "{{{
-    let g:pymode_lint_checker = g:pymode_lint_checker == "pylint" ? "pyflakes" : "pylint"
-    echomsg "Pymode lint checker: " . g:pymode_lint_checker
-endfunction "}}}
-
-
-fun! pymode#lint#toggle_win(toggle, msg) "{{{
-    if a:toggle
-        echomsg a:msg." enabled"
-        botright cwindow
-        if &buftype == "quickfix"
-            wincmd p
-        endif
-    else
-        echomsg a:msg." disabled"
-        cclose
-    endif
+    PymodePython pymode.auto()
+    cclose
+    edit
+    call pymode#wide_message("AutoPep8 done.")
 endfunction "}}}
 
 
 fun! pymode#lint#show_errormessage() "{{{
-    if g:pymode_lint_buffer != bufnr('%')
-        return 0
-    endif
-    let errors = getqflist()
-    if !len(errors)
+    if empty(b:pymode_errors)
         return
     endif
-    let [_, line, _, _] = getpos(".")
-    for e in errors
-        if e['lnum'] == line
-            call pymode#WideMessage(e['text'])
-        else
-            echo
-        endif
+
+    let l = line('.')
+    if l == b:pymode_error_line
+        return
+    endif
+    let b:pymode_error_line = l
+    if has_key(b:pymode_errors, l)
+        call pymode#wide_message(b:pymode_errors[l])
+    else
+        echo
+    endif
+endfunction "}}}
+
+
+fun! pymode#lint#toggle() "{{{
+    let g:pymode_lint = g:pymode_lint ? 0 : 1
+    if g:pymode_lint
+        call pymode#wide_message("Code checking is enabled.")
+    else
+        call pymode#wide_message("Code checking is disabled.")
+    end
+endfunction "}}}
+
+fun! pymode#lint#check() "{{{
+    " DESC: Run checkers on current file.
+    "
+    if !g:pymode_lint | return | endif
+
+    let b:pymode_errors = {}
+
+    if !pymode#save()
+        return 0
+    endif
+
+    call pymode#wide_message('Code checking is running ...')
+
+    PymodePython code_check()
+
+    let errors = getqflist()
+    if empty(errors)
+        call pymode#wide_message('Code checking is completed. No errors found.')
+    endif
+
+    if g:pymode_lint_cwindow
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
+    endif
+
+    if g:pymode_lint_signs
+        for item in b:pymode_signs
+            execute printf('sign unplace %d buffer=%d', item.lnum, item.bufnr)
+        endfor
+        let b:pymode_lint_signs = []
+        for item in filter(errors, 'v:val.bufnr != ""')
+            call add(b:pymode_signs, item)
+            execute printf('sign place %d line=%d name=%s buffer=%d', item.lnum, item.lnum, "Pymode".item.type, item.bufnr)
+        endfor
+    endif
+
+    for item in errors
+        let b:pymode_errors[item.lnum] = item.text
     endfor
+
+    let b:pymode_error_line = -1
+    call pymode#lint#show_errormessage()
+    call pymode#wide_message('Found errors and warnings: ' . len(errors))
+
 endfunction " }}}
 
+fun! pymode#lint#tick_queue() "{{{
 
-fun! pymode#lint#Auto() "{{{
-    if &modifiable && &modified
-        try
-            noautocmd write
-        catch /E212/
-            echohl Error | echo "File modified and I can't save it. Cancel operation." | echohl None
-            return 0
-        endtry
+    python import time
+    python print time.time()
+
+    if mode() == 'i'
+        if col('.') == 1
+            call feedkeys("\<Right>\<Left>", "n")
+        else
+            call feedkeys("\<Left>\<Right>", "n")
+        endif
+    else
+        call feedkeys("f\e", "n")
     endif
-    Python from pymode import auto
-    Python auto.fix_current_file()
-    cclose
-    edit
-    call pymode#WideMessage("AutoPep8 done.")
 endfunction "}}}
+
+fun! pymode#lint#stop() "{{{
+    au! pymode CursorHold <buffer>
+endfunction
+
+fun! pymode#lint#start() "{{{
+    au! pymode CursorHold <buffer> call pymode#lint#tick_queue()
+    call pymode#lint#tick_queue()
+endfunction
