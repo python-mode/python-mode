@@ -375,7 +375,7 @@ Bind keys for find occurencies for object under cursor (leave empty for disable)
 
 Bind keys for organize imports in current buffer (leave empty for disable): ::
 
-    let g:pymode_rope_orgazine_imports_bind = '<C-c>ro'
+    let g:pymode_rope_organize_imports_bind = '<C-c>ro'
 
 Bind keys for rename variable/method/class under cursor in the whole project
 (leave empty for disable): ::
