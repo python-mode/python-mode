@@ -20,8 +20,8 @@ else:
 
 from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
-from rope.contrib import autoimport as rope_autoimport, codeassist, findit # noqa
-from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature # noqa
+from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
+from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature, importutils # noqa
 from rope.base.taskhandle import TaskHandle # noqa
 
 
@@ -337,11 +337,11 @@ def autoimport():
 
         source, _ = get_assist_params()
         if len(modules) == 1:
-            _insert_import(word, modules[0], ctx, source)
+            _insert_import(word, modules[0], ctx)
 
         else:
             module = pymode_inputlist('Wich module to import:', modules)
-            _insert_import(word, module, ctx, source)
+            _insert_import(word, module, ctx)
 
         return True
 
@@ -756,6 +756,32 @@ class ChangeSignatureRefactoring(Refactoring):
         return refactor.get_changes(changers)
 
 
+class GenerateElementRefactoring(Refactoring):
+
+    """ Class description. """
+
+    def __init__(self, kind, *args, **kwargs):
+        """ Function description. """
+        self.kind = kind
+        super(GenerateElementRefactoring, self).__init__(*args, **kwargs)
+
+    def get_refactor(self, ctx):
+        """ Function description.
+
+        :return Rename:
+
+        """
+        _, offset = get_assist_params()
+        return generate.create_generate(
+            self.kind, ctx.project, ctx.resource, offset)
+
+    def get_changes(self, refactor, input_str):
+        """ Function description. """
+
+        print(refactor)
+        return refactor.get_changes()
+
+
 def reload_changes(changes):
     """ Reload changed buffers. """
 
@@ -849,19 +875,40 @@ def complete_check():
 
         source, _ = get_assist_params()
         if len(modules) == 1:
-            _insert_import(name, modules[0], ctx, source)
+            _insert_import(name, modules[0], ctx)
 
         else:
             module = pymode_inputlist('With module to import:', modules)
             if module:
-                _insert_import(name, module, ctx, source)
+                _insert_import(name, module, ctx)
 
         vim.command('call pymode#save()')
         regenerate()
 
 
-def _insert_import(name, module, ctx, source):
-    linenum = int(ctx.importer.find_insertion_line(source))
-    line = 'from %s import %s' % (module, name)
-    vim.current.buffer[linenum - 1:linenum - 1] = [line]
-    vim.current.buffer[linenum:linenum] = ['']
+def _insert_import(name, module, ctx):
+    pyobject = ctx.project.pycore.resource_to_pyobject(ctx.resource)
+    import_tools = importutils.ImportTools(ctx.project.pycore)
+    module_imports = import_tools.module_imports(pyobject)
+    new_import = importutils.FromImport(module, 0, [[name, None]])
+    module_imports.add_import(new_import)
+    changes = change.ChangeContents(
+        ctx.resource, module_imports.get_changed_source())
+
+    action = pymode_inputlist(
+        'Choose what to do:', ['perform', 'preview'])
+
+    if not action:
+        return False
+
+    if action == 'preview':
+        print("\n   ")
+        print("-------------------------------")
+        print("\n%s\n" % changes.get_description())
+        print("-------------------------------\n\n")
+        if not pymode_confirm(False):
+            return False
+
+    progress = ProgressHandler('Apply changes ...')
+    ctx.project.do(changes, task_handle=progress.handle)
+    reload_changes(changes)

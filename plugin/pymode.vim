@@ -202,6 +202,15 @@ call pymode#default('g:pymode_rope_inline_bind', '<C-c>ri')
 " Move refactoring
 call pymode#default('g:pymode_rope_move_bind', '<C-c>rv')
 
+" Generate function
+call pymode#default('g:pymode_rope_generate_function_bind', '<C-c>rnf')
+
+" Generate class
+call pymode#default('g:pymode_rope_generate_class_bind', '<C-c>rnc')
+
+" Generate package
+call pymode#default('g:pymode_rope_generate_package_bind', '<C-c>rnp')
+
 " Change signature
 call pymode#default('g:pymode_rope_change_signature_bind', '<C-c>rs')
 

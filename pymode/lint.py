@@ -26,7 +26,7 @@ def code_check():
     if root:
         path = os.path.relpath(path, root)
 
-    if options.skip and any(p.match(path) for p in options.skip):
+    if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip): # noqa
         pymode_message('Skip code checking.')
         vim.command('return')
         return False

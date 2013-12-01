@@ -145,6 +145,18 @@ if g:pymode_rope
         exe "noremap <silent> <buffer> " . g:pymode_rope_use_function_bind . " :call pymode#rope#use_function()<CR>"
     end
 
+    if g:pymode_rope_generate_function_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_generate_function_bind . " :call pymode#rope#generate_function()<CR>"
+    end
+
+    if g:pymode_rope_generate_package_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_generate_package_bind . " :call pymode#rope#generate_package()<CR>"
+    end
+
+    if g:pymode_rope_generate_class_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_generate_class_bind . " :call pymode#rope#generate_class()<CR>"
+    end
+
     if g:pymode_rope_module_to_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_module_to_package_bind . " :call pymode#rope#module_to_package()<CR>"
     end

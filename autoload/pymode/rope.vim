@@ -166,3 +166,24 @@ fun! pymode#rope#autoimport(word) "{{{
     endif
     PymodePython rope.autoimport()
 endfunction "}}}
+
+fun! pymode#rope#generate_function() "{{{
+    if !pymode#save()
+        return 0
+    endif
+    PymodePython rope.GenerateElementRefactoring('function').run()
+endfunction "}}}
+
+fun! pymode#rope#generate_class() "{{{
+    if !pymode#save()
+        return 0
+    endif
+    PymodePython rope.GenerateElementRefactoring('class').run()
+endfunction "}}}
+
+fun! pymode#rope#generate_package() "{{{
+    if !pymode#save()
+        return 0
+    endif
+    PymodePython rope.GenerateElementRefactoring('package').run()
+endfunction "}}}
