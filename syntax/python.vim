@@ -38,6 +38,9 @@ call pymode#default('g:pymode_syntax_string_format', g:pymode_syntax_all)
 call pymode#default('g:pymode_syntax_string_templates', g:pymode_syntax_all)
 call pymode#default('g:pymode_syntax_doctests', g:pymode_syntax_all)
 
+" Support docstrings in syntax highlighting
+call pymode#default('g:pymode_syntax_docstrings', 1)
+
 " Highlight builtin objects (True, False, ...)
 call pymode#default('g:pymode_syntax_builtin_objs', g:pymode_syntax_all)
 
@@ -225,7 +228,7 @@ endif
     endif
 
     " DocStrings
-    if !pymode#Default('g:pymode_syntax_docstrings', g:pymode_syntax_all) || g:pymode_syntax_docstrings
+    if g:pymode_syntax_docstrings
         syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?"""+ end=+"""+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
         syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
     endif
@@ -352,6 +355,7 @@ endif
     hi def link  pythonSpaceError   Error
 
     hi def link  pythonString       String
+    hi def link  pythonDocstring    String
     hi def link  pythonUniString    String
     hi def link  pythonRawString    String
     hi def link  pythonUniRawString String

@@ -24,7 +24,7 @@ fun! pymode#rope#complete_on_dot() "{{{
         return ""
     end
     for group in map(synstack(line('.'), col('.') - 1), 'synIDattr(v:val, "name")')
-        for name in ['pythonString', 'pythonComment', 'pythonNumber']
+        for name in ['pythonString', 'pythonComment', 'pythonNumber', 'pythonDocstring']
             if group == name
                 return "" 
             endif
