@@ -1,6 +1,8 @@
 """ Pylama integration. """
 
 import vim # noqa
+from .utils import pymode_message
+
 import os.path
 
 
@@ -23,6 +25,11 @@ def code_check():
     path = b.name
     if root:
         path = os.path.relpath(path, root)
+
+    if options.skip and any(p.match(path) for p in options.skip):
+        pymode_message('Skip code checking.')
+        vim.command('return')
+        return False
 
     errors = check_path(path, options=options)
     vim.command('call setqflist(%s)' % json.dumps(errors))

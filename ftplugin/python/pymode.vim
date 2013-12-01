@@ -137,6 +137,10 @@ if g:pymode_rope
         exe "noremap <silent> <buffer> " . g:pymode_rope_move_bind . " :call pymode#rope#move()<CR>"
     end
 
+    if g:pymode_rope_change_signature_bind != ""
+        exe "noremap <silent> <buffer> " . g:pymode_rope_change_signature_bind . " :call pymode#rope#signature()<CR>"
+    end
+
     if g:pymode_rope_use_function_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_use_function_bind . " :call pymode#rope#use_function()<CR>"
     end

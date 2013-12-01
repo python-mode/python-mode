@@ -56,6 +56,7 @@ fun! pymode#lint#check() "{{{
     let errors = getqflist()
     if empty(errors)
         call pymode#wide_message('Code checking is completed. No errors found.')
+        return
     endif
 
     if g:pymode_lint_cwindow

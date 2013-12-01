@@ -151,8 +151,8 @@ call pymode#default('g:pymode_rope_completion', 1)
 " Enable autoimport used modules
 call pymode#default('g:pymode_rope_autoimport', 1)
 
-" Import object after complete (if that not be imported before)
-call pymode#default('g:pymode_rope_autoimport_import_after_complete', 1)
+" Offer to import object after complete (if that not be imported before)
+call pymode#default('g:pymode_rope_autoimport_import_after_complete', 0)
 
 " Autoimported modules
 call pymode#default('g:pymode_rope_autoimport_modules', ['os', 'shutil', 'datetime'])
@@ -201,6 +201,9 @@ call pymode#default('g:pymode_rope_inline_bind', '<C-c>ri')
 
 " Move refactoring
 call pymode#default('g:pymode_rope_move_bind', '<C-c>rv')
+
+" Change signature
+call pymode#default('g:pymode_rope_change_signature_bind', '<C-c>rs')
 
 " Tries to find the places in which a function can be used and changes the
 " code to call it instead

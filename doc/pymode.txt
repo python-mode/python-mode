@@ -397,7 +397,7 @@ Load modules to autoimport by default       *'g:pymode_rope_autoimport_modules'*
 
 Offer to unresolved import object after completion.
 >
-    let g:pymode_rope_autoimport_import_after_complete = 1
+    let g:pymode_rope_autoimport_import_after_complete = 0
 
 
 ------------------------------------------------------------------------------
@@ -441,7 +441,8 @@ Keymap for rename current module            *'g:pymode_rope_rename_module_bind'*
 
 Imports ~
 
-Organize imports in current file (drop unused imports, sort imports)
+Organize imports sorts imports, too. It does that according to PEP8. Unused
+imports will be dropped.
 Keymap                                   *'g:pymode_rope_organize_imports_bind'*
 >
     let g:pymode_rope_organize_imports_bind = '<C-c>ro'
@@ -493,6 +494,10 @@ of the occurrences of the old method to use the new method you can inline it
 afterwards.
 >
     let g:pymode_rope_move_bind = '<C-c>rv'
+
+Change function signature ~
+>
+    let g:pymode_rope_change_signature_bind = '<C-c>rs'
 
 
 ------------------------------------------------------------------------------

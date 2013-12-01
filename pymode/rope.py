@@ -21,7 +21,7 @@ else:
 from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit # noqa
-from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move # noqa
+from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature # noqa
 from rope.base.taskhandle import TaskHandle # noqa
 
 
@@ -704,6 +704,56 @@ class MoveRefactoring(Refactoring):
         if offset == 0:
             offset = None
         return move.create_move(ctx.project, ctx.resource, offset)
+
+
+class ChangeSignatureRefactoring(Refactoring):
+
+    """ Change function signature (add/remove/sort arguments). """
+
+    @staticmethod
+    def get_input_str(refactor, ctx):
+        """ Get destination.
+
+        :return str:
+
+        """
+        args = refactor.get_args()
+        default = ', '.join(a[0] for a in args)
+        return pymode_input('Change the signature:', udefault=default)
+
+    @staticmethod
+    def get_refactor(ctx):
+        """ Function description.
+
+        :return Rename:
+
+        """
+        _, offset = get_assist_params()
+        return change_signature.ChangeSignature(
+            ctx.project, ctx.resource, offset)
+
+    def get_changes(self, refactor, input_string):
+        """ Function description. """
+
+        args = re.sub(r'[\s\(\)]+', '', input_string).split(',')
+        olds = [arg[0] for arg in refactor.get_args()]
+
+        changers = []
+        for arg in [a for a in olds if not a in args]:
+            changers.append(change_signature.ArgumentRemover(olds.index(arg)))
+            olds.remove(arg)
+
+        order = []
+        for index, arg in enumerate(args):
+            if arg not in olds:
+                changers.append(change_signature.ArgumentAdder(index, arg))
+                olds.insert(index, arg)
+            order.append(olds.index(arg))
+
+        changers.append(change_signature.ArgumentReorderer(
+            order, autodef='None'))
+
+        return refactor.get_changes(changers)
 
 
 def reload_changes(changes):

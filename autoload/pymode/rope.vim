@@ -139,6 +139,13 @@ fun! pymode#rope#move() "{{{
     PymodePython rope.MoveRefactoring().run()
 endfunction "}}}
 
+fun! pymode#rope#signature() "{{{
+    if !pymode#save()
+        return 0
+    endif
+    PymodePython rope.ChangeSignatureRefactoring().run()
+endfunction "}}}
+
 fun! pymode#rope#use_function() "{{{
     if !pymode#save()
         return 0
