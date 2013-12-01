@@ -3,9 +3,10 @@
 import os.path
 import vim # noqa
 
-from .utils import pymode_message
+from .utils import pymode_message, catch_and_print_exceptions
 
 
+@catch_and_print_exceptions
 def enable_virtualenv():
     """ Enable virtualenv for vim.
 
@@ -16,6 +17,7 @@ def enable_virtualenv():
     path = vim.eval('g:pymode_virtualenv_path')
     enabled = vim.eval('g:pymode_virtualenv_enabled')
     if path == enabled:
+        pymode_message('Virtualenv %s already enabled.' % path)
         return False
 
     activate_this = os.path.join(os.path.join(path, 'bin'), 'activate_this.py')

@@ -10,3 +10,8 @@ fun! pymode#virtualenv#init() "{{{
     PymodePython enable_virtualenv()
 
 endfunction "}}}
+
+fun! pymode#virtualenv#activate(relpath) "{{{
+    let g:pymode_virtualenv_path = getcwd() . '/' . a:relpath
+    call pymode#virtualenv#init()
+endfunction "}}}

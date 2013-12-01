@@ -9,6 +9,8 @@ if !pymode#default('g:pymode_init', 1)
     call pymode#breakpoint#init()
 endif
 
+command! -buffer -nargs=1 PymodeVirtualenv call pymode#virtualenv#activate(<args>)
+
 " Setup events for pymode
 au pymode BufWritePre <buffer> call pymode#buffer_pre_write()
 au pymode BufWritePost <buffer> call pymode#buffer_post_write()
