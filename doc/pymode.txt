@@ -131,6 +131,9 @@ You could choose prefer version, but value will be testsed on loading.
 Values are `python`, `python3`, `disable`. If value set to `disable` most
 python-features of **pymode** will be disabled.
 
+Set value to `python3` if you are working with python3 projects. You could use
+|exrc|
+
 ------------------------------------------------------------------------------
 2.2 Python indentation ~
                                                                  *pymode-indent*
