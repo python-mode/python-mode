@@ -47,11 +47,12 @@ fun! pymode#quickfix_open(onlyRecognized, maxHeight, minHeight, jumpError) "{{{
     let numErrors = len(filter(getqflist(), 'v:val.valid'))
     let numOthers = len(getqflist()) - numErrors
     if numErrors > 0 || (!a:onlyRecognized && numOthers > 0)
+        let num = winnr()
         botright copen
         exe max([min([line("$"), a:maxHeight]), a:minHeight]) . "wincmd _"
         if a:jumpError
             cc
-        else
+        elseif num != winnr()
             wincmd p
         endif
     else
