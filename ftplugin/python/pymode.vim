@@ -72,8 +72,6 @@ if g:pymode_lint
     command! -buffer -nargs=0 PymodeLint :call pymode#lint#check()
 
     let b:pymode_error_line = -1
-    let b:pymode_errors = {}
-    let b:pymode_signs = []
 
     if g:pymode_lint_on_fly
         au! InsertLeave <buffer> PymodeLint
