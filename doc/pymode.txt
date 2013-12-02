@@ -276,6 +276,10 @@ Check code on every save (if file has been modified)  *'g:pymode_lint_on_write'*
 >
     let g:pymode_lint_on_write = 1
 
+Check code on every save (every)                    *'g:pymode_lint_unmodified'*
+>
+    let g:pymode_lint_unmodified = 1
+
 Check code when editting (onfly)                        *'g:pymode_lint_on_fly'*
 >
     let g:pymode_lint_on_fly = 1
