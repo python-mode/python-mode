@@ -21,18 +21,21 @@ Changelog
         'pymode_rope_enable_autoimport' -> 'pymode_rope_autoimport'
 
     * Options removed:
+
         'pymode_lint_hold', 'pymode_lint_config', 'pymode_lint_jump',
         'pymode_lint_signs_always_visible', 'pymode_rope_extended_complete',
         'pymode_rope_auto_project', 'pymode_rope_autoimport_generate',
         'pymode_rope_autoimport_underlines', 'pymode_rope_codeassist_maxfixes',
         'pymode_rope_sorted_completions', 'pymode_rope_extended_complete',
         'pymode_rope_confirm_saving', 'pymode_rope_global_prefix',
-        'pymode_rope_local_prefix', 'pymode_rope_vim_completion', 'pymode_rope_guess_project',
-        'pymode_rope_goto_def_newwin', 'pymode_rope_always_show_complete_menu'
+        'pymode_rope_local_prefix', 'pymode_rope_vim_completion',
+        'pymode_rope_guess_project', 'pymode_rope_goto_def_newwin',
+        'pymode_rope_always_show_complete_menu'
 
     * Options added:
-        'pymode_rope_regenerate_on_write', 'pymode_rope_completion', 'pymode_rope_complete_on_dot',
-        'pymode_lint_sort'
+        'pymode_rope_regenerate_on_write', 'pymode_rope_completion',
+        'pymode_rope_complete_on_dot', 'pymode_lint_sort',
+        'pymode_rope_look_project', 'pymode_lint_unmodified'
 
     * Commands added:
         'PymodeVirtualenv'

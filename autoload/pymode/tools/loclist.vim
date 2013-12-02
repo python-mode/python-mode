@@ -18,6 +18,7 @@ fun! g:PymodeLocList.current() "{{{
     if !exists("b:pymode_loclist")
         let b:pymode_loclist = g:PymodeLocList.init([])
     endif
+    let b:pymode_loclist._bufnr = bufnr('.')
     return b:pymode_loclist
 endfunction "}}}
 
@@ -30,6 +31,7 @@ endfunction "}}}
 fun! g:PymodeLocList.clear() "{{{
     let self._loclist = []
     let self._messages = {}
+    let self._bufnr = bufnr('')
 endfunction "}}}
 
 

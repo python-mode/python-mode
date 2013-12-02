@@ -50,5 +50,8 @@ def code_check():
     if sort_rules:
         errors = sorted(errors, key=__sort)
 
+    for e in errors:
+        e['bufnr'] = b.number
+
     vim.command(
         'call g:PymodeLocList.current().extend(%s)' % json.dumps(errors))

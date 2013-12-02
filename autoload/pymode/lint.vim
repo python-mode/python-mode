@@ -48,8 +48,6 @@ endfunction "}}}
 fun! pymode#lint#check() "{{{
     " DESC: Run checkers on current file.
     "
-    if !g:pymode_lint | return | endif
-
     let loclist = g:PymodeLocList.current()
 
     let b:pymode_error_line = -1
@@ -64,12 +62,12 @@ fun! pymode#lint#check() "{{{
         call pymode#wide_message('Code checking is completed. No errors found.')
     endif
 
+    call g:PymodeSigns.refresh(loclist)
+
     if g:pymode_lint_cwindow
         call setqflist(loclist._loclist)
         call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
     endif
-
-    call g:PymodeSigns.refresh(loclist)
 
     call pymode#lint#show_errormessage()
     call pymode#wide_message('Found errors and warnings: ' . len(loclist._loclist))

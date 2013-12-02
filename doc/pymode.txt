@@ -346,6 +346,11 @@ Commands:
 |:PymodeRopeRenameModule| -- Rename current module
 |:PymodeRopeUndo| -- Undo changes from last refactoring
 
+
+Turn on the rope script                                        *'g:pymode_rope'*
+>
+    let g:pymode_rope = 1
+
 .roperoject Folder ~
                                                                   *.ropeproject*
 
@@ -366,10 +371,18 @@ Currently it is used for things such as:
 * It can be used for saving object information to help rope object inference.
 * It can be used for saving global names cache which is used in auto-import.
 
+If ``.ropeproject`` is not found in the current directory, rope will walk
+upwards looking for a ``.ropeproject`` in every dir of the parent path. If
+rope finds ``.ropeproject`` in a parent dir, it sets the project for all child
+dirs and the scan may be slow for so many dirs and files.
 
-Turn on the rope script                                        *'g:pymode_rope'*
+Enable search |.ropeproject| in parent's directories
+                                                  *'g:pymode_rope_look_project'*
 >
-    let g:pymode_rope = 1
+    let g:pymode_rope_look_project = 1
+
+
+Show documentation for element under cursor ~
 
 Show documentation for object under cursor.      *'g:pymode_rope_show_doc_bind'*
 Leave empty for disable key binding.
@@ -628,6 +641,8 @@ Solutions:
   in the current dir.
 - Run ``:PymodeRopeNewProject`` to make rope create ``.ropeproject`` in the
   current dir.
+- Set |'g:pymode_rope_look_project'| to 0 for prevent searching in parent
+  dirs.
 
 
 Pylint check is very slow

@@ -144,6 +144,9 @@ call pymode#default('g:pymode_breakpoint_cmd', '')
 " Rope support
 call pymode#default('g:pymode_rope', 1)
 
+" If project hasnt been finded in current working directory, look at parents directory
+call pymode#default('g:pymode_rope_look_project', 1)
+
 " Enable Rope completion
 call pymode#default('g:pymode_rope_completion', 1)
 

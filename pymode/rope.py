@@ -238,6 +238,7 @@ def organize_imports():
             reload_changes(changes)
 
 
+@catch_and_print_exceptions
 def regenerate():
     """ Clear cache. """
     with RopeContext() as ctx:
@@ -306,7 +307,10 @@ def cache_project(cls):
         if resources.get(path):
             return resources.get(path)
 
-        project_path = look_ropeproject(os.path.dirname(path))
+        project_path = os.path.dirname(vim.eval('getcwd()'))
+        if int(vim.eval('g:pymode_rope_look_project')):
+            project_path = look_ropeproject(project_path)
+
         ctx = projects.get(project_path)
         if not ctx:
             projects[project_path] = ctx = cls(path, project_path)
@@ -375,6 +379,8 @@ class RopeContext(object):
 
         if self.options.get('autoimport') == '1':
             self.generate_autoimport_cache()
+
+        debug('Context inited %s' % project_path)
 
     def __enter__(self):
         self.project.validate(self.project.root)

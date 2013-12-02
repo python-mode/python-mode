@@ -45,12 +45,11 @@ endfunction "}}}
 
 fun! g:PymodeSigns.place(loclist) "{{{
     let seen = {}
-    let buf = bufnr('')
     for issue in a:loclist._loclist
         if !has_key(seen, issue.lnum)
             let seen[issue.lnum] = 1
             call add(self._sign_ids, self._next_id)
-            execute printf('sign place %d line=%d name=%s buffer=%d', self._next_id, issue.lnum, "Pymode".issue.type[0], buf)
+            execute printf('sign place %d line=%d name=%s buffer=%d', self._next_id, issue.lnum, "Pymode".issue.type[0], issue.bufnr)
             let self._next_id += 1
         endif
     endfor

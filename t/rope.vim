@@ -18,13 +18,9 @@ describe 'pymode-plugin'
     it 'pymode rope auto open project in current working directory'
         let project_path = '.ropeproject'
         Expect isdirectory(project_path)  == 0
-        call pymode#rope#complete(0)
-        Expect isdirectory(project_path)  == 1
-    end
-
-    it 'pymode rope completion'
         normal oimporX
         Expect getline('.') == 'import'
+        Expect isdirectory(project_path)  == 1
     end
 
 end
