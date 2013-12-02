@@ -6,7 +6,7 @@
     (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.7.3b
+                          Version: 0.7.4b
 
 ==============================================================================
 CONTENTS                                                       *pymode-contents*
@@ -358,25 +358,25 @@ Turn on the rope script                                        *'g:pymode_rope'*
 *:PymodeRopeRegenerate* -- Regenerate the project cache
 
 Rope uses a folder inside projects for holding project configuration and data.
-Its default name is `.ropeproject` If the folder doesnt exists in current
-working directory, parent folders will be checked.
+Its default name is `.ropeproject`.
 
 Currently it is used for things such as:
 
-* There is a config.py file in this folder in which you can change project
-    configurations. Have look at the default config.py file (s created when it
+* The config.py file in this folder contains project configuration. Have
+    a look at the default config.py file (which is created when it
     does not exist) for more information.
 * It can be used for saving project history, so that the next time you open the
     project you can undo past changes.
-* It can be used for saving object information to help rope object inference.
-* It can be used for saving global names cache which is used in auto-import.
+* It can be used to save information about object inferences.
+* It can be used to save a global name cache, which is used for auto-import.
 
-If ``.ropeproject`` is not found in the current directory, rope will walk
-upwards looking for a ``.ropeproject`` in every dir of the parent path. If
-rope finds ``.ropeproject`` in a parent dir, it sets the project for all child
-dirs and the scan may be slow for so many dirs and files.
+If `.ropeproject` is not found in the current directory, rope will look
+recursively for it in parent folders.
+Warning: If rope finds `.ropeproject` in a parent dir, it will use it with
+all its child directories, which may slow scanning down (because of many,
+possibly unrelated, files)
 
-Enable search |.ropeproject| in parent's directories
+Enable searching for |.ropeproject| in parent directories
                                                   *'g:pymode_rope_lookup_project'*
 >
     let g:pymode_rope_lookup_project = 1
@@ -385,7 +385,7 @@ Enable search |.ropeproject| in parent's directories
 Show documentation for element under cursor ~
 
 Show documentation for object under cursor.      *'g:pymode_rope_show_doc_bind'*
-Leave empty for disable key binding.
+Leave empty to disable the key binding.
 >
     let g:pymode_rope_show_doc_bind = '<C-c>d'
 
@@ -397,18 +397,18 @@ Regenerate project cache on every save (if file has been modified)
 4.1 Completion ~
                                                              *pymode-completion*
 
-By default you could typing <Ctrl-Space> for autocompletion. Will be
+By default you can use <Ctrl-Space> for autocompletion. Will be
 automatically selected first entry and you can press <Return> to insert in
 your code. <C-X><C-O> and <C-P>/<C-N> works too.
 
-Autocompletion is also called by typing a period in |Insert| mode.
+Autocompletion is also called by typing a period in |Insert| mode by default.
 
 
 Turn on code completion support in the plugin       *'g:pymode_rope_completion'*
 >
     let g:pymode_rope_completion = 1
 
-Turn on autocompletion when you typing a period
+Turn on autocompletion when typing a period
                                                *'g:pymode_rope_complete_on_dot'*
 >
     let g:pymode_rope_complete_on_dot = 1
@@ -417,8 +417,8 @@ Keymap for autocomplete                        *'g:pymode_rope_completion_bind'*
 >
     let g:pymode_rope_completion_bind = '<C-Space>'
 
-Extended autocompletion (rope could complete objects wich hasnt be imported)
-from project                                        *'g:pymode_rope_autoimport'*
+Extended autocompletion (rope could complete objects which have not been
+imported) from project                              *'g:pymode_rope_autoimport'*
 >
     let g:pymode_rope_autoimport = 1
 

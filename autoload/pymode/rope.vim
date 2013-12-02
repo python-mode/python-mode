@@ -53,16 +53,11 @@ endfunction
 
 
 fun! pymode#rope#find_it()
-    let l:output = []
+    let loclist = g:PymodeLocList.current()
+    let loclist._title = "Occurrences"
     call pymode#wide_message('Finding Occurrences ...')
     PymodePython rope.find_it()
-    call pymode#wide_message('')
-    if !empty(l:output)
-        let loclist = g:PymodeLocList.current()
-        let loclist._loclist = l:output
-        let loclist._title = "Occurrences"
-        call loclist.show()
-    end
+    call loclist.show()
 endfunction
 
 

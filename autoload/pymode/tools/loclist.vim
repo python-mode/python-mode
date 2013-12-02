@@ -74,7 +74,7 @@ fun! g:PymodeLocList.show() "{{{
         execute max([min([line("$"), g:pymode_quickfix_maxheight]), g:pymode_quickfix_minheight]) . "wincmd _"
         if num != winnr()
             call setwinvar(winnr(), 'quickfix_title', self._title . ' <' . self._name . '>')
-            wincmd p
+            exe num . "wincmd w"
         endif
     end
 endfunction "}}}

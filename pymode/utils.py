@@ -18,18 +18,6 @@ DEBUG = int(vim.eval('g:pymode_debug'))
 PY2 = sys.version_info[0] == 2
 
 
-def args_from_vim(func):
-    """ Proxy arguments from Vim function to Python function.
-
-    :return func: A wrapper
-
-    """
-    def __wrapper():
-        args = vim.eval('a:000')
-        return func(*args)
-    return __wrapper
-
-
 def pymode_message(content):
     """ Show message. """
 
@@ -97,26 +85,6 @@ def pymode_error(content):
     """ Show error. """
 
     vim.command('call pymode#error("%s")' % str(content))
-
-
-def with_metaclass(meta, *bases):
-    """ Metaclass support.
-
-    :return class:
-
-    """
-
-    class metaclass(meta):
-
-        __call__ = type.__call__
-        __init__ = type.__init__
-
-        def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
-            return meta(name, bases, d)
-
-    return metaclass('temporary_class', None, {})
 
 
 def catch_and_print_exceptions(func):

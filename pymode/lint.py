@@ -1,7 +1,7 @@
 """ Pylama integration. """
 
-import vim # noqa
-from .utils import pymode_message, silence_stderr
+from .environment import env
+from .utils import silence_stderr
 
 import os.path
 
@@ -15,31 +15,27 @@ def code_check():
 
     from pylama.main import parse_options
     from pylama.tasks import check_path
-    import json
-
-    b = vim.current.buffer
-    root = vim.eval('getcwd()')
-    linters = vim.eval('g:pymode_lint_checkers')
-    ignore = vim.eval('g:pymode_lint_ignore')
-    select = vim.eval('g:pymode_lint_select')
 
     options = parse_options(
-        ignore=ignore, select=select, linters=linters)
+        ignore=env.var('g:pymode_lint_ignore'),
+        select=env.var('g:pymode_lint_select'),
+        linters=env.var('g:pymode_lint_checkers'),
+    )
 
-    path = b.name
-    if root:
-        path = os.path.relpath(path, root)
+    path = os.path.relpath(env.curbuf.name, env.curdir)
+    env.debug("Start code check: ", path)
 
     if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip): # noqa
-        pymode_message('Skip code checking.')
-        vim.command('return')
+        env.message('Skip code checking.')
+        env.debug("Skipped")
+        env.stop()
         return False
 
-    code = '\n'.join(vim.current.buffer)
-
     with silence_stderr():
-        errors = check_path(path, options=options, code=code)
-    sort_rules = vim.eval('g:pymode_lint_sort')
+        errors = check_path(path, options=options, code=env.source)
+
+    env.debug("Find errors: ", len(errors))
+    sort_rules = env.var('g:pymode_lint_sort')
 
     def __sort(e):
         try:
@@ -48,10 +44,10 @@ def code_check():
             return 999
 
     if sort_rules:
+        env.debug("Find sorting: ", sort_rules)
         errors = sorted(errors, key=__sort)
 
     for e in errors:
-        e['bufnr'] = b.number
+        e['bufnr'] = env.curbuf.number
 
-    vim.command(
-        'call g:PymodeLocList.current().extend(%s)' % json.dumps(errors))
+    env.run('g:PymodeLocList.current().extend', errors)
