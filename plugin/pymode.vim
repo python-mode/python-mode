@@ -6,6 +6,7 @@ com! PymodeTroubleshooting call pymode#troubleshooting#test()
 
 " Enable pymode by default :)
 call pymode#default('g:pymode', 1)
+call pymode#default('g:pymode_debug', 0)
 
 " DESC: Disable script loading
 if !g:pymode || &cp
@@ -118,17 +119,6 @@ call pymode#default("g:pymode_lint_visual_symbol", "RR")
 call pymode#default("g:pymode_lint_error_symbol", "EE")
 call pymode#default("g:pymode_lint_info_symbol", "II")
 call pymode#default("g:pymode_lint_pyflakes_symbol", "FF")
-
-if g:pymode_lint_signs && has('signs')
-
-    execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
-    execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
-    execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
-    execute 'sign define PymodeE text=' . g:pymode_lint_error_symbol    . " texthl=Error"
-    execute 'sign define PymodeI text=' . g:pymode_lint_info_symbol     . " texthl=Info"
-    execute 'sign define PymodeF text=' . g:pymode_lint_pyflakes_symbol . " texthl=Info"
-
-endif
 
 " }}}
 

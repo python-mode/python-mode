@@ -1,5 +1,9 @@
 PymodePython from pymode.lint import code_check
 
+call pymode#tools#signs#init()
+call pymode#tools#loclist#init()
+
+
 fun! pymode#lint#auto() "{{{
     if !pymode#save()
         return 0
@@ -13,7 +17,8 @@ endfunction "}}}
 
 
 fun! pymode#lint#show_errormessage() "{{{
-    if empty(b:pymode_errors)
+    let loclist = g:PymodeLocList.current()
+    if loclist.is_empty()
         return
     endif
 
@@ -22,8 +27,8 @@ fun! pymode#lint#show_errormessage() "{{{
         return
     endif
     let b:pymode_error_line = l
-    if has_key(b:pymode_errors, l)
-        call pymode#wide_message(b:pymode_errors[l])
+    if has_key(loclist._messages, l)
+        call pymode#wide_message(loclist._messages[l])
     else
         echo
     endif
@@ -39,46 +44,38 @@ fun! pymode#lint#toggle() "{{{
     end
 endfunction "}}}
 
+
 fun! pymode#lint#check() "{{{
     " DESC: Run checkers on current file.
     "
     if !g:pymode_lint | return | endif
 
-    let b:pymode_errors = {}
+    let loclist = g:PymodeLocList.current()
+
+    let b:pymode_error_line = -1
+
+    call loclist.clear()
 
     call pymode#wide_message('Code checking is running ...')
 
     PymodePython code_check()
 
-    let errors = getqflist()
-    if empty(errors)
+    if loclist.is_empty()
         call pymode#wide_message('Code checking is completed. No errors found.')
     endif
 
     if g:pymode_lint_cwindow
+        call setqflist(loclist._loclist)
         call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
     endif
 
-    if g:pymode_lint_signs
-        for item in b:pymode_signs
-            execute printf('sign unplace %d buffer=%d', item.lnum, item.bufnr)
-        endfor
-        let b:pymode_lint_signs = []
-        for item in filter(errors, 'v:val.bufnr != ""')
-            call add(b:pymode_signs, item)
-            execute printf('sign place %d line=%d name=%s buffer=%d', item.lnum, item.lnum, "Pymode".item.type, item.bufnr)
-        endfor
-    endif
+    call g:PymodeSigns.refresh(loclist)
 
-    for item in errors
-        let b:pymode_errors[item.lnum] = item.text
-    endfor
-
-    let b:pymode_error_line = -1
     call pymode#lint#show_errormessage()
-    call pymode#wide_message('Found errors and warnings: ' . len(errors))
+    call pymode#wide_message('Found errors and warnings: ' . len(loclist._loclist))
 
 endfunction " }}}
+
 
 fun! pymode#lint#tick_queue() "{{{
 
@@ -96,11 +93,13 @@ fun! pymode#lint#tick_queue() "{{{
     endif
 endfunction "}}}
 
+
 fun! pymode#lint#stop() "{{{
     au! pymode CursorHold <buffer>
-endfunction
+endfunction "}}}
+
 
 fun! pymode#lint#start() "{{{
     au! pymode CursorHold <buffer> call pymode#lint#tick_queue()
     call pymode#lint#tick_queue()
-endfunction
+endfunction "}}}

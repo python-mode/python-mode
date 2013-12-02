@@ -17,7 +17,7 @@ from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inl
 import vim # noqa
 from .utils import (
     pymode_message, pymode_error, pymode_input, pymode_inputlist,
-    pymode_confirm, catch_and_print_exceptions)
+    pymode_confirm, catch_and_print_exceptions, debug)
 
 
 def get_assist_params(cursor=None, base=''):
@@ -63,6 +63,7 @@ def look_ropeproject(path):
         p = new_p
 
 
+@catch_and_print_exceptions
 def completions():
     """ Search completions. """
 
@@ -158,14 +159,17 @@ def goto():
         found_resource, line = codeassist.get_definition_location(
             ctx.project, source, offset, ctx.resource, maxfixes=3)
 
+        if not found_resource:
+            pymode_error('Definition not found')
+            return
+
         if not os.path.abspath(found_resource.path) == vim.current.buffer.name:
             vim.command("%s +%s %s" % (
                 ctx.options.get('goto_definition_cmd'),
                 line, found_resource.path))
 
         else:
-            vim.current.window.cursor = (
-                line, int(vim.eval('indent(%s)' % line)))
+            vim.command('normal %sggzz' % line)
 
 
 @catch_and_print_exceptions
@@ -330,7 +334,6 @@ def autoimport():
             pymode_message('Global name %s not found.' % word)
             return False
 
-        source, _ = get_assist_params()
         if len(modules) == 1:
             _insert_import(word, modules[0], ctx)
 
@@ -349,6 +352,8 @@ class RopeContext(object):
     def __init__(self, path, project_path):
 
         self.path = path
+        debug('Init rope context %s' % self.path)
+
         self.project = project.Project(
             project_path, fscommands=FileSystemCommands())
 
@@ -360,7 +365,7 @@ class RopeContext(object):
         self.resource = None
         self.options = dict(
             completeopt=vim.eval('&completeopt'),
-            autoimport=vim.eval('g:pymode_rope_autoimport'),
+            autoimport=int(vim.eval('g:pymode_rope_autoimport')),
             autoimport_modules=vim.eval('g:pymode_rope_autoimport_modules'),
             goto_definition_cmd=vim.eval('g:pymode_rope_goto_definition_cmd'),
         )
@@ -376,6 +381,13 @@ class RopeContext(object):
         self.options['encoding'] = vim.eval('&encoding')
         self.resource = libutils.path_to_resource(
             self.project, vim.current.buffer.name, 'file')
+
+        if not self.resource.exists() or os.path.isdir(
+                self.resource.real_path):
+            self.resource = None
+        else:
+            debug('Found resource "%s"' % self.resource.path)
+
         return self
 
     def __exit__(self, t, value, traceback):
@@ -435,6 +447,11 @@ class Refactoring(object): # noqa
         """
 
         with RopeContext() as ctx:
+
+            if not ctx.resource:
+                pymode_error("You should save the file before refactoring.")
+                return None
+
             try:
                 pymode_message(self.__doc__)
                 refactor = self.get_refactor(ctx)
@@ -728,7 +745,11 @@ class ChangeSignatureRefactoring(Refactoring):
             ctx.project, ctx.resource, offset)
 
     def get_changes(self, refactor, input_string):
-        """ Function description. """
+        """ Function description.
+
+        :return Rope.changes:
+
+        """
 
         args = re.sub(r'[\s\(\)]+', '', input_string).split(',')
         olds = [arg[0] for arg in refactor.get_args()]
@@ -771,9 +792,12 @@ class GenerateElementRefactoring(Refactoring):
             self.kind, ctx.project, ctx.resource, offset)
 
     def get_changes(self, refactor, input_str):
-        """ Function description. """
+        """ Function description.
 
-        print(refactor)
+        :return Rope.changes:
+
+        """
+
         return refactor.get_changes()
 
 
@@ -847,7 +871,11 @@ def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
 
 @catch_and_print_exceptions
 def complete_check():
-    """ Function description. """
+    """ Function description.
+
+    :return bool:
+
+    """
 
     row, column = vim.current.window.cursor
     line = vim.current.buffer[row - 1]
@@ -868,7 +896,6 @@ def complete_check():
         if not pymode_confirm(True, "Import %s?" % name):
             return False
 
-        source, _ = get_assist_params()
         if len(modules) == 1:
             _insert_import(name, modules[0], ctx)
 

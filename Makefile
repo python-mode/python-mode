@@ -9,6 +9,7 @@ clean:
 .PHONY: test
 test:
 	bundle install
+	rm -rf $(CURDIR)/.ropeproject
 	rake test
 
 .PHONY: pylama

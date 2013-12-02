@@ -14,7 +14,7 @@ except ImportError:
     from io import StringIO
 
 
-
+DEBUG = int(vim.eval('g:pymode_debug'))
 PY2 = sys.version_info[0] == 2
 
 
@@ -129,6 +129,8 @@ def catch_and_print_exceptions(func):
         try:
             return func(*args, **kwargs)
         except (Exception, vim.error) as e: # noqa
+            if DEBUG:
+                raise
             pymode_error(e)
             return None
     return wrapper
@@ -136,7 +138,6 @@ def catch_and_print_exceptions(func):
 
 @contextmanager
 def silence_stderr():
-
     """ Redirect stderr. """
 
     with threading.Lock():
@@ -158,3 +159,12 @@ def patch_paths():
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs2'))
     else:
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs3'))
+
+
+debug = lambda _: None
+
+if DEBUG:
+    def debug(msg): # noqa
+        """ Debug message. """
+
+        print(msg)
