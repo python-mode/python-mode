@@ -1,7 +1,6 @@
 """ Rope support in pymode. """
 from __future__ import absolute_import, print_function
 
-import json
 import multiprocessing
 import os.path
 import re
@@ -14,34 +13,8 @@ from rope.base.taskhandle import TaskHandle # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature, importutils # noqa
 
-import vim # noqa
-from .utils import (
-    pymode_message, pymode_error, pymode_input, pymode_inputlist,
-    pymode_confirm, catch_and_print_exceptions, debug)
 
-
-def get_assist_params(cursor=None, base=''):
-    """ Prepare source and get offset.
-
-    :return source, offset:
-
-    """
-    if cursor is None:
-        cursor = vim.current.window.cursor
-
-    row, column = cursor
-    source = ""
-    offset = 0
-
-    for i, line in enumerate(vim.current.buffer, 1):
-        if i == row:
-            source += line[:column] + base
-            offset = len(source)
-            source += line[column:]
-        else:
-            source += line
-        source += '\n'
-    return source, offset
+from .environment import env
 
 
 def look_ropeproject(path):
@@ -63,35 +36,39 @@ def look_ropeproject(path):
         p = new_p
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def completions():
-    """ Search completions. """
+    """ Search completions.
 
-    row, column = vim.current.window.cursor
-    if vim.eval('a:findstart') == '1':
+    :return None:
+
+    """
+
+    row, col = env.cursor
+    if env.var('a:findstart', True):
         count = 0
-        for char in reversed(vim.current.line[:column]):
+        for char in reversed(env.current.line[:col]):
             if not re.match(r'[\w\d]', char):
                 break
             count += 1
-        vim.command('return %i' % (column - count))
-        return
+        env.debug('Complete find start', (col - count))
+        return env.stop(col - count)
 
-    base = vim.eval('a:base')
-    source, offset = get_assist_params((row, column), base)
+    base = env.var('a:base')
+    source, offset = env.get_offset_params((row, col), base)
     proposals = get_proporsals(source, offset, base)
-    vim.command("return %s" % json.dumps(proposals))
+    return env.stop(proposals)
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def complete(dot=False):
     """ Ctrl+Space completion.
 
     :return bool: success
 
     """
-    row, column = vim.current.window.cursor
-    source, offset = get_assist_params((row, column))
+    row, col = env.cursor
+    source, offset = env.get_offset_params()
     proposals = get_proporsals(source, offset, dot=dot)
     if not proposals:
         return False
@@ -106,12 +83,10 @@ def complete(dot=False):
         prefix = prefix[:common]
     s_offset = codeassist.starting_offset(source, offset)
     p_prefix = prefix[offset - s_offset:]
-    line = vim.current.buffer[row - 1]
-    vim.current.buffer[row - 1] = line[:column] + p_prefix + line[column:] # noqa
-    vim.current.window.cursor = (row, column + len(p_prefix))
-    vim.command('call complete(%s, %s)' % (
-        column - len(prefix) + len(p_prefix) + 1, json.dumps(proposals)))
-
+    line = env.lines[row - 1]
+    env.curbuf[row - 1] = line[:col] + p_prefix + line[col:] # noqa
+    env.current.window.cursor = (row, col + len(p_prefix))
+    env.run('complete', col - len(prefix) + len(p_prefix) + 1, proposals)
     return True
 
 
@@ -149,50 +124,46 @@ def get_proporsals(source, offset, base='', dot=False):
     return out
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def goto():
     """ Goto definition. """
 
     with RopeContext() as ctx:
-        source, offset = get_assist_params()
+        source, offset = env.get_offset_params()
 
         found_resource, line = codeassist.get_definition_location(
             ctx.project, source, offset, ctx.resource, maxfixes=3)
 
         if not found_resource:
-            pymode_error('Definition not found')
+            env.error('Definition not found')
             return
 
-        if not os.path.abspath(found_resource.path) == vim.current.buffer.name:
-            vim.command("%s +%s %s" % (
-                ctx.options.get('goto_definition_cmd'),
-                line, found_resource.path))
-
-        else:
-            vim.command('normal %sggzz' % line)
+        env.goto_file(
+            found_resource.path, cmd=ctx.options.get('goto_definition_cmd'))
+        env.goto_line(line)
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def show_doc():
     """ Show documentation. """
 
     with RopeContext() as ctx:
-        source, offset = get_assist_params()
+        source, offset = env.get_offset_params()
         try:
             doc = codeassist.get_doc(
                 ctx.project, source, offset, ctx.resource, maxfixes=3)
             if not doc:
                 raise exceptions.BadIdentifierError
-            vim.command('let l:output = %s' % json.dumps(doc.split('\n')))
+            env.let('l:output', doc.split('\n'))
         except exceptions.BadIdentifierError:
-            pymode_error("No documentation found.")
+            env.error("No documentation found.")
 
 
 def find_it():
     """ Find occurrences. """
 
     with RopeContext() as ctx:
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         try:
             occurrences = findit.find_occurrences(
                 ctx.project, ctx.resource, offset)
@@ -203,10 +174,10 @@ def find_it():
     for oc in occurrences:
         lst.append(dict(
             filename=oc.resource.path,
-            text=ctx.current[oc.lineno - 1],
+            text=env.lines[oc.lineno - 1] if oc.resource.real_path == env.curbuf.name else "", # noqa
             lnum=oc.lineno,
         ))
-    vim.command('let l:output = %s' % json.dumps(lst))
+    env.let('loclist._loclist', lst)
 
 
 def update_python_path(paths):
@@ -239,7 +210,7 @@ def organize_imports():
             reload_changes(changes)
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def regenerate():
     """ Clear cache. """
     with RopeContext() as ctx:
@@ -250,10 +221,10 @@ def regenerate():
 
 def new():
     """ Create a new project. """
-    root = vim.eval('input("Enter project root: ", getcwd())')
+    root = env.var('input("Enter project root: ", getcwd())')
     prj = project.Project(projectroot=root)
     prj.close()
-    pymode_message("Project is opened: %s" % root)
+    env.message("Project is opened: %s" % root)
 
 
 def undo():
@@ -266,10 +237,10 @@ def undo():
     with RopeContext() as ctx:
         changes = ctx.project.history.tobe_undone
         if changes is None:
-            pymode_error('Nothing to undo!')
+            env.error('Nothing to undo!')
             return False
 
-        if pymode_confirm(yes=False, msg='Undo [%s]?' % str(changes)):
+        if env.user_confirm('Undo [%s]?' % str(changes)):
             progress = ProgressHandler('Undo %s' % str(changes))
             for c in ctx.project.history.undo(task_handle=progress.handle):
                 reload_changes(c)
@@ -285,10 +256,10 @@ def redo():
     with RopeContext() as ctx:
         changes = ctx.project.history.tobe_redone
         if changes is None:
-            pymode_error('Nothing to redo!')
+            env.error('Nothing to redo!')
             return False
 
-        if pymode_confirm(yes=False, msg='Redo [%s]?' % str(changes)):
+        if env.user_confirm('Redo [%s]?' % str(changes)):
             progress = ProgressHandler('Redo %s' % str(changes))
             for c in ctx.project.history.redo(task_handle=progress.handle):
                 reload_changes(c)
@@ -304,12 +275,12 @@ def cache_project(cls):
     resources = dict()
 
     def get_ctx(*args, **kwargs):
-        path = vim.current.buffer.name
+        path = env.curbuf.name
         if resources.get(path):
             return resources.get(path)
 
-        project_path = os.path.dirname(vim.eval('getcwd()'))
-        if int(vim.eval('g:pymode_rope_lookup_project')):
+        project_path = os.path.dirname(env.curdir)
+        if env.var('g:pymode_rope_lookup_project', True):
             project_path = look_ropeproject(project_path)
 
         ctx = projects.get(project_path)
@@ -326,9 +297,9 @@ def autoimport():
     :return bool:
 
     """
-    word = vim.eval('a:word')
+    word = env.var('a:word')
     if not word:
-        pymode_error("Should be word under cursor.")
+        env.error("Should be word under cursor.")
         return False
 
     with RopeContext() as ctx:
@@ -336,14 +307,14 @@ def autoimport():
             ctx.generate_autoimport_cache()
         modules = ctx.importer.get_modules(word)
         if not modules:
-            pymode_message('Global name %s not found.' % word)
+            env.message('Global name %s not found.' % word)
             return False
 
         if len(modules) == 1:
             _insert_import(word, modules[0], ctx)
 
         else:
-            module = pymode_inputlist('Wich module to import:', modules)
+            module = env.user_input_choices('Wich module to import:', *modules)
             _insert_import(word, module, ctx)
 
         return True
@@ -357,7 +328,6 @@ class RopeContext(object):
     def __init__(self, path, project_path):
 
         self.path = path
-        debug('Init rope context %s' % self.path)
 
         self.project = project.Project(
             project_path, fscommands=FileSystemCommands())
@@ -370,10 +340,10 @@ class RopeContext(object):
         self.resource = None
         self.current = None
         self.options = dict(
-            completeopt=vim.eval('&completeopt'),
-            autoimport=int(vim.eval('g:pymode_rope_autoimport')),
-            autoimport_modules=vim.eval('g:pymode_rope_autoimport_modules'),
-            goto_definition_cmd=vim.eval('g:pymode_rope_goto_definition_cmd'),
+            completeopt=env.var('&completeopt'),
+            autoimport=env.var('g:pymode_rope_autoimport', True),
+            autoimport_modules=env.var('g:pymode_rope_autoimport_modules'),
+            goto_definition_cmd=env.var('g:pymode_rope_goto_definition_cmd'),
         )
 
         if os.path.exists("%s/__init__.py" % project_path):
@@ -382,20 +352,18 @@ class RopeContext(object):
         if self.options.get('autoimport') == '1':
             self.generate_autoimport_cache()
 
-        debug('Context inited %s' % project_path)
+        env.debug('Context init', project_path)
 
     def __enter__(self):
         self.project.validate(self.project.root)
-        self.options['encoding'] = vim.eval('&encoding')
-        self.current = vim.current.buffer
         self.resource = libutils.path_to_resource(
-            self.project, self.current.name, 'file')
+            self.project, env.curbuf.name, 'file')
 
         if not self.resource.exists() or os.path.isdir(
                 self.resource.real_path):
             self.resource = None
         else:
-            debug('Found resource "%s"' % self.resource.path)
+            env.debug('Found resource', self.resource.path)
 
         return self
 
@@ -406,7 +374,7 @@ class RopeContext(object):
     def generate_autoimport_cache(self):
         """ Update autoimport cache. """
 
-        pymode_message('Regenerate autoimport cache.')
+        env.message('Regenerate autoimport cache.')
         modules = self.options.get('autoimport_modules', [])
 
         def _update_cache(importer, modules=None):
@@ -432,7 +400,7 @@ class ProgressHandler(object):
     def __call__(self):
         """ Show current progress. """
         percent_done = self.handle.current_jobset().get_percent_done()
-        pymode_message('%s - done %s%%' % (self.message, percent_done))
+        env.message('%s - done %s%%' % (self.message, percent_done))
 
 
 _scope_weight = {
@@ -458,11 +426,11 @@ class Refactoring(object): # noqa
         with RopeContext() as ctx:
 
             if not ctx.resource:
-                pymode_error("You should save the file before refactoring.")
+                env.error("You should save the file before refactoring.")
                 return None
 
             try:
-                pymode_message(self.__doc__)
+                env.message(self.__doc__)
                 refactor = self.get_refactor(ctx)
                 input_str = self.get_input_str(refactor, ctx)
                 if not input_str:
@@ -470,8 +438,8 @@ class Refactoring(object): # noqa
 
                 changes = self.get_changes(refactor, input_str)
 
-                action = pymode_inputlist(
-                    'Choose what to do:', ['perform', 'preview'])
+                action = env.user_input_choices(
+                    'Choose what to do:', 'perform', 'preview')
 
                 if not action:
                     return False
@@ -481,17 +449,17 @@ class Refactoring(object): # noqa
                     print("-------------------------------")
                     print("\n%s\n" % changes.get_description())
                     print("-------------------------------\n\n")
-                    if not pymode_confirm(False):
+                    if not env.user_confirm('Do the changes?'):
                         return False
 
                 progress = ProgressHandler('Apply changes ...')
                 ctx.project.do(changes, task_handle=progress.handle)
                 reload_changes(changes)
             except exceptions.RefactoringError as e:
-                pymode_error(str(e))
+                env.error(str(e))
 
             except Exception as e:
-                pymode_error('Unhandled exception in Pymode: %s' % e)
+                env.error('Unhandled exception in Pymode: %s' % e)
 
     @staticmethod
     def get_refactor(ctx):
@@ -537,7 +505,8 @@ class RenameRefactoring(Refactoring):
         """
         offset = None
         if not self.module:
-            _, offset = get_assist_params()
+            _, offset = env.get_offset_params()
+        env.debug('Prepare rename', offset)
         return rename.Rename(ctx.project, ctx.resource, offset)
 
     def get_input_str(self, refactor, ctx):
@@ -547,10 +516,10 @@ class RenameRefactoring(Refactoring):
         msg = 'Renaming method/variable. New name:'
         if self.module:
             msg = 'Renaming module. New name:'
-        newname = pymode_input(msg, oldname)
+        newname = env.user_input(msg, oldname)
 
         if newname == oldname:
-            pymode_message("Nothing to do.")
+            env.message("Nothing to do.")
             return False
 
         return newname
@@ -564,7 +533,7 @@ class ExtractMethodRefactoring(Refactoring):
     def get_input_str(refactor, ctx):
         """ Return user input. """
 
-        return pymode_input('New method name:')
+        return env.user_input('New method name:')
 
     @staticmethod
     def get_refactor(ctx):
@@ -573,10 +542,9 @@ class ExtractMethodRefactoring(Refactoring):
         :return Rename:
 
         """
-        buf = vim.current.buffer
-        cursor1, cursor2 = buf.mark('<'), buf.mark('>')
-        _, offset1 = get_assist_params(cursor1)
-        _, offset2 = get_assist_params(cursor2)
+        cursor1, cursor2 = env.curbuf.mark('<'), env.curbuf.mark('>')
+        _, offset1 = env.get_offset_params(cursor1)
+        _, offset2 = env.get_offset_params(cursor2)
         return extract.ExtractMethod(
             ctx.project, ctx.resource, offset1, offset2)
 
@@ -599,7 +567,7 @@ class ExtractVariableRefactoring(Refactoring):
     def get_input_str(refactor, ctx):
         """ Return user input. """
 
-        return pymode_input('New variable name:')
+        return env.user_input('New variable name:')
 
     @staticmethod
     def get_refactor(ctx):
@@ -608,10 +576,9 @@ class ExtractVariableRefactoring(Refactoring):
         :return Rename:
 
         """
-        buf = vim.current.buffer
-        cursor1, cursor2 = buf.mark('<'), buf.mark('>')
-        _, offset1 = get_assist_params(cursor1)
-        _, offset2 = get_assist_params(cursor2)
+        cursor1, cursor2 = env.curbuf.mark('<'), env.curbuf.mark('>')
+        _, offset1 = env.get_offset_params(cursor1)
+        _, offset2 = env.get_offset_params(cursor2)
         return extract.ExtractVariable(
             ctx.project, ctx.resource, offset1, offset2)
 
@@ -637,7 +604,7 @@ class InlineRefactoring(Refactoring):
         :return Rename:
 
         """
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         return inline.create_inline(ctx.project, ctx.resource, offset)
 
     @staticmethod
@@ -662,7 +629,7 @@ class UseFunctionRefactoring(Refactoring):
         :return Rename:
 
         """
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         return usefunction.UseFunction(ctx.project, ctx.resource, offset)
 
     @staticmethod
@@ -712,7 +679,7 @@ class MoveRefactoring(Refactoring):
 
         """
 
-        return pymode_input('Enter destination:')
+        return env.user_input('Enter destination:')
 
     @staticmethod
     def get_refactor(ctx):
@@ -721,7 +688,7 @@ class MoveRefactoring(Refactoring):
         :return Rename:
 
         """
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         if offset == 0:
             offset = None
         return move.create_move(ctx.project, ctx.resource, offset)
@@ -740,7 +707,7 @@ class ChangeSignatureRefactoring(Refactoring):
         """
         args = refactor.get_args()
         default = ', '.join(a[0] for a in args)
-        return pymode_input('Change the signature:', udefault=default)
+        return env.user_input('Change the signature:', default)
 
     @staticmethod
     def get_refactor(ctx):
@@ -749,7 +716,7 @@ class ChangeSignatureRefactoring(Refactoring):
         :return Rename:
 
         """
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         return change_signature.ChangeSignature(
             ctx.project, ctx.resource, offset)
 
@@ -796,7 +763,7 @@ class GenerateElementRefactoring(Refactoring):
         :return Rename:
 
         """
-        _, offset = get_assist_params()
+        _, offset = env.get_offset_params()
         return generate.create_generate(
             self.kind, ctx.project, ctx.resource, offset)
 
@@ -810,30 +777,27 @@ class GenerateElementRefactoring(Refactoring):
         return refactor.get_changes()
 
 
+@env.catch_exceptions
 def reload_changes(changes):
     """ Reload changed buffers. """
 
     resources = changes.get_changed_resources()
     moved = _get_moved_resources(changes) # noqa
-    current = vim.current.buffer.number
+    current = env.curbuf.number
 
     for f in resources:
-        try:
-            bufnr = vim.eval('bufnr("%s")' % f.real_path)
-            if bufnr == '-1':
-                continue
-            vim.command('buffer %s' % bufnr)
+        bufnr = env.var('bufnr("%s")' % f.real_path)
+        env.goto_buffer(bufnr)
 
-            if f in moved:
-                vim.command('e! %s' % moved[f].real_path)
-            else:
-                vim.command('e!')
+        path = env.curbuf.name
+        if f in moved:
+            path = moved[f].real_path
 
-            vim.command('echom "%s has been changed."' % f.real_path)
+        env.debug('Reload', f.real_path, path, bufnr)
+        env.goto_file(path, 'e!', force=True)
+        env.message("%s has been changed." % f.real_path, history=True)
 
-        except vim.error:
-            continue
-    vim.command('buffer %s' % current)
+    env.goto_buffer(current)
 
 
 def _get_moved_resources(changes):
@@ -878,7 +842,7 @@ def _get_autoimport_proposals(out, ctx, source, offset, dot=False):
     return out
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def complete_check():
     """ Function description.
 
@@ -886,8 +850,8 @@ def complete_check():
 
     """
 
-    row, column = vim.current.window.cursor
-    line = vim.current.buffer[row - 1]
+    row, column = env.cursor
+    line = env.lines[row - 1]
     word_finder = worder.Worder(line, True)
     parent, name, _ = word_finder.get_splitted_primary_before(column - 1)
     if parent:
@@ -902,27 +866,24 @@ def complete_check():
         if name in ctx.project.pycore.resource_to_pyobject(ctx.resource):
             return False
 
-        if not pymode_confirm(True, "Import %s?" % name):
+        if not env.user_confirm("Import %s?" % name, True):
             return False
 
         if len(modules) == 1:
             _insert_import(name, modules[0], ctx)
 
         else:
-            module = pymode_inputlist('With module to import:', modules)
+            module = env.user_input_choices('With module to import:', *modules)
             if module:
                 _insert_import(name, module, ctx)
-
-        vim.command('call pymode#save()')
-        regenerate()
 
 
 def _insert_import(name, module, ctx):
     if not ctx.resource:
-        source, _ = get_assist_params()
+        source, _ = env.get_offset_params()
         lineno = ctx.importer.find_insertion_line(source)
         line = 'from %s import %s' % (module, name)
-        vim.current.buffer[lineno - 1:lineno - 1] = [line]
+        env.curbuf[lineno - 1:lineno - 1] = [line]
         return True
 
     pyobject = ctx.project.pycore.resource_to_pyobject(ctx.resource)
@@ -933,8 +894,8 @@ def _insert_import(name, module, ctx):
     changes = change.ChangeContents(
         ctx.resource, module_imports.get_changed_source())
 
-    action = pymode_inputlist(
-        'Choose what to do:', ['perform', 'preview'])
+    action = env.user_input_choices(
+        'Choose what to do:', 'perform', 'preview')
 
     if not action:
         return False
@@ -944,7 +905,7 @@ def _insert_import(name, module, ctx):
         print("-------------------------------")
         print("\n%s\n" % changes.get_description())
         print("-------------------------------\n\n")
-        if not pymode_confirm(False):
+        if not env.user_confirm('Do the changes?'):
             return False
 
     progress = ProgressHandler('Apply changes ...')

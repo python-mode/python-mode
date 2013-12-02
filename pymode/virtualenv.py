@@ -1,12 +1,11 @@
 """ Support virtualenv in pymode. """
 
 import os.path
-import vim # noqa
 
-from .utils import pymode_message, catch_and_print_exceptions
+from .environment import env
 
 
-@catch_and_print_exceptions
+@env.catch_exceptions
 def enable_virtualenv():
     """ Enable virtualenv for vim.
 
@@ -14,11 +13,11 @@ def enable_virtualenv():
 
     """
 
-    path = vim.eval('g:pymode_virtualenv_path')
-    enabled = vim.eval('g:pymode_virtualenv_enabled')
+    path = env.var('g:pymode_virtualenv_path')
+    enabled = env.var('g:pymode_virtualenv_enabled')
     if path == enabled:
-        pymode_message('Virtualenv %s already enabled.' % path)
-        return False
+        env.message('Virtualenv %s already enabled.' % path)
+        return env.stop()
 
     activate_this = os.path.join(os.path.join(path, 'bin'), 'activate_this.py')
 
@@ -32,8 +31,8 @@ def enable_virtualenv():
         source = f.read()
         exec(compile(  # noqa
             source, activate_this, 'exec'), dict(__file__=activate_this))
-        pymode_message('Activate virtualenv: ' + path)
-        vim.command('let g:pymode_virtualenv_enabled = "%s"' % path)
+        env.message('Activate virtualenv: ' + path)
+        env.let('g:pymode_virtualenv_enabled', path)
         return True
     finally:
         f.close()
