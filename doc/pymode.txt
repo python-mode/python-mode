@@ -6,7 +6,7 @@
     (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.7.1b
+                          Version: 0.7.2b
 
 ==============================================================================
 CONTENTS                                                       *pymode-contents*
@@ -276,6 +276,10 @@ Check code on every save (if file has been modified)  *'g:pymode_lint_on_write'*
 >
     let g:pymode_lint_on_write = 1
 
+Check code on every save (every)                    *'g:pymode_lint_unmodified'*
+>
+    let g:pymode_lint_unmodified = 1
+
 Check code when editting (onfly)                        *'g:pymode_lint_on_fly'*
 >
     let g:pymode_lint_on_fly = 1
@@ -334,16 +338,24 @@ Definitions for |signs|
 Pymode support Rope refactoring operations, code completion and code assists.
 
 Commands:
-*:PymodeRopeAutoImport* -- Autoimport used modules
-*:PymodeRopeModuleToPackage* -- Convert current module to package
-*:PymodeRopeNewProject* -- Open new Rope project in current working directory
-*:PymodeRopeRedo* -- Redo changes from last refactoring
-*:PymodeRopeRegenerate* -- Regenerate the project cache
-*:PymodeRopeRenameModule* -- Rename current module
-*:PymodeRopeUndo* -- Undo changes from last refactoring
+|:PymodeRopeAutoImport| -- Resolve import for element under cursor
+|:PymodeRopeModuleToPackage| -- Convert current module to package
+|:PymodeRopeNewProject| -- Open new Rope project in current working directory
+|:PymodeRopeRedo| -- Redo changes from last refactoring
+|:PymodeRopeRegenerate| -- Regenerate the project cache
+|:PymodeRopeRenameModule| -- Rename current module
+|:PymodeRopeUndo| -- Undo changes from last refactoring
+
+
+Turn on the rope script                                        *'g:pymode_rope'*
+>
+    let g:pymode_rope = 1
 
 .roperoject Folder ~
                                                                   *.ropeproject*
+
+*:PymodeRopeNewProject* -- Open new Rope project in current working directory
+*:PymodeRopeRegenerate* -- Regenerate the project cache
 
 Rope uses a folder inside projects for holding project configuration and data.
 Its default name is `.ropeproject` If the folder doesnt exists in current
@@ -359,10 +371,18 @@ Currently it is used for things such as:
 * It can be used for saving object information to help rope object inference.
 * It can be used for saving global names cache which is used in auto-import.
 
+If ``.ropeproject`` is not found in the current directory, rope will walk
+upwards looking for a ``.ropeproject`` in every dir of the parent path. If
+rope finds ``.ropeproject`` in a parent dir, it sets the project for all child
+dirs and the scan may be slow for so many dirs and files.
 
-Turn on the rope script                                        *'g:pymode_rope'*
+Enable search |.ropeproject| in parent's directories
+                                                  *'g:pymode_rope_look_project'*
 >
-    let g:pymode_rope = 1
+    let g:pymode_rope_look_project = 1
+
+
+Show documentation for element under cursor ~
 
 Show documentation for object under cursor.      *'g:pymode_rope_show_doc_bind'*
 Leave empty for disable key binding.
@@ -451,6 +471,8 @@ Keymap for rename current module            *'g:pymode_rope_rename_module_bind'*
 
 
 Imports ~
+
+*:PymodeRopeAutoImport* -- Resolve import for element under cursor
 
 Organize imports sorts imports, too. It does that according to PEP8. Unused
 imports will be dropped.
@@ -619,6 +641,8 @@ Solutions:
   in the current dir.
 - Run ``:PymodeRopeNewProject`` to make rope create ``.ropeproject`` in the
   current dir.
+- Set |'g:pymode_rope_look_project'| to 0 for prevent searching in parent
+  dirs.
 
 
 Pylint check is very slow

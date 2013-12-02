@@ -11,15 +11,11 @@ if !pymode#default('g:pymode_init', 1)
     PymodePython patch_paths()
 endif
 
-augroup pymode
-
-    au!
-
 command! -buffer -nargs=1 PymodeVirtualenv call pymode#virtualenv#activate(<args>)
 
 " Setup events for pymode
-au BufWritePre <buffer> call pymode#buffer_pre_write()
-au BufWritePost <buffer> call pymode#buffer_post_write()
+au! pymode BufWritePre <buffer> call pymode#buffer_pre_write()
+au! pymode BufWritePost <buffer> call pymode#buffer_post_write()
 
 " Run python code
 if g:pymode_run
@@ -72,16 +68,14 @@ if g:pymode_lint
     command! -buffer -nargs=0 PymodeLint :call pymode#lint#check()
 
     let b:pymode_error_line = -1
-    let b:pymode_errors = {}
-    let b:pymode_signs = []
 
     if g:pymode_lint_on_fly
-        au! InsertLeave <buffer> PymodeLint
+        au! pymode InsertLeave <buffer> PymodeLint
     endif
 
     if g:pymode_lint_message
-        au! CursorMoved <buffer>
-        au! CursorMoved <buffer> call pymode#lint#show_errormessage()
+        au! pymode CursorMoved <buffer>
+        au! pymode CursorMoved <buffer> call pymode#lint#show_errormessage()
     endif
 
     " Disabled for current release
@@ -189,5 +183,3 @@ if g:pymode_rope
     end
 
 end
-
-augroup END

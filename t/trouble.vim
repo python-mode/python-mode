@@ -13,4 +13,3 @@ describe 'pymode troubleshooting'
     end
 
 end
-

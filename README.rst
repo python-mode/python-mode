@@ -98,9 +98,16 @@ Then rebuild **helptags** in vim::
 Troubleshooting
 ===============
 
-If your python-mode doesn't work: open any python file and type: ::
+If your python-mode doesn't work:
 
-    :call pymode#troubleshooting#test()
+1. Load Vim with only python-mode enabled (use `debug.vim` from pymode): ::
+
+    vim -u <path_to_pymode>/debug.vim
+
+And try to repeat your case. If no error occurs, seems like problem isnt in the
+plugin.
+
+2. Type `:PymodeTroubleshooting`
 
 And fix any warnings or copy the output and send it to me. (For example, by
 creating a `new github issue <https://github.com/klen/python-mode/issues/new>`_

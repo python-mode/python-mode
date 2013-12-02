@@ -86,11 +86,11 @@ fun! pymode#save() "{{{
         try
             noautocmd write
         catch /E212/
-            call pymode#error("File modified and I can't save it. Cancel code checking.")
+            call pymode#error("File modified and I can't save it. Please save it manually.")
             return 0
         endtry
     endif
-    return 1
+    return expand('%') != ''
 endfunction "}}}
 
 fun! pymode#reload_buf_by_nr(nr) "{{{
@@ -110,9 +110,18 @@ endfunction
 
 fun! pymode#buffer_post_write() "{{{
     if b:pymode_modified && g:pymode_rope_regenerate_on_write
+        call pymode#debug('regenerate')
         call pymode#rope#regenerate()
     endif
-    if b:pymode_modified && g:pymode_lint_on_write
+    if g:pymode_lint_unmodified || (g:pymode_lint_on_write && b:pymode_modified)
+        call pymode#debug('check code')
         call pymode#lint#check()
+    endif
+endfunction "}}}
+
+fun! pymode#debug(msg) "{{{
+    if g:pymode_debug
+        let g:pymode_debug += 1
+        echom string(g:pymode_debug) . ': ' . string(a:msg)
     endif
 endfunction "}}}

@@ -7,7 +7,11 @@ import os.path
 
 
 def code_check():
-    """ Run pylama and check current file. """
+    """ Run pylama and check current file.
+
+    :return bool:
+
+    """
 
     from pylama.main import parse_options
     from pylama.tasks import check_path
@@ -37,15 +41,17 @@ def code_check():
         errors = check_path(path, options=options, code=code)
     sort_rules = vim.eval('g:pymode_lint_sort')
 
-    def sort(e):
+    def __sort(e):
         try:
-            print(e.get('type'))
             return sort_rules.index(e.get('type'))
         except ValueError:
             return 999
 
     if sort_rules:
-        print(sort_rules)
-        errors = sorted(errors, key=sort)
+        errors = sorted(errors, key=__sort)
 
-    vim.command('call setqflist(%s)' % json.dumps(errors))
+    for e in errors:
+        e['bufnr'] = b.number
+
+    vim.command(
+        'call g:PymodeLocList.current().extend(%s)' % json.dumps(errors))

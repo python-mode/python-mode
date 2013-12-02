@@ -55,7 +55,7 @@ import token
 import tokenize
 import warnings
 
-from .pylama.lint.pylama_pep8 import pep8
+from pylama.lint.pylama_pep8 import pep8
 
 
 try:

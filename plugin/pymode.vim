@@ -1,16 +1,20 @@
 " vi: fdl=1 
-let g:pymode_version = "0.7.1b"
+let g:pymode_version = "0.7.2b"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 com! PymodeTroubleshooting call pymode#troubleshooting#test()
 
 " Enable pymode by default :)
 call pymode#default('g:pymode', 1)
+call pymode#default('g:pymode_debug', 0)
 
 " DESC: Disable script loading
 if !g:pymode || &cp
     finish
 endif
+
+" Pymode needs
+filetype plugin on
 
 " OPTIONS: {{{
 
@@ -82,8 +86,11 @@ call pymode#default('g:pymode_lint', 1)
 call pymode#default('g:pymode_lint_async', 1)
 call pymode#default('g:pymode_lint_async_updatetime', 1000)
 
-" Check code every save.
+" Check code every save if file has been modified
 call pymode#default("g:pymode_lint_on_write", 1)
+
+" Check code every save (every)
+call pymode#default("g:pymode_lint_unmodified", 0)
 
 " Check code on fly
 call pymode#default("g:pymode_lint_on_fly", 0)
@@ -119,17 +126,6 @@ call pymode#default("g:pymode_lint_error_symbol", "EE")
 call pymode#default("g:pymode_lint_info_symbol", "II")
 call pymode#default("g:pymode_lint_pyflakes_symbol", "FF")
 
-if g:pymode_lint_signs && has('signs')
-
-    execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
-    execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
-    execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
-    execute 'sign define PymodeE text=' . g:pymode_lint_error_symbol    . " texthl=Error"
-    execute 'sign define PymodeI text=' . g:pymode_lint_info_symbol     . " texthl=Info"
-    execute 'sign define PymodeF text=' . g:pymode_lint_pyflakes_symbol . " texthl=Info"
-
-endif
-
 " }}}
 
 " SET/UNSET BREAKPOINTS {{{
@@ -150,6 +146,9 @@ call pymode#default('g:pymode_breakpoint_cmd', '')
 "
 " Rope support
 call pymode#default('g:pymode_rope', 1)
+
+" If project hasnt been finded in current working directory, look at parents directory
+call pymode#default('g:pymode_rope_look_project', 1)
 
 " Enable Rope completion
 call pymode#default('g:pymode_rope_completion', 1)
