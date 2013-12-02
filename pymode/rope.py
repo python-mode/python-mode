@@ -203,6 +203,7 @@ def find_it():
     for oc in occurrences:
         lst.append(dict(
             filename=oc.resource.path,
+            text=ctx.current[oc.lineno - 1],
             lnum=oc.lineno,
         ))
     vim.command('let l:output = %s' % json.dumps(lst))
@@ -367,6 +368,7 @@ class RopeContext(object):
         update_python_path(self.project.prefs.get('python_path', []))
 
         self.resource = None
+        self.current = None
         self.options = dict(
             completeopt=vim.eval('&completeopt'),
             autoimport=int(vim.eval('g:pymode_rope_autoimport')),
@@ -385,8 +387,9 @@ class RopeContext(object):
     def __enter__(self):
         self.project.validate(self.project.root)
         self.options['encoding'] = vim.eval('&encoding')
+        self.current = vim.current.buffer
         self.resource = libutils.path_to_resource(
-            self.project, vim.current.buffer.name, 'file')
+            self.project, self.current.name, 'file')
 
         if not self.resource.exists() or os.path.isdir(
                 self.resource.real_path):
