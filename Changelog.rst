@@ -35,7 +35,7 @@ Changelog
     * Options added:
         'pymode_rope_regenerate_on_write', 'pymode_rope_completion',
         'pymode_rope_complete_on_dot', 'pymode_lint_sort',
-        'pymode_rope_look_project', 'pymode_lint_unmodified'
+        'pymode_rope_lookup_project', 'pymode_lint_unmodified'
 
     * Commands added:
         'PymodeVirtualenv'

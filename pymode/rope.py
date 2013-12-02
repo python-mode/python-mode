@@ -308,7 +308,7 @@ def cache_project(cls):
             return resources.get(path)
 
         project_path = os.path.dirname(vim.eval('getcwd()'))
-        if int(vim.eval('g:pymode_rope_look_project')):
+        if int(vim.eval('g:pymode_rope_lookup_project')):
             project_path = look_ropeproject(project_path)
 
         ctx = projects.get(project_path)

@@ -377,9 +377,9 @@ rope finds ``.ropeproject`` in a parent dir, it sets the project for all child
 dirs and the scan may be slow for so many dirs and files.
 
 Enable search |.ropeproject| in parent's directories
-                                                  *'g:pymode_rope_look_project'*
+                                                  *'g:pymode_rope_lookup_project'*
 >
-    let g:pymode_rope_look_project = 1
+    let g:pymode_rope_lookup_project = 1
 
 
 Show documentation for element under cursor ~
@@ -641,7 +641,7 @@ Solutions:
   in the current dir.
 - Run ``:PymodeRopeNewProject`` to make rope create ``.ropeproject`` in the
   current dir.
-- Set |'g:pymode_rope_look_project'| to 0 for prevent searching in parent
+- Set |'g:pymode_rope_lookup_project'| to 0 for prevent searching in parent
   dirs.
 
 
