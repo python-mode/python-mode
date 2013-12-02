@@ -13,6 +13,9 @@ if !g:pymode || &cp
     finish
 endif
 
+" Pymode needs
+filetype plugin on
+
 " OPTIONS: {{{
 
 " Vim Python interpreter. Set to 'disable' for remove python features.

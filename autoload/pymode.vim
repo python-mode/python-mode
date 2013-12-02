@@ -106,16 +106,16 @@ endfunction "}}}
 
 fun! pymode#buffer_pre_write() "{{{
     let b:pymode_modified = &modified
-    if g:pymode_lint_unmodified || (g:pymode_lint_on_write && b:pymode_modified)
-        call pymode#debug('check code')
-        call pymode#lint#check()
-    endif
 endfunction
 
 fun! pymode#buffer_post_write() "{{{
     if b:pymode_modified && g:pymode_rope_regenerate_on_write
         call pymode#debug('regenerate')
         call pymode#rope#regenerate()
+    endif
+    if g:pymode_lint_unmodified || (g:pymode_lint_on_write && b:pymode_modified)
+        call pymode#debug('check code')
+        call pymode#lint#check()
     endif
 endfunction "}}}
 
