@@ -65,8 +65,7 @@ fun! pymode#lint#check() "{{{
     call g:PymodeSigns.refresh(loclist)
 
     if g:pymode_lint_cwindow
-        call setqflist(loclist._loclist)
-        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
+        call loclist.show()
     endif
 
     call pymode#lint#show_errormessage()

@@ -47,11 +47,12 @@ fun! pymode#quickfix_open(onlyRecognized, maxHeight, minHeight, jumpError) "{{{
     let numErrors = len(filter(getqflist(), 'v:val.valid'))
     let numOthers = len(getqflist()) - numErrors
     if numErrors > 0 || (!a:onlyRecognized && numOthers > 0)
+        let num = winnr()
         botright copen
         exe max([min([line("$"), a:maxHeight]), a:minHeight]) . "wincmd _"
         if a:jumpError
             cc
-        else
+        elseif num != winnr()
             wincmd p
         endif
     else
@@ -109,13 +110,17 @@ fun! pymode#buffer_pre_write() "{{{
 endfunction
 
 fun! pymode#buffer_post_write() "{{{
-    if b:pymode_modified && g:pymode_rope_regenerate_on_write
-        call pymode#debug('regenerate')
-        call pymode#rope#regenerate()
+    if g:pymode_rope
+        if b:pymode_modified && g:pymode_rope_regenerate_on_write
+            call pymode#debug('regenerate')
+            call pymode#rope#regenerate()
+        endif
     endif
-    if g:pymode_lint_unmodified || (g:pymode_lint_on_write && b:pymode_modified)
-        call pymode#debug('check code')
-        call pymode#lint#check()
+    if g:pymode_lint
+        if g:pymode_lint_unmodified || (g:pymode_lint_on_write && b:pymode_modified)
+            call pymode#debug('check code')
+            call pymode#lint#check()
+        endif
     endif
 endfunction "}}}
 

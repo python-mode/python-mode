@@ -1,5 +1,5 @@
 " vi: fdl=1 
-let g:pymode_version = "0.7.2b"
+let g:pymode_version = "0.7.3b"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 com! PymodeTroubleshooting call pymode#troubleshooting#test()
@@ -148,7 +148,7 @@ call pymode#default('g:pymode_breakpoint_cmd', '')
 call pymode#default('g:pymode_rope', 1)
 
 " If project hasnt been finded in current working directory, look at parents directory
-call pymode#default('g:pymode_rope_look_project', 1)
+call pymode#default('g:pymode_rope_lookup_project', 1)
 
 " Enable Rope completion
 call pymode#default('g:pymode_rope_completion', 1)

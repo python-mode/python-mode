@@ -43,6 +43,8 @@ let s:efm .= '%-G%.%#'
 
 PymodePython from pymode.run import run_code
 
+call pymode#tools#loclist#init()
+
 
 " DESC: Run python code
 fun! pymode#run#code_run(line1, line2) "{{{
@@ -86,7 +88,11 @@ fun! pymode#run#code_run(line1, line2) "{{{
             call setqflist(qflist)
         endif
 
-        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_maxheight, 0)
+        let loclist = g:PymodeLocList.current()
+        let loclist._loclist = getqflist()
+        let loclist._title = "Run errors"
+        call loclist.show()
+
         let &efm = l:_efm
 
     catch /E234/
