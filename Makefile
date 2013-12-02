@@ -9,7 +9,7 @@ clean:
 # Temporary disable rope tests on Travis
 .PHONY: travis
 travis:
-	# rm -rf t/rope.vim
+	rm -rf t/rope.vim
 	rake test
 
 .PHONY: test
