@@ -1,5 +1,7 @@
 let g:pymode_rope_completion_bind = 'X'
 let g:pymode_rope_autoimport = 0
+let g:pymode_debug = 1
+
 source  plugin/pymode.vim 
 
 describe 'pymode-plugin'

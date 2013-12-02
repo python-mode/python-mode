@@ -6,6 +6,12 @@ PYLAMA = $(LIBS)/pylama
 clean:
 	find . -name "*.pyc" -delete
 
+# Temporary disable rope tests on Travis
+.PHONY: travis
+travis:
+	rm -rf t/rope.vim
+	rake test
+
 .PHONY: test
 test:
 	bundle install
