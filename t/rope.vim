@@ -1,6 +1,5 @@
 let g:pymode_rope_completion_bind = 'X'
 let g:pymode_rope_autoimport = 0
-
 source  plugin/pymode.vim 
 
 describe 'pymode-plugin'
@@ -15,15 +14,13 @@ describe 'pymode-plugin'
     end
 
     it 'pymode rope auto open project in current working directory'
-        let project_path = getcwd() . '/.ropeproject'
+        let project_path = '.ropeproject'
         Expect isdirectory(project_path)  == 0
         call pymode#rope#complete(0)
         Expect isdirectory(project_path)  == 1
     end
 
     it 'pymode rope completion'
-        source  after/ftplugin/python.vim 
-        Expect &ft == 'python'
         normal oimporX
         Expect getline('.') == 'import'
     end

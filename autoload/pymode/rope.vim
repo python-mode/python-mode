@@ -161,9 +161,6 @@ fun! pymode#rope#module_to_package() "{{{
 endfunction "}}}
 
 fun! pymode#rope#autoimport(word) "{{{
-    if !pymode#save()
-        return 0
-    endif
     PymodePython rope.autoimport()
 endfunction "}}}
 

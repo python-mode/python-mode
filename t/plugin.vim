@@ -27,6 +27,11 @@ describe 'pymode-plugin'
         Expect getline('$') == 'test success'
     end
 
+    it 'pymode save'
+        Expect expand('%') == ''
+        Expect pymode#save() == 0
+    end
+
 end
 
 

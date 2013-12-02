@@ -909,6 +909,13 @@ def complete_check():
 
 
 def _insert_import(name, module, ctx):
+    if not ctx.resource:
+        source, _ = get_assist_params()
+        lineno = ctx.importer.find_insertion_line(source)
+        line = 'from %s import %s' % (module, name)
+        vim.current.buffer[lineno - 1:lineno - 1] = [line]
+        return True
+
     pyobject = ctx.project.pycore.resource_to_pyobject(ctx.resource)
     import_tools = importutils.ImportTools(ctx.project.pycore)
     module_imports = import_tools.module_imports(pyobject)

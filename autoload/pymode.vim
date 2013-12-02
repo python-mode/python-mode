@@ -86,11 +86,11 @@ fun! pymode#save() "{{{
         try
             noautocmd write
         catch /E212/
-            call pymode#error("File modified and I can't save it. Cancel code checking.")
+            call pymode#error("File modified and I can't save it. Please save it manually.")
             return 0
         endtry
     endif
-    return 1
+    return expand('%') != ''
 endfunction "}}}
 
 fun! pymode#reload_buf_by_nr(nr) "{{{
