@@ -1,0 +1,10 @@
+.vim-flavor
+.vimrc
+Gemfile.lock
+VimFlavor.lock
+_
+build
+test.py
+todo.txt
+vim.py
+
