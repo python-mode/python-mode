@@ -1,0 +1,14 @@
+Date: 2013-12-03 14:35:55 UTC
+Suite: saucy
+MD5Sum:
+ d41d8cd98f00b204e9800998ecf8427e                  0 Release
+ f73478540a5518c5540058e03e79c6e8                  476 main/binary-amd64/Packages  
+ ba2a425c9e69ae400e59b9d1aa7cbb20                  348 main/binary-amd64/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-amd64/Release  
+ af0284589a83784c3b926167f82eae71                  475 main/binary-i386/Packages  
+ 5c9b0350cfaca1febab6db39055782fd                  348 main/binary-i386/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-i386/Release  
+ de2ea4f34bda4dca71e8866548d4546b                  474 main/binary-all/Packages  
+ dafc506ab67a82ac1f034d781f69ff0f                  346 main/binary-all/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-all/Release  
+

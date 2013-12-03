@@ -10,7 +10,7 @@ Section: default
 Priority: extra
 Homepage: http://github.com/klen/python-mode
 Description: Vim-Swissknife for python
-Filename: dists/precise/main/binary-i386/vim-python-mode_0.7.4b_all.deb
-MD5sum: 2b3572667011816988c284c18d2d5279
+Filename: dists/quantal/main/binary-amd64/vim-python-mode_0.7.4b_all.deb
+MD5sum: c85d528ec0adea37d58ee2150f41b225
 Size: 522414
 

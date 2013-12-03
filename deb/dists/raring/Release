@@ -1,0 +1,14 @@
+Date: 2013-12-03 14:35:53 UTC
+Suite: raring
+MD5Sum:
+ d41d8cd98f00b204e9800998ecf8427e                  0 Release
+ 85d0153c076ab039b97788efae75cf0d                  477 main/binary-amd64/Packages  
+ d3131b655a347120eb545ef6d4a91108                  348 main/binary-amd64/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-amd64/Release  
+ 190872ed2a453a9e7f6103238f67c260                  476 main/binary-i386/Packages  
+ cec2b96c51e911e775f0708f6071939d                  348 main/binary-i386/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-i386/Release  
+ 088610471261e8f57e6c4321e2dea806                  475 main/binary-all/Packages  
+ 7c6ffbfd0eb849e137c29300696f0da6                  346 main/binary-all/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-all/Release  
+
