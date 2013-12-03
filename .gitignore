@@ -9,6 +9,7 @@
 Gemfile.lock
 VimFlavor.lock
 _
+build
 tags
 test.py
 todo.txt

@@ -33,7 +33,7 @@ def run_code():
             # A false code will be treated as a
             # successful run, and the error will be hidden from Vim
             env.error("Script exited with code %s" % e.code)
-            env.stop()
+            return env.stop()
 
     except Exception:
         import traceback
@@ -43,12 +43,8 @@ def run_code():
         err = sys.stderr.getvalue()
 
     output = sys.stdout.getvalue().strip()
+    output = env.prepare_value(output)
     sys.stdout, sys.stderr = stdout_, stderr_
-
-    try:
-        output = output.decode('utf-8').encode(env.options.get('encoding'))
-    except AttributeError:
-        pass
 
     errors += [er for er in err.splitlines() if er and "<string>" not in er]
 
