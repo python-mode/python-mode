@@ -14,3 +14,19 @@ Filename: dists/precise/main/binary-i386/vim-python-mode_0.7.4b_all.deb
 MD5sum: 2b3572667011816988c284c18d2d5279
 Size: 522414
 
+Package: vim-python-mode
+Version: 0.7.5b
+License: GNU lesser general public license
+Vendor: horneds@pulsar-22
+Architecture: all
+Maintainer: Kirill Klenov <horneds@gmail.com>
+Installed-Size: 2297
+Depends: python2.7, vim-addon-manager
+Section: default
+Priority: extra
+Homepage: http://github.com/klen/python-mode
+Description: Vim-Swissknife for python
+Filename: dists/precise/main/binary-i386/vim-python-mode_0.7.5b_all.deb
+MD5sum: 62977500a90a0178784e7feb6c79606d
+Size: 522304
+
