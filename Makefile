@@ -60,7 +60,7 @@ deb: clean $(CURDIR)/build
 	    usr
 	@mkdir -p $(TARGET)
 	@prm --type deb --path $(TARGET) \
-	    --release precise \
+	    --release precise,quantal,raring,saucy \
 	    --arch amd64,i386,all \
 	    --component main \
 	    --directory $(CURDIR) \
