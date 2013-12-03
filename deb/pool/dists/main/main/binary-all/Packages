@@ -1,0 +1,15 @@
+Package: vim-python-mode
+Version: 0.7.4b
+License: GNU lesser general public license
+Vendor: horneds@pulsar-22
+Architecture: all
+Maintainer: Kirill Klenov <horneds@gmail.com>
+Installed-Size: 2297
+Depends: python2.7, vim-addon-manager
+Section: default
+Priority: extra
+Homepage: http://github.com/klen/python-mode
+Description: Swissknife for python in VimFilename: dists/main/main/binary-all/vim-python-mode_0.7.4b_all.deb
+MD5sum: 48d8ff5e611f047660f3a1270953e330
+Size: 522402
+
