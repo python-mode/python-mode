@@ -1,0 +1,14 @@
+Date: 2013-12-03 13:07:52 UTC
+Suite: precise
+MD5Sum:
+ d41d8cd98f00b204e9800998ecf8427e                  0 Release
+ 44d66ec5a5489cef33e9535d59d91f42                  484 main/binary-amd64/Packages  
+ d4250a02ebd16bc47385167edb68f6f8                  356 main/binary-amd64/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-amd64/Release  
+ 3cd49154b40a05aab35e1a9ad5b5384f                  483 main/binary-i386/Packages  
+ a4eac90ed7bada3ca9e736725f9b931f                  355 main/binary-i386/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-i386/Release  
+ f9941449b7f6b0564a401d7c0081d2e4                  482 main/binary-all/Packages  
+ 0c1817300bed91a34c825cdaf8d20913                  354 main/binary-all/Packages.gz  
+ d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-all/Release  
+
