@@ -45,6 +45,7 @@ PACKAGE_MAINTAINER="Kirill Klenov <horneds@gmail.com>"
 PACKAGE_URL=http://github.com/klen/python-mode
 deb: clean $(CURDIR)/build
 	@git co gh-pages
+	@rm -rf deb
 	@fpm -s dir -t deb -a all \
 	    -n $(PACKAGE_NAME) \
 	    -v $(PACKAGE_VERSION) \
