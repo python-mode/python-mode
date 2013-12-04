@@ -1,5 +1,5 @@
 Package: vim-python-mode
-Version: 0.7.6b
+Version: 0.7.7b
 License: GNU lesser general public license
 Vendor: horneds@pulsar-22
 Architecture: all
@@ -9,7 +9,7 @@ Depends: python2.7, vim-addon-manager
 Section: default
 Priority: extra
 Homepage: http://github.com/klen/python-mode
-Description: Vim-Swissknife for pythonFilename: dists/precise/main/binary-all/vim-python-mode_0.7.6b_all.deb
-MD5sum: 37f858f7d94b8e8bf4267729e271c355
-Size: 522464
+Description: Vim-Swissknife for pythonFilename: dists/precise/main/binary-all/vim-python-mode_0.7.7b_all.deb
+MD5sum: 01c209efea96cd58072ac57af9b40bf7
+Size: 522448
 
