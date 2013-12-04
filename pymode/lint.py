@@ -31,6 +31,10 @@ def code_check():
         env.stop()
         return False
 
+    if env.options.get('debug'):
+        from pylama.core import LOGGER, logging
+        LOGGER.setLevel(logging.DEBUG)
+
     with silence_stderr():
         errors = check_path(path, options=options, code=env.source)
 

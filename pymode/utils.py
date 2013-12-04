@@ -21,14 +21,18 @@ PY2 = sys.version_info[0] == 2
 def silence_stderr():
     """ Redirect stderr. """
 
-    with threading.Lock():
-        stderr = sys.stderr
-        sys.stderr = StringIO()
+    if DEBUG:
+        yield
 
-    yield
+    else:
+        with threading.Lock():
+            stderr = sys.stderr
+            sys.stderr = StringIO()
 
-    with threading.Lock():
-        sys.stderr = stderr
+        yield
+
+        with threading.Lock():
+            sys.stderr = stderr
 
 
 def patch_paths():
