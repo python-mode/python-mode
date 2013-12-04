@@ -1,14 +1,14 @@
-Date: 2013-12-03 14:49:16 UTC
+Date: 2013-12-04 06:03:44 UTC
 Suite: saucy
 MD5Sum:
  d41d8cd98f00b204e9800998ecf8427e                  0 Release
- 2d12360bef6c4a03c17d89dd78e19ef5                  952 main/binary-amd64/Packages  
- 8cfe9f678da04e877d02b451bde16377                  397 main/binary-amd64/Packages.gz  
+ be4600e3a121fe90c153f963155122f8                  475 main/binary-amd64/Packages  
+ d3c1399315ad689e441dd60b6cc53ed6                  349 main/binary-amd64/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-amd64/Release  
- d7be0db6c04567f12dbf591cbaad6919                  950 main/binary-i386/Packages  
- 425571f550cb1c2866942302a9eba372                  397 main/binary-i386/Packages.gz  
+ f84fc5c1ddcffd0860a79f85f2157ed2                  474 main/binary-i386/Packages  
+ c687e9e42075104376d6890131cf5b71                  348 main/binary-i386/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-i386/Release  
- 1adb9803808ff9579f69cd73b0ce1154                  948 main/binary-all/Packages  
- 922dddd51e5da57b5228fdcf72770a78                  394 main/binary-all/Packages.gz  
+ 2f3945dbd37408dd21abf17c2c3a2b67                  473 main/binary-all/Packages  
+ 2161b035e87c5b9faf843008438cbcfc                  348 main/binary-all/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-all/Release  
 

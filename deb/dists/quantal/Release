@@ -1,14 +1,14 @@
-Date: 2013-12-03 14:49:14 UTC
+Date: 2013-12-04 06:03:41 UTC
 Suite: quantal
 MD5Sum:
  d41d8cd98f00b204e9800998ecf8427e                  0 Release
- 0ad235ef7836736fb441f5c5219a83ec                  956 main/binary-amd64/Packages  
- 70aad5f345040190084a030bc391741c                  400 main/binary-amd64/Packages.gz  
+ ca84893958cc30178026ce1c2ce8b68d                  477 main/binary-amd64/Packages  
+ 246bdb43cc91deb2b9dc009fcaa8f78e                  351 main/binary-amd64/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-amd64/Release  
- a9fb6fe6a44e2c4c3abdbd17641606b2                  954 main/binary-i386/Packages  
- 8b099a39ee7a7be35800f407b1bd888f                  400 main/binary-i386/Packages.gz  
+ b0a9363e10a91a986ce133b7a2fec5e6                  476 main/binary-i386/Packages  
+ fccd6ecca70c5f20d11ddc9cb442c8a4                  350 main/binary-i386/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-i386/Release  
- ec388a94785ef1cd132b2244a089d1e1                  952 main/binary-all/Packages  
- dc28562dda1bb702bc4a3fafa20f4a7f                  398 main/binary-all/Packages.gz  
+ 88cbfae616bd3cd778b0aa4922d888da                  475 main/binary-all/Packages  
+ 47e7014a33c494bf01cf9e7d2adbe11f                  349 main/binary-all/Packages.gz  
  d41d8cd98f00b204e9800998ecf8427e                  0 main/binary-all/Release  
 
