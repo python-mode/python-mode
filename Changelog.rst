@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 2013-12-02 0.7.5b
+## 2013-12-04 0.7.6b
 --------------------
     * Update indentation support;
     * Python3 support;
