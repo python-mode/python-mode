@@ -128,7 +128,7 @@ def get_parser():
             if linter:
                 result.append((name, linter))
             else:
-                logging.warn("Linter `%s` not found." % name)
+                logging.warn("Linter `%s` not found.", name)
         return result
 
     parser.add_argument(

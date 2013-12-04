@@ -23,6 +23,7 @@ def look_ropeproject(path):
     :return str|None: A finded path
 
     """
+    env.debug('Look project', path)
     p = os.path.abspath(path)
 
     while True:
@@ -31,7 +32,7 @@ def look_ropeproject(path):
 
         new_p = os.path.abspath(os.path.join(p, ".."))
         if new_p == p:
-            return '.'
+            return path
 
         p = new_p
 
@@ -279,7 +280,8 @@ def cache_project(cls):
         if resources.get(path):
             return resources.get(path)
 
-        project_path = os.path.dirname(env.curdir)
+        project_path = env.curdir
+        env.debug('Look ctx', project_path)
         if env.var('g:pymode_rope_lookup_project', True):
             project_path = look_ropeproject(project_path)
 
@@ -353,8 +355,10 @@ class RopeContext(object):
             self.generate_autoimport_cache()
 
         env.debug('Context init', project_path)
+        env.message('Init Rope project: %s' % project_path)
 
     def __enter__(self):
+        env.let('g:pymode_rope_current', self.project.root.real_path)
         self.project.validate(self.project.root)
         self.resource = libutils.path_to_resource(
             self.project, env.curbuf.name, 'file')

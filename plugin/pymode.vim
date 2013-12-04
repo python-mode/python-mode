@@ -147,6 +147,9 @@ call pymode#default('g:pymode_breakpoint_cmd', '')
 " Rope support
 call pymode#default('g:pymode_rope', 1)
 
+" System plugin variable
+call pymode#default('g:pymode_rope_current', '')
+
 " If project hasnt been finded in current working directory, look at parents directory
 call pymode#default('g:pymode_rope_lookup_project', 1)
 

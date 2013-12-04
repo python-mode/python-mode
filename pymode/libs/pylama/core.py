@@ -5,6 +5,7 @@ Prepare params, check a modeline and run the checkers.
 """
 import logging
 import re
+import sys
 from .lint.extensions import LINTERS
 
 #: The skip pattern
@@ -16,7 +17,7 @@ MODELINE_RE = re.compile(
 
 # Setup a logger
 LOGGER = logging.getLogger('pylama')
-STREAM = logging.StreamHandler()
+STREAM = logging.StreamHandler(sys.stdout)
 LOGGER.addHandler(STREAM)
 
 
@@ -175,6 +176,9 @@ class CodeContext(object):
             self.code = self._file.read() + '\n\n'
         return self
 
-    def __exit__(self):
+    def __exit__(self, t, value, traceback):
         if not self._file is None:
             self._file.close()
+
+        if t and LOGGER.level == logging.DEBUG:
+            LOGGER.debug(traceback)
