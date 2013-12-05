@@ -77,7 +77,11 @@ class VimPymodeEnviroment(object):
         return value
 
     def message(self, msg, history=False):
-        """ Show message to user. """
+        """ Show message to user.
+
+        :return: :None
+
+        """
 
         if history:
             return vim.command('echom "%s"' % str(msg))
@@ -188,14 +192,16 @@ class VimPymodeEnviroment(object):
         self.debug(cmd)
         vim.command(cmd)
 
-    def prepare_value(self, value):
+    def prepare_value(self, value, dumps=True):
         """ Decode bstr to vim encoding.
 
         :return unicode string:
 
         """
 
-        value = json.dumps(value)
+        if dumps:
+            value = json.dumps(value)
+
         if PY2:
             value = value.decode('utf-8').encode(self.options.get('encoding'))
 
