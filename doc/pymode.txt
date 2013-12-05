@@ -312,7 +312,7 @@ after them 'C' and ...
 >
     let g:pymode_lint_sort = []
 
-Auto open cwindow (quickfix) if any errors has been finded
+Auto open cwindow (quickfix) if any errors have been found
                                                        *'g:pymode_lint_cwindow'*
 >
     let g:pymode_lint_cwindow = 1
@@ -335,7 +335,7 @@ Definitions for |signs|
 3. Rope support ~
                                                                    *pymode-rope*
 
-Pymode support Rope refactoring operations, code completion and code assists.
+Pymode supports Rope refactoring operations, code completion and code assists.
 
 Commands:
 |:PymodeRopeAutoImport| -- Resolve import for element under cursor
@@ -397,8 +397,8 @@ Regenerate project cache on every save (if file has been modified)
 4.1 Completion ~
                                                              *pymode-completion*
 
-By default you can use <Ctrl-Space> for autocompletion. Will be
-automatically selected first entry and you can press <Return> to insert in
+By default you can use <Ctrl-Space> for autocompletion. The first entry will
+be automatically selected and you can press <Return> to insert the entry in
 your code. <C-X><C-O> and <C-P>/<C-N> works too.
 
 Autocompletion is also called by typing a period in |Insert| mode by default.
@@ -552,8 +552,9 @@ Turn on pymode syntax                                        *'g:pymode_syntax'*
 >
     let g:pymode_syntax = 1
 
-More slow synchronizing. Disable on the slow machine, but code in docstrings
-could be broken.                                   *'g:pymode_syntax_slow_sync'*
+Slower syntax synchronization that is better at handling code blocks in
+docstrings. Consider disabling this on slower hardware.
+                                                   *'g:pymode_syntax_slow_sync'*
 >
     let g:pymode_syntax_slow_sync = 1
 
