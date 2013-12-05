@@ -61,6 +61,9 @@ def completions():
     return env.stop(proposals)
 
 
+FROM_RE = re.compile(r'^from\s+[\.\w\d_]+$')
+
+
 @env.catch_exceptions
 def complete(dot=False):
     """ Ctrl+Space completion.
@@ -70,6 +73,12 @@ def complete(dot=False):
     """
     row, col = env.cursor
     source, offset = env.get_offset_params()
+
+    cline = env.current.line[:col]
+    env.debug('dot completion', cline)
+    if FROM_RE.match(cline) or cline.endswith('..'):
+        return env.stop("")
+
     proposals = get_proporsals(source, offset, dot=dot)
     if not proposals:
         return False

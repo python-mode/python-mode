@@ -158,7 +158,7 @@ class VimPymodeEnviroment(object):
         """ Break Vim function. """
 
         cmd = 'return'
-        if value:
+        if not value is None:
             cmd += ' ' + self.prepare_value(value)
         vim.command(cmd)
 
