@@ -13,7 +13,7 @@ from .environment import env
 def run_code():
     """ Run python code in current buffer. """
 
-    errors = []
+    errors, err = [], ''
     line1, line2 = env.var('a:line1'), env.var('a:line2')
     lines = __prepare_lines(line1, line2)
 
