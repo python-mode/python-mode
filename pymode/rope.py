@@ -85,7 +85,9 @@ def complete(dot=False):
     s_offset = codeassist.starting_offset(source, offset)
     p_prefix = prefix[offset - s_offset:]
     line = env.lines[row - 1]
-    env.curbuf[row - 1] = line[:col] + p_prefix + line[col:] # noqa
+    cline = line[:col] + p_prefix + line[col:]
+    if cline != line:
+        env.curbuf[row - 1] = env.prepare_value(cline, dumps=False)
     env.current.window.cursor = (row, col + len(p_prefix))
     env.run('complete', col - len(prefix) + len(p_prefix) + 1, proposals)
     return True
@@ -887,7 +889,8 @@ def _insert_import(name, module, ctx):
         source, _ = env.get_offset_params()
         lineno = ctx.importer.find_insertion_line(source)
         line = 'from %s import %s' % (module, name)
-        env.curbuf[lineno - 1:lineno - 1] = [line]
+        env.curbuf[lineno - 1:lineno - 1] = [
+            env.prepare_value(line, dumps=False)]
         return True
 
     pyobject = ctx.project.pycore.resource_to_pyobject(ctx.resource)
