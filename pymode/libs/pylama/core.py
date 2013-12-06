@@ -17,6 +17,7 @@ MODELINE_RE = re.compile(
 
 # Setup a logger
 LOGGER = logging.getLogger('pylama')
+LOGGER.propagate = False
 STREAM = logging.StreamHandler(sys.stdout)
 LOGGER.addHandler(STREAM)
 
@@ -173,7 +174,7 @@ class CodeContext(object):
     def __enter__(self):
         if self.code is None:
             self._file = open(self.path, 'rU')
-            self.code = self._file.read() + '\n\n'
+            self.code = self._file.read()
         return self
 
     def __exit__(self, t, value, traceback):

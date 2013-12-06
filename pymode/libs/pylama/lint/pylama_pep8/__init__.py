@@ -2,20 +2,27 @@
 from .. import Linter as BaseLinter
 from .pep8 import BaseReport, StyleGuide
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+
 
 class Linter(BaseLinter):
 
     """ PEP8 code check. """
 
     @staticmethod
-    def run(path, **meta):
+    def run(path, code=None, **meta):
         """ PEP8 code checking.
 
         :return list: List of errors.
 
         """
         P8Style = StyleGuide(reporter=_PEP8Report)
-        return P8Style.input_file(path)
+        buf = StringIO(code)
+        return P8Style.input_file(path, lines=buf.readlines())
 
 
 class _PEP8Report(BaseReport):
