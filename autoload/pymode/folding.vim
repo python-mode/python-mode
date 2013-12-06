@@ -17,7 +17,7 @@ fun! pymode#folding#text() " {{{
     let line = getline(fs)
 
     let nucolwidth = &fdc + &number * &numberwidth
-    let windowwidth = winwidth(0) - nucolwidth - 3
+    let windowwidth = winwidth(0) - nucolwidth - 6
     let foldedlinecount = v:foldend - v:foldstart
 
     " expand tabs into spaces
@@ -27,7 +27,7 @@ fun! pymode#folding#text() " {{{
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
     let line = substitute(line, '\%("""\|''''''\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
-    return line . '…' . repeat(" ",fillcharcount) . foldedlinecount . '…' . ' '
+    return line . '…' . repeat(" ", fillcharcount) . ' ' . foldedlinecount . ' '
 endfunction "}}}
 
 
