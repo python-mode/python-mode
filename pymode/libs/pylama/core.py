@@ -6,7 +6,9 @@ Prepare params, check a modeline and run the checkers.
 import logging
 import re
 import sys
+
 from .lint.extensions import LINTERS
+
 
 #: The skip pattern
 SKIP_PATTERN = re.compile(r'# *noqa\b', re.I).search
@@ -22,28 +24,30 @@ STREAM = logging.StreamHandler(sys.stdout)
 LOGGER.addHandler(STREAM)
 
 
-def run(
-        path, ignore=None, select=None, linters=None, config=None, code=None,
-        **meta):
+def run(path, code=None, options=None):
     """ Run a code checkers with given params.
 
     :return errors: list of dictionaries with error's information
 
     """
     errors = []
-    linters = linters or LINTERS.items()
-    params = dict(ignore=ignore, select=select)
+    params = dict(ignore=options.ignore, select=options.select)
+    config = dict()
+    for mask in options.file_params:
+        if mask.match(path):
+            config.update(options.file_params[mask])
+
     try:
         with CodeContext(code, path) as ctx:
             code = ctx.code
             params = prepare_params(
-                parse_modeline(code), config, ignore=ignore, select=select
-            )
+                parse_modeline(code), config, ignore=options.ignore,
+                select=options.select)
 
             if not params['lint']:
                 return errors
 
-            for item in linters:
+            for item in options.linters:
 
                 if not isinstance(item, tuple):
                     item = (item, LINTERS.get(item))
@@ -53,14 +57,15 @@ def run(
                 if not linter or not linter.allow(path):
                     continue
 
+                meta = options.linter_params.get(name, dict())
                 result = linter.run(path, code=code, **meta)
                 for e in result:
+                    e['linter'] = name
                     e['col'] = e.get('col') or 0
                     e['lnum'] = e.get('lnum') or 0
                     e['type'] = e.get('type') or 'E'
-                    e['text'] = "{0} [{1}]".format((e.get(
-                        'text') or '').strip()
-                        .replace("'", "\"").split('\n')[0], name)
+                    e['text'] = "%s [%s]" % (
+                        e.get('text', '').strip().split('\n')[0], name)
                     e['filename'] = path or ''
                     errors.append(e)
 

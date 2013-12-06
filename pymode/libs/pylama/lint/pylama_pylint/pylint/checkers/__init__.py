@@ -43,11 +43,11 @@ import tokenize
 import warnings
 from os.path import dirname
 
-from ..astroid.utils import ASTWalker
-from ..logilab.common.configuration import OptionsProviderMixIn
+from astroid.utils import ASTWalker
+from logilab.common.configuration import OptionsProviderMixIn
 
-from ..reporters import diff_string
-from ..utils import register_plugins
+from pylint.reporters import diff_string
+from pylint.utils import register_plugins
 
 def table_lines_from_stats(stats, old_stats, columns):
     """get values listed in <columns> from <stats> and <old_stats>,

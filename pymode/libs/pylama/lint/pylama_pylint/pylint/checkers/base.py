@@ -17,15 +17,16 @@
 """basic checker for Python code"""
 
 import sys
-from .. import astroid
-from ..logilab.common.ureports import Table
-from ..astroid import are_exclusive, bases
+import astroid
+from logilab.common.ureports import Table
+from astroid import are_exclusive
+import astroid.bases
 
-from ..interfaces import IAstroidChecker
-from ..utils import EmptyReport
-from ..reporters import diff_string
-from . import BaseChecker
-from .utils import (
+from pylint.interfaces import IAstroidChecker
+from pylint.utils import EmptyReport
+from pylint.reporters import diff_string
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import (
     check_messages,
     clobber_in_except,
     is_builtin_object,
@@ -36,7 +37,6 @@ from .utils import (
 
 
 import re
-
 
 # regex for class/function/variable/constant name
 CLASS_NAME_RGX = re.compile('[A-Z_][a-zA-Z0-9]+$')
@@ -541,7 +541,7 @@ functions, methods
                 value = default.infer().next()
             except astroid.InferenceError:
                 continue
-            builtins = bases.BUILTINS
+            builtins = astroid.bases.BUILTINS
             if (isinstance(value, astroid.Instance) and
                 value.qname() in ['.'.join([builtins, x]) for x in ('set', 'dict', 'list')]):
                 if value is default:

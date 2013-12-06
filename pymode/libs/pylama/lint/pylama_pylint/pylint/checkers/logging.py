@@ -14,9 +14,11 @@
 """checker for use of Python logging
 """
 
-from .. import astroid
-from . import BaseChecker, utils
-from .. import interfaces
+import astroid
+from pylint import checkers
+from pylint import interfaces
+from pylint.checkers import utils
+from pylint.checkers.utils import check_messages
 
 MSGS = {
     'W1201': ('Specify string format arguments as logging function parameters',
@@ -52,7 +54,7 @@ CHECKED_CONVENIENCE_FUNCTIONS = set([
     'warning'])
 
 
-class LoggingChecker(BaseChecker):
+class LoggingChecker(checkers.BaseChecker):
     """Checks use of the logging module."""
 
     __implements__ = interfaces.IAstroidChecker
@@ -75,7 +77,7 @@ class LoggingChecker(BaseChecker):
                 else:
                     self._logging_name = 'logging'
 
-    @utils.check_messages(*(MSGS.keys()))
+    @check_messages(*(MSGS.keys()))
     def visit_callfunc(self, node):
         """Checks calls to (simple forms of) logging methods."""
         if (not isinstance(node.func, astroid.Getattr)

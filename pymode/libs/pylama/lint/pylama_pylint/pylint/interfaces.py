@@ -12,7 +12,7 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """Interfaces for PyLint objects"""
 
-from .logilab.common.interface import Interface
+from logilab.common.interface import Interface
 
 
 class IChecker(Interface):

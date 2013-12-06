@@ -40,7 +40,8 @@ def code_check():
         LOGGER.setLevel(logging.DEBUG)
 
     with silence_stderr():
-        errors = check_path(path, options=options, code='\n'.join(env.curbuf))
+        errors = check_path(path, options=options,
+                            code='\n'.join(env.curbuf) + '\n')
 
     env.debug("Find errors: ", len(errors))
     sort_rules = env.var('g:pymode_lint_sort')

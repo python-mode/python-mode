@@ -15,17 +15,17 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """imports checkers for Python code"""
 
-from ..logilab.common.graph import get_cycles, DotBackend
-from ..logilab.common.modutils import is_standard_module
-from ..logilab.common.ureports import VerbatimText, Paragraph
+from logilab.common.graph import get_cycles, DotBackend
+from logilab.common.modutils import is_standard_module
+from logilab.common.ureports import VerbatimText, Paragraph
 
-from .. import astroid
-from ..astroid import are_exclusive
+import astroid
+from astroid import are_exclusive
 
-from ..interfaces import IAstroidChecker
-from ..utils import EmptyReport
-from . import BaseChecker
-from .utils import check_messages
+from pylint.interfaces import IAstroidChecker
+from pylint.utils import EmptyReport
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import check_messages
 
 
 def get_first_import(node, context, name, base, level):

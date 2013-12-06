@@ -8,9 +8,6 @@ from .config import parse_options, CURDIR, setup_logger
 from .core import LOGGER
 
 
-DEFAULT_COMPLEXITY = 10
-
-
 def shell(args=None, error=True):
     """ Endpoint for console.
 

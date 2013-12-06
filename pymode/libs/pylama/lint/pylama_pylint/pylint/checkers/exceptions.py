@@ -16,14 +16,14 @@
 """
 import sys
 
-from ..logilab.common.compat import builtins
+from logilab.common.compat import builtins
 BUILTINS_NAME = builtins.__name__
-from  .. import astroid
-from ..astroid import YES, Instance, unpack_infer
+import astroid
+from astroid import YES, Instance, unpack_infer
 
-from . import BaseChecker
-from .utils import is_empty, is_raising, check_messages
-from ..interfaces import IAstroidChecker
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import is_empty, is_raising, check_messages
+from pylint.interfaces import IAstroidChecker
 
 
 OVERGENERAL_EXCEPTIONS = ('Exception',)
@@ -46,7 +46,11 @@ MSGS = {
               'notimplemented-raised',
               'Used when NotImplemented is raised instead of \
               NotImplementedError'),
-
+    'E0712': ('Catching an exception which doesn\'t inherit from BaseException: %s',
+              'catching-non-exception',
+              'Used when a class which doesn\'t inherit from \
+               BaseException is used as an exception in an except clause.'),
+    
     'W0701': ('Raising a string exception',
               'raising-string',
               'Used when a string exception is raised.'),
@@ -160,13 +164,14 @@ class ExceptionsChecker(BaseChecker):
             value_found = False
         return value_found
 
-
     @check_messages('W0712')
     def visit_excepthandler(self, node):
         """Visit an except handler block and check for exception unpacking."""
         if isinstance(node.name, (astroid.Tuple, astroid.List)):
             self.add_message('W0712', node=node)
-    @check_messages('W0702', 'W0703', 'W0704', 'W0711', 'E0701')
+
+
+    @check_messages('W0702', 'W0703', 'W0704', 'W0711', 'E0701', 'catching-non-exception')
     def visit_tryexcept(self, node):
         """check for empty except"""
         exceptions_classes = []
@@ -206,6 +211,13 @@ class ExceptionsChecker(BaseChecker):
                         and exc.root().name == EXCEPTIONS_MODULE
                         and nb_handlers == 1 and not is_raising(handler.body)):
                         self.add_message('W0703', args=exc.name, node=handler.type)
+        
+                    if (not inherit_from_std_ex(exc) and
+                        exc.root().name != BUILTINS_NAME):
+                        self.add_message('catching-non-exception', 
+                                         node=handler.type,
+                                         args=(exc.name, ))
+
                 exceptions_classes += excs
 
 

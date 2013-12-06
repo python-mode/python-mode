@@ -27,37 +27,37 @@
 """
 
 # import this first to avoid builtin namespace pollution
-from .checkers import utils
+from pylint.checkers import utils
 
 import sys
 import os
 import tokenize
 from warnings import warn
 
-from .logilab.common.configuration import UnsupportedAction, OptionsManagerMixIn
-from .logilab.common.optik_ext import check_csv
-from .logilab.common.modutils import load_module_from_name, get_module_part
-from .logilab.common.interface import implements
-from .logilab.common.textutils import splitstrip
-from .logilab.common.ureports import Table, Text, Section
-from .logilab.common.__pkginfo__ import version as common_version
+from logilab.common.configuration import UnsupportedAction, OptionsManagerMixIn
+from logilab.common.optik_ext import check_csv
+from logilab.common.modutils import load_module_from_name, get_module_part
+from logilab.common.interface import implements
+from logilab.common.textutils import splitstrip
+from logilab.common.ureports import Table, Text, Section
+from logilab.common.__pkginfo__ import version as common_version
 
-from .astroid import MANAGER, nodes, AstroidBuildingException
-from .astroid.__pkginfo__ import version as astroid_version
+from astroid import MANAGER, nodes, AstroidBuildingException
+from astroid.__pkginfo__ import version as astroid_version
 
-from .utils import (
+from pylint.utils import (
     MSG_TYPES, OPTION_RGX,
     PyLintASTWalker, UnknownMessage, MessagesHandlerMixIn, ReportsHandlerMixIn,
     EmptyReport, WarningScope,
     expand_modules, tokenize_module)
-from .interfaces import IRawChecker, ITokenChecker, IAstroidChecker
-from .checkers import (BaseTokenChecker,
+from pylint.interfaces import IRawChecker, ITokenChecker, IAstroidChecker
+from pylint.checkers import (BaseTokenChecker,
                              table_lines_from_stats,
                              initialize as checkers_initialize)
-from .reporters import initialize as reporters_initialize
-from . import config
+from pylint.reporters import initialize as reporters_initialize
+from pylint import config
 
-from .__pkginfo__ import version
+from pylint.__pkginfo__ import version
 
 
 
@@ -262,7 +262,7 @@ This is used by the global evaluation report (RP0004).'}),
                   'group': 'Reports',
                   'help' : ('Template used to display messages. '
                             'This is a python new-style format string '
-                            'used to format the massage information. '
+                            'used to format the message information. '
                             'See doc for all details')
                   }), # msg-template
                )
@@ -518,7 +518,7 @@ This is used by the global evaluation report (RP0004).'}),
                 if first <= lineno <= last:
                     # Set state for all lines for this block, if the
                     # warning is applied to nodes.
-                    if self._messages[msgid].scope == WarningScope.NODE:
+                    if self.check_message_id(msgid).scope == WarningScope.NODE:
                         if lineno > firstchildlineno:
                             state = True
                         first_, last_ = node.block_range(lineno)
@@ -563,6 +563,22 @@ This is used by the global evaluation report (RP0004).'}),
                 checker.active_msgs = messages
         return neededcheckers
 
+    def should_analyze_file(self, modname, path):
+        """Returns whether or not a module should be checked.
+
+        This implementation returns True for all inputs, indicating that all
+        files should be linted.
+
+        Subclasses may override this method to indicate that modules satisfying
+        certain conditions should not be linted.
+
+        :param str modname: The name of the module to be checked.
+        :param str path: The full path to the source code of the module.
+        :returns: True if the module should be checked.
+        :rtype: bool
+        """
+        return True
+
     def check(self, files_or_modules):
         """main checking entry: check a list of files or modules from their
         name.
@@ -582,12 +598,14 @@ This is used by the global evaluation report (RP0004).'}),
         # build ast and check modules or packages
         for descr in self.expand_files(files_or_modules):
             modname, filepath = descr['name'], descr['path']
+            if not self.should_analyze_file(modname, filepath):
+                continue
             if self.config.files_output:
                 reportfile = 'pylint_%s.%s' % (modname, self.reporter.extension)
                 self.reporter.set_output(open(reportfile, 'w'))
             self.set_current_module(modname, filepath)
             # get the module representation
-            astroid = self.get_astroid(filepath, modname)
+            astroid = self.get_ast(filepath, modname)
             if astroid is None:
                 continue
             self.base_name = descr['basename']
@@ -639,8 +657,8 @@ This is used by the global evaluation report (RP0004).'}),
             self._raw_module_msgs_state = {}
             self._ignored_msgs = {}
 
-    def get_astroid(self, filepath, modname):
-        """return a astroid representation for a module"""
+    def get_ast(self, filepath, modname):
+        """return a ast(roid) representation for a module"""
         try:
             return MANAGER.ast_from_file(filepath, modname, source=True)
         except SyntaxError, ex:
@@ -717,6 +735,8 @@ This is used by the global evaluation report (RP0004).'}),
             # save results if persistent run
             if self.config.persistent:
                 config.save_results(self.stats, self.base_name)
+        else:
+            self.reporter.on_close(self.stats, {})
 
     # specific reports ########################################################
 
@@ -819,7 +839,7 @@ def report_messages_by_module_stats(sect, stats, _):
 # this may help to import modules using gettext
 # XXX syt, actually needed since we don't import code?
 
-from .logilab.common.compat import builtins
+from logilab.common.compat import builtins
 builtins._ = str
 
 
@@ -1037,7 +1057,7 @@ are done by default'''}),
 
     def cb_generate_manpage(self, *args, **kwargs):
         """optik callback for sample config file generation"""
-        from . import __pkginfo__
+        from pylint import __pkginfo__
         self.linter.generate_manpage(__pkginfo__)
         sys.exit(0)
 

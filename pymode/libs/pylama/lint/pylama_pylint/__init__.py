@@ -9,7 +9,12 @@ __project__ = 'pylama_pylint'
 __author__ = "horneds <horneds@gmail.com>"
 __license__ = "BSD"
 
-try:
-    from .main import Linter
-except ImportError:
-    Linter = None
+import os.path
+import sys
+
+CURDIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, CURDIR)
+
+from .main import Linter
+assert Linter
+
