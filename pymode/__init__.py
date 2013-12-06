@@ -35,3 +35,4 @@ def get_documentation():
     help(vim.eval('a:word'))
     sys.stdout, out = _, sys.stdout.getvalue()
     vim.current.buffer.append(str(out).splitlines(), 0)
+

@@ -100,7 +100,7 @@ if g:pymode_doc
     command! -buffer -nargs=1 PymodeDoc call pymode#doc#show("<args>")
 
     " Set keys
-    exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#show(expand('<cword>'))<CR>"
+    exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#find()<CR>"
     exe "vnoremap <silent> <buffer> " g:pymode_doc_bind ":<C-U>call pymode#doc#show(@*)<CR>"
 
 end
