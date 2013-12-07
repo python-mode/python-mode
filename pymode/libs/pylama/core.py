@@ -53,6 +53,7 @@ def run(path, code=None, options=None):
                     item = (item, LINTERS.get(item))
 
                 name, linter = item
+                LOGGER.debug("Run %s", name)
 
                 if not linter or not linter.allow(path):
                     continue
@@ -70,16 +71,19 @@ def run(path, code=None, options=None):
                     errors.append(e)
 
     except IOError as e:
+        LOGGER.debug("IOError %s", e)
         errors.append(dict(
             lnum=0, type='E', col=0, text=str(e), filename=path or ''))
 
     except SyntaxError as e:
+        LOGGER.debug("SyntaxError %s", e)
         errors.append(dict(
             lnum=e.lineno or 0, type='E', col=e.offset or 0,
             text=e.args[0] + ' [%s]' % name, filename=path or ''
         ))
 
-    except Exception:
+    except Exception as e:
+        LOGGER.debug("Unknown exception %s", e)
         import traceback
         logging.debug(traceback.format_exc())
 

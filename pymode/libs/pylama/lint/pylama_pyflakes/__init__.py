@@ -8,15 +8,15 @@ class Linter(BaseLinter):
     """ Pyflakes code check. """
 
     @staticmethod
-    def run(path, code=None, builtins=None, **meta):
+    def run(path, code=None, builtins="", **meta):
         """ Pyflake code checking.
 
         :return list: List of errors.
 
         """
         import _ast
-        from .pyflakes import checker
         import os
+        from .pyflakes import checker
 
         os.environ.setdefault('PYFLAKES_BUILTINS', builtins)
 

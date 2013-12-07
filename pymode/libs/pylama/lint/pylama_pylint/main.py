@@ -52,4 +52,3 @@ class Linter(BaseLinter):
         runner = Run(
             [path] + attrs, reporter=Reporter(), exit=False)
         return runner.linter.reporter.errors
-

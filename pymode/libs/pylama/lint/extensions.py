@@ -15,8 +15,11 @@ except ImportError:
 for p in listdir(CURDIR):
     if p.startswith(PREFIX) and op.isdir(op.join(CURDIR, p)):
         name = p[len(PREFIX):]
-        module = import_module('.lint.%s%s' % (PREFIX, name), 'pylama')
-        LINTERS[name] = getattr(module, 'Linter')()
+        try:
+            module = import_module('.lint.%s%s' % (PREFIX, name), 'pylama')
+            LINTERS[name] = getattr(module, 'Linter')()
+        except ImportError:
+            continue
 
 try:
     from pkg_resources import iter_entry_points
