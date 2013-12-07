@@ -1,6 +1,8 @@
 Changelog
 =========
 
+    * Get fold's expression symbol from &fillchars
+
 ## 2013-12-04 0.7.8b
 --------------------
     * Update indentation support;

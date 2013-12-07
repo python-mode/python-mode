@@ -7,6 +7,10 @@ let s:decorator_regex = '^\s*@'
 let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
+let s:symbol = ' '
+if stridx(&fillchars, 'fold') > -1
+    let s:symbol = strpart(&fillchars, stridx(&fillchars, 'fold') + 5, 1)
+endif
 
 
 fun! pymode#folding#text() " {{{
@@ -27,7 +31,7 @@ fun! pymode#folding#text() " {{{
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
     let line = substitute(line, '\%("""\|''''''\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
-    return line . '…' . repeat(" ", fillcharcount) . ' ' . foldedlinecount . ' '
+    return line . '…' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount . ' '
 endfunction "}}}
 
 
