@@ -4,7 +4,7 @@
 # ==================
 
 
-__version__ = '0.1.3'
+__version__ = '0.1.5'
 __project__ = 'pylama_pylint'
 __author__ = "horneds <horneds@gmail.com>"
 __license__ = "BSD"
