@@ -151,7 +151,7 @@ def goto():
             return
 
         env.goto_file(
-            found_resource.path, cmd=ctx.options.get('goto_definition_cmd'))
+            found_resource.real_path, cmd=ctx.options.get('goto_definition_cmd'))
         env.goto_line(line)
 
 
