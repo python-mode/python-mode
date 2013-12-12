@@ -7,9 +7,9 @@ let s:decorator_regex = '^\s*@'
 let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
-let s:symbol = ' '
-if stridx(&fillchars, 'fold') > -1
-    let s:symbol = strpart(&fillchars, stridx(&fillchars, 'fold') + 5, 1)
+let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
+if s:symbol == ''
+    let s:symbol = ' '
 endif
 
 
