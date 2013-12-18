@@ -112,7 +112,7 @@ python buffers: >
 
 Setup pymode |quickfix| window
 
-                    *'g:pymode_quickfix_maxheght'* *'g:pymode_quickfix_minheight'*
+                    *'g:pymode_quickfix_maxheight'* *'g:pymode_quickfix_minheight'*
 >
     let g:pymode_quickfix_minheight = 3
     let g:pymode_quickfix_maxheight = 6
