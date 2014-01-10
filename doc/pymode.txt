@@ -278,11 +278,11 @@ Check code on every save (if file has been modified)  *'g:pymode_lint_on_write'*
 
 Check code on every save (every)                    *'g:pymode_lint_unmodified'*
 >
-    let g:pymode_lint_unmodified = 1
+    let g:pymode_lint_unmodified = 0
 
 Check code when editting (onfly)                        *'g:pymode_lint_on_fly'*
 >
-    let g:pymode_lint_on_fly = 1
+    let g:pymode_lint_on_fly = 0
 
 Show error message if cursor placed at the error line  *'g:pymode_lint_message'*
 >
