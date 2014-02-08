@@ -1,7 +1,9 @@
 Changelog
 =========
 
-    * Get fold's expression symbol from &fillchars
+    * Get fold's expression symbol from &fillchars;
+    * Fixed error when setting g:pymode_breakpoint_cmd (expobrain);
+
 
 ## 2013-12-04 0.7.8b
 --------------------
