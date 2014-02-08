@@ -468,7 +468,7 @@ Rename a current module/package ~
 
 Keymap for rename current module            *'g:pymode_rope_rename_module_bind'*
 >
-    let g:pymode_rope_rename_bind = '<C-c>rr'
+    let g:pymode_rope_rename_module_bind = '<C-c>r1r'
 
 
 Imports ~
