@@ -587,7 +587,7 @@ Highlight space's errors                        *'g:pymode_syntax_space_errors'*
 >
     let g:pymode_syntax_space_errors = g:pymode_syntax_all
 
-Highlight string formatting                 *'g:pymode_syntax_string_formating'*
+Highlight string formatting                 *'g:pymode_syntax_string_formatting'*
                                                *'g:pymode_syntax_string_format'*
                                             *'g:pymode_syntax_string_templates'*
                                                     *'g:pymode_syntax_doctests'*
