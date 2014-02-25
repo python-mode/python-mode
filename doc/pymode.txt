@@ -80,7 +80,7 @@ Turn on the whole plugin                                            *'g:pymode'*
 >
     let g:pymode = 1
 
-Trun off plugin's warnings                                 *'g:pymode_warnings'*
+Turn off plugin's warnings                                 *'g:pymode_warnings'*
 >
     let g:pymode_warnings = 1
 
