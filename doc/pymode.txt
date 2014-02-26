@@ -43,7 +43,7 @@ refactoring, and some other useful things.
 This plugin allows you to create python code in vim very easily. There is no
 need to install the pylint or rope libraries on your system.
 
-Python-mode containts all you need to develop python applications in Vim.
+Python-mode contains all you need to develop python applications in Vim.
 
 Features:                                                      *pymode-features*
 
@@ -70,7 +70,7 @@ Features:                                                      *pymode-features*
 2. Common functionality ~
                                                                  *pymode-common*
 
-This script provides the following options that can customise the behaviour of
+This script provides the following options that can customizes the behavior of
 PythonMode. These options should be set in your |vimrc|.
 
         Bellow shows the default values.
@@ -80,7 +80,7 @@ Turn on the whole plugin                                            *'g:pymode'*
 >
     let g:pymode = 1
 
-Trun off plugin's warnings                                 *'g:pymode_warnings'*
+Turn off plugin's warnings                                 *'g:pymode_warnings'*
 >
     let g:pymode_warnings = 1
 
@@ -89,7 +89,7 @@ Value is list of path's strings.
 >
     let g:pymode_paths = []
 
-Trim unused whitespaces on save                    *'g:pymode_trim_whitespaces'*
+Trim unused white spaces on save                    *'g:pymode_trim_whitespaces'*
 >
     let g:pymode_trim_whitespaces = 1
 
@@ -280,7 +280,7 @@ Check code on every save (every)                    *'g:pymode_lint_unmodified'*
 >
     let g:pymode_lint_unmodified = 0
 
-Check code when editting (onfly)                        *'g:pymode_lint_on_fly'*
+Check code when editing (on the fly)                        *'g:pymode_lint_on_fly'*
 >
     let g:pymode_lint_on_fly = 0
 
@@ -295,7 +295,7 @@ Default code checkers (you could set several)         *'g:pymode_lint_checkers'*
 Values may be chosen from: `pylint`, `pep8`, `mccabe`, `pep257`, `pyflakes`.
 
 Skip errors and warnings                                *'g:pymode_lint_ignore'*
-E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors startswith E2) and etc
+E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors that starts with E2) and etc
 >
     let g:pymode_lint_ignore = "E501,W"
 
@@ -306,7 +306,7 @@ By example you disable all warnings starting from 'W', but want to see warning
     let g:pymode_lint_select = "E501,W0011,W430"
 
 Sort errors by relevance                                  *'g:pymode_lint_sort'*
-If not emply, errors will be sort by defined relevance
+If not empty, errors will be sort by defined relevance
 E.g. let g:pymode_lint_sort = ['E', 'C', 'I']  " Errors first 'E',
 after them 'C' and ...
 >
@@ -442,7 +442,7 @@ Leave empty for disable key binding.      *'g:pymode_rope_goto_definition_bind'*
 >
     let g:pymode_rope_goto_definition_bind = '<C-c>g'
 
-Command for open window when definition has been finded
+Command for open window when definition has been found
 Values are (`e`, `new`, `vnew`)                  *'g:pymode_rope_goto_definition_cmd'*
 >
     let g:pymode_rope_goto_definition_cmd = 'new'
@@ -559,7 +559,7 @@ docstrings. Consider disabling this on slower hardware.
 >
     let g:pymode_syntax_slow_sync = 1
 
-Enable all python highlightings                          *'g:pymode_syntax_all'*
+Enable all python highlights                          *'g:pymode_syntax_all'*
 >
     let g:pymode_syntax_all = 1
 
@@ -587,7 +587,7 @@ Highlight space's errors                        *'g:pymode_syntax_space_errors'*
 >
     let g:pymode_syntax_space_errors = g:pymode_syntax_all
 
-Highlight string formatting                 *'g:pymode_syntax_string_formating'*
+Highlight string formatting                 *'g:pymode_syntax_string_formatting'*
                                                *'g:pymode_syntax_string_format'*
                                             *'g:pymode_syntax_string_templates'*
                                                     *'g:pymode_syntax_doctests'*
@@ -651,7 +651,7 @@ Pylint check is very slow
 -------------------------
 
 In some projects pylint may check slowly, because it also scans imported
-modules if possible. Try using another code checkiers: see
+modules if possible. Try using another code checker: see
 |'g:pymode_lint_checkers'|.
 
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings
