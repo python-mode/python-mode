@@ -14,7 +14,7 @@ describe 'pymode check code'
         Expect g:pymode_lint == 1
     end
 
-    it 'lint code'
+    it 'lint new'
         put =['# coding: utf-8', 'call_unknown_function()']
         PymodeLint
         Expect getloclist(0) ==  []
