@@ -13,11 +13,12 @@ clean:
 travis:
 	rake test
 
-.PHONY: test
+.PHONY: test t
 test:
 	bundle install
 	rm -rf $(CURDIR)/.ropeproject
 	rake test
+t: test
 
 .PHONY: pylama
 pylama:
