@@ -13,34 +13,34 @@ def code_check():
 
     """
 
-    from pylama.main import parse_options
-    from pylama.tasks import check_path
-
-    if not env.curbuf.name:
-        env.stop()
-        return False
-
-    options = parse_options(
-        ignore=env.var('g:pymode_lint_ignore'),
-        select=env.var('g:pymode_lint_select'),
-        linters=env.var('g:pymode_lint_checkers'),
-    )
-
-    path = os.path.relpath(env.curbuf.name, env.curdir)
-    env.debug("Start code check: ", path)
-
-    if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip): # noqa
-        env.message('Skip code checking.')
-        env.debug("Skipped")
-        env.stop()
-        return False
-
-    if env.options.get('debug'):
-        from pylama.core import LOGGER, logging
-        LOGGER.setLevel(logging.DEBUG)
-
     with silence_stderr():
-        errors = check_path(path, options=options, code='\n'.join(env.curbuf))
+
+        from pylama.main import parse_options
+        from pylama.tasks import check_path
+
+        if not env.curbuf.name:
+            return env.stop()
+
+        options = parse_options(
+            ignore=env.var('g:pymode_lint_ignore'),
+            select=env.var('g:pymode_lint_select'),
+            linters=env.var('g:pymode_lint_checkers'),
+        )
+
+        path = os.path.relpath(env.curbuf.name, env.curdir)
+        env.debug("Start code check: ", path)
+
+        if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip): # noqa
+            env.message('Skip code checking.')
+            env.debug("Skipped")
+            return env.stop()
+
+        if env.options.get('debug'):
+            from pylama.core import LOGGER, logging
+            LOGGER.setLevel(logging.DEBUG)
+
+        errors = check_path(
+            path, options=options, code='\n'.join(env.curbuf) + '\n')
 
     env.debug("Find errors: ", len(errors))
     sort_rules = env.var('g:pymode_lint_sort')

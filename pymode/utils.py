@@ -2,6 +2,7 @@
 import os.path
 import sys
 import threading
+import warnings
 from contextlib import contextmanager
 
 import vim # noqa
@@ -15,6 +16,8 @@ except ImportError:
 
 DEBUG = int(vim.eval('g:pymode_debug'))
 PY2 = sys.version_info[0] == 2
+
+warnings.filterwarnings('ignore')
 
 
 @contextmanager

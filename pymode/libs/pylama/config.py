@@ -1,4 +1,5 @@
 """ Parse arguments from command line and configuration files. """
+
 import fnmatch
 from os import getcwd, path
 from re import compile as re
@@ -15,16 +16,13 @@ from .lint.extensions import LINTERS
 #: A default checkers
 DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
 
-#: A default complexity for mccabe checker
-DEFAULT_COMPLEXITY = 10
-
 CURDIR = getcwd()
 DEFAULT_INI_PATH = path.join(CURDIR, 'pylama.ini')
 
 
 def parse_options(
         args=None, async=False, select='', ignore='', linters=DEFAULT_LINTERS,
-        complexity=DEFAULT_COMPLEXITY, options=DEFAULT_INI_PATH):
+        options=DEFAULT_INI_PATH):
     """ Parse options from command line and configuration files.
 
     :return argparse.Namespace:
@@ -37,10 +35,9 @@ def parse_options(
         async=_Default(async), format=_Default('pep8'),
         select=_Default(select), ignore=_Default(ignore),
         report=_Default(None), verbose=_Default(False),
-        linters=_Default(','.join(linters)), complexity=_Default(complexity),
-        options=_Default(options))
+        linters=_Default(','.join(linters)), options=_Default(options))
 
-    if not (args is None):
+    if not args is None:
         options = parser.parse_args(args)
 
     # Parse options from ini file
@@ -72,13 +69,18 @@ def parse_options(
 
     # Parse file related options
     options.file_params = dict()
+    options.linter_params = dict()
     for k, s in config.sections.items():
-        if k != config.default_section:
-            mask = re(fnmatch.translate(k))
-            options.file_params[mask] = dict(s)
-            options.file_params[mask]['lint'] = int(
-                options.file_params[mask].get('lint', 1)
-            )
+        if k == config.default_section:
+            continue
+        if k in LINTERS:
+            options.linter_params[k] = dict(s)
+            continue
+        mask = re(fnmatch.translate(k))
+        options.file_params[mask] = dict(s)
+        options.file_params[mask]['lint'] = int(
+            options.file_params[mask].get('lint', 1)
+        )
 
     return options
 
@@ -146,10 +148,6 @@ def get_parser():
         "--skip", default=_Default(''),
         type=lambda s: [re(fnmatch.translate(p)) for p in s.split(',') if p],
         help="Skip files by masks (comma-separated, Ex. */messages.py)")
-
-    parser.add_argument(
-        "--complexity", "-c", default=_Default(DEFAULT_COMPLEXITY), type=int,
-        help="Set mccabe complexity.")
 
     parser.add_argument("--report", "-r", help="Filename for report.")
     parser.add_argument(

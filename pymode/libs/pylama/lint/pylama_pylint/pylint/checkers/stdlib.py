@@ -18,10 +18,11 @@
 import re
 import sys
 
-from .. import astroid
+import astroid
 
-from ..interfaces import IAstroidChecker
-from . import BaseChecker, BaseTokenChecker, utils
+from pylint.interfaces import IAstroidChecker
+from pylint.checkers import BaseChecker, BaseTokenChecker
+from pylint.checkers import utils
 
 _VALID_OPEN_MODE_REGEX = r'^(r?U|[rwa]\+?b?)$'
 

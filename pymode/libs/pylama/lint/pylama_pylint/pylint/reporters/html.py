@@ -12,13 +12,14 @@
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """HTML reporter"""
+
 import sys
 from cgi import escape
 
-from ..logilab.common.ureports import HTMLWriter, Section, Table
+from logilab.common.ureports import HTMLWriter, Section, Table
 
-from . import BaseReporter, Message
-from ..interfaces import IReporter
+from pylint.interfaces import IReporter
+from pylint.reporters import BaseReporter, Message
 
 
 class HTMLReporter(BaseReporter):

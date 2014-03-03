@@ -61,6 +61,9 @@ def completions():
     return env.stop(proposals)
 
 
+FROM_RE = re.compile(r'^\s*from\s+[\.\w\d_]+$')
+
+
 @env.catch_exceptions
 def complete(dot=False):
     """ Ctrl+Space completion.
@@ -70,6 +73,12 @@ def complete(dot=False):
     """
     row, col = env.cursor
     source, offset = env.get_offset_params()
+
+    cline = env.current.line[:col]
+    env.debug('dot completion', cline)
+    if FROM_RE.match(cline) or cline.endswith('..') or cline.endswith('\.'):
+        return env.stop("")
+
     proposals = get_proporsals(source, offset, dot=dot)
     if not proposals:
         return False
@@ -142,7 +151,7 @@ def goto():
             return
 
         env.goto_file(
-            found_resource.path, cmd=ctx.options.get('goto_definition_cmd'))
+            found_resource.real_path, cmd=ctx.options.get('goto_definition_cmd'))
         env.goto_line(line)
 
 
@@ -318,7 +327,7 @@ def autoimport():
             _insert_import(word, modules[0], ctx)
 
         else:
-            module = env.user_input_choices('Wich module to import:', *modules)
+            module = env.user_input_choices('Which module to import:', *modules)
             _insert_import(word, module, ctx)
 
         return True

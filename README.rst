@@ -13,7 +13,7 @@ by utilizing libraries including pylint_, rope_, pydoc_, pyflakes_, pep8_, and
 mccabe_  for features like static analysis, refactoring, folding, completion,
 documentation, and more.
 
-The plugin containts all you need to develop python applications in Vim.
+The plugin contains all you need to develop python applications in Vim.
 
 There is no need to install pylint_, rope_ or any other Python libraries on
 your system.

@@ -19,8 +19,8 @@ Check source code is ascii only or has an encoding declaration (PEP 263)
 
 import re
 
-from ..interfaces import IRawChecker
-from . import BaseChecker
+from pylint.interfaces import IRawChecker
+from pylint.checkers import BaseChecker
 
 
 MSGS = {

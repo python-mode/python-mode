@@ -17,7 +17,9 @@ import sys
 import locale
 import os
 
-from .. import utils
+from pylint.utils import MSG_TYPES
+
+from pylint import utils
 
 CMPS = ['=', '-', '+']
 
@@ -44,7 +46,7 @@ class Message(object):
         self.path = self.abspath.replace(reporter.path_strip_prefix, '')
         self.msg = msg
         self.C = msg_id[0]
-        self.category = utils.MSG_TYPES[msg_id[0]]
+        self.category = MSG_TYPES[msg_id[0]]
         self.symbol = reporter.linter.check_message_id(msg_id).symbol
 
     def format(self, template):

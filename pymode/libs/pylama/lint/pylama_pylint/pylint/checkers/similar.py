@@ -19,10 +19,10 @@
 import sys
 from itertools import izip
 
-from ..logilab.common.ureports import Table
+from logilab.common.ureports import Table
 
-from ..interfaces import IRawChecker
-from . import BaseChecker, table_lines_from_stats
+from pylint.interfaces import IRawChecker
+from pylint.checkers import BaseChecker, table_lines_from_stats
 
 
 class Similar(object):

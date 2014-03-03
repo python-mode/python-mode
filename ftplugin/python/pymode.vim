@@ -67,6 +67,12 @@ if g:pymode_lint
     command! -buffer -nargs=0 PymodeLintToggle :call pymode#lint#toggle()
     command! -buffer -nargs=0 PymodeLint :call pymode#lint#check()
 
+    if v:version > 703 || (v:version == 703 && has('patch544'))
+        au! QuitPre <buffer> call pymode#quit()
+    else
+        au! pymode BufWinLeave * silent! lclose
+    endif
+
     let b:pymode_error_line = -1
 
     if g:pymode_lint_on_fly
@@ -94,7 +100,7 @@ if g:pymode_doc
     command! -buffer -nargs=1 PymodeDoc call pymode#doc#show("<args>")
 
     " Set keys
-    exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#show(expand('<cword>'))<CR>"
+    exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#find()<CR>"
     exe "vnoremap <silent> <buffer> " g:pymode_doc_bind ":<C-U>call pymode#doc#show(@*)<CR>"
 
 end

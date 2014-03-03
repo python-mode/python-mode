@@ -11,6 +11,8 @@ fun! pymode#breakpoint#init() "{{{
             return
         endif
 
+    endif
+
         PymodePython << EOF
 
 from imp import find_module
@@ -24,8 +26,6 @@ for module in ('pudb', 'ipdb'):
         continue
 
 EOF
-
-    endif
 
 endfunction "}}}
 

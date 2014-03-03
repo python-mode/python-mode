@@ -16,14 +16,14 @@
 :text: the default one grouping messages by module
 :colorized: an ANSI colorized text reporter
 """
+
 import warnings
 
-from ..logilab.common.textutils import colorize_ansi
-from ..logilab.common.ureports import TextWriter
+from logilab.common.ureports import TextWriter
+from logilab.common.textutils import colorize_ansi
 
-from . import BaseReporter, Message
-from ..interfaces import IReporter
-
+from pylint.interfaces import IReporter
+from pylint.reporters import BaseReporter, Message
 
 TITLE_UNDERLINES = ['', '=', '-', '.']
 

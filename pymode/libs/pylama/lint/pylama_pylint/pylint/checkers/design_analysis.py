@@ -15,11 +15,11 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """check for signs of poor design"""
 
-from ..astroid import Function, If, InferenceError
+from astroid import Function, If, InferenceError
 
-from ..interfaces import IAstroidChecker
-from . import BaseChecker
-from .utils import check_messages
+from pylint.interfaces import IAstroidChecker
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import check_messages
 
 import re
 

@@ -19,12 +19,12 @@
 import re
 import shlex
 
-from .. import astroid
-from ..astroid import InferenceError, NotFoundError, YES, Instance
+import astroid
+from astroid import InferenceError, NotFoundError, YES, Instance
 
-from ..interfaces import IAstroidChecker
-from . import BaseChecker
-from .utils import safe_infer, is_super, check_messages
+from pylint.interfaces import IAstroidChecker
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import safe_infer, is_super, check_messages
 
 MSGS = {
     'E1101': ('%s %r has no %r member',

@@ -17,11 +17,11 @@
 """
 import sys
 
-from .. import astroid
+import astroid
 
-from ..interfaces import IAstroidChecker
-from . import BaseChecker
-from .utils import check_messages
+from pylint.interfaces import IAstroidChecker
+from pylint.checkers import BaseChecker
+from pylint.checkers.utils import check_messages
 
 MSGS = {
     'E1001': ('Use of __slots__ on an old style class',

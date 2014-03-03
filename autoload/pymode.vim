@@ -130,3 +130,9 @@ fun! pymode#debug(msg) "{{{
         echom string(g:pymode_debug) . ': ' . string(a:msg)
     endif
 endfunction "}}}
+
+fun! pymode#quit() "{{{
+    augroup pymode
+        au!
+    augroup END
+endfunction "}}}
