@@ -12,11 +12,13 @@ def auto():
     from .autopep8 import fix_file
 
     class Options(object):
-        aggressive = 0
-        line_range = None
+        aggressive = 2
         diff = False
+        experimental = True
         ignore = vim.eval('g:pymode_lint_ignore')
         in_place = True
+        indent_size = int(vim.eval('&tabstop'))
+        line_range = None
         max_line_length = 79
         pep8_passes = 100
         recursive = False
@@ -35,4 +37,3 @@ def get_documentation():
     help(vim.eval('a:word'))
     sys.stdout, out = _, sys.stdout.getvalue()
     vim.current.buffer.append(str(out).splitlines(), 0)
-
