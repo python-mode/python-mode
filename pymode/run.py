@@ -73,4 +73,6 @@ def __prepare_lines(line1, line2):
             indent = len(line) - len(line.lstrip())
             break
 
+    if len(lines) == 1:
+        lines.append('')
     return [l[indent:] for l in lines]
