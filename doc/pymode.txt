@@ -623,7 +623,7 @@ Highlight docstrings as pythonDocstring (otherwise as pythonString)
 Python-mode doesn't work
 ------------------------
 
-Open any python file and run ":call pymode#troubleshooting#Test()",
+Open any python file and run ":call pymode#troubleshooting#test()",
 fix the warning or send me the output.
 
 
