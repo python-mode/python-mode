@@ -78,7 +78,7 @@ endif
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
     syn match pythonFunction "\%(\%(def\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonVars
-    syn region pythonVars start="(" end=")" contained contains=pythonParameters transparent keepend
+    syn region pythonVars start="(" skip=+\(".*"\|'.*'\)+ end=")" contained contains=pythonParameters transparent keepend
     syn match pythonParameters "[^,]*" contained contains=pythonParam skipwhite
     syn match pythonParam "[^,]*" contained contains=pythonExtraOperator,pythonLambdaExpr,pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonString,pythonNumber,pythonBrackets,pythonSelf skipwhite
     syn match pythonBrackets "{[(|)]}" contained skipwhite
