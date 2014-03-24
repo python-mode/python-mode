@@ -888,6 +888,9 @@ class Yield(NodeNG):
     _astroid_fields = ('value',)
     value = None
 
+class YieldFrom(Yield):
+    """ Class representing a YieldFrom node. """    
+
 # constants ##############################################################
 
 CONST_CLS = {

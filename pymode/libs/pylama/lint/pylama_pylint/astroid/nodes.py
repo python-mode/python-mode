@@ -43,7 +43,7 @@ from astroid.node_classes import Arguments, AssAttr, Assert, Assign, \
     Dict, Discard, Ellipsis, EmptyNode, ExceptHandler, Exec, ExtSlice, For, \
     From, Getattr, Global, If, IfExp, Import, Index, Keyword, \
     List, Name, Nonlocal, Pass, Print, Raise, Return, Set, Slice, Starred, Subscript, \
-    TryExcept, TryFinally, Tuple, UnaryOp, While, With, Yield, \
+    TryExcept, TryFinally, Tuple, UnaryOp, While, With, Yield, YieldFrom, \
     const_factory
 from astroid.scoped_nodes import Module, GenExpr, Lambda, DictComp, \
     ListComp, SetComp, Function, Class
@@ -68,6 +68,6 @@ ALL_NODE_CLASSES = (
     TryExcept, TryFinally, Tuple,
     UnaryOp,
     While, With,
-    Yield,
+    Yield, YieldFrom
     )
 

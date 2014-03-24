@@ -102,6 +102,12 @@ class AstroidBuilder(InspectBuilder):
             # this is a built-in module
             # get a partial representation by introspection
             node = self.inspect_build(module, modname=modname, path=path)
+            # we have to handle transformation by ourselves since the rebuilder
+            # isn't called for builtin nodes
+            #
+            # XXX it's then only called for Module nodes, not for underlying
+            # nodes
+            node = self._manager.transform(node)
         return node
 
     def file_build(self, path, modname=None):

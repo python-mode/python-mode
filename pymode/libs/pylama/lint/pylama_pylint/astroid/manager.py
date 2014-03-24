@@ -273,6 +273,33 @@ class AstroidManager(OptionsProviderMixIn):
         """
         self.transforms.setdefault(node_class, []).append( (transform, predicate) )
 
+    def unregister_transform(self, node_class, transform, predicate=None):
+        """Unregister the given transform."""
+        self.transforms[node_class].remove( (transform, predicate) )
+
+    def transform(self, node):
+        """Call matching transforms for the given node if any and return the
+        transformed node.
+        """
+        try:
+            transforms = self.transforms[type(node)]
+        except KeyError:
+            return node # no transform registered for this class of node
+        orig_node = node # copy the reference
+        for transform_func, predicate in transforms:
+            if predicate is None or predicate(node):
+                ret = transform_func(node)
+                # if the transformation function returns something, it's
+                # expected to be a replacement for the node
+                if ret is not None:
+                    if node is not orig_node:
+                        # node has already be modified by some previous
+                        # transformation, warn about it
+                        warn('node %s substitued multiple times' % node)
+                    node = ret
+        return node
+
+
 
 class Project(object):
     """a project handle a set of modules / packages"""

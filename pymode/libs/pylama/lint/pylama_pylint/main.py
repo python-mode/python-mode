@@ -1,14 +1,17 @@
 """ Pylint support. """
 from os import path as op, environ
+import sys
 
 from pylama.lint import Linter as BaseLinter
+
+CURDIR = op.abspath(op.dirname(__file__))
+sys.path.insert(0, CURDIR)
 
 from astroid import MANAGER
 from pylint.lint import Run
 from pylint.reporters import BaseReporter
 
-
-PYLINT_RC = op.abspath(op.join(op.dirname(__file__), 'pylint.rc'))
+PYLINT_RC = op.abspath(op.join(CURDIR, 'pylint.rc'))
 
 
 class Linter(BaseLinter):
@@ -16,7 +19,7 @@ class Linter(BaseLinter):
     """ Check code with pylint. """
 
     @staticmethod
-    def run(path, **meta): # noqa
+    def run(path, code=None, **meta): # noqa
         """ Pylint code checking.
 
         :return list: List of errors.

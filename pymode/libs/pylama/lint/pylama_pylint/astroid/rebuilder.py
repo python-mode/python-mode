@@ -122,6 +122,14 @@ def _infer_metaclass(node):
     elif isinstance(node, Attribute):
         return node.attr
 
+def _create_yield_node(node, parent, rebuilder, factory):
+    newnode = factory()
+    _lineno_parent(node, newnode, parent)
+    if node.value is not None:
+        newnode.value = rebuilder.visit(node.value, newnode)
+    newnode.set_line_info(newnode.last_child())
+    return newnode
+
 
 class TreeRebuilder(object):
     """Rebuilds the _ast tree to become an Astroid tree"""
@@ -134,25 +142,7 @@ class TreeRebuilder(object):
         self._from_nodes = []
         self._delayed_assattr = []
         self._visit_meths = {}
-
-    def _transform(self, node):
-        try:
-            transforms = self._manager.transforms[type(node)]
-        except KeyError:
-            return node # no transform registered for this class of node
-        orig_node = node # copy the reference
-        for transform_func, predicate in transforms:
-            if predicate is None or predicate(node):
-                ret = transform_func(node)
-                # if the transformation function returns something, it's
-                # expected to be a replacement for the node
-                if ret is not None:
-                    if node is not orig_node:
-                        # node has already be modified by some previous
-                        # transformation, warn about it
-                        warn('node %s substitued multiple times' % node)
-                    node = ret
-        return node
+        self._transform = manager.transform
 
     def visit_module(self, node, modname, package):
         """visit a Module node by returning a fresh instance of it"""
@@ -837,13 +827,7 @@ class TreeRebuilder(object):
 
     def visit_yield(self, node, parent):
         """visit a Yield node by returning a fresh instance of it"""
-        newnode = new.Yield()
-        _lineno_parent(node, newnode, parent)
-        if node.value is not None:
-            newnode.value = self.visit(node.value, newnode)
-        newnode.set_line_info(newnode.last_child())
-        return newnode
-
+        return _create_yield_node(node, parent, self, new.Yield)
 
 class TreeRebuilder3k(TreeRebuilder):
     """extend and overwrite TreeRebuilder for python3k"""
@@ -954,7 +938,7 @@ class TreeRebuilder3k(TreeRebuilder):
         return newnode
 
     def visit_yieldfrom(self, node, parent):
-        return self.visit_yield(node, parent)
+        return _create_yield_node(node, parent, self, new.YieldFrom)
 
     def visit_class(self, node, parent):
         newnode = super(TreeRebuilder3k, self).visit_class(node, parent)

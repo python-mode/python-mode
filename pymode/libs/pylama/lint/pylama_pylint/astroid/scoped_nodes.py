@@ -32,7 +32,7 @@ from logilab.common.decorators import cached
 from astroid.exceptions import NotFoundError, \
      AstroidBuildingException, InferenceError
 from astroid.node_classes import Const, DelName, DelAttr, \
-     Dict, From, List, Pass, Raise, Return, Tuple, Yield, \
+     Dict, From, List, Pass, Raise, Return, Tuple, Yield, YieldFrom, \
      LookupMixIn, const_factory as cf, unpack_infer
 from astroid.bases import NodeNG, InferenceContext, Instance,\
      YES, Generator, UnboundMethod, BoundMethod, _infer_stmts, copy_context, \
@@ -620,7 +620,8 @@ class Function(Statement, Lambda):
         """return true if this is a generator function"""
         # XXX should be flagged, not computed
         try:
-            return self.nodes_of_class(Yield, skip_klass=(Function, Lambda)).next()
+            return self.nodes_of_class((Yield, YieldFrom),
+                                       skip_klass=(Function, Lambda)).next()
         except StopIteration:
             return False
 
