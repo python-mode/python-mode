@@ -80,7 +80,7 @@ class DeprecationManager(object):
             if '%s' in message:
                 message %= func.func_name
             def wrapped(*args, **kwargs):
-                self.warn(version, message, stacklevel)
+                self.warn(version, message, stacklevel+1)
                 return func(*args, **kwargs)
             return wrapped
         return decorator
@@ -92,7 +92,7 @@ class DeprecationManager(object):
             def __call__(cls, *args, **kwargs):
                 msg = getattr(cls, "__deprecation_warning__",
                               "%(cls)s is deprecated") % {'cls': cls.__name__}
-                self.warn(version, msg)
+                self.warn(version, msg, stacklevel=3)
                 return type.__call__(cls, *args, **kwargs)
         return metaclass
 
@@ -129,7 +129,7 @@ class DeprecationManager(object):
                 """FIXME: There might be a better way to handle old/new-style class
                 """
                 def __init__(self, *args, **kwargs):
-                    self.warn(version, message)
+                    self.warn(version, message, stacklevel=3)
                     new_class.__init__(self, *args, **kwargs)
             return DeprecatedClass
 

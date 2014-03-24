@@ -3,10 +3,11 @@
 Prepare params, check a modeline and run the checkers.
 
 """
-import logging
 import re
-import sys
 
+import logging
+
+from .config import process_value, LOGGER
 from .lint.extensions import LINTERS
 
 
@@ -15,13 +16,8 @@ SKIP_PATTERN = re.compile(r'# *noqa\b', re.I).search
 
 # Parse a modelines
 MODELINE_RE = re.compile(
-    r'^\s*#\s+(?:pymode\:)?((?:lint[\w_]*=[^:\n\s]+:?)+)', re.I | re.M)
-
-# Setup a logger
-LOGGER = logging.getLogger('pylama')
-LOGGER.propagate = False
-STREAM = logging.StreamHandler(sys.stdout)
-LOGGER.addHandler(STREAM)
+    r'^\s*#\s+(?:pylama:)\s*((?:[\w_]*=[^:\n\s]+:?)+)',
+    re.I | re.M)
 
 
 def run(path, code=None, options=None):
@@ -32,19 +28,17 @@ def run(path, code=None, options=None):
     """
     errors = []
     params = dict(ignore=options.ignore, select=options.select)
-    config = dict()
+    fileconfig = dict()
     for mask in options.file_params:
         if mask.match(path):
-            config.update(options.file_params[mask])
+            fileconfig.update(options.file_params[mask])
 
     try:
         with CodeContext(code, path) as ctx:
             code = ctx.code
-            params = prepare_params(
-                parse_modeline(code), config, ignore=options.ignore,
-                select=options.select)
+            params = prepare_params(parse_modeline(code), fileconfig, options)
 
-            if not params['lint']:
+            if params.get('skip'):
                 return errors
 
             for item in options.linters:
@@ -108,26 +102,22 @@ def parse_modeline(code):
     return dict()
 
 
-def prepare_params(*configs, **params):
+def prepare_params(modeline, fileconfig, options):
     """ Prepare and merge a params from modelines and configs.
 
     :return dict:
 
     """
-    params['ignore'] = list(params.get('ignore') or [])
-    params['select'] = list(params.get('select') or [])
+    params = dict(ignore=options.ignore, select=options.select, skip=False)
 
-    for config in filter(None, configs):
+    for config in filter(None, [modeline, fileconfig]):
         for key in ('ignore', 'select'):
-            config.setdefault(key, config.get('lint_' + key, []))
-            if not isinstance(config[key], list):
-                config[key] = config[key].split(',')
-            params[key] += config[key]
-        params['lint'] = config.get('lint', 1)
+            params[key] += process_value(key, config.get(key, []))
+        params['skip'] = bool(int(config.get('skip', False)))
 
     params['ignore'] = set(params['ignore'])
     params['select'] = set(params['select'])
-    params.setdefault('lint', 1)
+
     return params
 
 
@@ -176,17 +166,20 @@ class CodeContext(object):
     """ Read file if code is None. """
 
     def __init__(self, code, path):
+        """ Init context. """
         self.code = code
         self.path = path
         self._file = None
 
     def __enter__(self):
+        """ Open file and read a code. """
         if self.code is None:
             self._file = open(self.path, 'rU')
             self.code = self._file.read()
         return self
 
     def __exit__(self, t, value, traceback):
+        """ Close opened file. """
         if not self._file is None:
             self._file.close()
 

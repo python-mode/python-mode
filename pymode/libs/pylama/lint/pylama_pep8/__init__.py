@@ -44,7 +44,7 @@ class _PEP8Report(BaseReport):
 
         self.errors.append(dict(
             text=text,
-            type=code,
+            type=code.replace('E', 'C'),
             col=offset + 1,
             lnum=line_number,
         ))

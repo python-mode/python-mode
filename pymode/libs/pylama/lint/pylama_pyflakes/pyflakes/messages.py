@@ -18,7 +18,7 @@ class Message(object):
 
 
 class UnusedImport(Message):
-    message = 'W0611 %r imported but unused'
+    message = '%r imported but unused'
 
     def __init__(self, filename, loc, name):
         Message.__init__(self, filename, loc)
@@ -26,7 +26,7 @@ class UnusedImport(Message):
 
 
 class RedefinedWhileUnused(Message):
-    message = 'W0404 redefinition of unused %r from line %r'
+    message = 'redefinition of unused %r from line %r'
 
     def __init__(self, filename, loc, name, orig_loc):
         Message.__init__(self, filename, loc)
@@ -34,7 +34,7 @@ class RedefinedWhileUnused(Message):
 
 
 class RedefinedInListComp(Message):
-    message = 'W0621 list comprehension redefines %r from line %r'
+    message = 'list comprehension redefines %r from line %r'
 
     def __init__(self, filename, loc, name, orig_loc):
         Message.__init__(self, filename, loc)
@@ -42,7 +42,7 @@ class RedefinedInListComp(Message):
 
 
 class ImportShadowedByLoopVar(Message):
-    message = 'W0621 import %r from line %r shadowed by loop variable'
+    message = 'import %r from line %r shadowed by loop variable'
 
     def __init__(self, filename, loc, name, orig_loc):
         Message.__init__(self, filename, loc)
@@ -50,7 +50,7 @@ class ImportShadowedByLoopVar(Message):
 
 
 class ImportStarUsed(Message):
-    message = "W0401 'from %s import *' used; unable to detect undefined names"
+    message = "'from %s import *' used; unable to detect undefined names"
 
     def __init__(self, filename, loc, modname):
         Message.__init__(self, filename, loc)
@@ -58,7 +58,7 @@ class ImportStarUsed(Message):
 
 
 class UndefinedName(Message):
-    message = 'E0602 undefined name %r'
+    message = 'undefined name %r'
 
     def __init__(self, filename, loc, name):
         Message.__init__(self, filename, loc)
@@ -66,7 +66,7 @@ class UndefinedName(Message):
 
 
 class DoctestSyntaxError(Message):
-    message = 'W0511 syntax error in doctest'
+    message = 'syntax error in doctest'
 
     def __init__(self, filename, loc, position=None):
         Message.__init__(self, filename, loc)
@@ -76,7 +76,7 @@ class DoctestSyntaxError(Message):
 
 
 class UndefinedExport(Message):
-    message = 'E0603 undefined name %r in __all__'
+    message = 'undefined name %r in __all__'
 
     def __init__(self, filename, loc, name):
         Message.__init__(self, filename, loc)
@@ -84,7 +84,7 @@ class UndefinedExport(Message):
 
 
 class UndefinedLocal(Message):
-    message = ('E0602 local variable %r (defined in enclosing scope on line %r) '
+    message = ('local variable %r (defined in enclosing scope on line %r) '
                'referenced before assignment')
 
     def __init__(self, filename, loc, name, orig_loc):
@@ -93,7 +93,7 @@ class UndefinedLocal(Message):
 
 
 class DuplicateArgument(Message):
-    message = 'E1122 duplicate argument %r in function definition'
+    message = 'duplicate argument %r in function definition'
 
     def __init__(self, filename, loc, name):
         Message.__init__(self, filename, loc)
@@ -101,7 +101,7 @@ class DuplicateArgument(Message):
 
 
 class Redefined(Message):
-    message = 'W0621 redefinition of %r from line %r'
+    message = 'redefinition of %r from line %r'
 
     def __init__(self, filename, loc, name, orig_loc):
         Message.__init__(self, filename, loc)
@@ -109,7 +109,7 @@ class Redefined(Message):
 
 
 class LateFutureImport(Message):
-    message = 'W0410 future import(s) %r after other statements'
+    message = 'future import(s) %r after other statements'
 
     def __init__(self, filename, loc, names):
         Message.__init__(self, filename, loc)
@@ -121,8 +121,15 @@ class UnusedVariable(Message):
     Indicates that a variable has been explicity assigned to but not actually
     used.
     """
-    message = 'W0612 local variable %r is assigned to but never used'
+    message = 'local variable %r is assigned to but never used'
 
     def __init__(self, filename, loc, names):
         Message.__init__(self, filename, loc)
         self.message_args = (names,)
+
+
+class ReturnWithArgsInsideGenerator(Message):
+    """
+    Indicates a return statement with arguments inside a generator.
+    """
+    message = '\'return\' with argument inside generator'

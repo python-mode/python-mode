@@ -40,7 +40,6 @@ def git_hook():
 
 def hg_hook(ui, repo, node=None, **kwargs):
     """ Run pylama after mercurial commit. """
-
     from .main import check_files
     seen = set()
     paths = []
@@ -74,7 +73,6 @@ if __name__ == '__main__':
 
 def install_hg(path):
     """ Install hook in Mercurial repository. """
-
     hook = op.join(path, 'hgrc')
     if not op.isfile(hook):
         open(hook, 'w+').close()
@@ -95,7 +93,6 @@ def install_hg(path):
 
 def install_hook(path):
     """ Auto definition of SCM and hook installation. """
-
     git = op.join(path, '.git', 'hooks')
     hg = op.join(path, '.hg')
     if op.exists(git):

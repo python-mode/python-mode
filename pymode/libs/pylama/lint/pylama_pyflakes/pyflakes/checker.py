@@ -7,12 +7,11 @@ Also, it models the Bindings and Scopes.
 import doctest
 import os
 import sys
-try:
-    builtin_vars = dir(__import__('builtins'))
-    PY2 = False
-except ImportError:
-    builtin_vars = dir(__import__('__builtin__'))
-    PY2 = True
+
+PY2 = sys.version_info < (3, 0)
+PY32 = sys.version_info < (3, 3)    # Python 2.5 to 3.2
+PY33 = sys.version_info < (3, 4)    # Python 2.5 to 3.3
+builtin_vars = dir(__import__('__builtin__' if PY2 else 'builtins'))
 
 try:
     import ast
@@ -45,7 +44,7 @@ else:
     ast_TryExcept = ast.TryExcept
     ast_TryFinally = ast.TryFinally
 
-from . import messages
+from pyflakes import messages
 
 
 if PY2:
@@ -142,16 +141,16 @@ class ExportBinding(Binding):
     Names which are imported and not otherwise used but appear in the value of
     C{__all__} will not have an unused import warning reported for them.
     """
-    def names(self):
-        """
-        Return a list of the names referenced by this binding.
-        """
-        names = []
-        if isinstance(self.source, ast.List):
-            for node in self.source.elts:
+    def __init__(self, name, source, scope):
+        if '__all__' in scope and isinstance(source, ast.AugAssign):
+            self.names = list(scope['__all__'].names)
+        else:
+            self.names = []
+        if isinstance(source.value, (ast.List, ast.Tuple)):
+            for node in source.value.elts:
                 if isinstance(node, ast.Str):
-                    names.append(node.s)
-        return names
+                    self.names.append(node.s)
+        super(ExportBinding, self).__init__(name, source)
 
 
 class Scope(dict):
@@ -180,6 +179,8 @@ class FunctionScope(Scope):
         super(FunctionScope, self).__init__()
         # Simplify: manage the special locals as globals
         self.globals = self.alwaysUsed.copy()
+        self.returnValue = None     # First non-empty return
+        self.isGenerator = False    # Detect a generator
 
     def unusedAssignments(self):
         """
@@ -229,7 +230,6 @@ class Checker(object):
     nodeDepth = 0
     offset = None
     traceTree = False
-    withDoctest = ('PYFLAKES_NODOCTEST' not in os.environ)
 
     builtIns = set(builtin_vars).union(_MAGIC_GLOBALS)
     _customBuiltIns = os.environ.get('PYFLAKES_BUILTINS')
@@ -237,7 +237,8 @@ class Checker(object):
         builtIns.update(_customBuiltIns.split(','))
     del _customBuiltIns
 
-    def __init__(self, tree, filename='(none)', builtins=None):
+    def __init__(self, tree, filename='(none)', builtins=None,
+                 withDoctest='PYFLAKES_DOCTEST' in os.environ):
         self._nodeHandlers = {}
         self._deferredFunctions = []
         self._deferredAssignments = []
@@ -246,6 +247,7 @@ class Checker(object):
         self.filename = filename
         if builtins:
             self.builtIns = self.builtIns.union(builtins)
+        self.withDoctest = withDoctest
         self.scopeStack = [ModuleScope()]
         self.exceptHandlers = [()]
         self.futuresAllowed = True
@@ -305,32 +307,27 @@ class Checker(object):
         for scope in self.deadScopes:
             export = isinstance(scope.get('__all__'), ExportBinding)
             if export:
-                all = scope['__all__'].names()
+                all_names = set(scope['__all__'].names)
                 if not scope.importStarred and \
                    os.path.basename(self.filename) != '__init__.py':
                     # Look for possible mistakes in the export list
-                    undefined = set(all) - set(scope)
+                    undefined = all_names.difference(scope)
                     for name in undefined:
                         self.report(messages.UndefinedExport,
                                     scope['__all__'].source, name)
             else:
-                all = []
+                all_names = []
 
             # Look for imported names that aren't used.
             for importation in scope.values():
-                if isinstance(importation, Importation):
-                    if not importation.used and importation.name not in all:
-                        self.report(messages.UnusedImport,
-                                    importation.source, importation.name)
+                if (isinstance(importation, Importation) and
+                        not importation.used and
+                        importation.name not in all_names):
+                    self.report(messages.UnusedImport,
+                                importation.source, importation.name)
 
     def pushScope(self, scopeClass=FunctionScope):
         self.scopeStack.append(scopeClass())
-
-    def pushFunctionScope(self):    # XXX Deprecated
-        self.pushScope(FunctionScope)
-
-    def pushClassScope(self):       # XXX Deprecated
-        self.pushScope(ClassScope)
 
     def report(self, messageClass, *args, **kwargs):
         self.messages.append(messageClass(self.filename, *args, **kwargs))
@@ -351,9 +348,9 @@ class Checker(object):
 
         if not hasattr(lnode, 'parent') or not hasattr(rnode, 'parent'):
             return
-        if (lnode.level > rnode.level):
+        if (lnode.depth > rnode.depth):
             return self.getCommonAncestor(lnode.parent, rnode, stop)
-        if (rnode.level > lnode.level):
+        if (rnode.depth > lnode.depth):
             return self.getCommonAncestor(lnode, rnode.parent, stop)
         return self.getCommonAncestor(lnode.parent, rnode.parent, stop)
 
@@ -496,7 +493,7 @@ class Checker(object):
             binding = Binding(name, node)
         elif (parent is not None and name == '__all__' and
               isinstance(self.scope, ModuleScope)):
-            binding = ExportBinding(name, parent.value)
+            binding = ExportBinding(name, parent, self.scope)
         else:
             binding = Assignment(name, node)
         if name in self.scope:
@@ -548,7 +545,7 @@ class Checker(object):
                                         self.isDocstring(node)):
             self.futuresAllowed = False
         self.nodeDepth += 1
-        node.level = self.nodeDepth
+        node.depth = self.nodeDepth
         node.parent = parent
         try:
             handler = self.getNodeHandler(node.__class__)
@@ -578,12 +575,17 @@ class Checker(object):
             except SyntaxError:
                 e = sys.exc_info()[1]
                 position = (node_lineno + example.lineno + e.lineno,
-                            example.indent + 4 + e.offset)
+                            example.indent + 4 + (e.offset or 0))
                 self.report(messages.DoctestSyntaxError, node, position)
             else:
                 self.offset = (node_offset[0] + node_lineno + example.lineno,
                                node_offset[1] + example.indent + 4)
+                underscore_in_builtins = '_' in self.builtIns
+                if not underscore_in_builtins:
+                    self.builtIns.add('_')
                 self.handleChildren(tree)
+                if not underscore_in_builtins:
+                    self.builtIns.remove('_')
                 self.offset = node_offset
         self.popScope()
 
@@ -591,15 +593,15 @@ class Checker(object):
         pass
 
     # "stmt" type nodes
-    RETURN = DELETE = PRINT = WHILE = IF = WITH = WITHITEM = RAISE = \
+    DELETE = PRINT = WHILE = IF = WITH = WITHITEM = RAISE = \
         TRYFINALLY = ASSERT = EXEC = EXPR = handleChildren
 
     CONTINUE = BREAK = PASS = ignore
 
     # "expr" type nodes
-    BOOLOP = BINOP = UNARYOP = IFEXP = DICT = SET = YIELD = YIELDFROM = \
+    BOOLOP = BINOP = UNARYOP = IFEXP = DICT = SET = \
         COMPARE = CALL = REPR = ATTRIBUTE = SUBSCRIPT = LIST = TUPLE = \
-        STARRED = handleChildren
+        STARRED = NAMECONSTANT = handleChildren
 
     NUM = STR = BYTES = ELLIPSIS = ignore
 
@@ -695,6 +697,17 @@ class Checker(object):
             # arguments, but these aren't dispatched through here
             raise RuntimeError("Got impossible expression context: %r" % (node.ctx,))
 
+    def RETURN(self, node):
+        if node.value and not self.scope.returnValue:
+            self.scope.returnValue = node.value
+        self.handleNode(node.value, node)
+
+    def YIELD(self, node):
+        self.scope.isGenerator = True
+        self.handleNode(node.value, node)
+
+    YIELDFROM = YIELD
+
     def FUNCTIONDEF(self, node):
         for deco in node.decorator_list:
             self.handleNode(deco, node)
@@ -705,6 +718,7 @@ class Checker(object):
 
     def LAMBDA(self, node):
         args = []
+        annotations = []
 
         if PY2:
             def addArgs(arglist):
@@ -712,34 +726,41 @@ class Checker(object):
                     if isinstance(arg, ast.Tuple):
                         addArgs(arg.elts)
                     else:
-                        if arg.id in args:
-                            self.report(messages.DuplicateArgument,
-                                        node, arg.id)
                         args.append(arg.id)
             addArgs(node.args.args)
             defaults = node.args.defaults
         else:
             for arg in node.args.args + node.args.kwonlyargs:
-                if arg.arg in args:
-                    self.report(messages.DuplicateArgument,
-                                node, arg.arg)
                 args.append(arg.arg)
-                self.handleNode(arg.annotation, node)
-            if hasattr(node, 'returns'):    # Only for FunctionDefs
-                for annotation in (node.args.varargannotation,
-                                   node.args.kwargannotation, node.returns):
-                    self.handleNode(annotation, node)
+                annotations.append(arg.annotation)
             defaults = node.args.defaults + node.args.kw_defaults
 
-        # vararg/kwarg identifiers are not Name nodes
-        for wildcard in (node.args.vararg, node.args.kwarg):
+        # Only for Python3 FunctionDefs
+        is_py3_func = hasattr(node, 'returns')
+
+        for arg_name in ('vararg', 'kwarg'):
+            wildcard = getattr(node.args, arg_name)
             if not wildcard:
                 continue
-            if wildcard in args:
-                self.report(messages.DuplicateArgument, node, wildcard)
-            args.append(wildcard)
-        for default in defaults:
-            self.handleNode(default, node)
+            args.append(wildcard if PY33 else wildcard.arg)
+            if is_py3_func:
+                if PY33:  # Python 2.5 to 3.3
+                    argannotation = arg_name + 'annotation'
+                    annotations.append(getattr(node.args, argannotation))
+                else:     # Python >= 3.4
+                    annotations.append(wildcard.annotation)
+
+        if is_py3_func:
+            annotations.append(node.returns)
+
+        if len(set(args)) < len(args):
+            for (idx, arg) in enumerate(args):
+                if arg in args[:idx]:
+                    self.report(messages.DuplicateArgument, node, arg)
+
+        for child in annotations + defaults:
+            if child:
+                self.handleNode(child, node)
 
         def runFunction():
 
@@ -761,6 +782,17 @@ class Checker(object):
                 for name, binding in self.scope.unusedAssignments():
                     self.report(messages.UnusedVariable, binding.source, name)
             self.deferAssignment(checkUnusedAssignments)
+
+            if PY32:
+                def checkReturnWithArgumentInsideGenerator():
+                    """
+                    Check to see if there is any return statement with
+                    arguments but the function is a generator.
+                    """
+                    if self.scope.isGenerator and self.scope.returnValue:
+                        self.report(messages.ReturnWithArgsInsideGenerator,
+                                    self.scope.returnValue)
+                self.deferAssignment(checkReturnWithArgumentInsideGenerator)
             self.popScope()
 
         self.deferFunction(runFunction)

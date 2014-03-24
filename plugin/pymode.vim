@@ -120,6 +120,7 @@ call pymode#default("g:pymode_lint_signs", 1)
 
 " Symbol's definitions
 call pymode#default("g:pymode_lint_todo_symbol", "WW")
+call pymode#default("g:pymode_lint_docs_symbol", "DD")
 call pymode#default("g:pymode_lint_comment_symbol", "CC")
 call pymode#default("g:pymode_lint_visual_symbol", "RR")
 call pymode#default("g:pymode_lint_error_symbol", "EE")

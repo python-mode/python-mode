@@ -990,3 +990,25 @@ class Class(Statement, LocalsDictNodeNG, FilterStmtsMixin):
                 yield iface
         if missing:
             raise InferenceError()
+
+    _metaclass = None
+    def metaclass(self):
+        """ Return the metaclass of this class """
+        if self._metaclass:
+            # Expects this from Py3k TreeRebuilder
+            try:
+                return next(self._metaclass.infer())
+            except InferenceError:
+                return 
+
+        try:
+            meta = self.getattr('__metaclass__')[0]
+        except NotFoundError:
+            return
+        try:
+            infered = meta.infer().next()
+        except InferenceError:
+            return
+        if infered is YES: # don't expose this
+            return None
+        return infered

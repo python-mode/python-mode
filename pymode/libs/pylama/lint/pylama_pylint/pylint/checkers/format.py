@@ -11,7 +11,7 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """Python code format's checker.
 
 By default try to follow Guido's style guide :
@@ -36,7 +36,9 @@ from pylint.checkers.utils import check_messages
 from pylint.utils import WarningScope, OPTION_RGX
 
 _KEYWORD_TOKENS = ['assert', 'del', 'elif', 'except', 'for', 'if', 'in', 'not',
-                   'print', 'raise', 'return', 'while', 'yield']
+                   'raise', 'return', 'while', 'yield']
+if sys.version_info < (3, 0):
+    _KEYWORD_TOKENS.append('print')
 
 _SPACED_OPERATORS = ['==', '<', '>', '!=', '<>', '<=', '>=',
                      '+=', '-=', '*=', '**=', '/=', '//=', '&=', '|=', '^=',
@@ -212,7 +214,6 @@ class FormatChecker(BaseTokenChecker):
         if tokens[start+1][1] != '(':
             return
 
-        found_comma = False
         found_and_or = False
         depth = 0
         keyword_token = tokens[start][1]
@@ -300,7 +301,7 @@ class FormatChecker(BaseTokenChecker):
         else:
             self._check_space(tokens, i, (_MUST, _MUST))
 
-    def _open_lambda(self, unused_tokens, unused_i):
+    def _open_lambda(self, tokens, i): # pylint:disable=unused-argument
         self._bracket_stack.append('lambda')
 
     def _handle_colon(self, tokens, i):
@@ -355,7 +356,6 @@ class FormatChecker(BaseTokenChecker):
         pairs = [(tokens[i-1], tokens[i]), (tokens[i], tokens[i+1])]
 
         for other_idx, (policy, token_pair) in enumerate(zip(policies, pairs)):
-            current_idx = 1 - other_idx
             if token_pair[other_idx][0] in _EOL or policy == _IGNORE:
                 continue
 
@@ -501,7 +501,7 @@ class FormatChecker(BaseTokenChecker):
         if line_num > self.config.max_module_lines:
             self.add_message('C0302', args=line_num, line=1)
 
-    @check_messages('C0321' ,'C03232', 'C0323', 'C0324')
+    @check_messages('C0321', 'C03232', 'C0323', 'C0324')
     def visit_default(self, node):
         """check the node line number and check it if not yet done"""
         if not node.is_statement:
@@ -606,7 +606,7 @@ class FormatChecker(BaseTokenChecker):
                 self.add_message('W0312', args=args, line=line_num)
                 return level
             suppl += string[0]
-            string = string [1:]
+            string = string[1:]
         if level != expected or suppl:
             i_type = 'spaces'
             if indent[0] == '\t':

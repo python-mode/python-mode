@@ -14,14 +14,13 @@ class Linter(BaseLinter):
         :return list: List of errors.
 
         """
-        from .pep257 import check_source
+        from .pep257 import PEP257Checker
 
         errors = []
-        for er in check_source(code, path):
+        for er in PEP257Checker().check_source(code, path):
             errors.append(dict(
                 lnum=er.line,
-                col=er.char,
-                text='C0110 %s' % er.explanation.split('\n')[0].strip(),
-                type='W',
+                text=er.message,
+                type='D',
             ))
         return errors
