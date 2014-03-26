@@ -20,7 +20,6 @@ def run_code():
     :returns: None
 
     """
-
     errors, err = [], ''
     line1, line2 = env.var('a:line1'), env.var('a:line2')
     lines = __prepare_lines(line1, line2)
@@ -36,7 +35,9 @@ def run_code():
 
     try:
         code = compile('\n'.join(lines) + '\n', env.curbuf.name, 'exec')
+        sys.path.insert(0, env.curdir)
         exec(code, context) # noqa
+        sys.path.pop(0)
 
     except SystemExit as e:
         if e.code:
