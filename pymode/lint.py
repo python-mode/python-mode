@@ -26,6 +26,7 @@ def code_check():
             select=env.var('g:pymode_lint_select'),
             linters=env.var('g:pymode_lint_checkers'),
         )
+        env.debug(options)
 
         path = os.path.relpath(env.curbuf.name, env.curdir)
         env.debug("Start code check: ", path)

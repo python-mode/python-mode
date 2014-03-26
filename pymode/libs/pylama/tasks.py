@@ -49,7 +49,7 @@ def async_check_files(paths, options, rootpath=None):
     errors = []
 
     # Disable async if pylint enabled
-    async = options.async and not 'pylint' in options.linters
+    async = options.async and 'pylint' not in options.linters
 
     if not async:
         for path in paths:

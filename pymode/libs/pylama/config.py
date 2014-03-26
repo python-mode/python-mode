@@ -7,7 +7,7 @@ from re import compile as re
 import logging
 from argparse import ArgumentParser
 
-from . import version
+from . import __version__
 from .libs.inirama import Namespace
 from .lint.extensions import LINTERS
 
@@ -72,7 +72,7 @@ PARSER.add_argument(
     "--verbose", "-v", action='store_true', help="Verbose mode.")
 
 PARSER.add_argument('--version', action='version',
-                    version='%(prog)s ' + version)
+                    version='%(prog)s ' + __version__)
 
 PARSER.add_argument(
     "--format", "-f", default=_Default('pep8'), choices=['pep8', 'pylint'],
@@ -116,7 +116,7 @@ PARSER.add_argument(
 ACTIONS = dict((a.dest, a) for a in PARSER._actions)
 
 
-def parse_options(args=None, **overrides): # noqa
+def parse_options(args=None, config=True, **overrides): # noqa
     """ Parse options from command line and configuration files.
 
     :return argparse.Namespace:
@@ -127,16 +127,8 @@ def parse_options(args=None, **overrides): # noqa
 
     # Parse args from command string
     options = PARSER.parse_args(args)
-
-    # Parse options from ini file
-    cfg = get_config(str(options.options))
-
-    # Compile options from ini
-    for k, v in cfg.default.items():
-        LOGGER.info('Find option %s (%s)', k, v)
-        passed_value = getattr(options, k, _Default())
-        if isinstance(passed_value, _Default):
-            setattr(options, k, _Default(v))
+    options.file_params = dict()
+    options.linter_params = dict()
 
     # Override options
     for k, v in overrides.items():
@@ -144,26 +136,33 @@ def parse_options(args=None, **overrides): # noqa
         if isinstance(passed_value, _Default):
             setattr(options, k, _Default(v))
 
+    # Compile options from ini
+    if config:
+        cfg = get_config(str(options.options))
+        for k, v in cfg.default.items():
+            LOGGER.info('Find option %s (%s)', k, v)
+            passed_value = getattr(options, k, _Default())
+            if isinstance(passed_value, _Default):
+                setattr(options, k, _Default(v))
+
+        # Parse file related options
+        for k, s in cfg.sections.items():
+            if k == cfg.default_section:
+                continue
+            if k in LINTERS:
+                options.linter_params[k] = dict(s)
+                continue
+            mask = re(fnmatch.translate(k))
+            options.file_params[mask] = dict(s)
+            options.file_params[mask]['lint'] = int(
+                options.file_params[mask].get('lint', 1)
+            )
+
     # Postprocess options
     opts = dict(options.__dict__.items())
     for name, value in opts.items():
         if isinstance(value, _Default):
             setattr(options, name, process_value(name, value.value))
-
-    # Parse file related options
-    options.file_params = dict()
-    options.linter_params = dict()
-    for k, s in cfg.sections.items():
-        if k == cfg.default_section:
-            continue
-        if k in LINTERS:
-            options.linter_params[k] = dict(s)
-            continue
-        mask = re(fnmatch.translate(k))
-        options.file_params[mask] = dict(s)
-        options.file_params[mask]['lint'] = int(
-            options.file_params[mask].get('lint', 1)
-        )
 
     return options
 

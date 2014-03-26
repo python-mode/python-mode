@@ -8,7 +8,6 @@ except ImportError:
     from io import StringIO
 
 
-
 class Linter(BaseLinter):
 
     """ PEP8 code check. """
@@ -42,12 +41,13 @@ class _PEP8Report(BaseReport):
         code = super(_PEP8Report, self).error(
             line_number, offset, text, check)
 
-        self.errors.append(dict(
-            text=text,
-            type=code.replace('E', 'C'),
-            col=offset + 1,
-            lnum=line_number,
-        ))
+        if code:
+            self.errors.append(dict(
+                text=text,
+                type=code.replace('E', 'C'),
+                col=offset + 1,
+                lnum=line_number,
+            ))
 
     def get_file_results(self):
         """ Get errors.

@@ -47,11 +47,11 @@ def run(path, code=None, options=None):
                     item = (item, LINTERS.get(item))
 
                 name, linter = item
-                LOGGER.debug("Run %s", name)
 
                 if not linter or not linter.allow(path):
                     continue
 
+                LOGGER.info("Run %s", name)
                 meta = options.linter_params.get(name, dict())
                 result = linter.run(path, code=code, **meta)
                 for e in result:
@@ -77,9 +77,8 @@ def run(path, code=None, options=None):
         ))
 
     except Exception as e:
-        LOGGER.debug("Unknown exception %s", e)
         import traceback
-        logging.debug(traceback.format_exc())
+        LOGGER.info(traceback.format_exc())
 
     errors = [er for er in errors if filter_errors(er, **params)]
 
@@ -180,7 +179,7 @@ class CodeContext(object):
 
     def __exit__(self, t, value, traceback):
         """ Close opened file. """
-        if not self._file is None:
+        if self._file is not None:
             self._file.close()
 
         if t and LOGGER.level == logging.DEBUG:
