@@ -28,7 +28,10 @@ def run_code():
             lines.pop(ix)
 
     context = dict(
-        __name__='__main__', input=env.user_input, raw_input=env.user_input)
+        __name__='__main__',
+        __file__=env.var('expand("%:p")'),
+        input=env.user_input,
+        raw_input=env.user_input)
 
     sys.stdout, stdout_ = StringIO(), sys.stdout
     sys.stderr, stderr_ = StringIO(), sys.stderr
