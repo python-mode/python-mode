@@ -31,9 +31,12 @@ def auto():
 def get_documentation():
     """ Search documentation and append to current buffer. """
 
-    import StringIO
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
 
-    sys.stdout, _ = StringIO.StringIO(), sys.stdout
+    sys.stdout, _ = StringIO(), sys.stdout
     help(vim.eval('a:word'))
     sys.stdout, out = _, sys.stdout.getvalue()
     vim.current.buffer.append(str(out).splitlines(), 0)
