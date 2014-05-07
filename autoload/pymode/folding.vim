@@ -30,8 +30,8 @@ fun! pymode#folding#text() " {{{
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
     let line = substitute(line, '\%("""\|''''''\)', '', '')
-    let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
-    return line . '…' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount . ' '
+    let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
+    return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
 
 
