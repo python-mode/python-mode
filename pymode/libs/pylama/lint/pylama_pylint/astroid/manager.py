@@ -97,7 +97,7 @@ class AstroidManager(OptionsProviderMixIn):
                 modname = '.'.join(modpath_from_file(filepath))
             except ImportError:
                 modname = filepath
-        if modname in self.astroid_cache:
+        if modname in self.astroid_cache and self.astroid_cache[modname].file == filepath:
             return self.astroid_cache[modname]
         if source:
             from astroid.builder import AstroidBuilder
@@ -281,11 +281,13 @@ class AstroidManager(OptionsProviderMixIn):
         """Call matching transforms for the given node if any and return the
         transformed node.
         """
-        try:
-            transforms = self.transforms[type(node)]
-        except KeyError:
-            return node # no transform registered for this class of node
-        orig_node = node # copy the reference
+        cls = node.__class__
+        if cls not in self.transforms:
+            # no transform registered for this class of node
+            return node
+
+        transforms = self.transforms[cls]
+        orig_node = node  # copy the reference
         for transform_func, predicate in transforms:
             if predicate is None or predicate(node):
                 ret = transform_func(node)
@@ -299,6 +301,9 @@ class AstroidManager(OptionsProviderMixIn):
                     node = ret
         return node
 
+    def cache_module(self, module):
+        """Cache a module if no module with the same name is known yet."""
+        self.astroid_cache.setdefault(module.name, module)
 
 
 class Project(object):

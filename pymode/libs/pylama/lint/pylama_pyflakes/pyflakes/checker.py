@@ -15,7 +15,6 @@ builtin_vars = dir(__import__('__builtin__' if PY2 else 'builtins'))
 
 try:
     import ast
-    iter_child_nodes = ast.iter_child_nodes
 except ImportError:     # Python 2.5
     import _ast as ast
 
@@ -23,26 +22,6 @@ except ImportError:     # Python 2.5
         # Patch the missing attribute 'decorator_list'
         ast.ClassDef.decorator_list = ()
         ast.FunctionDef.decorator_list = property(lambda s: s.decorators)
-
-    def iter_child_nodes(node):
-        """
-        Yield all direct child nodes of *node*, that is, all fields that
-        are nodes and all items of fields that are lists of nodes.
-        """
-        for name in node._fields:
-            field = getattr(node, name, None)
-            if isinstance(field, ast.AST):
-                yield field
-            elif isinstance(field, list):
-                for item in field:
-                    yield item
-# Python >= 3.3 uses ast.Try instead of (ast.TryExcept + ast.TryFinally)
-if hasattr(ast, 'Try'):
-    ast_TryExcept = ast.Try
-    ast_TryFinally = ()
-else:
-    ast_TryExcept = ast.TryExcept
-    ast_TryFinally = ast.TryFinally
 
 from pyflakes import messages
 
@@ -54,6 +33,55 @@ if PY2:
 else:
     def getNodeType(node_class):
         return node_class.__name__.upper()
+
+# Python >= 3.3 uses ast.Try instead of (ast.TryExcept + ast.TryFinally)
+if PY32:
+    def getAlternatives(n):
+        if isinstance(n, (ast.If, ast.TryFinally)):
+            return [n.body]
+        if isinstance(n, ast.TryExcept):
+            return [n.body + n.orelse] + [[hdl] for hdl in n.handlers]
+else:
+    def getAlternatives(n):
+        if isinstance(n, ast.If):
+            return [n.body]
+        if isinstance(n, ast.Try):
+            return [n.body + n.orelse] + [[hdl] for hdl in n.handlers]
+
+
+class _FieldsOrder(dict):
+    """Fix order of AST node fields."""
+
+    def _get_fields(self, node_class):
+        # handle iter before target, and generators before element
+        fields = node_class._fields
+        if 'iter' in fields:
+            key_first = 'iter'.find
+        elif 'generators' in fields:
+            key_first = 'generators'.find
+        else:
+            key_first = 'value'.find
+        return tuple(sorted(fields, key=key_first, reverse=True))
+
+    def __missing__(self, node_class):
+        self[node_class] = fields = self._get_fields(node_class)
+        return fields
+
+
+def iter_child_nodes(node, omit=None, _fields_order=_FieldsOrder()):
+    """
+    Yield all direct child nodes of *node*, that is, all fields that
+    are nodes and all items of fields that are lists of nodes.
+    """
+    for name in _fields_order[node.__class__]:
+        if name == omit:
+            continue
+        field = getattr(node, name, None)
+        if isinstance(field, ast.AST):
+            yield field
+        elif isinstance(field, list):
+            for item in field:
+                yield item
 
 
 class Binding(object):
@@ -82,8 +110,17 @@ class Binding(object):
                                                         self.source.lineno,
                                                         id(self))
 
+    def redefines(self, other):
+        return isinstance(other, Definition) and self.name == other.name
 
-class Importation(Binding):
+
+class Definition(Binding):
+    """
+    A binding that defines a function or a class.
+    """
+
+
+class Importation(Definition):
     """
     A binding created by an import statement.
 
@@ -91,21 +128,22 @@ class Importation(Binding):
         possibly including multiple dotted components.
     @type fullName: C{str}
     """
+
     def __init__(self, name, source):
         self.fullName = name
+        self.redefined = []
         name = name.split('.')[0]
         super(Importation, self).__init__(name, source)
+
+    def redefines(self, other):
+        if isinstance(other, Importation):
+            return self.fullName == other.fullName
+        return isinstance(other, Definition) and self.name == other.name
 
 
 class Argument(Binding):
     """
     Represents binding a name as an argument.
-    """
-
-
-class Definition(Binding):
-    """
-    A binding that defines a function or a class.
     """
 
 
@@ -141,6 +179,7 @@ class ExportBinding(Binding):
     Names which are imported and not otherwise used but appear in the value of
     C{__all__} will not have an unused import warning reported for them.
     """
+
     def __init__(self, name, source, scope):
         if '__all__' in scope and isinstance(source, ast.AugAssign):
             self.names = list(scope['__all__'].names)
@@ -305,8 +344,7 @@ class Checker(object):
         which were imported but unused.
         """
         for scope in self.deadScopes:
-            export = isinstance(scope.get('__all__'), ExportBinding)
-            if export:
+            if isinstance(scope.get('__all__'), ExportBinding):
                 all_names = set(scope['__all__'].names)
                 if not scope.importStarred and \
                    os.path.basename(self.filename) != '__init__.py':
@@ -319,12 +357,20 @@ class Checker(object):
                 all_names = []
 
             # Look for imported names that aren't used.
-            for importation in scope.values():
-                if (isinstance(importation, Importation) and
-                        not importation.used and
-                        importation.name not in all_names):
-                    self.report(messages.UnusedImport,
-                                importation.source, importation.name)
+            for value in scope.values():
+                if isinstance(value, Importation):
+                    used = value.used or value.name in all_names
+                    if not used:
+                        messg = messages.UnusedImport
+                        self.report(messg, value.source, value.name)
+                    for node in value.redefined:
+                        if isinstance(self.getParent(node), ast.For):
+                            messg = messages.ImportShadowedByLoopVar
+                        elif used:
+                            continue
+                        else:
+                            messg = messages.RedefinedWhileUnused
+                        self.report(messg, node, value.name, value.source)
 
     def pushScope(self, scopeClass=FunctionScope):
         self.scopeStack.append(scopeClass())
@@ -332,94 +378,77 @@ class Checker(object):
     def report(self, messageClass, *args, **kwargs):
         self.messages.append(messageClass(self.filename, *args, **kwargs))
 
-    def hasParent(self, node, kind):
-        while hasattr(node, 'parent'):
+    def getParent(self, node):
+        # Lookup the first parent which is not Tuple, List or Starred
+        while True:
             node = node.parent
-            if isinstance(node, kind):
-                return True
+            if not hasattr(node, 'elts') and not hasattr(node, 'ctx'):
+                return node
 
-    def getCommonAncestor(self, lnode, rnode, stop=None):
-        if not stop:
-            stop = self.root
+    def getCommonAncestor(self, lnode, rnode, stop):
+        if stop in (lnode, rnode) or not (hasattr(lnode, 'parent') and
+                                          hasattr(rnode, 'parent')):
+            return None
         if lnode is rnode:
             return lnode
-        if stop in (lnode, rnode):
-            return stop
 
-        if not hasattr(lnode, 'parent') or not hasattr(rnode, 'parent'):
-            return
         if (lnode.depth > rnode.depth):
             return self.getCommonAncestor(lnode.parent, rnode, stop)
-        if (rnode.depth > lnode.depth):
+        if (lnode.depth < rnode.depth):
             return self.getCommonAncestor(lnode, rnode.parent, stop)
         return self.getCommonAncestor(lnode.parent, rnode.parent, stop)
 
-    def descendantOf(self, node, ancestors, stop=None):
+    def descendantOf(self, node, ancestors, stop):
         for a in ancestors:
-            if self.getCommonAncestor(node, a, stop) not in (stop, None):
+            if self.getCommonAncestor(node, a, stop):
                 return True
         return False
-
-    def onFork(self, parent, lnode, rnode, items):
-        return (self.descendantOf(lnode, items, parent) ^
-                self.descendantOf(rnode, items, parent))
 
     def differentForks(self, lnode, rnode):
         """True, if lnode and rnode are located on different forks of IF/TRY"""
-        ancestor = self.getCommonAncestor(lnode, rnode)
-        if isinstance(ancestor, ast.If):
-            for fork in (ancestor.body, ancestor.orelse):
-                if self.onFork(ancestor, lnode, rnode, fork):
+        ancestor = self.getCommonAncestor(lnode, rnode, self.root)
+        parts = getAlternatives(ancestor)
+        if parts:
+            for items in parts:
+                if self.descendantOf(lnode, items, ancestor) ^ \
+                   self.descendantOf(rnode, items, ancestor):
                     return True
-        elif isinstance(ancestor, ast_TryExcept):
-            body = ancestor.body + ancestor.orelse
-            for fork in [body] + [[hdl] for hdl in ancestor.handlers]:
-                if self.onFork(ancestor, lnode, rnode, fork):
-                    return True
-        elif isinstance(ancestor, ast_TryFinally):
-            if self.onFork(ancestor, lnode, rnode, ancestor.body):
-                return True
         return False
 
-    def addBinding(self, node, value, reportRedef=True):
+    def addBinding(self, node, value):
         """
         Called when a binding is altered.
 
         - `node` is the statement responsible for the change
-        - `value` is the optional new value, a Binding instance, associated
-          with the binding; if None, the binding is deleted if it exists.
-        - if `reportRedef` is True (default), rebinding while unused will be
-          reported.
+        - `value` is the new value, a Binding instance
         """
-        redefinedWhileUnused = False
-        if not isinstance(self.scope, ClassScope):
-            for scope in self.scopeStack[::-1]:
-                existing = scope.get(value.name)
-                if (isinstance(existing, Importation)
-                        and not existing.used
-                        and (not isinstance(value, Importation) or
-                             value.fullName == existing.fullName)
-                        and reportRedef
-                        and not self.differentForks(node, existing.source)):
-                    redefinedWhileUnused = True
+        # assert value.source in (node, node.parent):
+        for scope in self.scopeStack[::-1]:
+            if value.name in scope:
+                break
+        existing = scope.get(value.name)
+
+        if existing and not self.differentForks(node, existing.source):
+
+            parent_stmt = self.getParent(value.source)
+            if isinstance(existing, Importation) and isinstance(parent_stmt, ast.For):
+                self.report(messages.ImportShadowedByLoopVar,
+                            node, value.name, existing.source)
+
+            elif scope is self.scope:
+                if (isinstance(parent_stmt, ast.comprehension) and
+                        not isinstance(self.getParent(existing.source),
+                                       (ast.For, ast.comprehension))):
+                    self.report(messages.RedefinedInListComp,
+                                node, value.name, existing.source)
+                elif not existing.used and value.redefines(existing):
                     self.report(messages.RedefinedWhileUnused,
                                 node, value.name, existing.source)
 
-        existing = self.scope.get(value.name)
-        if not redefinedWhileUnused and self.hasParent(value.source, ast.ListComp):
-            if (existing and reportRedef
-                    and not self.hasParent(existing.source, (ast.For, ast.ListComp))
-                    and not self.differentForks(node, existing.source)):
-                self.report(messages.RedefinedInListComp,
-                            node, value.name, existing.source)
+            elif isinstance(existing, Importation) and value.redefines(existing):
+                existing.redefined.append(node)
 
-        if (isinstance(existing, Definition)
-                and not existing.used
-                and not self.differentForks(node, existing.source)):
-            self.report(messages.RedefinedWhileUnused,
-                        node, value.name, existing.source)
-        else:
-            self.scope[value.name] = value
+        self.scope[value.name] = value
 
     def getNodeHandler(self, node_class):
         try:
@@ -488,12 +517,13 @@ class Checker(object):
                                 scope[name].used[1], name, scope[name].source)
                     break
 
-        parent = getattr(node, 'parent', None)
-        if isinstance(parent, (ast.For, ast.comprehension, ast.Tuple, ast.List)):
+        parent_stmt = self.getParent(node)
+        if isinstance(parent_stmt, (ast.For, ast.comprehension)) or (
+                parent_stmt != node.parent and
+                not self.isLiteralTupleUnpacking(parent_stmt)):
             binding = Binding(name, node)
-        elif (parent is not None and name == '__all__' and
-              isinstance(self.scope, ModuleScope)):
-            binding = ExportBinding(name, parent, self.scope)
+        elif name == '__all__' and isinstance(self.scope, ModuleScope):
+            binding = ExportBinding(name, node.parent, self.scope)
         else:
             binding = Assignment(name, node)
         if name in self.scope:
@@ -512,9 +542,16 @@ class Checker(object):
             except KeyError:
                 self.report(messages.UndefinedName, node, name)
 
-    def handleChildren(self, tree):
-        for node in iter_child_nodes(tree):
+    def handleChildren(self, tree, omit=None):
+        for node in iter_child_nodes(tree, omit=omit):
             self.handleNode(node, tree)
+
+    def isLiteralTupleUnpacking(self, node):
+        if isinstance(node, ast.Assign):
+            for child in node.targets + [node.value]:
+                if not hasattr(child, 'elts'):
+                    return False
+            return True
 
     def isDocstring(self, node):
         """
@@ -559,16 +596,19 @@ class Checker(object):
 
     def handleDoctests(self, node):
         try:
-            docstring, node_lineno = self.getDocstring(node.body[0])
-            if not docstring:
-                return
-            examples = self._getDoctestExamples(docstring)
+            (docstring, node_lineno) = self.getDocstring(node.body[0])
+            examples = docstring and self._getDoctestExamples(docstring)
         except (ValueError, IndexError):
             # e.g. line 6 of the docstring for <string> has inconsistent
             # leading whitespace: ...
             return
+        if not examples:
+            return
         node_offset = self.offset or (0, 0)
         self.pushScope()
+        underscore_in_builtins = '_' in self.builtIns
+        if not underscore_in_builtins:
+            self.builtIns.add('_')
         for example in examples:
             try:
                 tree = compile(example.source, "<doctest>", "exec", ast.PyCF_ONLY_AST)
@@ -580,21 +620,18 @@ class Checker(object):
             else:
                 self.offset = (node_offset[0] + node_lineno + example.lineno,
                                node_offset[1] + example.indent + 4)
-                underscore_in_builtins = '_' in self.builtIns
-                if not underscore_in_builtins:
-                    self.builtIns.add('_')
                 self.handleChildren(tree)
-                if not underscore_in_builtins:
-                    self.builtIns.remove('_')
                 self.offset = node_offset
+        if not underscore_in_builtins:
+            self.builtIns.remove('_')
         self.popScope()
 
     def ignore(self, node):
         pass
 
     # "stmt" type nodes
-    DELETE = PRINT = WHILE = IF = WITH = WITHITEM = RAISE = \
-        TRYFINALLY = ASSERT = EXEC = EXPR = handleChildren
+    DELETE = PRINT = FOR = WHILE = IF = WITH = WITHITEM = RAISE = \
+        TRYFINALLY = ASSERT = EXEC = EXPR = ASSIGN = handleChildren
 
     CONTINUE = BREAK = PASS = ignore
 
@@ -617,7 +654,7 @@ class Checker(object):
         EQ = NOTEQ = LT = LTE = GT = GTE = IS = ISNOT = IN = NOTIN = ignore
 
     # additional node types
-    COMPREHENSION = KEYWORD = handleChildren
+    LISTCOMP = COMPREHENSION = KEYWORD = handleChildren
 
     def GLOBAL(self, node):
         """
@@ -628,54 +665,12 @@ class Checker(object):
 
     NONLOCAL = GLOBAL
 
-    def LISTCOMP(self, node):
-        # handle generators before element
-        for gen in node.generators:
-            self.handleNode(gen, node)
-        self.handleNode(node.elt, node)
-
     def GENERATOREXP(self, node):
         self.pushScope(GeneratorScope)
-        # handle generators before element
-        for gen in node.generators:
-            self.handleNode(gen, node)
-        self.handleNode(node.elt, node)
-        self.popScope()
-
-    SETCOMP = GENERATOREXP
-
-    def DICTCOMP(self, node):
-        self.pushScope(GeneratorScope)
-        for gen in node.generators:
-            self.handleNode(gen, node)
-        self.handleNode(node.key, node)
-        self.handleNode(node.value, node)
-        self.popScope()
-
-    def FOR(self, node):
-        """
-        Process bindings for loop variables.
-        """
-        vars = []
-
-        def collectLoopVars(n):
-            if isinstance(n, ast.Name):
-                vars.append(n.id)
-            elif isinstance(n, ast.expr_context):
-                return
-            else:
-                for c in iter_child_nodes(n):
-                    collectLoopVars(c)
-
-        collectLoopVars(node.target)
-        for varn in vars:
-            if (isinstance(self.scope.get(varn), Importation)
-                    # unused ones will get an unused import warning
-                    and self.scope[varn].used):
-                self.report(messages.ImportShadowedByLoopVar,
-                            node, varn, self.scope[varn].source)
-
         self.handleChildren(node)
+        self.popScope()
+
+    DICTCOMP = SETCOMP = GENERATOREXP
 
     def NAME(self, node):
         """
@@ -698,7 +693,11 @@ class Checker(object):
             raise RuntimeError("Got impossible expression context: %r" % (node.ctx,))
 
     def RETURN(self, node):
-        if node.value and not self.scope.returnValue:
+        if (
+            node.value and
+            hasattr(self.scope, 'returnValue') and
+            not self.scope.returnValue
+        ):
             self.scope.returnValue = node.value
         self.handleNode(node.value, node)
 
@@ -711,8 +710,8 @@ class Checker(object):
     def FUNCTIONDEF(self, node):
         for deco in node.decorator_list:
             self.handleNode(deco, node)
-        self.addBinding(node, FunctionDefinition(node.name, node))
         self.LAMBDA(node)
+        self.addBinding(node, FunctionDefinition(node.name, node))
         if self.withDoctest:
             self.deferFunction(lambda: self.handleDoctests(node))
 
@@ -766,7 +765,7 @@ class Checker(object):
 
             self.pushScope()
             for name in args:
-                self.addBinding(node, Argument(name, node), reportRedef=False)
+                self.addBinding(node, Argument(name, node))
             if isinstance(node.body, list):
                 # case for FunctionDefs
                 for stmt in node.body:
@@ -818,11 +817,6 @@ class Checker(object):
         self.popScope()
         self.addBinding(node, ClassDefinition(node.name, node))
 
-    def ASSIGN(self, node):
-        self.handleNode(node.value, node)
-        for target in node.targets:
-            self.handleNode(target, node)
-
     def AUGASSIGN(self, node):
         self.handleNodeLoad(node.target)
         self.handleNode(node.value, node)
@@ -868,9 +862,7 @@ class Checker(object):
             self.handleNode(child, node)
         self.exceptHandlers.pop()
         # Process the other nodes: "except:", "else:", "finally:"
-        for child in iter_child_nodes(node):
-            if child not in node.body:
-                self.handleNode(child, node)
+        self.handleChildren(node, omit='body')
 
     TRYEXCEPT = TRY
 

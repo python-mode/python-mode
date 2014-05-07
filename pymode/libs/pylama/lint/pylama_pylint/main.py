@@ -19,7 +19,7 @@ class Linter(BaseLinter):
     """ Check code with pylint. """
 
     @staticmethod
-    def run(path, code=None, **meta): # noqa
+    def run(path, **meta): # noqa
         """ Pylint code checking.
 
         :return list: List of errors.

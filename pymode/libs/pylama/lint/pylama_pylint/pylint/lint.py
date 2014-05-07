@@ -29,6 +29,7 @@
 # import this first to avoid builtin namespace pollution
 from pylint.checkers import utils
 
+import functools
 import sys
 import os
 import tokenize
@@ -38,7 +39,7 @@ from logilab.common.configuration import UnsupportedAction, OptionsManagerMixIn
 from logilab.common.optik_ext import check_csv
 from logilab.common.modutils import load_module_from_name, get_module_part
 from logilab.common.interface import implements
-from logilab.common.textutils import splitstrip
+from logilab.common.textutils import splitstrip, unquote
 from logilab.common.ureports import Table, Text, Section
 from logilab.common.__pkginfo__ import version as common_version
 
@@ -89,10 +90,6 @@ MSGS = {
               'ignored-builtin-module',
               'Used to indicate that the user asked to analyze a builtin '
               'module which has been skipped.'),
-    'F0004': ('unexpected inferred value %s',
-              'unexpected-inferred-value',
-              'Used to indicate that some value of an unexpected type has been '
-              'inferred.'),
     'F0010': ('error while code parsing: %s',
               'parse-error',
               'Used when an exception occured while building the Astroid '
@@ -108,23 +105,17 @@ MSGS = {
               'Used when an inline option is either badly formatted or can\'t '
               'be used inside modules.'),
 
-    'I0011': ('Locally disabling %s',
+    'I0011': ('Locally disabling %s (%s)',
               'locally-disabled',
               'Used when an inline option disables a message or a messages '
               'category.'),
-    'I0012': ('Locally enabling %s',
+    'I0012': ('Locally enabling %s (%s)',
               'locally-enabled',
               'Used when an inline option enables a message or a messages '
               'category.'),
     'I0013': ('Ignoring entire file',
               'file-ignored',
               'Used to inform that the file will not be checked'),
-    'I0014': ('Used deprecated directive "pylint:disable-all" or '
-              '"pylint:disable=all"',
-              'deprecated-disable-all',
-              'You should preferably use "pylint:skip-file" as this directive '
-              'has a less confusing name. Do this only if you are sure that '
-              'all people running Pylint on your code have version >= 0.26'),
     'I0020': ('Suppressed %s (from line %d)',
               'suppressed-message',
               'A message was triggered on a line, but suppressed explicitly '
@@ -135,11 +126,12 @@ MSGS = {
               'useless-suppression',
               'Reported when a message is explicitly disabled for a line or '
               'a block of code, but never triggered.'),
-    'I0022': ('Deprecated pragma "pylint:disable-msg" or "pylint:enable-msg"',
+    'I0022': ('Pragma "%s" is deprecated, use "%s" instead',
               'deprecated-pragma',
-              'You should preferably use "pylint:disable" or "pylint:enable" '
-              'instead of the deprecated suppression pragma style '
-              '"pylint:disable-msg" or "pylint:enable-msg"'),
+              'Some inline pylint options have been renamed or reworked, '
+              'only the most recent form should be used. '
+              'NOTE:skip-all is only available with pylint >= 0.26', 
+              {'old_names': [('I0014', 'deprecated-disable-all')]}),
 
     'E0001': ('%s',
               'syntax-error',
@@ -152,6 +144,13 @@ MSGS = {
               'bad-option-value',
               'Used when a bad value for an inline option is encountered.'),
     }
+
+
+def _deprecated_option(shortname, opt_type):
+    def _warn_deprecated(option, optname, *args):
+        sys.stderr.write('Warning: option %s is deprecated and ignored.\n' % (optname,))
+    return {'short': shortname, 'help': 'DEPRECATED', 'hide': True,
+            'type': opt_type, 'action': 'callback', 'callback': _warn_deprecated}
 
 
 class PyLinter(OptionsManagerMixIn, MessagesHandlerMixIn, ReportsHandlerMixIn,
@@ -271,7 +270,10 @@ warning, statement which respectively contain the number of errors / warnings\
                             'This is a python new-style format string '
                             'used to format the message information. '
                             'See doc for all details')
-                  }), # msg-template
+                  }),
+
+                ('include-ids', _deprecated_option('i', 'yn')),
+                ('symbols', _deprecated_option('s', 'yn')),
                )
 
     option_groups = (
@@ -389,7 +391,7 @@ warning, statement which respectively contain the number of errors / warnings\
                 value = check_csv(None, optname, value)
                 if isinstance(value, (list, tuple)):
                     for _id in value:
-                        meth(_id)
+                        meth(_id, ignore_unknown=True)
                 else:
                     meth(value)
         elif optname == 'output-format':
@@ -453,25 +455,24 @@ warning, statement which respectively contain the number of errors / warnings\
         """process tokens from the current module to search for module/block
         level options
         """
-        comment = tokenize.COMMENT
-        newline = tokenize.NEWLINE
-        for (tok_type, _, start, _, line) in tokens:
-            if tok_type not in (comment, newline):
+        for (tok_type, content, start, _, _) in tokens:
+            if tok_type != tokenize.COMMENT:
                 continue
-            match = OPTION_RGX.search(line)
+            match = OPTION_RGX.search(content)
             if match is None:
                 continue
             if match.group(1).strip() == "disable-all" or \
                     match.group(1).strip() == 'skip-file':
                 if match.group(1).strip() == "disable-all":
-                    self.add_message('I0014', line=start[0])
-                self.add_message('I0013', line=start[0])
+                    self.add_message('deprecated-pragma', line=start[0],
+                                     args=('disable-all', 'skip-file'))
+                self.add_message('file-ignored', line=start[0])
                 self._ignore_file = True
                 return
             try:
                 opt, value = match.group(1).split('=', 1)
             except ValueError:
-                self.add_message('I0010', args=match.group(1).strip(),
+                self.add_message('bad-inline-option', args=match.group(1).strip(),
                                  line=start[0])
                 continue
             opt = opt.strip()
@@ -481,19 +482,19 @@ warning, statement which respectively contain the number of errors / warnings\
                 except KeyError:
                     meth = self._bw_options_methods[opt]
                     # found a "(dis|en)able-msg" pragma deprecated suppresssion
-                    self.add_message('deprecated-pragma', line=start[0])
+                    self.add_message('deprecated-pragma', line=start[0], args=(opt, opt.replace('-msg', '')))
                 for msgid in splitstrip(value):
                     try:
                         if (opt, msgid) == ('disable', 'all'):
-                            self.add_message('I0014', line=start[0])
-                            self.add_message('I0013', line=start[0])
+                            self.add_message('deprecated-pragma', line=start[0], args=('disable=all', 'skip-file'))
+                            self.add_message('file-ignored', line=start[0])
                             self._ignore_file = True
                             return
                         meth(msgid, 'module', start[0])
                     except UnknownMessage:
-                        self.add_message('E0012', args=msgid, line=start[0])
+                        self.add_message('bad-option-value', args=msgid, line=start[0])
             else:
-                self.add_message('E0011', args=opt, line=start[0])
+                self.add_message('unrecognized-inline-option', args=opt, line=start[0])
 
     def collect_block_lines(self, node, msg_state):
         """walk ast to collect block level options line numbers"""
@@ -569,14 +570,13 @@ warning, statement which respectively contain the number of errors / warnings\
             if (messages or
                 any(self.report_is_enabled(r[0]) for r in checker.reports)):
                 neededcheckers.append(checker)
-                checker.active_msgs = messages
         return neededcheckers
 
     def should_analyze_file(self, modname, path): # pylint: disable=unused-argument
         """Returns whether or not a module should be checked.
 
-        This implementation returns True for all inputs, indicating that all
-        files should be linted.
+        This implementation returns True for all python source file, indicating
+        that all files should be linted.
 
         Subclasses may override this method to indicate that modules satisfying
         certain conditions should not be linted.
@@ -586,7 +586,7 @@ warning, statement which respectively contain the number of errors / warnings\
         :returns: True if the module should be checked.
         :rtype: bool
         """
-        return True
+        return path.endswith('.py')
 
     def check(self, files_or_modules):
         """main checking entry: check a list of files or modules from their
@@ -607,7 +607,7 @@ warning, statement which respectively contain the number of errors / warnings\
         # build ast and check modules or packages
         for descr in self.expand_files(files_or_modules):
             modname, filepath = descr['name'], descr['path']
-            if not self.should_analyze_file(modname, filepath):
+            if not descr['isarg'] and not self.should_analyze_file(modname, filepath):
                 continue
             if self.config.files_output:
                 reportfile = 'pylint_%s.%s' % (modname, self.reporter.extension)
@@ -622,7 +622,7 @@ warning, statement which respectively contain the number of errors / warnings\
             self._ignore_file = False
             # fix the current file (if the source file was not available or
             # if it's actually a c extension)
-            self.current_file = astroid.file
+            self.current_file = astroid.file # pylint: disable=maybe-no-member
             self.check_astroid_module(astroid, walker, rawcheckers, tokencheckers)
             self._add_suppression_messages()
         # notify global end
@@ -640,7 +640,7 @@ warning, statement which respectively contain the number of errors / warnings\
             message = modname = error["mod"]
             key = error["key"]
             self.set_current_module(modname)
-            if key == "F0001":
+            if key == "fatal":
                 message = str(error["ex"]).replace(os.getcwd() + os.sep, '')
             self.add_message(key, args=message)
         return result
@@ -671,13 +671,13 @@ warning, statement which respectively contain the number of errors / warnings\
         try:
             return MANAGER.ast_from_file(filepath, modname, source=True)
         except SyntaxError, ex:
-            self.add_message('E0001', line=ex.lineno, args=ex.msg)
+            self.add_message('syntax-error', line=ex.lineno, args=ex.msg)
         except AstroidBuildingException, ex:
-            self.add_message('F0010', args=ex)
+            self.add_message('parse-error', args=ex)
         except Exception, ex:
             import traceback
             traceback.print_exc()
-            self.add_message('F0002', args=(ex.__class__, ex))
+            self.add_message('astroid-error', args=(ex.__class__, ex))
 
     def check_astroid_module(self, astroid, walker, rawcheckers, tokencheckers):
         """check a module from its astroid representation, real work"""
@@ -685,11 +685,11 @@ warning, statement which respectively contain the number of errors / warnings\
         try:
             tokens = tokenize_module(astroid)
         except tokenize.TokenError, ex:
-            self.add_message('E0001', line=ex.args[1][0], args=ex.args[0])
+            self.add_message('syntax-error', line=ex.args[1][0], args=ex.args[0])
             return
 
         if not astroid.pure_python:
-            self.add_message('I0001', args=astroid.name)
+            self.add_message('raw-checker-failed', args=astroid.name)
         else:
             #assert astroid.file.endswith('.py')
             # invoke ITokenChecker interface on self to fetch module/block
@@ -753,12 +753,12 @@ warning, statement which respectively contain the number of errors / warnings\
         for warning, lines in self._raw_module_msgs_state.iteritems():
             for line, enable in lines.iteritems():
                 if not enable and (warning, line) not in self._ignored_msgs:
-                    self.add_message('I0021', line, None,
+                    self.add_message('useless-suppression', line, None,
                                      (self.get_msg_display_string(warning),))
         # don't use iteritems here, _ignored_msgs may be modified by add_message
         for (warning, from_), lines in self._ignored_msgs.items():
             for line in lines:
-                self.add_message('I0020', line, None,
+                self.add_message('suppressed-message', line, None,
                                  (self.get_msg_display_string(warning), from_))
 
     def report_evaluation(self, sect, stats, previous_stats):
@@ -907,7 +907,7 @@ group are mutually exclusive.'),
         try:
             preprocess_options(args, {
                     # option: (callback, takearg)
-                    'init-hooks':   (cb_init_hook, True),
+                    'init-hook':   (cb_init_hook, True),
                     'rcfile':       (self.cb_set_rcfile, True),
                     'load-plugins': (self.cb_add_plugins, True),
                     })
@@ -1005,12 +1005,16 @@ are done by default'''}),
 'been issued by analysing pylint output status code\n',
         level=1)
         # read configuration
-        linter.disable('W0704')
-        linter.disable('I0020')
-        linter.disable('I0021')
+        linter.disable('pointless-except')
+        linter.disable('suppressed-message')
+        linter.disable('useless-suppression')
         linter.read_config_file()
-        # is there some additional plugins in the file configuration, in
         config_parser = linter.cfgfile_parser
+        # run init hook, if present, before loading plugins
+        if config_parser.has_option('MASTER', 'init-hook'):
+            cb_init_hook('init-hook',
+                         unquote(config_parser.get('MASTER', 'init-hook')))
+        # is there some additional plugins in the file configuration, in
         if config_parser.has_option('MASTER', 'load-plugins'):
             plugins = splitstrip(config_parser.get('MASTER', 'load-plugins'))
             linter.load_plugin_modules(plugins)

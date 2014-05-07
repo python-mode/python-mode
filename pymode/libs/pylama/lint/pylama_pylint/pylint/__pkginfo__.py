@@ -19,19 +19,19 @@ import sys
 
 modname = distname = 'pylint'
 
-numversion = (1, 1, 0)
+numversion = (1, 2, 1)
 version = '.'.join([str(num) for num in numversion])
 
 if sys.version_info < (2, 6):
-    install_requires = ['logilab-common >= 0.53.0', 'astroid >= 1.0.1',
+    install_requires = ['logilab-common >= 0.53.0', 'astroid >= 1.1',
                         'StringFormat']
 else:
-    install_requires = ['logilab-common >= 0.53.0', 'astroid >= 1.0.1']
+    install_requires = ['logilab-common >= 0.53.0', 'astroid >= 1.1']
 
 license = 'GPL'
 description = "python code static checker"
 web = 'http://www.pylint.org'
-mailinglist = "mailto://python-projects@lists.logilab.org"
+mailinglist = "mailto://code-quality@python.org"
 author = 'Logilab'
 author_email = 'python-projects@lists.logilab.org'
 
@@ -45,8 +45,8 @@ classifiers = ['Development Status :: 4 - Beta',
                'Programming Language :: Python :: 3',
                'Topic :: Software Development :: Debuggers',
                'Topic :: Software Development :: Quality Assurance',
-               'Topic :: Software Development :: Testing',
-               ]
+               'Topic :: Software Development :: Testing'
+              ]
 
 
 long_desc = """\

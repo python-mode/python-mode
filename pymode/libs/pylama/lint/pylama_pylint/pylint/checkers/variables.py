@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2014 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -146,6 +146,12 @@ MSGS = {
               'Used when something which is not '
               'a sequence is used in an unpack assignment'),
 
+    'W0640': ('Cell variable %s defined in loop',
+              'cell-var-from-loop', 
+              'A variable used in a closure is defined in a loop. '
+              'This will result in all closures using the same value for '
+              'the closed-over variable.'),
+
     }
 
 class VariablesChecker(BaseChecker):
@@ -170,8 +176,8 @@ __init__ files.'}),
                ("dummy-variables-rgx",
                 {'default': ('_$|dummy'),
                  'type' :'regexp', 'metavar' : '<regexp>',
-                 'help' : 'A regular expression matching the beginning of \
-                  the name of dummy variables (i.e. not used).'}),
+                 'help' : 'A regular expression matching the name of dummy \
+variables (i.e. expectedly not used).'}),
                ("additional-builtins",
                 {'default': (), 'type' : 'csv',
                  'metavar' : '<comma separated list>',
@@ -192,9 +198,9 @@ builtins. Remember that you should avoid to define new builtins when possible.'
         for name, stmts in node.locals.iteritems():
             if is_builtin(name) and not is_inside_except(stmts[0]):
                 # do not print Redefining builtin for additional builtins
-                self.add_message('W0622', args=name, node=stmts[0])
+                self.add_message('redefined-builtin', args=name, node=stmts[0])
 
-    @check_messages('W0611', 'W0614', 'W0622', 'E0603', 'E0604')
+    @check_messages('unused-import', 'unused-wildcard-import', 'redefined-builtin', 'undefined-all-variable', 'invalid-all-object')
     def leave_module(self, node):
         """leave module: check globals
         """
@@ -210,10 +216,11 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                     except astroid.InferenceError:
                         continue
 
-                    if not isinstance(elt_name, astroid.Const) or not isinstance(elt_name.value, basestring):
-                        self.add_message('E0604', args=elt.as_string(), node=elt)
+                    if not isinstance(elt_name, astroid.Const) \
+                             or not isinstance(elt_name.value, basestring):
+                        self.add_message('invalid-all-object', args=elt.as_string(), node=elt)
                         continue
-                    elt_name = elt.value
+                    elt_name = elt_name.value
                     # If elt is in not_consumed, remove it from not_consumed
                     if elt_name in not_consumed:
                         del not_consumed[elt_name]
@@ -230,8 +237,8 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                                 try:
                                     file_from_modpath(name.split("."))
                                 except ImportError:
-                                    self.add_message('undefined-all-variable', 
-                                                     args=elt_name, 
+                                    self.add_message('undefined-all-variable',
+                                                     args=elt_name,
                                                      node=elt)
                                 except SyntaxError, exc:
                                     # don't yield an syntax-error warning,
@@ -242,14 +249,18 @@ builtins. Remember that you should avoid to define new builtins when possible.'
         if not self.config.init_import and node.package:
             return
         for name, stmts in not_consumed.iteritems():
+            if any(isinstance(stmt, astroid.AssName)
+                   and isinstance(stmt.ass_type(), astroid.AugAssign)
+                   for stmt in stmts):
+                continue
             stmt = stmts[0]
             if isinstance(stmt, astroid.Import):
-                self.add_message('W0611', args=name, node=stmt)
+                self.add_message('unused-import', args=name, node=stmt)
             elif isinstance(stmt, astroid.From) and stmt.modname != '__future__':
                 if stmt.names[0][0] == '*':
-                    self.add_message('W0614', args=name, node=stmt)
+                    self.add_message('unused-wildcard-import', args=name, node=stmt)
                 else:
-                    self.add_message('W0611', args=name, node=stmt)
+                    self.add_message('unused-import', args=name, node=stmt)
         del self._to_consume
 
     def visit_class(self, node):
@@ -311,7 +322,8 @@ builtins. Remember that you should avoid to define new builtins when possible.'
         """visit function: update consumption analysis variable and check locals
         """
         self._to_consume.append((copy(node.locals), {}, 'function'))
-        if not set(('W0621', 'W0622')) & self.active_msgs:
+        if not (self.linter.is_message_enabled('redefined-outer-name') or
+                self.linter.is_message_enabled('redefined-builtin')):
             return
         globs = node.root().globals
         for name, stmt in node.items():
@@ -321,15 +333,16 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                 line = globs[name][0].fromlineno
                 dummy_rgx = self.config.dummy_variables_rgx
                 if not dummy_rgx.match(name):
-                    self.add_message('W0621', args=(name, line), node=stmt)
+                    self.add_message('redefined-outer-name', args=(name, line), node=stmt)
             elif is_builtin(name):
                 # do not print Redefining builtin for additional builtins
-                self.add_message('W0622', args=name, node=stmt)
+                self.add_message('redefined-builtin', args=name, node=stmt)
 
     def leave_function(self, node):
         """leave function: check function's locals are consumed"""
         not_consumed = self._to_consume.pop()[0]
-        if not set(('W0612', 'W0613')) & self.active_msgs:
+        if not (self.linter.is_message_enabled('unused-variable') or
+                self.linter.is_message_enabled('unused-argument')):
             return
         # don't check arguments of function which are only raising an exception
         if is_error(node):
@@ -368,16 +381,17 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                 # don't check callback arguments XXX should be configurable
                 if node.name.startswith('cb_') or node.name.endswith('_cb'):
                     continue
-                self.add_message('W0613', args=name, node=stmt)
+                self.add_message('unused-argument', args=name, node=stmt)
             else:
-                self.add_message('W0612', args=name, node=stmt)
+                self.add_message('unused-variable', args=name, node=stmt)
 
-    @check_messages('W0601', 'W0602', 'W0603', 'W0604', 'W0622')
+    @check_messages('global-variable-undefined', 'global-variable-not-assigned', 'global-statement',
+                    'global-at-module-level', 'redefined-builtin')
     def visit_global(self, node):
         """check names imported exists in the global scope"""
         frame = node.frame()
         if isinstance(frame, astroid.Module):
-            self.add_message('W0604', node=node)
+            self.add_message('global-at-module-level', node=node)
             return
         module = frame.root()
         default_message = True
@@ -397,24 +411,43 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                     break
             else:
                 # global but no assignment
-                self.add_message('W0602', args=name, node=node)
+                self.add_message('global-variable-not-assigned', args=name, node=node)
                 default_message = False
             if not assign_nodes:
                 continue
             for anode in assign_nodes:
                 if anode.parent is None:
-                    self.add_message('W0622', args=name, node=node)
+                    self.add_message('redefined-builtin', args=name, node=node)
                     break
                 if anode.frame() is module:
                     # module level assignment
                     break
             else:
                 # global undefined at the module scope
-                self.add_message('W0601', args=name, node=node)
+                self.add_message('global-variable-undefined', args=name, node=node)
                 default_message = False
         if default_message:
-            self.add_message('W0603', node=node)
+            self.add_message('global-statement', node=node)
 
+    def _check_late_binding_closure(self, node, assignment_node, scope_type):
+        node_scope = node.scope()
+        if not isinstance(node_scope, (astroid.Lambda, astroid.Function)):
+            return
+
+        if isinstance(assignment_node, astroid.Comprehension):
+            if assignment_node.parent.parent_of(node.scope()):
+                self.add_message('cell-var-from-loop', node=node, args=node.name)
+        else:
+            assign_scope = assignment_node.scope()
+            maybe_for = assignment_node
+            while not isinstance(maybe_for, astroid.For):
+                if maybe_for is assign_scope:
+                    break
+                maybe_for = maybe_for.parent
+            else:
+                if maybe_for.parent_of(node_scope) and not isinstance(node_scope.statement(), astroid.Return):
+                    self.add_message('cell-var-from-loop', node=node, args=node.name)
+        
     def _loopvar_name(self, node, name):
         # filter variables according to node's scope
         # XXX used to filter parents but don't remember why, and removing this
@@ -423,7 +456,7 @@ builtins. Remember that you should avoid to define new builtins when possible.'
         #astmts = [stmt for stmt in node.lookup(name)[1]
         #          if hasattr(stmt, 'ass_type')] and
         #          not stmt.statement().parent_of(node)]
-        if 'W0631' not in self.active_msgs:
+        if not self.linter.is_message_enabled('undefined-loop-variable'):
             return
         astmts = [stmt for stmt in node.lookup(name)[1]
                   if hasattr(stmt, 'ass_type')]
@@ -449,14 +482,14 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             ass = astmts[0].ass_type()
             if isinstance(ass, (astroid.For, astroid.Comprehension, astroid.GenExpr)) \
                    and not ass.statement() is node.statement():
-                self.add_message('W0631', args=name, node=node)
+                self.add_message('undefined-loop-variable', args=name, node=node)
 
-    @check_messages('W0623')
+    @check_messages('redefine-in-handler')
     def visit_excepthandler(self, node):
         for name in get_all_elements(node.name):
             clobbering, args = clobber_in_except(name)
             if clobbering:
-                self.add_message('W0623', args=args, node=name)
+                self.add_message('redefine-in-handler', args=args, node=name)
 
     def visit_assname(self, node):
         if isinstance(node.ass_type(), astroid.AugAssign):
@@ -501,6 +534,8 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             # the name has already been consumed, only check it's not a loop
             # variable used outside the loop
             if name in consumed:
+                defnode = assign_parent(consumed[name][0])
+                self._check_late_binding_closure(node, defnode, scope_type)
                 self._loopvar_name(node, name)
                 break
             # mark the name as consumed if it's defined in this scope
@@ -512,6 +547,7 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             # checks for use before assignment
             defnode = assign_parent(to_consume[name][0])
             if defnode is not None:
+                self._check_late_binding_closure(node, defnode, scope_type)
                 defstmt = defnode.statement()
                 defframe = defstmt.frame()
                 maybee0601 = True
@@ -539,14 +575,14 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                     and not are_exclusive(stmt, defstmt, ('NameError', 'Exception', 'BaseException'))):
                     if defstmt is stmt and isinstance(node, (astroid.DelName,
                                                              astroid.AssName)):
-                        self.add_message('E0602', args=name, node=node)
+                        self.add_message('undefined-variable', args=name, node=node)
                     elif self._to_consume[-1][-1] != 'lambda':
                         # E0601 may *not* occurs in lambda scope
-                        self.add_message('E0601', args=name, node=node)
-            if not isinstance(node, astroid.AssName): # Aug AssName
-                del to_consume[name]
-            else:
+                        self.add_message('used-before-assignment', args=name, node=node)
+            if isinstance(node, astroid.AssName): # Aug AssName
                 del consumed[name]
+            else:
+                del to_consume[name]
             # check it's not a loop variable used outside the loop
             self._loopvar_name(node, name)
             break
@@ -555,9 +591,9 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             # undefined name !
             if not (name in astroid.Module.scope_attrs or is_builtin(name)
                     or name in self.config.additional_builtins):
-                self.add_message('E0602', args=name, node=node)
+                self.add_message('undefined-variable', args=name, node=node)
 
-    @check_messages('E0611')
+    @check_messages('no-name-in-module')
     def visit_import(self, node):
         """check modules attribute accesses"""
         for name, _ in node.names:
@@ -568,7 +604,7 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                 continue
             self._check_module_attrs(node, module, parts[1:])
 
-    @check_messages('E0611')
+    @check_messages('no-name-in-module')
     def visit_from(self, node):
         """check modules attribute accesses"""
         name_parts = node.modname.split('.')
@@ -597,10 +633,6 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             return
 
         targets = node.targets[0].itered()
-        if any(not isinstance(target_node, astroid.AssName)
-               for target_node in targets):
-            return
-
         try:
             for infered in node.value.infer():
                 self._check_unpacking(infered, node, targets)
@@ -653,7 +685,7 @@ builtins. Remember that you should avoid to define new builtins when possible.'
                 if module is astroid.YES:
                     return None
             except astroid.NotFoundError:
-                self.add_message('E0611', args=(name, module.name), node=node)
+                self.add_message('no-name-in-module', args=(name, module.name), node=node)
                 return None
             except astroid.InferenceError:
                 return None
@@ -661,7 +693,7 @@ builtins. Remember that you should avoid to define new builtins when possible.'
             # FIXME: other message if name is not the latest part of
             # module_names ?
             modname = module and module.name or '__dict__'
-            self.add_message('E0611', node=node,
+            self.add_message('no-name-in-module', node=node,
                              args=('.'.join(module_names), modname))
             return None
         if isinstance(module, astroid.Module):
@@ -683,6 +715,22 @@ class VariablesChecker3k(VariablesChecker):
         """
         # do not check for not used locals here
         self._to_consume.pop()
+
+    def leave_module(self, node):
+        """ Update consumption analysis variable
+        for metaclasses.
+        """
+        for klass in node.nodes_of_class(astroid.Class):
+            if klass._metaclass:
+                metaclass = klass.metaclass()
+                module_locals = self._to_consume[0][0]
+
+                if isinstance(klass._metaclass, astroid.Name):
+                    module_locals.pop(klass._metaclass.name, None)
+                if metaclass:                
+                    # if it uses a `metaclass=module.Class`                            
+                    module_locals.pop(metaclass.root().name, None)
+        super(VariablesChecker3k, self).leave_module(node)
 
 if sys.version_info >= (3, 0):
     VariablesChecker = VariablesChecker3k

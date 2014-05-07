@@ -5,6 +5,7 @@ Helps with understanding everything imported from 'gi.repository'
 
 import inspect
 import sys
+import re
 
 from astroid import MANAGER, AstroidBuildingException
 from astroid.builder import AstroidBuilder
@@ -12,6 +13,7 @@ from astroid.builder import AstroidBuilder
 
 _inspected_modules = {}
 
+_identifier_re = r'^[A-Za-z_]\w*$'
 
 def _gi_build_stub(parent):
     """
@@ -23,9 +25,13 @@ def _gi_build_stub(parent):
     constants = {}
     methods = {}
     for name in dir(parent):
-        if not name or name.startswith("__"):
-            # GLib.IConv has a parameter named "" :/
+        if name.startswith("__"):
             continue
+
+        # Check if this is a valid name in python
+        if not re.match(_identifier_re, name):
+            continue
+
         try:
             obj = getattr(parent, name)
         except:
@@ -45,6 +51,12 @@ def _gi_build_stub(parent):
               str(obj).startswith("<enum ") or
               str(obj).startswith("<GType ") or
               inspect.isdatadescriptor(obj)):
+            constants[name] = 0
+        elif callable(obj):
+            # Fall back to a function for anything callable
+            functions[name] = obj
+        else:
+            # Assume everything else is some manner of constant
             constants[name] = 0
 
     ret = ""

@@ -72,6 +72,11 @@ class CallContext:
                         return iter((boundnode,))
                     if funcnode.type == 'classmethod':
                         return iter((boundnode,))
+                # if we have a method, extract one position
+                # from the index, so we'll take in account
+                # the extra parameter represented by `self` or `cls`
+                if funcnode.type in ('method', 'classmethod'):
+                    argindex -= 1
                 # 2. search arg index
                 try:
                     return self.args[argindex].infer(context)

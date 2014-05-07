@@ -46,12 +46,12 @@ except ImportError:
 
     def __delitem__(self, key):
         dict.__delitem__(self, key)
-        ix = self.__map.pop(key)
+        self.__map.pop(key)
         self.__order = self.null
 
     def __iter__(self):
         for key in self.__order:
-            if not key is self.null:
+            if key is not self.null:
                 yield key
 
     def keys(self):
@@ -67,8 +67,8 @@ except ImportError:
     iteritems = DictMixin.iteritems
 
 
-__version__ = '0.5.0'
-__project__ = 'Inirama'
+__version__ = "0.5.1"
+__project__ = "Inirama"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "BSD"
 
@@ -193,7 +193,11 @@ class Section(MutableMapping):
         self.__storage__ = dict()
 
     def __setitem__(self, name, value):
-        self.__storage__[name] = str(value)
+        value = str(value)
+        if value.isdigit():
+            value = int(value)
+
+        self.__storage__[name] = value
 
     def __getitem__(self, name):
         return self.__storage__[name]
@@ -370,7 +374,7 @@ class Namespace(object):
         :return :class:`inirama.Section`: section
 
         """
-        if not name in self.sections:
+        if name not in self.sections:
             self.sections[name] = self.section_type(self)
         return self.sections[name]
 

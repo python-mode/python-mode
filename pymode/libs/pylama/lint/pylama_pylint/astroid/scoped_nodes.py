@@ -25,6 +25,10 @@ __doctype__ = "restructuredtext en"
 
 import sys
 from itertools import chain
+try:
+    from io import BytesIO
+except ImportError:
+    from cStringIO import StringIO as BytesIO
 
 from logilab.common.compat import builtins
 from logilab.common.decorators import cached
@@ -217,6 +221,8 @@ class Module(LocalsDictNodeNG):
     # the file from which as been extracted the astroid representation. It may
     # be None if the representation has been built from a built-in module
     file = None
+    # Alternatively, if built from a string/bytes, this can be set
+    file_bytes = None
     # encoding of python source file, so we can get unicode out of it (python2
     # only)
     file_encoding = None
@@ -230,6 +236,9 @@ class Module(LocalsDictNodeNG):
     # as value
     globals = None
 
+    # Future imports
+    future_imports = None
+
     # names of python special attributes (handled by getattr impl.)
     special_attributes = set(('__name__', '__doc__', '__file__', '__path__',
                               '__dict__'))
@@ -242,9 +251,12 @@ class Module(LocalsDictNodeNG):
         self.pure_python = pure_python
         self.locals = self.globals = {}
         self.body = []
+        self.future_imports = set()
 
     @property
     def file_stream(self):
+        if self.file_bytes is not None:
+            return BytesIO(self.file_bytes)
         if self.file is not None:
             return open(self.file, 'rb')
         return None
@@ -283,6 +295,8 @@ class Module(LocalsDictNodeNG):
             try:
                 return [self.import_module(name, relative_only=True)]
             except AstroidBuildingException:
+                raise NotFoundError(name)
+            except SyntaxError:
                 raise NotFoundError(name)
             except Exception:# XXX pylint tests never pass here; do we need it?
                 import traceback
@@ -656,6 +670,34 @@ def _rec_get_names(args, names=None):
 
 # Class ######################################################################
 
+
+def _is_metaclass(klass):
+    """ Return if the given class can be
+    used as a metaclass.
+    """
+    if klass.name == 'type':
+        return True
+    for base in klass.bases:
+        try:
+            for baseobj in base.infer():
+                if isinstance(baseobj, Instance):
+                    # not abstract
+                    return False
+                if baseobj is YES:
+                    continue
+                if baseobj is klass:
+                    continue
+                if not isinstance(baseobj, Class):
+                    continue
+                if baseobj._type == 'metaclass':
+                    return True
+                if _is_metaclass(baseobj):
+                    return True
+        except InferenceError:
+            continue
+    return False
+
+
 def _class_type(klass, ancestors=None):
     """return a Class node type to differ metaclass, interface and exception
     from 'regular' classes
@@ -663,7 +705,7 @@ def _class_type(klass, ancestors=None):
     # XXX we have to store ancestors in case we have a ancestor loop
     if klass._type is not None:
         return klass._type
-    if klass.name == 'type':
+    if _is_metaclass(klass):
         klass._type = 'metaclass'
     elif klass.name.endswith('Interface'):
         klass._type = 'interface'
@@ -679,9 +721,14 @@ def _class_type(klass, ancestors=None):
         ancestors.add(klass)
         # print >> sys.stderr, '_class_type', repr(klass)
         for base in klass.ancestors(recurs=False):
-            if _class_type(base, ancestors) != 'class':
-                klass._type = base.type
-                break
+            name = _class_type(base, ancestors)
+            if name != 'class':
+                 if name == 'metaclass' and not _is_metaclass(klass):
+                     # don't propagate it if the current class
+                     # can't be a metaclass
+                     continue
+                 klass._type = base.type
+                 break
     if klass._type is None:
         klass._type = 'class'
     return klass._type
@@ -801,8 +848,11 @@ class Class(Statement, LocalsDictNodeNG, FilterStmtsMixin):
                 try:
                     for baseobj in stmt.infer(context):
                         if not isinstance(baseobj, Class):
-                            # duh ?
-                            continue
+                            if isinstance(baseobj, Instance):
+                                baseobj = baseobj._proxied
+                            else:
+                                # duh ?
+                                continue
                         if baseobj in yielded:
                             continue # cf xxx above
                         yielded.add(baseobj)
@@ -993,13 +1043,21 @@ class Class(Statement, LocalsDictNodeNG, FilterStmtsMixin):
             raise InferenceError()
 
     _metaclass = None
-    def metaclass(self):
-        """ Return the metaclass of this class """
+    def _explicit_metaclass(self):
+        """ Return the explicit defined metaclass
+        for the current class.
+
+        An explicit defined metaclass is defined
+        either by passing the ``metaclass`` keyword argument
+        in the class definition line (Python 3) or by
+        having a ``__metaclass__`` class attribute.
+        """
         if self._metaclass:
             # Expects this from Py3k TreeRebuilder
             try:
-                return next(self._metaclass.infer())
-            except InferenceError:
+                return next(node for node in self._metaclass.infer()
+                            if node is not YES)
+            except (InferenceError, StopIteration):
                 return 
 
         try:
@@ -1013,3 +1071,18 @@ class Class(Statement, LocalsDictNodeNG, FilterStmtsMixin):
         if infered is YES: # don't expose this
             return None
         return infered
+
+    def metaclass(self):
+        """ Return the metaclass of this class.
+
+        If this class does not define explicitly a metaclass,
+        then the first defined metaclass in ancestors will be used
+        instead.
+        """
+        klass = self._explicit_metaclass()
+        if klass is None:
+            for parent in self.ancestors():
+                klass = parent.metaclass()
+                if klass is not None:
+                    break
+        return klass

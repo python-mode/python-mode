@@ -171,6 +171,9 @@ class Instance(Proxy):
     def igetattr(self, name, context=None):
         """inferred getattr"""
         try:
+            # avoid recursively inferring the same attr on the same class
+            if context:
+                context.push((self._proxied, name))
             # XXX frame should be self._proxied, or not ?
             get_attr = self.getattr(name, context, lookupclass=False)
             return _infer_stmts(self._wrap_attr(get_attr, context), context,
@@ -200,6 +203,8 @@ class Instance(Proxy):
         """infer what a class instance is returning when called"""
         infered = False
         for node in self._proxied.igetattr('__call__', context):
+            if node is YES:
+                continue
             for res in node.infer_call_result(caller, context):
                 infered = True
                 yield res
@@ -254,7 +259,8 @@ class UnboundMethod(Proxy):
         # instance of the class given as first argument.
         if (self._proxied.name == '__new__' and
                 self._proxied.parent.frame().qname() == '%s.object' % BUILTINS):
-            return (x is YES and x or Instance(x) for x in caller.args[0].infer())
+            return ((x is YES and x or Instance(x))
+                    for x in caller.args[0].infer())
         return self._proxied.infer_call_result(caller, context)
 
 

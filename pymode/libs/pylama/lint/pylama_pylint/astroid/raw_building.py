@@ -225,7 +225,8 @@ class InspectBuilder(object):
             # in jython, java modules have no __doc__ (see #109562)
             node = build_module(modname)
         node.file = node.path = path and abspath(path) or path
-        MANAGER.astroid_cache[modname] = node
+        node.name = modname
+        MANAGER.cache_module(node)
         node.package = hasattr(module, '__path__')
         self._done = {}
         self.object_build(node, module)
