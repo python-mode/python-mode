@@ -233,8 +233,16 @@ def regenerate():
 
 def new():
     """ Create a new project. """
-    root = env.var('input("Enter project root: ", getcwd())')
-    prj = project.Project(projectroot=root)
+    root = None
+    if env.var('a:0') != '0':
+        root = env.var('a:1')
+    else:
+        default = env.var('g:pymode_rope_project_root')
+        if not default:
+            default = env.var('getcwd()')
+        root = env.var('input("Enter project root: ", "%s")' % default)
+    ropefolder = env.var('g:pymode_rope_ropefolder')
+    prj = project.Project(projectroot=root, ropefolder=ropefolder)
     prj.close()
     env.message("Project is opened: %s" % root)
 
@@ -291,12 +299,18 @@ def cache_project(cls):
         if resources.get(path):
             return resources.get(path)
 
-        project_path = env.curdir
-        env.debug('Look ctx', project_path)
-        if env.var('g:pymode_rope_lookup_project', True):
-            project_path = look_ropeproject(project_path)
+        project_path = env.var('g:pymode_rope_project_root')
+        if project_path:
+            project_path = env.curdir
+            env.debug('Look ctx', project_path)
+            if env.var('g:pymode_rope_lookup_project', True):
+                project_path = look_ropeproject(project_path)
 
-        ctx = projects.get(project_path)
+        if not os.path.exists(project_path):
+            env.error("Rope project root not exist: %s" % project_path)
+            ctx = None
+        else:
+            ctx = projects.get(project_path)
         if not ctx:
             projects[project_path] = ctx = cls(path, project_path)
         resources[path] = ctx

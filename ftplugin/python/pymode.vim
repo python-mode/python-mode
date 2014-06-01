@@ -177,7 +177,7 @@ if g:pymode_rope
         inoremap <silent> <buffer> . .<C-R>=pymode#rope#complete_on_dot()<CR>
     end
 
-    command! -buffer PymodeRopeNewProject call pymode#rope#new()
+    command! -buffer -nargs=? PymodeRopeNewProject call pymode#rope#new(<f-args>)
     command! -buffer PymodeRopeUndo call pymode#rope#undo()
     command! -buffer PymodeRopeRedo call pymode#rope#redo()
     command! -buffer PymodeRopeRenameModule call pymode#rope#rename_module()

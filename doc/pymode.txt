@@ -354,7 +354,7 @@ Turn on the rope script                                        *'g:pymode_rope'*
 .ropeproject Folder ~
                                                                   *.ropeproject*
 
-*:PymodeRopeNewProject* -- Open new Rope project in current working directory
+*:PymodeRopeNewProject* [<path>] -- Open new Rope project in the given path
 *:PymodeRopeRegenerate* -- Regenerate the project cache
 
 Rope uses a folder inside projects for holding project configuration and data.
@@ -371,8 +371,9 @@ Currently it is used for things such as:
 * It can be used to save information about object inferences.
 * It can be used to save a global name cache, which is used for auto-import.
 
-If `.ropeproject` is not found in the current directory, rope will look
-recursively for it in parent folders.
+By default, if `.ropeproject` is not found in the current directory, rope will
+look recursively for it in parent folders.
+
 Warning: If rope finds `.ropeproject` in a parent dir, it will use it with
 all its child directories, which may slow scanning down (because of many,
 possibly unrelated, files)
@@ -381,6 +382,23 @@ Enable searching for |.ropeproject| in parent directories
                                                   *'g:pymode_rope_lookup_project'*
 >
     let g:pymode_rope_lookup_project = 1
+
+You can also manually set the rope project directory. If not specified rope will
+use the current directory.
+                                                  *'g:pymode_rope_project_root'*
+>
+    let g:pymode_rope_project_root = ""
+
+
+The location of the `.ropeproject` folder may also be overridden if you wish to
+keep it outside of your project root. The rope library treats this folder as a
+project resource, so the path will always be relative to your proejct root (a
+leading '/' will be ignored). You may use `'..'` path segments to place the
+folder outside of your project root.
+                                                 *'g:pymode_rope_ropefolder'*
+>
+    let g:pymode_rope_ropefolder='.ropeproject'
+
 
 
 Show documentation for element under cursor ~
@@ -645,6 +663,10 @@ Solutions:
   current dir.
 - Set |'g:pymode_rope_lookup_project'| to 0 for prevent searching in parent
   dirs.
+
+You may also set |'g:pymode_rope_project_root'| to manually specify the project
+root path.
+
 
 
 Pylint check is very slow
