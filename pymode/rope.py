@@ -6,6 +6,7 @@ import os.path
 import re
 import site
 import sys
+import StringIO
 
 from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
@@ -398,9 +399,12 @@ class RopeContext(object):
                 importer.generate_modules_cache(modules)
             importer.project.sync()
 
+        sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
+        sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
         process = multiprocessing.Process(target=_update_cache, args=(
             self.importer, modules))
         process.start()
+        sys.stdout, sys.stderr = stdout_, stderr_
 
 
 class ProgressHandler(object):
