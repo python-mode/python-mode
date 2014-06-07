@@ -46,7 +46,7 @@ W warnings
 """
 from __future__ import with_statement
 
-__version__ = '1.5.7a0'
+__version__ = '1.6.0a0'
 
 import os
 import sys
@@ -64,7 +64,7 @@ except ImportError:
     from ConfigParser import RawConfigParser
 
 DEFAULT_EXCLUDE = '.svn,CVS,.bzr,.hg,.git,__pycache__'
-DEFAULT_IGNORE = 'E123,E226,E24'
+DEFAULT_IGNORE = 'E123,E226,E24,E704'
 if sys.platform == 'win32':
     DEFAULT_CONFIG = os.path.expanduser(r'~\.pep8')
 else:
@@ -353,20 +353,25 @@ def indentation(logical_line, previous_logical, indent_char,
     Okay: a = 1
     Okay: if a == 0:\n    a = 1
     E111:   a = 1
+    E114:   # a = 1
 
     Okay: for item in items:\n    pass
     E112: for item in items:\npass
+    E115: for item in items:\n# Hi\n    pass
 
     Okay: a = 1\nb = 2
     E113: a = 1\n    b = 2
+    E116: a = 1\n    # b = 2
     """
-    if indent_char == ' ' and indent_level % 4:
-        yield 0, "E111 indentation is not a multiple of four"
+    c = 0 if logical_line else 3
+    tmpl = "E11%d %s" if logical_line else "E11%d %s (comment)"
+    if indent_level % 4:
+        yield 0, tmpl % (1 + c, "indentation is not a multiple of four")
     indent_expect = previous_logical.endswith(':')
     if indent_expect and indent_level <= previous_indent_level:
-        yield 0, "E112 expected an indented block"
-    if indent_level > previous_indent_level and not indent_expect:
-        yield 0, "E113 unexpected indentation"
+        yield 0, tmpl % (2 + c, "expected an indented block")
+    elif not indent_expect and indent_level > previous_indent_level:
+        yield 0, tmpl % (3 + c, "unexpected indentation")
 
 
 def continued_indentation(logical_line, tokens, indent_level, hang_closing,
@@ -787,6 +792,7 @@ def whitespace_before_comment(logical_line, tokens):
     E262: x = x + 1  #Increment x
     E262: x = x + 1  #  Increment x
     E265: #Block comment
+    E266: ### Block comment
     """
     prev_end = (0, 0)
     for token_type, text, start, end, line in tokens:
@@ -797,13 +803,15 @@ def whitespace_before_comment(logical_line, tokens):
                     yield (prev_end,
                            "E261 at least two spaces before inline comment")
             symbol, sp, comment = text.partition(' ')
-            bad_prefix = symbol not in ('#', '#:')
+            bad_prefix = symbol not in '#:' and (symbol.lstrip('#')[:1] or '#')
             if inline_comment:
-                if bad_prefix or comment[:1].isspace():
+                if bad_prefix or comment[:1] in WHITESPACE:
                     yield start, "E262 inline comment should start with '# '"
-            elif bad_prefix:
-                if text.rstrip('#') and (start[0] > 1 or symbol[1] != '!'):
+            elif bad_prefix and (bad_prefix != '!' or start[0] > 1):
+                if bad_prefix != '#':
                     yield start, "E265 block comment should start with '# '"
+                elif comment:
+                    yield start, "E266 too many leading '#' for block comment"
         elif token_type != tokenize.NL:
             prev_end = end
 
@@ -834,6 +842,9 @@ def compound_statements(logical_line):
     on the same line, never do this for multi-clause statements.
     Also avoid folding such long lines!
 
+    Always use a def statement instead of an assignment statement that
+    binds a lambda expression directly to a name.
+
     Okay: if foo == 'blah':\n    do_blah_thing()
     Okay: do_one()
     Okay: do_two()
@@ -847,20 +858,26 @@ def compound_statements(logical_line):
     E701: try: something()
     E701: finally: cleanup()
     E701: if foo == 'blah': one(); two(); three()
-
     E702: do_one(); do_two(); do_three()
     E703: do_four();  # useless semicolon
+    E704: def f(x): return 2*x
+    E731: f = lambda x: 2*x
     """
     line = logical_line
     last_char = len(line) - 1
     found = line.find(':')
     while -1 < found < last_char:
         before = line[:found]
-        if (before.count('{') <= before.count('}') and  # {'a': 1} (dict)
-            before.count('[') <= before.count(']') and  # [1:2] (slice)
-            before.count('(') <= before.count(')') and  # (Python 3 annotation)
-                not LAMBDA_REGEX.search(before)):       # lambda x: x
-            yield found, "E701 multiple statements on one line (colon)"
+        if ((before.count('{') <= before.count('}') and   # {'a': 1} (dict)
+             before.count('[') <= before.count(']') and   # [1:2] (slice)
+             before.count('(') <= before.count(')'))):    # (annotation)
+            if LAMBDA_REGEX.search(before):
+                yield 0, "E731 do not assign a lambda expression, use a def"
+                break
+            if before.startswith('def '):
+                yield 0, "E704 multiple statements on one line (def)"
+            else:
+                yield found, "E701 multiple statements on one line (colon)"
         found = line.find(':', found + 1)
     found = line.find(';')
     while -1 < found:
@@ -1037,7 +1054,7 @@ if '' == ''.encode():
     # Python 2: implicit encoding.
     def readlines(filename):
         """Read the source code."""
-        with open(filename) as f:
+        with open(filename, 'rU') as f:
             return f.readlines()
     isidentifier = re.compile(r'[a-zA-Z_]\w*').match
     stdin_get_value = sys.stdin.read
@@ -1367,6 +1384,8 @@ class Checker(object):
         tokengen = tokenize.generate_tokens(self.readline)
         try:
             for token in tokengen:
+                if token[2][0] > self.total_lines:
+                    return
                 self.maybe_check_physical(token)
                 yield token
         except (SyntaxError, tokenize.TokenError):
@@ -1449,10 +1468,8 @@ class Checker(object):
                         token[3] = (token[2][0], token[2][1] + len(token[1]))
                         self.tokens = [tuple(token)]
                         self.check_logical()
-        if len(self.tokens) > 1 and (token_type == tokenize.ENDMARKER and
-                                     self.tokens[-2][0] not in SKIP_TOKENS):
-            self.tokens.pop()
-            self.check_physical(self.tokens[-1][4])
+        if self.tokens:
+            self.check_physical(self.lines[-1])
             self.check_logical()
         return self.report.get_file_results()
 

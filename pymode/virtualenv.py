@@ -12,7 +12,6 @@ def enable_virtualenv():
     :return bool:
 
     """
-
     path = env.var('g:pymode_virtualenv_path')
     enabled = env.var('g:pymode_virtualenv_enabled')
     if path == enabled:

@@ -33,7 +33,8 @@ class _Default(object):
     def __str__(self):
         return str(self.value)
 
-    __repr__ = lambda s: "<_Default [%s]>" % s.value
+    def __repr__(self):
+        return "<_Default [%s]>" % self.value
 
 
 def split_csp_str(s):

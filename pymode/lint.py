@@ -12,7 +12,6 @@ def code_check():
     :return bool:
 
     """
-
     with silence_stderr():
 
         from pylama.main import parse_options
@@ -57,6 +56,8 @@ def code_check():
         errors = sorted(errors, key=__sort)
 
     for e in errors:
-        e['bufnr'] = env.curbuf.number
+        e._info['bufnr'] = env.curbuf.number
 
-    env.run('g:PymodeLocList.current().extend', errors)
+    env.run('g:PymodeLocList.current().extend', [e._info for e in errors])
+
+# pylama:ignore=W0212

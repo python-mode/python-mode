@@ -6,9 +6,11 @@ Prepare params, check a modeline and run the checkers.
 import re
 
 import logging
+from collections import defaultdict
 
 from .config import process_value, LOGGER
 from .lint.extensions import LINTERS
+from .errors import DUPLICATES, Error
 
 
 #: The skip pattern
@@ -20,18 +22,24 @@ MODELINE_RE = re.compile(
     re.I | re.M)
 
 
-def run(path, code=None, options=None):
+def run(path='', code=None, options=None):
     """ Run a code checkers with given params.
 
     :return errors: list of dictionaries with error's information
 
     """
     errors = []
-    params = dict(ignore=options.ignore, select=options.select)
     fileconfig = dict()
-    for mask in options.file_params:
-        if mask.match(path):
-            fileconfig.update(options.file_params[mask])
+    params = dict()
+    linters = LINTERS
+    linter_params = dict()
+
+    if options:
+        linters = options.linters
+        linter_params = options.linter_params
+        for mask in options.file_params:
+            if mask.match(path):
+                fileconfig.update(options.file_params[mask])
 
     try:
         with CodeContext(code, path) as ctx:
@@ -41,51 +49,43 @@ def run(path, code=None, options=None):
             if params.get('skip'):
                 return errors
 
-            for item in options.linters:
+            for item in linters:
 
                 if not isinstance(item, tuple):
                     item = (item, LINTERS.get(item))
 
-                name, linter = item
+                lname, linter = item
 
-                if not linter or not linter.allow(path):
+                if not linter or path and not linter.allow(path):
                     continue
 
-                LOGGER.info("Run %s", name)
-                meta = options.linter_params.get(name, dict())
-                result = linter.run(path, code=code, **meta)
-                for e in result:
-                    e['linter'] = name
-                    e['col'] = e.get('col') or 0
-                    e['lnum'] = e.get('lnum') or 0
-                    e['type'] = e.get('type') or 'E'
-                    e['text'] = "%s [%s]" % (
-                        e.get('text', '').strip().split('\n')[0], name)
-                    e['filename'] = path or ''
-                    errors.append(e)
+                LOGGER.info("Run %s", lname)
+                meta = linter_params.get(lname, dict())
+                errors += [Error(filename=path, linter=lname, **e)
+                           for e in linter.run(path, code=code, **meta)]
 
     except IOError as e:
         LOGGER.debug("IOError %s", e)
-        errors.append(dict(
-            lnum=0, type='E', col=0, text=str(e), filename=path or ''))
+        errors.append(Error(text=str(e), filename=path, linter=lname))
 
     except SyntaxError as e:
         LOGGER.debug("SyntaxError %s", e)
-        errors.append(dict(
-            lnum=e.lineno or 0, type='E', col=e.offset or 0,
-            text=e.args[0] + ' [%s]' % name, filename=path or ''
-        ))
+        errors.append(
+            Error(linter=lname, lnum=e.lineno, col=e.offset, text=e.args[0],
+                  filename=path))
 
     except Exception as e:
         import traceback
         LOGGER.info(traceback.format_exc())
 
-    errors = [er for er in errors if filter_errors(er, **params)]
+    errors = filter_errors(errors, **params)
+
+    errors = list(remove_duplicates(errors))
 
     if code and errors:
         errors = filter_skiplines(code, errors)
 
-    return sorted(errors, key=lambda x: x['lnum'])
+    return sorted(errors, key=lambda e: e.lnum)
 
 
 def parse_modeline(code):
@@ -107,7 +107,10 @@ def prepare_params(modeline, fileconfig, options):
     :return dict:
 
     """
-    params = dict(ignore=options.ignore, select=options.select, skip=False)
+    params = dict(skip=False, ignore=[], select=[])
+    if options:
+        params['ignore'] = options.ignore
+        params['select'] = options.select
 
     for config in filter(None, [modeline, fileconfig]):
         for key in ('ignore', 'select'):
@@ -120,23 +123,26 @@ def prepare_params(modeline, fileconfig, options):
     return params
 
 
-def filter_errors(e, select=None, ignore=None, **params):
+def filter_errors(errors, select=None, ignore=None, **params):
     """ Filter a erros by select and ignore options.
 
     :return bool:
 
     """
-    if select:
+    select = select or []
+    ignore = ignore or []
+
+    for e in errors:
         for s in select:
-            if e['text'].startswith(s):
-                return True
-
-    if ignore:
-        for s in ignore:
-            if e['text'].startswith(s):
-                return False
-
-    return True
+            if e.number.startswith(s):
+                yield e
+                break
+        else:
+            for s in ignore:
+                if e.number.startswith(s):
+                    break
+            else:
+                yield e
 
 
 def filter_skiplines(code, errors):
@@ -148,16 +154,28 @@ def filter_skiplines(code, errors):
     if not errors:
         return errors
 
-    enums = set(er['lnum'] for er in errors)
+    enums = set(er.lnum for er in errors)
     removed = set([
         num for num, l in enumerate(code.split('\n'), 1)
         if num in enums and SKIP_PATTERN(l)
     ])
 
     if removed:
-        errors = [er for er in errors if not er['lnum'] in removed]
+        errors = [er for er in errors if er.lnum not in removed]
 
     return errors
+
+
+def remove_duplicates(errors):
+    """ Remove same errors from others linters. """
+    passed = defaultdict(list)
+    for error in errors:
+        key = error.linter, error.number
+        if key in DUPLICATES:
+            if key in passed[error.lnum]:
+                continue
+            passed[error.lnum] = DUPLICATES[key]
+        yield error
 
 
 class CodeContext(object):

@@ -1,4 +1,5 @@
-""" Async code checking. """
+""" Support for asyncronious code checking. """
+
 import logging
 import threading
 from os import path as op
@@ -91,9 +92,11 @@ def check_path(path, options=None, rootpath=None, code=None, **meta):
     errors = []
     for error in run(path, code, options):
         try:
-            error['rel'] = op.relpath(error['filename'], rootpath)
-            error['col'] = error.get('col', 1)
+            error._info['rel'] = op.relpath(error.filename, rootpath)
             errors.append(error)
         except KeyError:
             continue
+
     return errors
+
+# pylama:ignore=W0212
