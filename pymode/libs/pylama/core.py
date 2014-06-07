@@ -56,7 +56,7 @@ def run(path='', code=None, options=None):
 
                 lname, linter = item
 
-                if not linter or path and not linter.allow(path):
+                if not linter:
                     continue
 
                 LOGGER.info("Run %s", lname)

@@ -59,7 +59,7 @@ def check_files(paths, options, rootpath=None, error=True):
     work_paths = []
     for path in paths:
 
-        if not any(l.allow(path) for _, l in options.linters):
+        if not options.force and not any(l.allow(path) for _, l in options.linters): # noqa
             continue
 
         if not op.exists(path):

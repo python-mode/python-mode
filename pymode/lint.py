@@ -24,6 +24,7 @@ def code_check():
             ignore=env.var('g:pymode_lint_ignore'),
             select=env.var('g:pymode_lint_select'),
             linters=env.var('g:pymode_lint_checkers'),
+            force=1,
         )
         env.debug(options)
 

@@ -80,7 +80,7 @@ def async_check_files(paths, options, rootpath=None):
     return errors
 
 
-def check_path(path, options=None, rootpath=None, code=None, **meta):
+def check_path(path, options=None, rootpath=None, code=None):
     """ Check path.
 
     :return list: list of errors

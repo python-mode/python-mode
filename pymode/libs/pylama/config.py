@@ -113,6 +113,10 @@ PARSER.add_argument(
     "--options", "-o", default=_Default(DEFAULT_INI_PATH),
     help="Select configuration file. By default is '<CURDIR>/pylama.ini'")
 
+PARSER.add_argument(
+    "--force", "-F", action='store_true', default=_Default(False),
+    help="Force code checking (if linter doesnt allow)")
+
 
 ACTIONS = dict((a.dest, a) for a in PARSER._actions)
 
