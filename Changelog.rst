@@ -1,6 +1,8 @@
 Changelog
 =========
 
+## 2013-12-04 0.8.0
+-------------------
     * Pylama updated to version 3.3.2
     * Get fold's expression symbol from &fillchars;
     * Fixed error when setting g:pymode_breakpoint_cmd (expobrain);
