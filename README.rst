@@ -13,7 +13,7 @@ by utilizing libraries including pylint_, rope_, pydoc_, pyflakes_, pep8_, and
 mccabe_  for features like static analysis, refactoring, folding, completion,
 documentation, and more.
 
-The plugin containts all you need to develop python applications in Vim.
+The plugin contains all you need to develop python applications in Vim.
 
 There is no need to install pylint_, rope_ or any other Python libraries on
 your system.
@@ -167,111 +167,6 @@ Copyright
 
 Copyright © 2013 Kirill Klenov (klen_)
 
-Rope
------
-Copyright (C) 2006-2010 Ali Gholami Rudi
-
-Copyright (C) 2009-2010 Anton Gritsay
-
-https://pypi.python.org/pypi/rope
-
-https://pypi.python.org/pypi/ropemode
-
-http://rope.sourceforge.net/ropevim.html
-
-
-Pylama
-------
-Copyright (C) 2012-2013 Kirill Klenov
-
-https://pypi.python.org/pypi/pylama
-
-https://github.com/klen/pylama
-
-
-Pylint
-------
-Copyright (C) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
-
-https://pypi.python.org/pypi/pylint
-
-https://bitbucket.org/logilab/pylint
-
-http://www.pylint.org/
-
-http://www.logilab.fr/
-
-
-Pyflakes
---------
-
-Copyright (c) 2005 Divmod, Inc.
-
-https://pypi.python.org/pypi/pyflakes
-
-https://launchpad.net/pyflakes
-
-http://www.divmod.com/
-
-
-pep8
-----
-Copyright (C) 2006 Johann C. Rocholl <johann@rocholl.net>
-
-https://pypi.python.org/pypi/pep8
-
-http://github.com/jcrocholl/pep8
-
-http://www.python.org/dev/peps/pep-0008/
-
-
-autopep8
---------
-Copyright (C) 2010-2011 Hideo Hattori <hhatto.jp@gmail.com
-
-Copyright (C) 2011-2013 Hideo Hattori, Steven Myint
-
-https://pypi.python.org/pypi/autopep8
-
-https://github.com/hhatto/autopep8
-
-
-pep257
--------
-Copyright (C) 2012 Vladimir Keleshev, GreenSteam A/S
-
-https://pypi.python.org/pypi/pep257
-
-http://github.com/GreenSteam/pep257
-
-http://www.python.org/dev/peps/pep-0257/
-
-
-mccabe
-------
-Copyright (C) 2008 Ned Batchelder
-
-Copyright (C) 2013 Florent Xicluna
-
-https://pypi.python.org/pypi/mccabe
-
-https://github.com/flintwork/mccabe
-
-
-Python syntax for vim
-----------------------
-Copyright (c) 2010 Dmitry Vasiliev
-
-http://www.hlabs.spb.ru/vim/python.vim
-
-
-PEP8 VIM indentation
----------------------
-Copyright (c) 2012 Hynek Schlawack <hs@ox.cx>
-
-http://github.com/hynek/vim-python-pep8-indent
-
-
 License
 =======
 
@@ -281,12 +176,18 @@ If you like this plugin, you can send me postcard :)
 My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
 **Thanks for support!**
 
-
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html
 .. _klen: http://klen.github.com/
 .. _pydoc: http://docs.python.org/library/pydoc.html
 .. _pathogen: https://github.com/tpope/vim-pathogen
-.. _mccabe: http://en.wikipedia.org/wiki/Cyclomatic_complexity
-.. _Rope: http://rope.sourceforge.net/
-.. _Pylama: https://github.com/klen/pylama
+.. _rope: https://pypi.python.org/pypi/rope
+.. _pylama: https://github.com/klen/pylama
+.. _pylint: https://bitbucket.org/logilab/pylint
+.. _pyflakes: https://pypi.python.org/pypi/pyflakes
+.. _autopep8: https://github.com/hhatto/autopep8
+.. _pep257: http://github.com/GreenSteam/pep257
+.. _mccabe: https://github.com/flintwork/mccabe
+.. _pythonvim: http://www.hlabs.spb.ru/vim/python.vim
+.. _pep8: http://github.com/jcrocholl/pep8
+.. _pep8indent: http://github.com/hynek/vim-python-pep8-indent
 .. |logo| image:: https://raw.github.com/klen/python-mode/develop/logo.png

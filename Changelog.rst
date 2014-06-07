@@ -1,6 +1,19 @@
 Changelog
 =========
 
+## 2013-12-04 0.8.0
+-------------------
+    * Pylama updated to version 3.3.2
+    * Get fold's expression symbol from &fillchars;
+    * Fixed error when setting g:pymode_breakpoint_cmd (expobrain);
+    * Fixed code running;
+    * Ability to override rope project root and .ropeproject folder
+    * Added path argument to `PymodeRopeNewProject` which skips prompt
+    * Disable `pymode_rope_lookup_project` by default
+    * Options added:
+        'pymode_rope_project_root', 'pymode_rope_ropefolder'
+
+
 ## 2013-12-04 0.7.8b
 --------------------
     * Update indentation support;

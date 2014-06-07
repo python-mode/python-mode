@@ -1,4 +1,5 @@
 """ Python-mode async support. """
+
 try:
     from Queue import Queue
 except ImportError:

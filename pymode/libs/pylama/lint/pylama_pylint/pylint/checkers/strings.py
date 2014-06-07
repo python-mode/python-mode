@@ -14,17 +14,19 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """Checker for string formatting operations.
 """
 
 import sys
 import tokenize
 
-from .. import astroid
+import astroid
 
-from ..interfaces import ITokenChecker, IAstroidChecker
-from . import BaseChecker, BaseTokenChecker, utils
+from pylint.interfaces import ITokenChecker, IAstroidChecker, IRawChecker
+from pylint.checkers import BaseChecker, BaseTokenChecker
+from pylint.checkers import utils
+from pylint.checkers.utils import check_messages
 
 _PY3K = sys.version_info >= (3, 0)
 
@@ -64,11 +66,11 @@ MSGS = {
     'E1305': ("Too many arguments for format string",
               "too-many-format-args",
               "Used when a format string that uses unnamed conversion \
-              specifiers is given too few arguments."),
+              specifiers is given too many arguments."),
     'E1306': ("Not enough arguments for format string",
               "too-few-format-args",
               "Used when a format string that uses unnamed conversion \
-              specifiers is given too many arguments"),
+              specifiers is given too few arguments"),
     }
 
 OTHER_NODES = (astroid.Const, astroid.List, astroid.Backquote,
@@ -84,7 +86,7 @@ class StringFormatChecker(BaseChecker):
     name = 'string'
     msgs = MSGS
 
-    @utils.check_messages(*(MSGS.keys()))
+    @check_messages(*(MSGS.keys()))
     def visit_binop(self, node):
         if node.op != '%':
             return
@@ -100,15 +102,15 @@ class StringFormatChecker(BaseChecker):
                 utils.parse_format_string(format_string)
         except utils.UnsupportedFormatCharacter, e:
             c = format_string[e.index]
-            self.add_message('E1300', node=node, args=(c, ord(c), e.index))
+            self.add_message('bad-format-character', node=node, args=(c, ord(c), e.index))
             return
         except utils.IncompleteFormatString:
-            self.add_message('E1301', node=node)
+            self.add_message('truncated-format-string', node=node)
             return
         if required_keys and required_num_args:
             # The format string uses both named and unnamed format
             # specifiers.
-            self.add_message('E1302', node=node)
+            self.add_message('mixed-format-string', node=node)
         elif required_keys:
             # The format string uses only named format specifiers.
             # Check that the RHS of the % operator is a mapping object
@@ -123,7 +125,7 @@ class StringFormatChecker(BaseChecker):
                         if isinstance(key, basestring):
                             keys.add(key)
                         else:
-                            self.add_message('W1300', node=node, args=key)
+                            self.add_message('bad-format-string-key', node=node, args=key)
                     else:
                         # One of the keys was something other than a
                         # constant.  Since we can't tell what it is,
@@ -133,13 +135,13 @@ class StringFormatChecker(BaseChecker):
                 if not unknown_keys:
                     for key in required_keys:
                         if key not in keys:
-                            self.add_message('E1304', node=node, args=key)
+                            self.add_message('missing-format-string-key', node=node, args=key)
                 for key in keys:
                     if key not in required_keys:
-                        self.add_message('W1301', node=node, args=key)
+                        self.add_message('unused-format-string-key', node=node, args=key)
             elif isinstance(args, OTHER_NODES + (astroid.Tuple,)):
                 type_name = type(args).__name__
-                self.add_message('E1303', node=node, args=type_name)
+                self.add_message('format-needs-mapping', node=node, args=type_name)
             # else:
                 # The RHS of the format specifier is a name or
                 # expression.  It may be a mapping object, so
@@ -160,9 +162,9 @@ class StringFormatChecker(BaseChecker):
                 num_args = None
             if num_args is not None:
                 if num_args > required_num_args:
-                    self.add_message('E1305', node=node)
+                    self.add_message('too-many-format-args', node=node)
                 elif num_args < required_num_args:
-                    self.add_message('E1306', node=node)
+                    self.add_message('too-few-format-args', node=node)
 
 
 class StringMethodsChecker(BaseChecker):
@@ -175,7 +177,7 @@ class StringMethodsChecker(BaseChecker):
                   " duplicate character, "),
         }
 
-    @utils.check_messages(*(MSGS.keys()))
+    @check_messages(*(MSGS.keys()))
     def visit_callfunc(self, node):
         func = utils.safe_infer(node.func)
         if (isinstance(func, astroid.BoundMethod)
@@ -187,13 +189,13 @@ class StringMethodsChecker(BaseChecker):
             if not isinstance(arg, astroid.Const):
                 return
             if len(arg.value) != len(set(arg.value)):
-                self.add_message('E1310', node=node,
+                self.add_message('bad-str-strip-call', node=node,
                                  args=(func.bound.name, func.name))
 
 
 class StringConstantChecker(BaseTokenChecker):
     """Check string literals"""
-    __implements__ = (ITokenChecker,)
+    __implements__ = (ITokenChecker, IRawChecker)
     name = 'string_constant'
     msgs = {
         'W1401': ('Anomalous backslash in string: \'%s\'. '
@@ -219,6 +221,9 @@ class StringConstantChecker(BaseTokenChecker):
     # Unicode strings.
     UNICODE_ESCAPE_CHARACTERS = 'uUN'
 
+    def process_module(self, module):
+        self._unicode_literals = 'unicode_literals' in module.future_imports
+
     def process_tokens(self, tokens):
         for (tok_type, token, (start_row, start_col), _, _) in tokens:
             if tok_type == tokenize.STRING:
@@ -231,7 +236,7 @@ class StringConstantChecker(BaseTokenChecker):
             if c in '\'\"':
                 quote_char = c
                 break
-        prefix = token[:i].lower()  #  markers like u, b, r.
+        prefix = token[:i].lower() #  markers like u, b, r.
         after_prefix = token[i:]
         if after_prefix[:3] == after_prefix[-3:] == 3 * quote_char:
             string_body = after_prefix[3:-3]
@@ -277,12 +282,14 @@ class StringConstantChecker(BaseTokenChecker):
             if next_char in self.UNICODE_ESCAPE_CHARACTERS:
                 if 'u' in prefix:
                     pass
-                elif _PY3K and 'b' not in prefix:
+                elif (_PY3K or self._unicode_literals) and 'b' not in prefix:
                     pass  # unicode by default
                 else:
-                    self.add_message('W1402', line=start_row, args=(match, ))
+                    self.add_message('anomalous-unicode-escape-in-string', 
+                                     line=start_row, args=(match, ))
             elif next_char not in self.ESCAPE_CHARACTERS:
-                self.add_message('W1401', line=start_row, args=(match, ))
+                self.add_message('anomalous-backslash-in-string', 
+                                 line=start_row, args=(match, ))
             # Whether it was a valid escape or not, backslash followed by
             # another character can always be consumed whole: the second
             # character can never be the start of a new backslash escape.

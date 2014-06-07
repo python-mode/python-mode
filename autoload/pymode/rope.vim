@@ -83,7 +83,7 @@ fun! pymode#rope#regenerate() "{{{
 endfunction "}}}
 
 
-fun! pymode#rope#new() "{{{
+fun! pymode#rope#new(...) "{{{
     PymodePython rope.new()
 endfunction "}}}
 

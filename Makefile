@@ -13,11 +13,12 @@ clean:
 travis:
 	rake test
 
-.PHONY: test
+.PHONY: test t
 test:
 	bundle install
 	rm -rf $(CURDIR)/.ropeproject
 	rake test
+t: test
 
 .PHONY: pylama
 pylama:
@@ -37,14 +38,11 @@ $(CURDIR)/build:
 	cp -r after autoload doc ftplugin plugin pymode syntax $(CURDIR)/build/usr/share/vim/addons/.
 	cp -r python-mode.yaml $(CURDIR)/build/usr/share/vim/registry/.
 
-TARGET?=$(CURDIR)/deb
 PACKAGE_VERSION?=$(shell git describe --tags `git rev-list master --tags --max-count=1`) 
 PACKAGE_NAME="vim-python-mode"
 PACKAGE_MAINTAINER="Kirill Klenov <horneds@gmail.com>"
 PACKAGE_URL=http://github.com/klen/python-mode
 deb: clean $(CURDIR)/build
-	@git co gh-pages
-	@rm -rf deb
 	@fpm -s dir -t deb -a all \
 	    -n $(PACKAGE_NAME) \
 	    -v $(PACKAGE_VERSION) \
@@ -58,10 +56,4 @@ deb: clean $(CURDIR)/build
 	    -d "python2.7" \
 	    -d "vim-addon-manager" \
 	    usr
-	@mkdir -p $(TARGET)
-	@prm --type deb --path $(TARGET) \
-	    --release precise,quantal,raring,saucy \
-	    --arch amd64,i386,all \
-	    --component main \
-	    --directory $(CURDIR) \
-	    --gpg horneds@gmail.com
+	@mv *.deb ~/Dropbox/projects/deb/load

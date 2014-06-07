@@ -14,6 +14,7 @@ endfunction "}}}
 fun! g:PymodeSigns.setup() "{{{
     if self.enabled()
         execute 'sign define PymodeW text=' . g:pymode_lint_todo_symbol     . " texthl=Todo"
+        execute 'sign define PymodeD text=' . g:pymode_lint_docs_symbol     . " texthl=String"
         execute 'sign define PymodeC text=' . g:pymode_lint_comment_symbol  . " texthl=Comment"
         execute 'sign define PymodeR text=' . g:pymode_lint_visual_symbol   . " texthl=Visual"
         execute 'sign define PymodeE text=' . g:pymode_lint_error_symbol    . " texthl=Error"

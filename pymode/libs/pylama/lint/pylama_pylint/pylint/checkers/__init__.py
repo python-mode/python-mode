@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """utilities methods and classes for checkers
 
 Base id of standard checkers (used in msg and report ids):
@@ -41,13 +41,12 @@ messages nor reports. XXX not true, emit a 07 report !
 import sys
 import tokenize
 import warnings
-from os.path import dirname
 
-from ..astroid.utils import ASTWalker
-from ..logilab.common.configuration import OptionsProviderMixIn
+from astroid.utils import ASTWalker
+from logilab.common.configuration import OptionsProviderMixIn
 
-from ..reporters import diff_string
-from ..utils import register_plugins
+from pylint.reporters import diff_string
+from pylint.utils import register_plugins
 
 def table_lines_from_stats(stats, old_stats, columns):
     """get values listed in <columns> from <stats> and <old_stats>,
@@ -92,16 +91,10 @@ class BaseChecker(OptionsProviderMixIn, ASTWalker):
         self.name = self.name.lower()
         OptionsProviderMixIn.__init__(self)
         self.linter = linter
-        # messages that are active for the current check
-        self.active_msgs = set()
 
     def add_message(self, msg_id, line=None, node=None, args=None):
         """add a message of a given type"""
         self.linter.add_message(msg_id, line, node, args)
-
-    def package_dir(self):
-        """return the base directory for the analysed package"""
-        return dirname(self.linter.base_file)
 
     # dummy methods implementing the IChecker interface
 

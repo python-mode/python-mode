@@ -7,6 +7,10 @@ let s:decorator_regex = '^\s*@'
 let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
+let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
+if s:symbol == ''
+    let s:symbol = ' '
+endif
 
 
 fun! pymode#folding#text() " {{{
@@ -17,7 +21,7 @@ fun! pymode#folding#text() " {{{
     let line = getline(fs)
 
     let nucolwidth = &fdc + &number * &numberwidth
-    let windowwidth = winwidth(0) - nucolwidth - 3
+    let windowwidth = winwidth(0) - nucolwidth - 6
     let foldedlinecount = v:foldend - v:foldstart
 
     " expand tabs into spaces
@@ -26,8 +30,8 @@ fun! pymode#folding#text() " {{{
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
     let line = substitute(line, '\%("""\|''''''\)', '', '')
-    let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
-    return line . '…' . repeat(" ",fillcharcount) . foldedlinecount . '…' . ' '
+    let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
+    return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
 
 

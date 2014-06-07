@@ -4,12 +4,14 @@
 # ==================
 
 
-__version__ = '0.1.3'
-__project__ = 'pylama_pylint'
+__version__ = "0.2.1"
+__project__ = "pylama_pylint"
 __author__ = "horneds <horneds@gmail.com>"
 __license__ = "BSD"
 
-try:
-    from .main import Linter
-except ImportError:
-    Linter = None
+import sys
+if sys.version_info >= (3, 0, 0):
+    raise ImportError("pylama_pylint doesnt support python3")
+
+from .main import Linter
+assert Linter

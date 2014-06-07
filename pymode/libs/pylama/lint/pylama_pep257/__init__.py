@@ -8,21 +8,19 @@ class Linter(BaseLinter):
     """ Mccabe code complexity. """
 
     @staticmethod
-    def run(path, **meta):
+    def run(path, code=None, **meta):
         """ PEP257 code checking.
 
         :return list: List of errors.
 
         """
-        f = open(path)
-        from .pep257 import check_source
+        from .pep257 import PEP257Checker
 
         errors = []
-        for er in check_source(f.read(), path):
+        for er in PEP257Checker().check_source(code, path):
             errors.append(dict(
                 lnum=er.line,
-                col=er.char,
-                text='C0110 %s' % er.explanation.split('\n')[0].strip(),
-                type='W',
+                text=er.message,
+                type='D',
             ))
         return errors

@@ -10,14 +10,16 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """utilities methods and classes for reporters"""
 
 import sys
 import locale
 import os
 
-from .. import utils
+from pylint.utils import MSG_TYPES
+
+from pylint import utils
 
 CMPS = ['=', '-', '+']
 
@@ -25,6 +27,10 @@ CMPS = ['=', '-', '+']
 if sys.version_info >= (3, 0):
     def cmp(a, b):
         return (a > b) - (a < b)
+
+if sys.version_info < (2, 6):
+    import stringformat
+    stringformat.init(True)
 
 def diff_string(old, new):
     """given a old and new int value, return a string representing the
@@ -44,7 +50,7 @@ class Message(object):
         self.path = self.abspath.replace(reporter.path_strip_prefix, '')
         self.msg = msg
         self.C = msg_id[0]
-        self.category = utils.MSG_TYPES[msg_id[0]]
+        self.category = MSG_TYPES[msg_id[0]]
         self.symbol = reporter.linter.check_message_id(msg_id).symbol
 
     def format(self, template):

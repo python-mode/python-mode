@@ -17,6 +17,7 @@ class VimPymodeEnviroment(object):
     prefix = '[Pymode]'
 
     def __init__(self):
+        """ Init VIM environment. """
         self.current = vim.current
         self.options = dict(encoding=vim.eval('&enc'))
         self.options['debug'] = self.var('g:pymode_debug', True)
@@ -24,13 +25,11 @@ class VimPymodeEnviroment(object):
     @property
     def curdir(self):
         """ Return current working directory. """
-
         return self.var('getcwd()')
 
     @property
     def curbuf(self):
         """ Return current buffer. """
-
         return self.current.buffer
 
     @property
@@ -45,7 +44,6 @@ class VimPymodeEnviroment(object):
     @property
     def source(self):
         """ Return source of current buffer. """
-
         return "\n".join(self.lines)
 
     @property
@@ -66,7 +64,6 @@ class VimPymodeEnviroment(object):
         :return vimobj:
 
         """
-
         value = vim.eval(name)
 
         if to_bool:
@@ -82,7 +79,6 @@ class VimPymodeEnviroment(object):
         :return: :None
 
         """
-
         if history:
             return vim.command('echom "%s"' % str(msg))
 
@@ -149,16 +145,14 @@ class VimPymodeEnviroment(object):
 
     def debug(self, msg, *args):
         """ Print debug information. """
-
         if self.options.get('debug'):
             print("%s %s [%s]" % (
                 int(time.time()), msg, ', '.join([str(a) for a in args])))
 
     def stop(self, value=None):
         """ Break Vim function. """
-
         cmd = 'return'
-        if value:
+        if value is not None:
             cmd += ' ' + self.prepare_value(value)
         vim.command(cmd)
 
@@ -168,7 +162,6 @@ class VimPymodeEnviroment(object):
         :return func:
 
         """
-
         def _wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
@@ -181,7 +174,6 @@ class VimPymodeEnviroment(object):
 
     def run(self, name, *args):
         """ Run vim function. """
-
         vim.command('call %s(%s)' % (name, ", ".join([
             self.prepare_value(a) for a in args
         ])))
@@ -198,7 +190,6 @@ class VimPymodeEnviroment(object):
         :return unicode string:
 
         """
-
         if dumps:
             value = json.dumps(value)
 
@@ -229,12 +220,10 @@ class VimPymodeEnviroment(object):
 
     def goto_line(self, line):
         """ Go to line. """
-
         vim.command('normal %sggzz' % line)
 
     def goto_file(self, path, cmd='e', force=False):
         """ Function description. """
-
         if force or os.path.abspath(path) != self.curbuf.name:
             self.debug('read', path)
             vim.command("%s %s" % (cmd, path))

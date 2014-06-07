@@ -5,9 +5,7 @@
 
 """
 
-version_info = 2, 0, 4
-
-__version__ = version = '.'.join(map(str, version_info))
-__project__ = __name__
+__version__ = "3.3.2"
+__project__ = "pylama"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "GNU LGPL"
