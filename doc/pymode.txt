@@ -381,7 +381,7 @@ possibly unrelated, files)
 Enable searching for |.ropeproject| in parent directories
                                                   *'g:pymode_rope_lookup_project'*
 >
-    let g:pymode_rope_lookup_project = 1
+    let g:pymode_rope_lookup_project = 0
 
 You can also manually set the rope project directory. If not specified rope will
 use the current directory.

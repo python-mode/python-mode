@@ -293,7 +293,7 @@ def cache_project(cls):
             return resources.get(path)
 
         project_path = env.var('g:pymode_rope_project_root')
-        if project_path:
+        if not project_path:
             project_path = env.curdir
             env.debug('Look ctx', project_path)
             if env.var('g:pymode_rope_lookup_project', True):
@@ -302,10 +302,13 @@ def cache_project(cls):
         if not os.path.exists(project_path):
             env.error("Rope project root not exist: %s" % project_path)
             ctx = None
+
         else:
             ctx = projects.get(project_path)
+
         if not ctx:
             projects[project_path] = ctx = cls(path, project_path)
+
         resources[path] = ctx
         return ctx
     return get_ctx
