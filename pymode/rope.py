@@ -6,7 +6,6 @@ import os.path
 import re
 import site
 import sys
-import StringIO
 
 from rope.base import project, libutils, exceptions, change, worder # noqa
 from rope.base.fscommands import FileSystemCommands # noqa
@@ -14,7 +13,7 @@ from rope.base.taskhandle import TaskHandle # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature, importutils # noqa
 
-
+from ._compat import StringIO
 from .environment import env
 
 

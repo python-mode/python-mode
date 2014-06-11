@@ -1,14 +1,9 @@
 """ Code runnning support. """
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import sys
-
-from .environment import env
 from re import compile as re
+
+from ._compat import StringIO
+from .environment import env
 
 
 encoding = re(r'#[^\w]+coding:\s+utf.*$')
