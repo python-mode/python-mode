@@ -7,7 +7,7 @@ import json
 import time
 import os.path
 
-from .utils import PY2
+from ._compat import PY2
 
 
 class VimPymodeEnviroment(object):

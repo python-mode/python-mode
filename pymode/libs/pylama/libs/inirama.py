@@ -19,7 +19,6 @@ from __future__ import unicode_literals, print_function
 import io
 import re
 import logging
-from collections import MutableMapping
 try:
     from collections import OrderedDict
 except ImportError:
@@ -67,7 +66,7 @@ except ImportError:
     iteritems = DictMixin.iteritems
 
 
-__version__ = "0.5.1"
+__version__ = "0.7.0"
 __project__ = "Inirama"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "BSD"
@@ -170,7 +169,9 @@ class INIScanner(Scanner):
         ('SECTION', re.compile(r'\[[^]]+\]')),
         ('IGNORE', re.compile(r'[ \r\t\n]+')),
         ('COMMENT', re.compile(r'[;#].*')),
-        ('KEY', re.compile(r'[\w_]+\s*[:=].*'))]
+        ('KEY', re.compile(r'[\w_]+\s*[:=].*')),
+        ('CONTINUATION', re.compile(r'.*'))
+    ]
 
     ignore = ['IGNORE']
 
@@ -183,43 +184,20 @@ class INIScanner(Scanner):
 undefined = object()
 
 
-class Section(MutableMapping):
+class Section(OrderedDict):
 
     """ Representation of INI section. """
 
     def __init__(self, namespace, *args, **kwargs):
         super(Section, self).__init__(*args, **kwargs)
         self.namespace = namespace
-        self.__storage__ = dict()
 
     def __setitem__(self, name, value):
         value = str(value)
         if value.isdigit():
             value = int(value)
 
-        self.__storage__[name] = value
-
-    def __getitem__(self, name):
-        return self.__storage__[name]
-
-    def __delitem__(self, name):
-        del self.__storage__[name]
-
-    def __len__(self):
-        return len(self.__storage__)
-
-    def __iter__(self):
-        return iter(self.__storage__)
-
-    def __repr__(self):
-        return "<{0} {1}>".format(self.__class__.__name__, str(dict(self)))
-
-    def iteritems(self):
-        """ Impletment iteritems. """
-        for key in self.__storage__.keys():
-            yield key, self[key]
-
-    items = lambda s: list(s.iteritems())
+        super(Section, self).__setitem__(name, value)
 
 
 class InterpolationSection(Section):
@@ -246,18 +224,27 @@ class InterpolationSection(Section):
         except KeyError:
             return ''
 
-    def __getitem__(self, name):
+    def __getitem__(self, name, raw=False):
         value = super(InterpolationSection, self).__getitem__(name)
-        sample = undefined
-        while sample != value:
-            try:
-                sample, value = value, self.var_re.sub(
-                    self.__interpolate__, value)
-            except RuntimeError:
-                message = "Interpolation failed: {0}".format(name)
-                NS_LOGGER.error(message)
-                raise ValueError(message)
+        if not raw:
+            sample = undefined
+            while sample != value:
+                try:
+                    sample, value = value, self.var_re.sub(
+                        self.__interpolate__, value)
+                except RuntimeError:
+                    message = "Interpolation failed: {0}".format(name)
+                    NS_LOGGER.error(message)
+                    raise ValueError(message)
         return value
+
+    def iteritems(self, raw=False):
+        """ Iterate self items. """
+
+        for key in self:
+            yield key, self.__getitem__(key, raw=raw)
+
+    items = iteritems
 
 
 class Namespace(object):
@@ -356,6 +343,7 @@ class Namespace(object):
         scanner.scan()
 
         section = self.default_section
+        name = None
 
         for token in scanner.tokens:
             if token[0] == 'KEY':
@@ -367,6 +355,13 @@ class Namespace(object):
 
             elif token[0] == 'SECTION':
                 section = token[1].strip('[]')
+
+            elif token[0] == 'CONTINUATION':
+                if not name:
+                    raise SyntaxError(
+                        "SyntaxError[@char {0}: {1}]".format(
+                            token[2], "Bad continuation."))
+                self[section][name] += '\n' + token[1].strip()
 
     def __getitem__(self, name):
         """ Look name in self sections.
@@ -406,4 +401,4 @@ class InterpolationNamespace(Namespace):
 
     section_type = InterpolationSection
 
-# lint_ignore=W0201,R0924,F0401
+# pylama:ignore=D,W02,E731,W0621

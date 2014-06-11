@@ -18,22 +18,26 @@ fun! pymode#troubleshooting#test() "{{{
 
     call append('0', ['Pymode diagnostic',
                   \ '===================',
-                  \ 'VIM:' . v:version . ', OS: ' . os .', multi_byte:' .  has('multi_byte') . ', pymode: ' . g:pymode_version . ', python: ' . g:pymode_python, 
+                  \ 'VIM:' . v:version . ', OS: ' . os .', multi_byte:' .  has('multi_byte') . ', pymode: ' . g:pymode_version . ', pymode-python: ' . g:pymode_python, 
                   \ ''])
 
     if !exists('#filetypeplugin')
         call append('$', ['WARNING: ', 'Python-mode required :filetype plugin indent on', ''])
     endif
 
+    call append('$', ['+python: ' . has('python')])
+    call append('$', ['+python3: ' . has('python3'), ''])
+
     if g:pymode_python == 'disable'
+
         if !has('python') && !has('python3')
 
-            call append('$', ['WARNING: ', 'Python-mode required vim compiled with +python or +python3.',
+            call append('$', ['WARNING: Python-mode required vim compiled with +python or +python3.',
                             \ '"lint, rope, run, doc, virtualenv" features disabled.', ''])
 
         else
 
-            call append('$', ['WARNING: ', 'Python is disabled by `pymode_python` option.',
+            call append('$', ['WARNING: Python is disabled by `pymode_python` option.',
                             \ '"lint, rope, run, doc, virtualenv" features disabled.', ''])
 
         endif

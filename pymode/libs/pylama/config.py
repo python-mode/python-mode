@@ -1,7 +1,7 @@
 """ Parse arguments from command line and configuration files. """
 import fnmatch
 import sys
-from os import getcwd, path
+import os
 from re import compile as re
 
 import logging
@@ -21,8 +21,11 @@ LOGGER.addHandler(STREAM)
 #: A default checkers
 DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
 
-CURDIR = getcwd()
-DEFAULT_INI_PATH = path.join(CURDIR, 'pylama.ini')
+CURDIR = os.getcwd()
+CONFIG_FILES = [
+    os.path.join(CURDIR, basename) for basename in
+    ('pylama.ini', 'setup.cfg', 'tox.ini', 'pytest.ini')
+]
 
 
 class _Default(object):
@@ -67,7 +70,7 @@ def parse_linters(linters):
 PARSER = ArgumentParser(description="Code audit tool for python.")
 PARSER.add_argument(
     "path", nargs='?', default=_Default(CURDIR),
-    help="Path on file or directory.")
+    help="Path on file or directory for code check.")
 
 PARSER.add_argument(
     "--verbose", "-v", action='store_true', help="Verbose mode.")
@@ -77,11 +80,11 @@ PARSER.add_argument('--version', action='version',
 
 PARSER.add_argument(
     "--format", "-f", default=_Default('pep8'), choices=['pep8', 'pylint'],
-    help="Error format.")
+    help="Choose errors format (pep8, pylint).")
 
 PARSER.add_argument(
     "--select", "-s", default=_Default(''), type=split_csp_str,
-    help="Select errors and warnings. (comma-separated)")
+    help="Select errors and warnings. (comma-separated list)")
 
 
 PARSER.add_argument(
@@ -100,7 +103,7 @@ PARSER.add_argument(
     type=lambda s: [re(fnmatch.translate(p)) for p in s.split(',') if p],
     help="Skip files by masks (comma-separated, Ex. */messages.py)")
 
-PARSER.add_argument("--report", "-r", help="Filename for report.")
+PARSER.add_argument("--report", "-r", help="Send report to file [REPORT]")
 PARSER.add_argument(
     "--hook", action="store_true", help="Install Git (Mercurial) hook.")
 
@@ -110,7 +113,7 @@ PARSER.add_argument(
     "Dont supported with pylint.")
 
 PARSER.add_argument(
-    "--options", "-o", default=_Default(DEFAULT_INI_PATH),
+    "--options", "-o", default="",
     help="Select configuration file. By default is '<CURDIR>/pylama.ini'")
 
 PARSER.add_argument(
@@ -151,17 +154,22 @@ def parse_options(args=None, config=True, **overrides): # noqa
                 setattr(options, k, _Default(v))
 
         # Parse file related options
-        for k, s in cfg.sections.items():
-            if k == cfg.default_section:
+        for name, opts in cfg.sections.items():
+
+            if not name.startswith('pylama'):
                 continue
-            if k in LINTERS:
-                options.linter_params[k] = dict(s)
+
+            if name == cfg.default_section:
                 continue
-            mask = re(fnmatch.translate(k))
-            options.file_params[mask] = dict(s)
-            options.file_params[mask]['lint'] = int(
-                options.file_params[mask].get('lint', 1)
-            )
+
+            name = name[7:]
+
+            if name in LINTERS:
+                options.linter_params[name] = dict(opts)
+                continue
+
+            mask = re(fnmatch.translate(name))
+            options.file_params[mask] = dict(opts)
 
     # Postprocess options
     opts = dict(options.__dict__.items())
@@ -187,15 +195,21 @@ def process_value(name, value):
     return value
 
 
-def get_config(ini_path=DEFAULT_INI_PATH):
+def get_config(ini_path=None):
     """ Load configuration from INI.
 
     :return Namespace:
 
     """
     config = Namespace()
-    config.default_section = 'main'
-    config.read(ini_path)
+    config.default_section = 'pylama'
+
+    if not ini_path:
+        for path in CONFIG_FILES:
+            if os.path.isfile(path) and os.access(path, os.R_OK):
+                config.read(path)
+    else:
+        config.read(ini_path)
 
     return config
 
@@ -207,3 +221,5 @@ def setup_logger(options):
         LOGGER.removeHandler(STREAM)
         LOGGER.addHandler(logging.FileHandler(options.report, mode='w'))
     LOGGER.info('Try to read configuration from: ' + options.options)
+
+# pylama:ignore=W0212
