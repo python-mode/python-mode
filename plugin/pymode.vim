@@ -1,5 +1,5 @@
 " vi: fdl=1 
-let g:pymode_version = "0.8.0"
+let g:pymode_version = "0.8.1"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
 com! PymodeTroubleshooting call pymode#troubleshooting#test()
