@@ -16,6 +16,13 @@
 """
 from __future__ import unicode_literals, print_function
 
+
+__version__ = "0.8.0"
+__project__ = "Inirama"
+__author__ = "Kirill Klenov <horneds@gmail.com>"
+__license__ = "BSD"
+
+
 import io
 import re
 import logging
@@ -64,12 +71,6 @@ except ImportError:
     iterkeys = DictMixin.iterkeys
     itervalues = DictMixin.itervalues
     iteritems = DictMixin.iteritems
-
-
-__version__ = "0.7.0"
-__project__ = "Inirama"
-__author__ = "Kirill Klenov <horneds@gmail.com>"
-__license__ = "BSD"
 
 
 NS_LOGGER = logging.getLogger('inirama')
@@ -169,7 +170,7 @@ class INIScanner(Scanner):
         ('SECTION', re.compile(r'\[[^]]+\]')),
         ('IGNORE', re.compile(r'[ \r\t\n]+')),
         ('COMMENT', re.compile(r'[;#].*')),
-        ('KEY', re.compile(r'[\w_]+\s*[:=].*')),
+        ('KEY_VALUE', re.compile(r'[^=\s]+\s*[:=].*')),
         ('CONTINUATION', re.compile(r'.*'))
     ]
 
@@ -346,7 +347,7 @@ class Namespace(object):
         name = None
 
         for token in scanner.tokens:
-            if token[0] == 'KEY':
+            if token[0] == 'KEY_VALUE':
                 name, value = re.split('[=:]', token[1], 1)
                 name, value = name.strip(), value.strip()
                 if not update and name in self[section]:

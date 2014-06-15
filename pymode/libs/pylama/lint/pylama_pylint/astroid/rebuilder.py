@@ -516,16 +516,16 @@ class TreeRebuilder(object):
         frame = newnode.parent.frame()
         if isinstance(frame, new.Class):
             if newnode.name == '__new__':
-                newnode.type = 'classmethod'
+                newnode._type = 'classmethod'
             else:
-                newnode.type = 'method'
+                newnode._type = 'method'
         if newnode.decorators is not None:
             for decorator_expr in newnode.decorators.nodes:
                 if isinstance(decorator_expr, new.Name):
                     if decorator_expr.name in ('classmethod', 'staticmethod'):
-                        newnode.type = decorator_expr.name
+                        newnode._type = decorator_expr.name
                     elif decorator_expr.name == 'classproperty':
-                        newnode.type = 'classmethod'
+                        newnode._type = 'classmethod'
         frame.set_local(newnode.name, newnode)
         return newnode
 

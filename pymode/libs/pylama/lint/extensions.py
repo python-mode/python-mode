@@ -25,6 +25,7 @@ try:
     from pkg_resources import iter_entry_points
 
     for entry in iter_entry_points('pylama.linter'):
-        LINTERS[entry.name] = entry.load()()
+        if entry.name not in LINTERS:
+            LINTERS[entry.name] = entry.load()()
 except ImportError:
     pass

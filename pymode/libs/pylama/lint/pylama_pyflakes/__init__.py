@@ -21,20 +21,22 @@ class Linter(BaseLinter):
             monkey_patch_messages(checker.messages)
 
     @staticmethod
-    def run(path, code=None, builtins="", **meta):
+    def run(path, code=None, params=None, **meta):
         """ Pyflake code checking.
 
         :return list: List of errors.
 
         """
         import _ast
-        import os
 
-        os.environ.setdefault('PYFLAKES_BUILTINS', builtins)
+        builtins = params.get("builtins", "")
+
+        if builtins:
+            builtins = builtins.split(",")
 
         errors = []
         tree = compile(code, path, "exec", _ast.PyCF_ONLY_AST)
-        w = checker.Checker(tree, path)
+        w = checker.Checker(tree, path, builtins=builtins)
         w.messages = sorted(w.messages, key=lambda m: m.lineno)
         for w in w.messages:
             errors.append(dict(

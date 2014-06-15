@@ -31,13 +31,13 @@ except ImportError:
     from cStringIO import StringIO as BytesIO
 
 from logilab.common.compat import builtins
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, cachedproperty
 
 from astroid.exceptions import NotFoundError, \
      AstroidBuildingException, InferenceError
 from astroid.node_classes import Const, DelName, DelAttr, \
      Dict, From, List, Pass, Raise, Return, Tuple, Yield, YieldFrom, \
-     LookupMixIn, const_factory as cf, unpack_infer
+     LookupMixIn, const_factory as cf, unpack_infer, Name
 from astroid.bases import NodeNG, InferenceContext, Instance,\
      YES, Generator, UnboundMethod, BoundMethod, _infer_stmts, copy_context, \
      BUILTINS
@@ -476,6 +476,34 @@ else:
         """class representing a ListComp node"""
 
 # Function  ###################################################################
+    
+def _function_type(self):
+    """
+    Function type, possible values are:
+    method, function, staticmethod, classmethod.
+    """
+    # Can't infer that this node is decorated
+    # with a subclass of `classmethod` where `type` is first set,
+    # so do it here.
+    if self.decorators:
+        for node in self.decorators.nodes:
+            if not isinstance(node, Name):
+                continue
+            try:
+                for infered in node.infer():
+                    if not isinstance(infered, Class):
+                        continue
+                    for ancestor in infered.ancestors():
+                        if isinstance(ancestor, Class):
+                            if (ancestor.name == 'classmethod' and
+                                ancestor.root().name == BUILTINS):
+                                return 'classmethod'
+                            elif (ancestor.name == 'staticmethod' and
+                                  ancestor.root().name == BUILTINS):
+                                return 'staticmethod'
+            except InferenceError:
+                pass
+    return self._type
 
 
 class Lambda(LocalsDictNodeNG, FilterStmtsMixin):
@@ -539,6 +567,8 @@ class Function(Statement, Lambda):
     # attributes below are set by the builder module or by raw factories
     blockstart_tolineno = None
     decorators = None
+    _type = "function"
+    type = cachedproperty(_function_type)
 
     def __init__(self, name, doc):
         self.locals = {}

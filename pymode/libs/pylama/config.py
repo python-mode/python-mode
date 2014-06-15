@@ -136,7 +136,7 @@ def parse_options(args=None, config=True, **overrides): # noqa
     # Parse args from command string
     options = PARSER.parse_args(args)
     options.file_params = dict()
-    options.linter_params = dict()
+    options.linters_params = dict()
 
     # Override options
     for k, v in overrides.items():
@@ -165,7 +165,7 @@ def parse_options(args=None, config=True, **overrides): # noqa
             name = name[7:]
 
             if name in LINTERS:
-                options.linter_params[name] = dict(opts)
+                options.linters_params[name] = dict(opts)
                 continue
 
             mask = re(fnmatch.translate(name))

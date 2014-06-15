@@ -32,11 +32,11 @@ def run(path='', code=None, options=None):
     fileconfig = dict()
     params = dict()
     linters = LINTERS
-    linter_params = dict()
+    linters_params = dict()
 
     if options:
         linters = options.linters
-        linter_params = options.linter_params
+        linters_params = options.linters_params
         for mask in options.file_params:
             if mask.match(path):
                 fileconfig.update(options.file_params[mask])
@@ -45,6 +45,7 @@ def run(path='', code=None, options=None):
         with CodeContext(code, path) as ctx:
             code = ctx.code
             params = prepare_params(parse_modeline(code), fileconfig, options)
+            LOGGER.debug('Checking params: %s', params)
 
             if params.get('skip'):
                 return errors
@@ -59,10 +60,13 @@ def run(path='', code=None, options=None):
                 if not linter:
                     continue
 
-                LOGGER.info("Run %s", lname)
-                meta = linter_params.get(lname, dict())
-                errors += [Error(filename=path, linter=lname, **e)
-                           for e in linter.run(path, code=code, **meta)]
+                lparams = linters_params.get(lname, dict())
+                LOGGER.info("Run %s %s", lname, lparams)
+
+                for er in linter.run(
+                        path, code=code, ignore=params.get("ignore", set()),
+                        select=params.get("select", set()), params=lparams):
+                    errors.append(Error(filename=path, linter=lname, **er))
 
     except IOError as e:
         LOGGER.debug("IOError %s", e)

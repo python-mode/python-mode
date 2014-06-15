@@ -8,7 +8,7 @@ class Linter(BaseLinter):
     """ Mccabe code complexity. """
 
     @staticmethod
-    def run(path, code=None, complexity=10, **meta):
+    def run(path, code=None, params=None, **meta):
         """ MCCabe code checking.
 
         :return list: List of errors.
@@ -16,4 +16,5 @@ class Linter(BaseLinter):
         """
         from .mccabe import get_code_complexity
 
+        complexity = params.get('complexity', 10)
         return get_code_complexity(code, complexity, filename=path) or []
