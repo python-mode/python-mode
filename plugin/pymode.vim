@@ -47,6 +47,7 @@ call pymode#default("g:pymode_trim_whitespaces", 1)
 
 " Set recomended python options
 call pymode#default("g:pymode_options", 1)
+call pymode#default("g:pymode_options_max_line_length", 80)
 
 " Minimal height of pymode quickfix window
 call pymode#default('g:pymode_quickfix_maxheight', 6)
@@ -126,6 +127,20 @@ call pymode#default("g:pymode_lint_visual_symbol", "RR")
 call pymode#default("g:pymode_lint_error_symbol", "EE")
 call pymode#default("g:pymode_lint_info_symbol", "II")
 call pymode#default("g:pymode_lint_pyflakes_symbol", "FF")
+
+" Code checkers options
+call pymode#default("g:pymode_lint_options_pep8",
+    \ {'max_line_length': g:pymode_options_max_line_length})
+
+call pymode#default("g:pymode_lint_options_pylint",
+    \ {'max-line-length': g:pymode_options_max_line_length})
+
+call pymode#default("g:pymode_lint_options_mccabe",
+    \ {'complexity': 12})
+
+call pymode#default("g:pymode_lint_options_pep257", {})
+call pymode#default("g:pymode_lint_options_pyflakes", { 'builtins': '_' })
+
 
 " }}}
 

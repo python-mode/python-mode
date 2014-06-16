@@ -56,7 +56,10 @@ if g:pymode_options
         setlocal number
     endif
     setlocal nowrap
-    setlocal textwidth=79
+    exe "setlocal textwidth=" . g:pymode_options_max_line_length
+    if exists('+colorcolumn')
+        setlocal colorcolumn=+1
+    endif
     setlocal commentstring=#%s
     setlocal define=^\s*\\(def\\\\|class\\)
 endif

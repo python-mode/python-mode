@@ -58,13 +58,19 @@ class VimPymodeEnviroment(object):
 
         return [l.decode(self.options.get('encoding')) for l in self.curbuf]
 
-    def var(self, name, to_bool=False):
+    @staticmethod
+    def var(name, to_bool=False, silence=False):
         """ Get vim variable.
 
         :return vimobj:
 
         """
-        value = vim.eval(name)
+        try:
+            value = vim.eval(name)
+        except vim.error:
+            if silence:
+                return None
+            raise
 
         if to_bool:
             try:
@@ -73,7 +79,8 @@ class VimPymodeEnviroment(object):
                 value = value
         return value
 
-    def message(self, msg, history=False):
+    @staticmethod
+    def message(msg, history=False):
         """ Show message to user.
 
         :return: :None
@@ -139,7 +146,8 @@ class VimPymodeEnviroment(object):
             self.error('Invalid option: %s' % input_str)
             return self.user_input_choices(msg, *options)
 
-    def error(self, msg):
+    @staticmethod
+    def error(msg):
         """ Show error to user. """
         vim.command('call pymode#error("%s")' % str(msg))
 
@@ -218,7 +226,8 @@ class VimPymodeEnviroment(object):
         env.debug('Get offset', base or None, row, col, offset)
         return source, offset
 
-    def goto_line(self, line):
+    @staticmethod
+    def goto_line(line):
         """ Go to line. """
         vim.command('normal %sggzz' % line)
 
@@ -228,7 +237,8 @@ class VimPymodeEnviroment(object):
             self.debug('read', path)
             vim.command("%s %s" % (cmd, path))
 
-    def goto_buffer(self, bufnr):
+    @staticmethod
+    def goto_buffer(bufnr):
         """ Open buffer. """
         if str(bufnr) != '-1':
             vim.command('buffer %s' % bufnr)
