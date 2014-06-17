@@ -2,6 +2,8 @@ if !g:pymode || pymode#default('b:pymode', 1)
     finish
 endif
 
+let b:pymode_modified = &modified
+
 " Init paths
 if !pymode#default('g:pymode_init', 1)
     call pymode#init(expand('<sfile>:p:h:h:h'), g:pymode_paths)
