@@ -146,7 +146,7 @@ Set value to `python3` if you are working with python3 projects. You could use
 Pymode supports PEP8-compatible python indent.
 Enable pymode indentation                                  *'g:pymode_indent'*
 >
-    let g:pymode_indent = []
+    let g:pymode_indent = 1
 
 ------------------------------------------------------------------------------
 2.3 Python folding ~

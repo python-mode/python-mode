@@ -4,7 +4,7 @@
 " Prev Maintainer:  Eric Mc Sween <em@tomcom.de> (address invalid)
 " Original Author:  David Bustos <bustos@caltech.edu> (address invalid)
 " Last Change:      2012-06-21
-" License:          Public Domainlet
+" License:          Public Domain
 
 
 function! pymode#indent#get_indent(lnum)
