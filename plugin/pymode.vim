@@ -1,4 +1,4 @@
-" vi: fdl=1 
+" vi: fdl=1
 let g:pymode_version = "0.8.1"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
@@ -155,7 +155,7 @@ call pymode#default('g:pymode_rope_current', '')
 call pymode#default('g:pymode_rope_project_root', '')
 
 " Configurable rope project folder (always relative to project root)
-call pymode#default('g:pymode_rope_ropefolder', '.ropeproject') 
+call pymode#default('g:pymode_rope_ropefolder', '.ropeproject')
 
 " If project hasnt been finded in current working directory, look at parents directory
 call pymode#default('g:pymode_rope_lookup_project', 0)
@@ -246,10 +246,6 @@ if &compatible
     set nocompatible
 endif
 filetype plugin on
-
-if exists('+shellslash')
-    set shellslash
-endif
 
 " Disable python-related functionality
 " let g:pymode_python = 'disable'
