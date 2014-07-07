@@ -1,8 +1,6 @@
-if !g:pymode || !g:pymode_indent || exists("b:did_indent")
+if !g:pymode || !g:pymode_indent
     finish
 endif
-
-let b:did_indent = 1
 
 setlocal nolisp
 setlocal tabstop=4
