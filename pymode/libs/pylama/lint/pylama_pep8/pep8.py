@@ -199,6 +199,7 @@ def maximum_line_length(physical_line, max_line_length, multiline):
 
     Reports error E501.
     """
+    max_line_length = int(max_line_length)
     line = physical_line.rstrip()
     length = len(line)
     if length > max_line_length and not noqa(line):
