@@ -16,5 +16,5 @@ class Linter(BaseLinter):
         """
         from .mccabe import get_code_complexity
 
-        complexity = params.get('complexity', 10)
+        complexity = int(params.get('complexity', 10))
         return get_code_complexity(code, complexity, filename=path) or []
