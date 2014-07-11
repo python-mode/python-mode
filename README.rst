@@ -107,7 +107,7 @@ Install with commands:
      apt-get update
      apt-get install vim-python-mode
 
-If you are getting the message: "The following signatures couldn' be verified because the public key is not available": ::
+If you are getting the message: "The following signatures couldn't be verified because the public key is not available": ::
 
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B5DF65307000E266
 
@@ -126,7 +126,7 @@ If your python-mode doesn't work:
 
     vim -u <path_to_pymode>/debug.vim
 
-And try to repeat your case. If no error occurs, seems like problem isnt in the
+And try to repeat your case. If no error occurs, seems like problem isn't in the
 plugin.
 
 2. Type `:PymodeTroubleshooting`
@@ -134,6 +134,21 @@ plugin.
 And fix any warnings or copy the output and send it to me. (For example, by
 creating a `new github issue <https://github.com/klen/python-mode/issues/new>`_
 if one does not already exist for the problem).
+
+
+Customization
+=============
+
+You can override the default key bindings by redefining them in your `.vimrc`, for example: ::
+
+    " Override go-to.definition key shortcut to Ctrl-]
+    let g:pymode_rope_goto_definition_bind = "<C-]>"
+
+    " Override run current python file key shortcut to Ctrl-Shift-e
+    let g:pymode_run_bind = "<C-S-e>"
+
+    " Override view python doc key shortcut to Ctrl-Shift-d
+    let g:pymode_doc_bind = "<C-S-d>"
 
 
 Documentation
