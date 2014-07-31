@@ -74,7 +74,7 @@ Features:                                                      *pymode-features*
 This script provides the following options that can customizes the behavior of
 PythonMode. These options should be set in your |vimrc|.
 
-        Bellow shows the default values.
+        Below shows the default values.
 
 
 Turn on the whole plugin                                            *'g:pymode'*
