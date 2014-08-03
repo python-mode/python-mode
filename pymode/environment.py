@@ -235,6 +235,8 @@ class VimPymodeEnviroment(object):
         """ Function description. """
         if force or os.path.abspath(path) != self.curbuf.name:
             self.debug('read', path)
+            if ' ' in path and os.name == 'posix':
+                path = path.replace(' ', '\\ ')
             vim.command("%s %s" % (cmd, path))
 
     @staticmethod
