@@ -59,7 +59,7 @@ if g:pymode_options
     endif
     setlocal nowrap
     exe "setlocal textwidth=" . g:pymode_options_max_line_length
-    if exists('+colorcolumn')
+    if g:pymode_options_colorcolumn && exists('+colorcolumn')
         setlocal colorcolumn=+1
     endif
     setlocal commentstring=#%s

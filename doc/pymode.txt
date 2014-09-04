@@ -115,6 +115,10 @@ python buffers: >
     setlocal commentstring=#%s
     setlocal define=^\s*\\(def\\\\|class\\)
 
+Enable colorcolumn display at max_line_length   *'g:pymode_options_colorcolumn'*
+>
+    let g:pymode_options_colorcolumn = 1
+
 Setup pymode |quickfix| window
 
                     *'g:pymode_quickfix_maxheight'* *'g:pymode_quickfix_minheight'*
