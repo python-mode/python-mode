@@ -48,6 +48,7 @@ call pymode#default("g:pymode_trim_whitespaces", 1)
 " Set recomended python options
 call pymode#default("g:pymode_options", 1)
 call pymode#default("g:pymode_options_max_line_length", 80)
+call pymode#default("g:pymode_options_colorcolumn", 1)
 
 " Minimal height of pymode quickfix window
 call pymode#default('g:pymode_quickfix_maxheight', 6)
