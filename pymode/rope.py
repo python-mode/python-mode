@@ -221,7 +221,7 @@ def regenerate():
     """ Clear cache. """
     with RopeContext() as ctx:
         ctx.project.pycore._invalidate_resource_cache(ctx.resource) # noqa
-        ctx.importer.generate_cache(resources=[ctx.resource])
+        ctx.importer.generate_cache()
         ctx.project.sync()
 
 
@@ -372,7 +372,7 @@ class RopeContext(object):
         if os.path.exists("%s/__init__.py" % project_path):
             sys.path.append(project_path)
 
-        if self.options.get('autoimport') == '1':
+        if self.options.get('autoimport'):
             self.generate_autoimport_cache()
 
         env.debug('Context init', project_path)
@@ -409,8 +409,8 @@ class RopeContext(object):
                 importer.generate_modules_cache(modules)
             importer.project.sync()
 
-        sys.stdout, stdout_ = StringIO.StringIO(), sys.stdout
-        sys.stderr, stderr_ = StringIO.StringIO(), sys.stderr
+        sys.stdout, stdout_ = StringIO(), sys.stdout
+        sys.stderr, stderr_ = StringIO(), sys.stderr
         process = multiprocessing.Process(target=_update_cache, args=(
             self.importer, modules))
         process.start()
