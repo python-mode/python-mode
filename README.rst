@@ -56,7 +56,7 @@ Requirements
 How to install
 ==============
 
-Using pathogen (recomended)
+Using pathogen (recommended)
 ----------------------------
 ::
 
