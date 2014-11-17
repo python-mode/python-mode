@@ -57,6 +57,21 @@ fun! pymode#folding#expr(lnum) "{{{
         return "<".(indent / &shiftwidth + 1)
     endif
 
+    " Handle nested defs
+    let last_def = pymode#motion#BlockStart(a:lnum, s:def_regex)
+    if getline(last_def) =~ s:def_regex
+        let last_def_end = pymode#motion#BlockEnd(last_def)
+        if last_def_end < line('$')
+            let nested = getline(pymode#motion#BlockStart(last_def - 1)) =~ s:def_regex
+            if nested && getline(nextnonblank(a:lnum)) !~ s:def_regex
+                let fold_end = min([prevnonblank(last_def_end - 1) + 2, last_def_end])
+                if a:lnum == fold_end
+                    return 's1'
+                endif
+            endif
+        endif
+    endif
+
     if line =~ s:blank_regex
         if prev_line =~ s:blank_regex
             if indent(a:lnum + 1) == 0 && getline(a:lnum + 1) !~ s:blank_regex
