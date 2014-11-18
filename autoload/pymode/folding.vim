@@ -65,32 +65,33 @@ fun! pymode#folding#expr(lnum) "{{{
             let last_block_indent = indent(last_block)
 
             " Check if last class/def is not indented and therefore can't be
-            " nested and make sure it is a class/def block instead of a zero
-            " indented regular statement
-            if last_block_indent && getline(last_block) =~ s:def_regex
+            " nested.
+            if last_block_indent
                 " Note: This relies on the cursor position being set by s:BlockStart
-                let next_def = searchpos('^\s*def \w', 'nW')[0]
+                let next_def = searchpos(s:def_regex, 'nW')[0]
                 let next_def_indent = next_def ? indent(next_def) : -1
                 let last_block_end = s:BlockEnd(last_block)
 
-                " If the next def has the same or greater indent than the
-                " previous def, it is either nested at the same level or
-                " nested one level deeper, and in either case will have its
-                " own fold. If the class/def containing the current line is on
-                " the first line it can't be nested, and if the this block
-                " ends on the last line, it contains no trailing code that
-                " should not be folded. Finally, if the next non-blank line
-                " after the end of the previous def is less indented than the
-                " previous def, it is not part of the same fold as that def.
-                " Otherwise, we know the current line is at the end of a
-                " nested def.
-                if next_def_indent < last_block_indent && last_block > 1 && last_block_end < line('$')
+                " If the next def has greater indent than the previous def, it
+                " is nested one level deeper and will have its own fold. If
+                " the class/def containing the current line is on the first
+                " line it can't be nested, and if this block ends on the last
+                " line, it contains no trailing code that should not be
+                " folded. Finally, if the next non-blank line after the end of
+                " the previous def is less indented than the previous def, it
+                " is not part of the same fold as that def. Otherwise, we know
+                " the current line is at the end of a nested def.
+                if next_def_indent <= last_block_indent && last_block > 1 && last_block_end < line('$')
                     \ && indent(nextnonblank(last_block_end)) >= last_block_indent
 
                     " Include up to one blank line in the fold
-                    let fold_end = min([prevnonblank(last_block_end - 1) + 1, last_block_end])
+                    if getline(last_block_end) =~ s:blank_regex
+                        let fold_end = min([prevnonblank(last_block_end - 1), last_block_end]) + 1
+                    else
+                        let fold_end = last_block_end
+                    endif
                     if a:lnum == fold_end
-                        return next_def ? 's1' : 0
+                        return 's1'
                     else
                         return '='
                     endif
@@ -124,7 +125,7 @@ fun! s:BlockStart(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
     let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
-    return searchpos('\v^(\s{,'.max_indent.'}(def |class |\@)\w|[^ \t#])', 'bcnW')[0]
+    return searchpos('\v^\s{,'.max_indent.'}(def |class )\w', 'bcnW')[0]
 endfunction "}}}
 
 fun! s:BlockEnd(lnum) "{{{
