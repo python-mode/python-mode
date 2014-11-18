@@ -58,18 +58,43 @@ fun! pymode#folding#expr(lnum) "{{{
     endif
 
     " Handle nested defs
-    let last_def = pymode#motion#BlockStart(a:lnum, s:def_regex)
-    if getline(last_def) =~ s:def_regex
-        let last_def_end = pymode#motion#BlockEnd(last_def)
-        if last_def_end < line('$')
-            let nested = getline(pymode#motion#BlockStart(last_def - 1)) =~ s:def_regex
-            if nested && getline(nextnonblank(a:lnum)) !~ s:def_regex
-                let fold_end = min([prevnonblank(last_def_end - 1) + 2, last_def_end])
-                if a:lnum == fold_end
-                    return 's1'
+    if indent(prevnonblank(a:lnum))
+        let curpos = getcurpos()
+        try
+            let last_block = s:BlockStart(a:lnum)
+            let last_block_indent = indent(last_block)
+
+            " Check if last class/def is not indented and therefore can't be
+            " nested and make sure it is a class/def block instead of a zero
+            " indented regular statement
+            if last_block_indent && getline(last_block) =~ s:def_regex
+                " Note: This relies on the cursor position being set by s:BlockStart
+                let next_def = searchpos('^\s*def \w', 'nW')[0]
+                let next_def_indent = next_def ? indent(next_def) : -1
+                let last_block_end = s:BlockEnd(last_block)
+
+                " If the next def has the same or greater indent than the
+                " previous def, it is either nested at the same level or
+                " nested one level deeper, and in either case will have its
+                " own fold. If the class/def containing the current line is on
+                " the first line it can't be nested, and if the this block
+                " ends on the last line, it contains no trailing code that
+                " should not be folded. Otherwise, we know the current line
+                " is at the end of a nested def.
+                if next_def_indent < last_block_indent && last_block > 1 && last_block_end < line('$')
+
+                    " Include up to one blank line in the fold
+                    let fold_end = min([prevnonblank(last_block_end - 1) + 1, last_block_end])
+                    if a:lnum == fold_end
+                        return 's1'
+                    else
+                        return '='
+                    endif
                 endif
             endif
-        endif
+        finally
+            call setpos('.', curpos)
+        endtry
     endif
 
     if line =~ s:blank_regex
@@ -91,5 +116,17 @@ fun! pymode#folding#expr(lnum) "{{{
 
 endfunction "}}}
 
+fun! s:BlockStart(lnum) "{{{
+    " Note: Make sure to reset cursor position after using this function.
+    call cursor(a:lnum, 0)
+    let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
+    return searchpos('\v^(\s{,'.max_indent.'}(def |class |\@)\w|[^ \t#])', 'bcnW')[0]
+endfunction "}}}
+
+fun! s:BlockEnd(lnum) "{{{
+    " Note: Make sure to reset cursor position after using this function.
+    call cursor(a:lnum, 0)
+    return searchpos('\v^\s{,'.indent('.').'}\S', 'nW')[0] - 1
+endfunction "}}}
 
 " vim: fdm=marker:fdl=0

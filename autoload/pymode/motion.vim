@@ -32,15 +32,15 @@ endfunction "}}}
 fun! pymode#motion#select(pattern, inner) "{{{
     let cnt = v:count1 - 1
     let orig = getpos('.')[1:2]
-    let snum = pymode#motion#BlockStart(orig[0], a:pattern)
+    let snum = s:BlockStart(orig[0], a:pattern)
     if getline(snum) !~ a:pattern
         return 0
     endif
-    let enum = pymode#motion#BlockEnd(snum, indent(snum))
+    let enum = s:BlockEnd(snum, indent(snum))
     while cnt
         let lnum = search(a:pattern, 'nW')
         if lnum
-            let enum = pymode#motion#BlockEnd(lnum, indent(lnum))
+            let enum = s:BlockEnd(lnum, indent(lnum))
             call cursor(enum, 1)
         endif
         let cnt = cnt - 1
@@ -58,7 +58,7 @@ fun! pymode#motion#select(pattern, inner) "{{{
 endfunction "}}}
 
 
-fun! pymode#motion#BlockStart(lnum, ...) "{{{
+fun! s:BlockStart(lnum, ...) "{{{
     let pattern = a:0 ? a:1 : '^\s*\(@\|class\s.*:\|def\s\)'
     let lnum = a:lnum + 1
     let indent = 100
@@ -82,7 +82,7 @@ fun! pymode#motion#BlockStart(lnum, ...) "{{{
 endfunction "}}}
 
 
-fun! pymode#motion#BlockEnd(lnum, ...) "{{{
+fun! s:BlockEnd(lnum, ...) "{{{
     let indent = a:0 ? a:1 : indent(a:lnum)
     let lnum = a:lnum
     while lnum
