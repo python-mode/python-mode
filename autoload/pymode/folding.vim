@@ -79,14 +79,18 @@ fun! pymode#folding#expr(lnum) "{{{
                 " own fold. If the class/def containing the current line is on
                 " the first line it can't be nested, and if the this block
                 " ends on the last line, it contains no trailing code that
-                " should not be folded. Otherwise, we know the current line
-                " is at the end of a nested def.
+                " should not be folded. Finally, if the next non-blank line
+                " after the end of the previous def is less indented than the
+                " previous def, it is not part of the same fold as that def.
+                " Otherwise, we know the current line is at the end of a
+                " nested def.
                 if next_def_indent < last_block_indent && last_block > 1 && last_block_end < line('$')
+                    \ && indent(nextnonblank(last_block_end)) >= last_block_indent
 
                     " Include up to one blank line in the fold
                     let fold_end = min([prevnonblank(last_block_end - 1) + 1, last_block_end])
                     if a:lnum == fold_end
-                        return 's1'
+                        return next_def ? 's1' : 0
                     else
                         return '='
                     endif
