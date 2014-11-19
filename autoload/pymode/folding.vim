@@ -68,7 +68,7 @@ fun! pymode#folding#expr(lnum) "{{{
             " Check if last class/def is not indented and therefore can't be
             " nested.
             if last_block_indent
-                " Note: This relies on the cursor position being set by s:BlockStart
+                call cursor(a:lnum, 0)
                 let next_def = searchpos(s:def_regex, 'nW')[0]
                 let next_def_indent = next_def ? indent(next_def) : -1
                 let last_block_end = s:BlockEnd(last_block)
@@ -125,7 +125,26 @@ endfunction "}}}
 fun! s:BlockStart(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
-    let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
+
+    " In case the end of the block is indented to a higher level than the def
+    " statement plus one shiftwidth, we need to find the indent level at the
+    " bottom of that if/for/try/while/etc. block.
+    let last_def = searchpos(s:def_regex, 'bcnW')[0]
+    if last_def
+        let last_def_indent = indent(last_def)
+        call cursor(last_def, 0)
+        let next_stmt_at_def_indent = searchpos('\v^\s{'.last_def_indent.'}[^[:space:]#]', 'nW')[0]
+    else
+        let next_stmt_at_def_indent = -1
+    endif
+
+    " Now find the class/def one shiftwidth lower than the start of the
+    " aforementioned indent block.
+    if next_stmt_at_def_indent && next_stmt_at_def_indent < a:lnum
+        let max_indent = max([indent(next_stmt_at_def_indent) - &shiftwidth, 0])
+    else
+        let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
+    endif
     return searchpos('\v^\s{,'.max_indent.'}(def |class )\w', 'bcnW')[0]
 endfunction "}}}
 
