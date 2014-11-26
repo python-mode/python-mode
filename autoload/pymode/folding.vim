@@ -15,9 +15,12 @@ endif
 
 fun! pymode#folding#text() " {{{
     let fs = v:foldstart
-    while getline(fs) =~ '\%(^\s*@\)\|\%(^\s*\%("""\|''''''\)\s*$\)'
+    while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
     endwhile
+    if getline(fs) =~ s:doc_begin_regex
+        let fs = nextnonblank(fs + 1)
+    endif
     let line = getline(fs)
 
     let nucolwidth = &fdc + &number * &numberwidth
@@ -41,8 +44,24 @@ fun! pymode#folding#expr(lnum) "{{{
     let indent = indent(a:lnum)
     let prev_line = getline(a:lnum - 1)
 
-    if line =~ s:def_regex || line =~ s:decorator_regex
-        if prev_line =~ s:decorator_regex
+    if line =~ s:decorator_regex
+        return ">".(indent / &shiftwidth + 1)
+    endif
+
+    if line =~ s:def_regex
+        " Check if last decorator is before the last def
+        let decorated = 0
+        let lnum = a:lnum - 1
+        while lnum > 0
+            if getline(lnum) =~ s:def_regex
+                break
+            elseif getline(lnum) =~ s:decorator_regex
+                let decorated = 1
+                break
+            endif
+            let lnum -= 1
+        endwhile
+        if decorated
             return '='
         else
             return ">".(indent / &shiftwidth + 1)
