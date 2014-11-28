@@ -79,7 +79,7 @@ fun! pymode#folding#expr(lnum) "{{{
     " Handle nested defs but only for files shorter than
     " g:pymode_folding_nest_limit lines due to performance concerns
     if line('$') < g:pymode_folding_nest_limit && indent(prevnonblank(a:lnum))
-        let curpos = getcurpos()
+        let curpos = getpos('.')
         try
             let last_block = s:BlockStart(a:lnum)
             let last_block_indent = indent(last_block)
