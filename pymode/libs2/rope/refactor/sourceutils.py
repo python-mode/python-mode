@@ -1,4 +1,4 @@
-from rope.base import ast, codeanalyze
+from rope.base import codeanalyze
 
 
 def get_indents(lines, lineno):
@@ -48,7 +48,7 @@ def add_methods(pymodule, class_scope, methods_sources):
     methods = '\n\n' + '\n\n'.join(methods_sources)
     indented_methods = fix_indentation(
         methods, get_indents(lines, class_scope.get_start()) +
-        get_indent(pymodule.pycore))
+        get_indent(pymodule.pycore.project))
     result = []
     result.append(source_code[:insertion_offset])
     result.append(indented_methods)
@@ -58,7 +58,7 @@ def add_methods(pymodule, class_scope, methods_sources):
 
 def get_body(pyfunction):
     """Return unindented function body"""
-    scope = pyfunction.get_scope()
+    # FIXME scope = pyfunction.get_scope()
     pymodule = pyfunction.get_module()
     start, end = get_body_region(pyfunction)
     return fix_indentation(pymodule.source_code[start:end], 0)
@@ -87,6 +87,5 @@ def get_body_region(defined):
     return start, end
 
 
-def get_indent(pycore):
-    project = pycore.project
+def get_indent(project):
     return project.prefs.get('indent_size', 4)

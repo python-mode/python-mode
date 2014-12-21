@@ -57,7 +57,7 @@ class AssignmentValue(object):
 
         """
         self.ast_node = ast_node
-        if levels == None:
+        if levels is None:
             self.levels = []
         else:
             self.levels = levels
@@ -112,15 +112,16 @@ class ImportedModule(PyName):
         if self.pymodule.get() is None:
             pycore = self.importing_module.pycore
             if self.resource is not None:
-                self.pymodule.set(pycore.resource_to_pyobject(self.resource))
+                self.pymodule.set(pycore.project.get_pymodule(self.resource))
             elif self.module_name is not None:
                 try:
                     if self.level == 0:
-                        pymodule = pycore.get_module(self.module_name,
-                                                     self._current_folder())
+                        pymodule = pycore.project.get_module(
+                            self.module_name, self._current_folder())
                     else:
-                        pymodule = pycore.get_relative_module(
-                            self.module_name, self._current_folder(), self.level)
+                        pymodule = pycore.project.get_relative_module(
+                            self.module_name, self._current_folder(),
+                            self.level)
                     self.pymodule.set(pymodule)
                 except exceptions.ModuleNotFoundError:
                     pass
@@ -171,6 +172,7 @@ def _get_concluded_data(module):
 def _circular_inference():
     raise rope.base.pyobjects.IsBeingInferredError(
         'Circular Object Inference')
+
 
 class _Inferred(object):
 

@@ -35,10 +35,10 @@ class IntroduceParameter(object):
     """
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
         self.resource = resource
         self.offset = offset
-        self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        self.pymodule = self.project.get_pymodule(self.resource)
         scope = self.pymodule.get_scope().get_inner_scope_for_offset(offset)
         if scope.get_kind() != 'Function':
             raise exceptions.RefactoringError(
@@ -79,7 +79,7 @@ class IntroduceParameter(object):
         lines = self.pymodule.lines
         start_line = self.pyfunction.get_scope().get_start()
         end_line = self.pymodule.logical_lines.\
-                   logical_line_in(start_line)[1]
+            logical_line_in(start_line)[1]
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
         start = self.pymodule.source_code.find('def', start) + 4
@@ -88,7 +88,8 @@ class IntroduceParameter(object):
 
     def _change_function_occurances(self, collector, function_start,
                                     function_end, new_name):
-        finder = occurrences.create_finder(self.pycore, self.name, self.pyname)
+        finder = occurrences.create_finder(self.project, self.name,
+                                           self.pyname)
         for occurrence in finder.find_occurrences(resource=self.resource):
             start, end = occurrence.get_primary_range()
             if function_start <= start < function_end:

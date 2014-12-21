@@ -128,15 +128,6 @@ class _SuiteWalker(object):
         if node.orelse:
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
-    def _Try(self, node):
-        self.suites.append(Suite(node.body, node.lineno, self.suite))
-        for handler in node.handlers:
-            self.suites.append(Suite(handler.body, node.lineno, self.suite))
-        if node.orelse:
-            self.suites.append(Suite(node.orelse, node.lineno, self.suite))
-        if node.finalbody:
-            self.suites.append(Suite(node.finalbody, node.lineno, self.suite))
-
     def _add_if_like_node(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
         if node.orelse:

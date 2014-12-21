@@ -1,4 +1,10 @@
-from rope.base import pynames, taskhandle, evaluate, exceptions, worder, utils
+from rope.base import evaluate
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import pynames
+from rope.base import taskhandle
+from rope.base import utils
+from rope.base import worder
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -6,9 +12,9 @@ from rope.refactor import sourceutils, occurrences
 class EncapsulateField(object):
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
         self.name = worder.get_name_at(resource, offset)
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        this_pymodule = self.project.get_pymodule(resource)
         self.pyname = evaluate.eval_location(this_pymodule, offset)
         if not self._is_an_attribute(self.pyname):
             raise exceptions.RefactoringError(
@@ -30,7 +36,7 @@ class EncapsulateField(object):
 
         """
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
         job_set = task_handle.create_jobset('Collecting Changes',
                                             len(resources))
@@ -39,7 +45,7 @@ class EncapsulateField(object):
         if setter is None:
             setter = 'set_' + self.name
         renamer = GetterSetterRenameInModule(
-            self.pycore, self.name, self.pyname, getter, setter)
+            self.project, self.name, self.pyname, getter, setter)
         for file in resources:
             job_set.started_job(file.path)
             if file == self.resource:
@@ -61,7 +67,7 @@ class EncapsulateField(object):
         if pyname is not None and isinstance(pyname, pynames.AssignedName):
             pymodule, lineno = self.pyname.get_definition_location()
             scope = pymodule.get_scope().\
-                             get_inner_scope_for_line(lineno)
+                get_inner_scope_for_line(lineno)
             if scope.get_kind() == 'Class':
                 return pyname in scope.get_names().values()
             parent = scope.parent
@@ -80,7 +86,7 @@ class EncapsulateField(object):
         return pymodule.get_scope().get_inner_scope_for_line(line)
 
     def _change_holding_module(self, changes, renamer, getter, setter):
-        pymodule = self.pycore.resource_to_pyobject(self.resource)
+        pymodule = self.project.get_pymodule(self.resource)
         class_scope = self._get_defining_class_scope()
         defining_object = self._get_defining_scope().pyobject
         start, end = sourceutils.get_body_region(defining_object)
@@ -88,10 +94,11 @@ class EncapsulateField(object):
         new_source = renamer.get_changed_module(pymodule=pymodule,
                                                 skip_start=start, skip_end=end)
         if new_source is not None:
-            pymodule = self.pycore.get_string_module(new_source, self.resource)
+            pymodule = libutils.get_string_module(
+                self.project, new_source, self.resource)
             class_scope = pymodule.get_scope().\
-                          get_inner_scope_for_line(class_scope.get_start())
-        indents = sourceutils.get_indent(self.pycore) * ' '
+                get_inner_scope_for_line(class_scope.get_start())
+        indents = sourceutils.get_indent(self.project) * ' '
         getter = 'def %s(self):\n%sreturn self.%s' % \
                  (getter, indents, self.name)
         setter = 'def %s(self, value):\n%sself.%s = value' % \
@@ -103,10 +110,10 @@ class EncapsulateField(object):
 
 class GetterSetterRenameInModule(object):
 
-    def __init__(self, pycore, name, pyname, getter, setter):
-        self.pycore = pycore
+    def __init__(self, project, name, pyname, getter, setter):
+        self.project = project
         self.name = name
-        self.finder = occurrences.create_finder(pycore, name, pyname)
+        self.finder = occurrences.create_finder(project, name, pyname)
         self.getter = getter
         self.setter = setter
 
@@ -120,7 +127,7 @@ class GetterSetterRenameInModule(object):
 class _FindChangesForModule(object):
 
     def __init__(self, finder, resource, pymodule, skip_start, skip_end):
-        self.pycore = finder.pycore
+        self.project = finder.project
         self.finder = finder.finder
         self.getter = finder.getter
         self.setter = finder.setter
@@ -155,7 +162,7 @@ class _FindChangesForModule(object):
                                   + ' %s ' % assignment_type[:-1])
                 current_line = self.lines.get_line_number(start)
                 start_line, end_line = self.pymodule.logical_lines.\
-                                       logical_line_in(current_line)
+                    logical_line_in(current_line)
                 self.last_set = self.lines.get_line_end(end_line)
                 end = self.source.index('=', end) + 1
                 self.set_index = len(result)
@@ -193,7 +200,7 @@ class _FindChangesForModule(object):
     @utils.saveit
     def lines(self):
         if self.pymodule is None:
-            self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+            self.pymodule = self.project.get_pymodule(self.resource)
         return self.pymodule.lines
 
     @property

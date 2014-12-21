@@ -1,7 +1,12 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import pyobjects, taskhandle, evaluate, worder, codeanalyze, utils
+from rope.base import codeanalyze
+from rope.base import evaluate
+from rope.base import pyobjects
+from rope.base import taskhandle
+from rope.base import utils
+from rope.base import worder
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, functionutils
 
@@ -9,7 +14,7 @@ from rope.refactor import occurrences, functionutils
 class ChangeSignature(object):
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
         self.resource = resource
         self.offset = offset
         self._set_name_and_pyname()
@@ -20,7 +25,7 @@ class ChangeSignature(object):
 
     def _set_name_and_pyname(self):
         self.name = worder.get_name_at(self.resource, self.offset)
-        this_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        this_pymodule = self.project.get_pymodule(self.resource)
         self.primary, self.pyname = evaluate.eval_location2(
             this_pymodule, self.offset)
         if self.pyname is None:
@@ -42,21 +47,21 @@ class ChangeSignature(object):
     def _change_calls(self, call_changer, in_hierarchy=None, resources=None,
                       handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = ChangeSet('Changing signature of <%s>' % self.name)
         job_set = handle.create_jobset('Collecting Changes', len(resources))
         finder = occurrences.create_finder(
-            self.pycore, self.name, self.pyname, instance=self.primary,
+            self.project, self.name, self.pyname, instance=self.primary,
             in_hierarchy=in_hierarchy and self.is_method())
         if self.others:
             name, pyname = self.others
             constructor_finder = occurrences.create_finder(
-                self.pycore, name, pyname, only_calls=True)
+                self.project, name, pyname, only_calls=True)
             finder = _MultipleFinders([finder, constructor_finder])
         for file in resources:
             job_set.started_job(file.path)
             change_calls = _ChangeCallsInModule(
-                self.pycore, finder, file, call_changer)
+                self.project, finder, file, call_changer)
             changed_file = change_calls.get_changed_module()
             if changed_file is not None:
                 changes.add_change(ChangeContents(file, changed_file))
@@ -160,12 +165,15 @@ class _FunctionChangers(object):
     def change_call(self, primary, pyname, call):
         call_info = functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call)
-        mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
+        mapping = functionutils.ArgumentMapping(self.definition_info,
+                                                call_info)
 
-        for definition_info, changer in zip(self.changed_definition_infos, self.changers):
+        for definition_info, changer in zip(self.changed_definition_infos,
+                                            self.changers):
             changer.change_argument_mapping(definition_info, mapping)
 
-        return mapping.to_call_info(self.changed_definition_infos[-1]).to_string()
+        return mapping.to_call_info(
+            self.changed_definition_infos[-1]).to_string()
 
 
 class _ArgumentChanger(object):
@@ -190,12 +198,14 @@ class ArgumentRemover(_ArgumentChanger):
         if self.index < len(call_info.args_with_defaults):
             del call_info.args_with_defaults[self.index]
         elif self.index == len(call_info.args_with_defaults) and \
-           call_info.args_arg is not None:
+                call_info.args_arg is not None:
             call_info.args_arg = None
         elif (self.index == len(call_info.args_with_defaults) and
-            call_info.args_arg is None and call_info.keywords_arg is not None) or \
-           (self.index == len(call_info.args_with_defaults) + 1 and
-            call_info.args_arg is not None and call_info.keywords_arg is not None):
+              call_info.args_arg is None and
+              call_info.keywords_arg is not None) or \
+                (self.index == len(call_info.args_with_defaults) + 1 and
+                 call_info.args_arg is not None and
+                 call_info.keywords_arg is not None):
             call_info.keywords_arg = None
 
     def change_argument_mapping(self, definition_info, mapping):
@@ -282,8 +292,8 @@ class ArgumentReorderer(_ArgumentChanger):
 
 class _ChangeCallsInModule(object):
 
-    def __init__(self, pycore, occurrence_finder, resource, call_changer):
-        self.pycore = pycore
+    def __init__(self, project, occurrence_finder, resource, call_changer):
+        self.project = project
         self.occurrence_finder = occurrence_finder
         self.resource = resource
         self.call_changer = call_changer
@@ -291,11 +301,13 @@ class _ChangeCallsInModule(object):
     def get_changed_module(self):
         word_finder = worder.Worder(self.source)
         change_collector = codeanalyze.ChangeCollector(self.source)
-        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
+        for occurrence in self.occurrence_finder.find_occurrences(
+                self.resource):
             if not occurrence.is_called() and not occurrence.is_defined():
                 continue
             start, end = occurrence.get_primary_range()
-            begin_parens, end_parens = word_finder.get_word_parens_range(end - 1)
+            begin_parens, end_parens = word_finder.\
+                get_word_parens_range(end - 1)
             if occurrence.is_called():
                 primary, pyname = occurrence.get_primary_and_pyname()
                 changed_call = self.call_changer.change_call(
@@ -310,7 +322,7 @@ class _ChangeCallsInModule(object):
     @property
     @utils.saveit
     def pymodule(self):
-        return self.pycore.resource_to_pyobject(self.resource)
+        return self.project.get_pymodule(self.resource)
 
     @property
     @utils.saveit

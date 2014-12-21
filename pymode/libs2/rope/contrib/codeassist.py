@@ -4,8 +4,15 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import pyobjects, pyobjectsdef, pynames, builtins, exceptions, worder
-from rope.base.codeanalyze import SourceLinesAdapter
+from rope.base import builtins
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import pynames
+from rope.base import pynamesdef
+from rope.base import pyobjects
+from rope.base import pyobjectsdef
+from rope.base import pyscopes
+from rope.base import worder
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
@@ -53,9 +60,7 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
-    pymodule = fixer.get_pymodule()
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
@@ -88,9 +93,7 @@ def get_calltip(project, source_code, offset, resource=None,
     If `remove_self` is `True`, the first parameter whose name is self
     will be removed for methods.
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
-    pymodule = fixer.get_pymodule()
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
@@ -108,9 +111,7 @@ def get_definition_location(project, source_code, offset,
     location cannot be determined ``(None, None)`` is returned.
 
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
-    pymodule = fixer.get_pymodule()
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
@@ -124,6 +125,64 @@ def find_occurrences(*args, **kwds):
     warnings.warn('Use `rope.contrib.findit.find_occurrences()` instead',
                   DeprecationWarning, stacklevel=2)
     return rope.contrib.findit.find_occurrences(*args, **kwds)
+
+
+def get_canonical_path(project, resource, offset):
+    """Get the canonical path to an object.
+
+    Given the offset of the object, this returns a list of
+    (name, name_type) tuples representing the canonical path to the
+    object. For example, the 'x' in the following code:
+
+        class Foo(object):
+            def bar(self):
+                class Qux(object):
+                    def mux(self, x):
+                        pass
+
+    we will return:
+
+        [('Foo', 'CLASS'), ('bar', 'FUNCTION'), ('Qux', 'CLASS'),
+         ('mux', 'FUNCTION'), ('x', 'PARAMETER')]
+
+    `resource` is a `rope.base.resources.Resource` object.
+
+    `offset` is the offset of the pyname you want the path to.
+
+    """
+    # Retrieve the PyName.
+    pymod = project.get_pymodule(resource)
+    pyname = rope.base.evaluate.eval_location(pymod, offset)
+
+    # Now get the location of the definition and its containing scope.
+    defmod, lineno = pyname.get_definition_location()
+    if not defmod:
+        return None
+    scope = defmod.get_scope().get_inner_scope_for_line(lineno)
+
+    # Start with the name of the object we're interested in.
+    names = []
+    if isinstance(pyname, pynamesdef.ParameterName):
+        names = [(worder.get_name_at(pymod.get_resource(), offset),
+                  'PARAMETER') ]
+    elif isinstance(pyname, pynamesdef.AssignedName):
+        names = [(worder.get_name_at(pymod.get_resource(), offset),
+                  'VARIABLE')]
+
+    # Collect scope names.
+    while scope.parent:
+        if isinstance(scope, pyscopes.FunctionScope):
+            scope_type = 'FUNCTION'
+        elif isinstance(scope, pyscopes.ClassScope):
+            scope_type = 'CLASS'
+        else:
+            scope_type = None
+        names.append((scope.pyobject.get_name(), scope_type))
+        scope = scope.parent
+
+    names.append((defmod.get_resource().real_path, 'MODULE'))
+    names.reverse()
+    return names
 
 
 class CompletionProposal(object):
@@ -184,15 +243,14 @@ class CompletionProposal(object):
             if isinstance(pyobject, builtins.BuiltinFunction):
                 return 'function'
             elif isinstance(pyobject, builtins.BuiltinClass):
-                clsobj = pyobject.builtin
                 return 'class'
             elif isinstance(pyobject, builtins.BuiltinObject) or \
-                 isinstance(pyobject, builtins.BuiltinName):
+                    isinstance(pyobject, builtins.BuiltinName):
                 return 'instance'
         elif isinstance(pyname, pynames.ImportedModule):
             return 'module'
         elif isinstance(pyname, pynames.ImportedName) or \
-           isinstance(pyname, pynames.DefinedName):
+                isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()
             if isinstance(pyobject, pyobjects.AbstractFunction):
                 return 'function'
@@ -222,7 +280,7 @@ class CompletionProposal(object):
 
     @property
     def kind(self):
-        warnings.warn("the proposal's `kind` property is deprecated, " \
+        warnings.warn("the proposal's `kind` property is deprecated, "
                       "use `scope` instead")
         return self.scope
 
@@ -294,7 +352,6 @@ class _PythonCodeAssist(object):
     def __init__(self, project, source_code, offset, resource=None,
                  maxfixes=1, later_locals=True):
         self.project = project
-        self.pycore = self.project.pycore
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes
@@ -309,7 +366,7 @@ class _PythonCodeAssist(object):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
                                        source_code[current_offset] in '_'):
-            current_offset -= 1;
+            current_offset -= 1
         return current_offset + 1
 
     def _matching_keywords(self, starting):
@@ -339,11 +396,12 @@ class _PythonCodeAssist(object):
                 compl_scope = 'imported'
             for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting):
-                    result[name] = CompletionProposal(name, compl_scope, pyname)
+                    result[name] = CompletionProposal(name, compl_scope,
+                                                      pyname)
         return result
 
     def _undotted_completions(self, scope, result, lineno=None):
-        if scope.parent != None:
+        if scope.parent is not None:
             self._undotted_completions(scope.parent, result)
         if lineno is None:
             names = scope.get_propagated_names()
@@ -388,7 +446,7 @@ class _PythonCodeAssist(object):
 
     def _code_completions(self):
         lineno = self.code.count('\n', 0, self.offset) + 1
-        fixer = fixsyntax.FixSyntax(self.pycore, self.code,
+        fixer = fixsyntax.FixSyntax(self.project, self.code,
                                     self.resource, self.maxfixes)
         pymodule = fixer.get_pymodule()
         module_scope = pymodule.get_scope()
@@ -413,24 +471,21 @@ class _PythonCodeAssist(object):
         if offset == 0:
             return {}
         word_finder = worder.Worder(self.code, True)
-        lines = SourceLinesAdapter(self.code)
-        lineno = lines.get_line_number(offset)
         if word_finder.is_on_function_call_keyword(offset - 1):
-            name_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
             function_parens = word_finder.\
                 find_parens_start_from_inside(offset - 1)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
                 function_pyname = rope.base.evaluate.\
                     eval_str(scope, primary)
-            except exceptions.BadIdentifierError, e:
+            except exceptions.BadIdentifierError:
                 return {}
             if function_pyname is not None:
                 pyobject = function_pyname.get_object()
                 if isinstance(pyobject, pyobjects.AbstractFunction):
                     pass
                 elif isinstance(pyobject, pyobjects.AbstractClass) and \
-                     '__init__' in pyobject:
+                        '__init__' in pyobject:
                     pyobject = pyobject['__init__'].get_object()
                 elif '__call__' in pyobject:
                     pyobject = pyobject['__call__'].get_object()
@@ -455,12 +510,12 @@ class _ProposalSorter(object):
         self.proposals = code_assist_proposals
         if scopepref is None:
             scopepref = ['parameter_keyword', 'local', 'global', 'imported',
-                        'attribute', 'builtin', 'keyword']
+                         'attribute', 'builtin', 'keyword']
         self.scopepref = scopepref
         if typepref is None:
             typepref = ['class', 'function', 'instance', 'module', None]
         self.typerank = dict((type, index)
-                              for index, type in enumerate(typepref))
+                             for index, type in enumerate(typepref))
 
     def get_sorted_proposal_list(self):
         """Return a list of `CodeAssistProposal`"""
@@ -471,7 +526,7 @@ class _ProposalSorter(object):
         for scope in self.scopepref:
             scope_proposals = proposals.get(scope, [])
             scope_proposals = [proposal for proposal in scope_proposals
-                              if proposal.type in self.typerank]
+                               if proposal.type in self.typerank]
             scope_proposals.sort(self._proposal_cmp)
             result.extend(scope_proposals)
         return result
@@ -526,7 +581,8 @@ class PyDocExtractor(object):
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
         supers = [super.get_name() for super in pyclass.get_superclasses()]
-        doc = 'class %s(%s):\n\n' % (pyclass.get_name(), ', '.join(supers)) + contents
+        doc = 'class %s(%s):\n\n' % (pyclass.get_name(), ', '.join(supers)) \
+            + contents
 
         if '__init__' in pyclass:
             init = pyclass['__init__'].get_object()
@@ -544,7 +600,7 @@ class PyDocExtractor(object):
 
     def _is_method(self, pyfunction):
         return isinstance(pyfunction, pyobjects.PyFunction) and \
-               isinstance(pyfunction.parent, pyobjects.PyClass)
+            isinstance(pyfunction.parent, pyobjects.PyClass)
 
     def _get_single_function_docstring(self, pyfunction):
         signature = self._get_function_signature(pyfunction)
@@ -579,7 +635,6 @@ class PyDocExtractor(object):
             parent = parent.parent
         if add_module:
             if isinstance(pyobject, pyobjects.PyFunction):
-                module = pyobject.get_module()
                 location.insert(0, self._get_module(pyobject))
             if isinstance(parent, builtins.BuiltinModule):
                 location.insert(0, parent.get_name() + '.')
@@ -590,7 +645,7 @@ class PyDocExtractor(object):
         if module is not None:
             resource = module.get_resource()
             if resource is not None:
-                return pyfunction.pycore.modname(resource) + '.'
+                return libutils.modname(resource) + '.'
         return ''
 
     def _trim_docstring(self, docstring, indents=0):
