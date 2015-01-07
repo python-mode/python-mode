@@ -409,12 +409,7 @@ class RopeContext(object):
                 importer.generate_modules_cache(modules)
             importer.project.sync()
 
-        sys.stdout, stdout_ = StringIO(), sys.stdout
-        sys.stderr, stderr_ = StringIO(), sys.stderr
-        process = multiprocessing.Process(target=_update_cache, args=(
-            self.importer, modules))
-        process.start()
-        sys.stdout, sys.stderr = stdout_, stderr_
+        _update_cache(self.importer, modules)
 
 
 class ProgressHandler(object):
