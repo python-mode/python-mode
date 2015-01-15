@@ -23,7 +23,8 @@ fun! pymode#folding#text() " {{{
     endif
     let line = getline(fs)
 
-    let nucolwidth = &fdc + &number * &numberwidth
+    let has_numbers = &number || &relativenumber
+    let nucolwidth = &fdc + has_numbers * &numberwidth
     let windowwidth = winwidth(0) - nucolwidth - 6
     let foldedlinecount = v:foldend - v:foldstart
 
