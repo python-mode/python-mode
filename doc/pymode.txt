@@ -435,7 +435,7 @@ use the current directory.
 
 The location of the `.ropeproject` folder may also be overridden if you wish to
 keep it outside of your project root. The rope library treats this folder as a
-project resource, so the path will always be relative to your proejct root (a
+project resource, so the path will always be relative to your project root (a
 leading '/' will be ignored). You may use `'..'` path segments to place the
 folder outside of your project root.
                                                  *'g:pymode_rope_ropefolder'*
