@@ -505,14 +505,7 @@ class Refactoring(object): # noqa
 
     @staticmethod
     def get_changes(refactor, input_str, in_hierarchy=False):
-        """ Get changes.
-
-        :return Changes:
-
-        """
-        progress = ProgressHandler('Calculate changes ...')
-        return refactor.get_changes(
-            input_str, task_handle=progress.handle, in_hierarchy = in_hierarchy)
+        raise NotImplementedError
 
 
 class RenameRefactoring(Refactoring):
@@ -550,8 +543,26 @@ class RenameRefactoring(Refactoring):
 
         return newname
 
+    @staticmethod
+    def get_changes(refactor, input_str, in_hierarchy):
+        """ Get changes.
 
-class ExtractMethodRefactoring(Refactoring):
+        :return Changes:
+
+        """
+        return refactor.get_changes(input_str, in_hierarchy=in_hierarchy)
+
+class ExtractRefactoring(Refactoring):
+    @staticmethod
+    def get_changes(refactor, input_str, in_hierarchy):
+        """ Get changes.
+
+        :return Changes:
+
+        """
+        return refactor.get_changes(input_str) #, global_=not in_hierarchy)
+
+class ExtractMethodRefactoring(ExtractRefactoring):
 
     """ Extract method. """
 
@@ -574,18 +585,8 @@ class ExtractMethodRefactoring(Refactoring):
         return extract.ExtractMethod(
             ctx.project, ctx.resource, offset1, offset2)
 
-    @staticmethod
-    def get_changes(refactor, input_str):
-        """ Get changes.
 
-        :return Changes:
-
-        """
-
-        return refactor.get_changes(input_str)
-
-
-class ExtractVariableRefactoring(Refactoring):
+class ExtractVariableRefactoring(ExtractRefactoring):
 
     """ Extract variable. """
 
@@ -608,16 +609,6 @@ class ExtractVariableRefactoring(Refactoring):
         return extract.ExtractVariable(
             ctx.project, ctx.resource, offset1, offset2)
 
-    @staticmethod
-    def get_changes(refactor, input_str):
-        """ Get changes.
-
-        :return Changes:
-
-        """
-
-        return refactor.get_changes(input_str)
-
 
 class InlineRefactoring(Refactoring):
 
@@ -634,14 +625,13 @@ class InlineRefactoring(Refactoring):
         return inline.create_inline(ctx.project, ctx.resource, offset)
 
     @staticmethod
-    def get_changes(refactor, input_str):
+    def get_changes(refactor, input_str, in_hierarchy):
         """ Get changes.
 
         :return Changes:
 
         """
-        progress = ProgressHandler('Calculate changes ...')
-        return refactor.get_changes(task_handle=progress.handle)
+        return refactor.get_changes()
 
 
 class UseFunctionRefactoring(Refactoring):
@@ -659,15 +649,13 @@ class UseFunctionRefactoring(Refactoring):
         return usefunction.UseFunction(ctx.project, ctx.resource, offset)
 
     @staticmethod
-    def get_changes(refactor, input_str):
+    def get_changes(refactor, input_str, in_hierarchy):
         """ Get changes.
 
         :return Changes:
 
         """
-        progress = ProgressHandler('Calculate changes ...')
-        return refactor.get_changes(
-            resources=[refactor.resource], task_handle=progress.handle)
+        return refactor.get_changes()
 
 
 class ModuleToPackageRefactoring(Refactoring):
@@ -684,7 +672,7 @@ class ModuleToPackageRefactoring(Refactoring):
         return ModuleToPackage(ctx.project, ctx.resource)
 
     @staticmethod
-    def get_changes(refactor, input_str):
+    def get_changes(refactor, input_str, in_hierarchy):
         """ Get changes.
 
         :return Changes:
@@ -746,7 +734,7 @@ class ChangeSignatureRefactoring(Refactoring):
         return change_signature.ChangeSignature(
             ctx.project, ctx.resource, offset)
 
-    def get_changes(self, refactor, input_string):
+    def get_changes(self, refactor, input_string, in_hierarchy):
         """ Function description.
 
         :return Rope.changes:
@@ -771,7 +759,7 @@ class ChangeSignatureRefactoring(Refactoring):
         changers.append(change_signature.ArgumentReorderer(
             order, autodef='None'))
 
-        return refactor.get_changes(changers)
+        return refactor.get_changes(changers, in_hierarchy=in_hierarchy)
 
 
 class GenerateElementRefactoring(Refactoring):
