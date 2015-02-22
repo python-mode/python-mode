@@ -18,7 +18,7 @@ fun! pymode#folding#text() " {{{
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
     endwhile
-    if getline(fs) =~ s:doc_begin_regex
+    if getline(fs) =~ s:doc_end_regex && getline(fs) =~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
     endif
     let line = getline(fs)
