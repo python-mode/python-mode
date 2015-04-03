@@ -110,7 +110,7 @@ function! s:SearchParensPair() " {{{
     " Skip strings and comments and don't look too far
     let skip = "line('.') < " . (line - 50) . " ? dummy :" .
                 \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? ' .
-                \ '"string\\|comment"'
+                \ '"string\\|comment\\|doctest"'
 
     " Search for parentheses
     call cursor(line, col)
