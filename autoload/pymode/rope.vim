@@ -2,8 +2,6 @@
 "
 PymodePython from pymode import rope
 
-call pymode#tools#loclist#init()
-
 
 fun! pymode#rope#completions(findstart, base)
     PymodePython rope.completions()
@@ -57,7 +55,11 @@ fun! pymode#rope#find_it()
     let loclist._title = "Occurrences"
     call pymode#wide_message('Finding Occurrences ...')
     PymodePython rope.find_it()
-    call loclist.show()
+    call pymode#wide_message('')
+    if !empty(l:output)
+        call setqflist(l:output)
+        call pymode#quickfix_open(0, g:pymode_quickfix_maxheight, g:pymode_quickfix_minheight, 0)
+    end
 endfunction
 
 
