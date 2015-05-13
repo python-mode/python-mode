@@ -29,6 +29,9 @@ fun! pymode#doc#show(word) "{{{
     setlocal nomodifiable
     setlocal nomodified
     setlocal filetype=rst
+    if g:pymode_doc_vertical
+        wincmd L
+    endif
     wincmd p
 
 endfunction "}}}
