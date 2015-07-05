@@ -76,9 +76,11 @@ endfunction "}}}
 
 " DESC: Remove unused whitespaces
 fun! pymode#trim_whitespaces() "{{{
-    let cursor_pos = getpos('.')
-    silent! %s/\s\+$//
-    call setpos('.', cursor_pos)
+    if g:pymode_trim_whitespaces
+        let cursor_pos = getpos('.')
+        silent! %s/\s\+$//
+        call setpos('.', cursor_pos)
+    endif
 endfunction "}}}
 
 
