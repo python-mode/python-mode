@@ -152,6 +152,16 @@ Enable pymode indentation                                  *'g:pymode_indent'*
 >
     let g:pymode_indent = 1
 
+Enable hanging indent for closing             *'g:pymode_indent_hanging_paren'*
+braces, brackets, and parentheses
+
+When enabled, the closing brace/bracket/parenthesis of a multi-line construct
+will be indented to the first non-whitespace character of the previous line.
+When disabled, they will line up under the first character of the line that
+starts the multi-line construct. (Default: disabled)
+
+    let g:pymode_indent_hanging_paren = 0
+
 ------------------------------------------------------------------------------
 2.3 Python folding ~
                                                                 *pymode-folding*
