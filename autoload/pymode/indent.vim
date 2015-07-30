@@ -21,7 +21,7 @@ function! pymode#indent#get_indent(lnum)
         let parcol = col('.')
         let closing_paren = match(getline(a:lnum), '^\s*[])}]') != -1
         if match(getline(parlnum), '[([{]\s*$', parcol - 1) != -1
-            if closing_paren
+            if closing_paren && !g:pymode_indent_hanging_paren
                 return indent(parlnum)
             else
                 return indent(parlnum) + &shiftwidth

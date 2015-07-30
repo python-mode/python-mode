@@ -33,6 +33,9 @@ call pymode#default('g:pymode_doc_bind', 'K')
 
 " Enable/Disable pymode PEP8 indentation
 call pymode#default("g:pymode_indent", 1)
+" Enable/Disable closing parens, braces, brackets at same indent level
+" as previous line
+call pymode#default("g:pymode_indent_hanging_paren", 0)
 
 " Enable/disable pymode folding for pyfiles.
 call pymode#default("g:pymode_folding", 1)
