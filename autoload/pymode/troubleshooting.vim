@@ -64,6 +64,7 @@ EOF
     call append('$', 'let pymode_doc_bind = ' . string(g:pymode_doc_bind))
     call append('$', 'let pymode_folding = ' . string(g:pymode_folding))
     call append('$', 'let pymode_indent = ' . string(g:pymode_indent))
+    call append('$', 'let pymode_indent_hanging_paren = ' . string(g:pymode_indent_hanging_paren))
     call append('$', 'let pymode_lint = ' . string(g:pymode_lint))
     call append('$', 'let pymode_lint_checkers = ' . string(g:pymode_lint_checkers))
     call append('$', 'let pymode_lint_cwindow = ' . string(g:pymode_lint_cwindow))
