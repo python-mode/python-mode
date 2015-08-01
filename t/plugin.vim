@@ -1,7 +1,7 @@
 describe 'pymode-plugin'
 
     before
-        source  plugin/pymode.vim 
+        source  plugin/pymode.vim
         set filetype=python
     end
 
@@ -28,6 +28,8 @@ describe 'pymode-plugin'
     end
 
     it 'pymode save'
+        bd!
+        bd!
         Expect expand('%') == ''
         Expect pymode#save() == 0
     end
@@ -38,7 +40,7 @@ end
 describe 'pymode-python-disable'
     before
         let g:pymode_python = 'disable'
-        source  plugin/pymode.vim 
+        source  plugin/pymode.vim
         set filetype=python
     end
 
