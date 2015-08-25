@@ -1,7 +1,6 @@
 import collections
 import re
 import warnings
-import sys
 
 from rope.base import ast, codeanalyze, exceptions
 
@@ -564,19 +563,6 @@ class _PatchingASTWalker(object):
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
-        
-    def _Try(self, node):
-        children = ['try', ':']
-        children.extend(node.body)
-        children.extend(node.handlers)
-        if node.orelse:
-            children.extend(['else', ':'])
-            children.extend(node.orelse)
-        if node.finalbody:
-            children.extend(['finally', ':'])
-            children.extend(node.finalbody)
-            
-        self._handle(node, children)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
@@ -618,15 +604,9 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _With(self, node):
-        children = []
-        if (sys.version_info[1] < 3):
-            children = ['with', node.context_expr]
-            if node.optional_vars:
-                children.extend(['as', node.optional_vars])
-        else:
-            children = ['with', node.items[0].context_expr]
-            if node.items[0].optional_vars:
-                children.extend(['as', node.items[0].optional_vars])
+        children = ['with', node.context_expr]
+        if node.optional_vars:
+            children.extend(['as', node.optional_vars])
         children.append(':')
         children.extend(node.body)
         self._handle(node, children)

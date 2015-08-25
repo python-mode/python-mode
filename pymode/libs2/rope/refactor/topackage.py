@@ -1,12 +1,12 @@
 import rope.refactor.importutils
-from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
+from rope.base.change import ChangeSet, ChangeContents, MoveResource, \
+    CreateFolder
 
 
 class ModuleToPackage(object):
 
     def __init__(self, project, resource):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
 
     def get_changes(self):
@@ -27,6 +27,6 @@ class ModuleToPackage(object):
         return changes
 
     def _transform_relatives_to_absolute(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
+        pymodule = self.project.get_pymodule(resource)
+        import_tools = rope.refactor.importutils.ImportTools(self.project)
         return import_tools.relatives_to_absolutes(pymodule)

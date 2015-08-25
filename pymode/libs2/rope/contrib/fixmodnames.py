@@ -15,7 +15,7 @@ You can tell it to use any other style by using the ``fixer``
 argument.
 
 """
-from rope.base import change, taskhandle
+from rope.base import taskhandle
 from rope.contrib import changestack
 from rope.refactor import rename
 
@@ -57,7 +57,7 @@ class FixModuleNames(object):
         return len(list(self._tobe_fixed(fixer)))
 
     def _tobe_fixed(self, fixer):
-        for resource in self.project.pycore.get_python_files():
+        for resource in self.project.get_python_files():
             modname = self._name(resource)
             if modname != fixer(modname):
                 yield resource

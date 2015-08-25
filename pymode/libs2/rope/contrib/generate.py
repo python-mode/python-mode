@@ -1,5 +1,7 @@
 import rope.base.evaluate
-from rope.base import change, pyobjects, exceptions, pynames, worder, codeanalyze
+from rope.base import libutils
+from rope.base import (change, pyobjects, exceptions, pynames, worder,
+                       codeanalyze)
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
@@ -23,6 +25,7 @@ def create_module(project, name, sourcefolder=None):
     for package in packages[:-1]:
         parent = parent.get_child(package)
     return parent.create_file(packages[-1] + '.py')
+
 
 def create_package(project, name, sourcefolder=None):
     """Creates a package and returns a `rope.base.resources.Folder`"""
@@ -55,14 +58,16 @@ class _Generate(object):
                 'Element <%s> already exists.' % self.name)
         if not self.info.primary_is_found():
             raise exceptions.RefactoringError(
-                'Cannot determine the scope <%s> should be defined in.' % self.name)
+                'Cannot determine the scope <%s> should be defined in.' %
+                self.name)
 
     def get_changes(self):
         changes = change.ChangeSet('Generate %s <%s>' %
                                    (self._get_element_kind(), self.name))
         indents = self.info.get_scope_indents()
         blanks = self.info.get_blank_lines()
-        base_definition = sourceutils.fix_indentation(self._get_element(), indents)
+        base_definition = sourceutils.fix_indentation(self._get_element(),
+                                                      indents)
         definition = '\n' * blanks[0] + base_definition + '\n' * blanks[1]
 
         resource = self.info.get_insertion_resource()
@@ -130,18 +135,19 @@ class GenerateModule(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet('Generate Module <%s>' % self.name)
-        new_resource = self.project.get_file('%s/%s.py' % (package.path, self.name))
+        new_resource = self.project.get_file('%s/%s.py' %
+                                             (package.path, self.name))
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 'Module <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.pycore, self.resource, new_resource))
+                           self.project, self.resource, new_resource))
         return changes
 
     def get_location(self):
         package = self.info.get_package()
-        return (package.get_child('%s.py' % self.name) , 1)
+        return (package.get_child('%s.py' % self.name), 1)
 
 
 class GeneratePackage(_Generate):
@@ -149,13 +155,14 @@ class GeneratePackage(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet('Generate Package <%s>' % self.name)
-        new_resource = self.project.get_folder('%s/%s' % (package.path, self.name))
+        new_resource = self.project.get_folder('%s/%s' %
+                                               (package.path, self.name))
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 'Package <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.pycore, self.resource, new_resource))
+                           self.project, self.resource, new_resource))
         child = self.project.get_folder(package.path + '/' + self.name)
         changes.add_change(change.CreateFile(child, '__init__.py'))
         return changes
@@ -163,14 +170,14 @@ class GeneratePackage(_Generate):
     def get_location(self):
         package = self.info.get_package()
         child = package.get_child(self.name)
-        return (child.get_child('__init__.py') , 1)
+        return (child.get_child('__init__.py'), 1)
 
 
-def _add_import_to_module(pycore, resource, imported):
-    pymodule = pycore.resource_to_pyobject(resource)
-    import_tools = importutils.ImportTools(pycore)
+def _add_import_to_module(project, resource, imported):
+    pymodule = project.get_pymodule(resource)
+    import_tools = importutils.ImportTools(project)
     module_imports = import_tools.module_imports(pymodule)
-    module_name = pycore.modname(imported)
+    module_name = libutils.modname(imported)
     new_import = importutils.NormalImport(((module_name, None), ))
     module_imports.add_import(new_import)
     return change.ChangeContents(resource, module_imports.get_changed_source())
@@ -182,7 +189,7 @@ class _GenerationInfo(object):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
-        self.source_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.source_pymodule = self.pycore.project.get_pymodule(resource)
         finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
         self._init_fields()
@@ -264,7 +271,7 @@ class _GenerationInfo(object):
     def get_package(self):
         primary = self.primary
         if self.primary is None:
-            return self.pycore.get_source_folders()[0]
+            return self.pycore.project.get_source_folders()[0]
         if isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(
@@ -304,15 +311,15 @@ class _FunctionGenerationInfo(_GenerationInfo):
 
     def is_static_method(self):
         return self.primary is not None and \
-               isinstance(self.primary.get_object(), pyobjects.PyClass)
+            isinstance(self.primary.get_object(), pyobjects.PyClass)
 
     def is_method(self):
         return self.primary is not None and \
-               isinstance(self.primary.get_object().get_type(), pyobjects.PyClass)
+            isinstance(self.primary.get_object().get_type(), pyobjects.PyClass)
 
     def is_constructor(self):
         return self.pyname is not None and \
-               isinstance(self.pyname.get_object(), pyobjects.PyClass)
+            isinstance(self.pyname.get_object(), pyobjects.PyClass)
 
     def is_instance(self):
         if self.pyname is None:

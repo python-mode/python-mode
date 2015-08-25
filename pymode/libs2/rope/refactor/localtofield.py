@@ -6,13 +6,12 @@ class LocalToField(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
 
     def get_changes(self):
         name = worder.get_name_at(self.resource, self.offset)
-        this_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        this_pymodule = self.project.get_pymodule(self.resource)
         pyname = evaluate.eval_location(this_pymodule, self.offset)
         if not self._is_a_method_local(pyname):
             raise exceptions.RefactoringError(
@@ -26,7 +25,7 @@ class LocalToField(object):
 
         new_name = self._get_field_name(function_scope.pyobject, name)
         changes = Rename(self.project, self.resource, self.offset).\
-                  get_changes(new_name, resources=[self.resource])
+            get_changes(new_name, resources=[self.resource])
         return changes
 
     def _check_redefinition(self, name, function_scope):
@@ -45,6 +44,6 @@ class LocalToField(object):
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         parent = holding_scope.parent
         return isinstance(pyname, pynames.AssignedName) and \
-               pyname in holding_scope.get_names().values() and \
-               holding_scope.get_kind() == 'Function' and \
-               parent is not None and parent.get_kind() == 'Class'
+            pyname in holding_scope.get_names().values() and \
+            holding_scope.get_kind() == 'Function' and \
+            parent is not None and parent.get_kind() == 'Class'

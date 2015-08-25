@@ -1,9 +1,37 @@
+"""Files and folders in a project are represented as resource objects.
+
+Files and folders are access through `Resource` objects. `Resource` has
+two subclasses: `File` and `Folder`. What we care about is that
+refactorings and `rope.base.change.Change`s use resources.
+
+There are two options to create a `Resource` for a path in a project.
+Note that in these examples `path` is the path to a file or folder
+relative to the project's root. A project's root folder is represented
+by an empty string.
+
+  1) Use the `rope.base.Project.get_resource()` method. E.g.:
+
+       myresource = myproject.get_resource(path)
+
+
+  2) Use the `rope.base.libutils` module. `libutils` has a function
+     named `path_to_resource()`. It takes a project and a path:
+
+       from rope.base import libutils
+
+       myresource = libutils.path_to_resource(myproject, path)
+
+Once we have a `Resource`, we can retrieve information from it, like
+getting the path relative to the project's root (via `path`), reading
+from and writing to the resource, moving the resource, etc.
+"""
+
 import os
 import re
 
-import rope.base.change
-import rope.base.fscommands
+from rope.base import change
 from rope.base import exceptions
+from rope.base import fscommands
 
 
 class Resource(object):
@@ -15,12 +43,12 @@ class Resource(object):
 
     def move(self, new_location):
         """Move resource to `new_location`"""
-        self._perform_change(rope.base.change.MoveResource(self, new_location),
+        self._perform_change(change.MoveResource(self, new_location),
                              'Moving <%s> to <%s>' % (self.path, new_location))
 
     def remove(self):
         """Remove resource from the project"""
-        self._perform_change(rope.base.change.RemoveResource(self),
+        self._perform_change(change.RemoveResource(self),
                              'Removing <%s>' % self.path)
 
     def is_folder(self):
@@ -66,7 +94,7 @@ class Resource(object):
         return hash(self.path)
 
     def _perform_change(self, change_, description):
-        changes = rope.base.change.ChangeSet(description)
+        changes = change.ChangeSet(description)
         changes.add_change(change_)
         self.project.do(changes)
 
@@ -80,7 +108,7 @@ class File(Resource):
     def read(self):
         data = self.read_bytes()
         try:
-            return rope.base.fscommands.file_data_to_unicode(data)
+            return fscommands.file_data_to_unicode(data)
         except UnicodeDecodeError, e:
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
@@ -93,7 +121,7 @@ class File(Resource):
                 return
         except IOError:
             pass
-        self._perform_change(rope.base.change.ChangeContents(self, contents),
+        self._perform_change(change.ChangeContents(self, contents),
                              'Writing file <%s>' % self.path)
 
     def is_folder(self):
@@ -114,8 +142,12 @@ class Folder(Resource):
 
     def get_children(self):
         """Return the children of this folder"""
+        try:
+            children = os.listdir(self.real_path)
+        except OSError:
+            return []
         result = []
-        for name in os.listdir(self.real_path):
+        for name in children:
             try:
                 child = self.get_child(name)
             except exceptions.ResourceNotFoundError:
@@ -126,13 +158,13 @@ class Folder(Resource):
 
     def create_file(self, file_name):
         self._perform_change(
-            rope.base.change.CreateFile(self, file_name),
+            change.CreateFile(self, file_name),
             'Creating file <%s>' % self._get_child_path(file_name))
         return self.get_child(file_name)
 
     def create_folder(self, folder_name):
         self._perform_change(
-            rope.base.change.CreateFolder(self, folder_name),
+            change.CreateFolder(self, folder_name),
             'Creating folder <%s>' % self._get_child_path(folder_name))
         return self.get_child(folder_name)
 
@@ -187,8 +219,8 @@ class _ResourceMatcher(object):
 
     def _add_pattern(self, pattern):
         re_pattern = pattern.replace('.', '\\.').\
-                     replace('*', '[^/]*').replace('?', '[^/]').\
-                     replace('//', '/(.*/)?')
+            replace('*', '[^/]*').replace('?', '[^/]').\
+            replace('//', '/(.*/)?')
         re_pattern = '^(.*/)?' + re_pattern + '(/.*)?$'
         self.compiled_patterns.append(re.compile(re_pattern))
 

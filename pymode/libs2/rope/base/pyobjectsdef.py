@@ -3,16 +3,17 @@ import rope.base.evaluate
 import rope.base.builtins
 import rope.base.oi.soi
 import rope.base.pyscopes
+import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
-from rope.base.pyobjects import *
 
 
 class PyFunction(pyobjects.PyFunction):
 
     def __init__(self, pycore, ast_node, parent):
-        AbstractFunction.__init__(self)
-        PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        rope.base.pyobjects.AbstractFunction.__init__(self)
+        rope.base.pyobjects.PyDefinedObject.__init__(
+            self, pycore, ast_node, parent)
         self.arguments = self.ast_node.args
         self.parameter_pyobjects = pynames._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data())
@@ -109,8 +110,9 @@ class PyClass(pyobjects.PyClass):
 
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ClassVisitor
-        AbstractClass.__init__(self)
-        PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        rope.base.pyobjects.AbstractClass.__init__(self)
+        rope.base.pyobjects.PyDefinedObject.__init__(
+            self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
 
@@ -134,8 +136,9 @@ class PyClass(pyobjects.PyClass):
             base = rope.base.evaluate.eval_node(self.parent.get_scope(),
                                                 base_name)
             if base is not None and \
-               base.get_object().get_type() == get_base_type('Type'):
-                result.append(base.get_object())
+                base.get_object().get_type() == \
+                    rope.base.pyobjects.get_base_type('Type'):
+                    result.append(base.get_object())
         return result
 
     def _create_scope(self):
@@ -213,7 +216,7 @@ class PyPackage(pyobjects.PyPackage):
         self.resource = resource
         init_dot_py = self._get_init_dot_py()
         if init_dot_py is not None:
-            ast_node = pycore.resource_to_pyobject(
+            ast_node = pycore.project.get_pymodule(
                 init_dot_py, force_errors=force_errors).get_ast()
         else:
             ast_node = ast.parse('\n')
@@ -221,7 +224,7 @@ class PyPackage(pyobjects.PyPackage):
 
     def _create_structural_attributes(self):
         result = {}
-        modname = self.pycore.modname(self.resource)
+        modname = rope.base.libutils.modname(self.resource)
         extension_submodules = self.pycore._builtin_submodules(modname)
         for name, module in extension_submodules.iteritems():
             result[name] = rope.base.builtins.BuiltinName(module)
@@ -235,7 +238,7 @@ class PyPackage(pyobjects.PyPackage):
         result = {}
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
-            init_object = self.pycore.resource_to_pyobject(init_dot_py)
+            init_object = self.pycore.project.get_pymodule(init_dot_py)
             result.update(init_object.get_attributes())
         return result
 
@@ -245,13 +248,14 @@ class PyPackage(pyobjects.PyPackage):
             if child.is_folder():
                 result[child.name] = child
             elif child.name.endswith('.py') and \
-                 child.name != '__init__.py':
+                    child.name != '__init__.py':
                 name = child.name[:-3]
                 result[name] = child
         return result
 
     def _get_init_dot_py(self):
-        if self.resource is not None and self.resource.has_child('__init__.py'):
+        if self.resource is not None and \
+                self.resource.has_child('__init__.py'):
             return self.resource.get_child('__init__.py')
         else:
             return None
@@ -262,7 +266,7 @@ class PyPackage(pyobjects.PyPackage):
     def get_module(self):
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
-            return self.pycore.resource_to_pyobject(init_dot_py)
+            return self.pycore.project.get_pymodule(init_dot_py)
         return self
 
 
@@ -329,7 +333,9 @@ class _ScopeVisitor(object):
             if isinstance(decorator, ast.Name) and decorator.id == 'property':
                 if isinstance(self, _ClassVisitor):
                     type_ = rope.base.builtins.Property(pyfunction)
-                    arg = pynames.UnboundName(PyObject(self.owner_object))
+                    arg = pynames.UnboundName(
+                        rope.base.pyobjects.PyObject(self.owner_object))
+
                     def _eval(type_=type_, arg=arg):
                         return type_.get_property_object(
                             arguments.ObjectArguments([arg]))
@@ -347,7 +353,7 @@ class _ScopeVisitor(object):
         pass
 
     def _For(self, node):
-        names = self._update_evaluated(node.target, node.iter,
+        names = self._update_evaluated(node.target, node.iter,  # noqa
                                        '.__iter__().next()')
         for child in node.body + node.orelse:
             ast.walk(child, self)
@@ -362,7 +368,7 @@ class _ScopeVisitor(object):
             self.names[name] = pyname
 
     def _update_evaluated(self, targets, assigned,
-                          evaluation= '', eval_type=False):
+                          evaluation='', eval_type=False):
         result = {}
         names = astutils.get_name_levels(targets)
         for name, levels in names:
@@ -430,7 +436,8 @@ class _ScopeVisitor(object):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get('ignore_bad_imports', False):
             return False
-        return not isinstance(imported_module.get_object(), AbstractModule)
+        return not isinstance(imported_module.get_object(),
+                              rope.base.pyobjects.AbstractModule)
 
     def _Global(self, node):
         module = self.get_module()

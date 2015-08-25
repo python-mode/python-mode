@@ -84,7 +84,7 @@ class ImportInfo(object):
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
-               self.get_import_statement() == obj.get_import_statement()
+            self.get_import_statement() == obj.get_import_statement()
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
@@ -147,10 +147,10 @@ class FromImport(ImportInfo):
         Returns `None` if module was not found.
         """
         if self.level == 0:
-            return context.pycore.find_module(
+            return context.project.find_module(
                 self.module_name, folder=context.folder)
         else:
-            return context.pycore.find_relative_module(
+            return context.project.find_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_imported_module(self, context):
@@ -160,10 +160,10 @@ class FromImport(ImportInfo):
         could not be found.
         """
         if self.level == 0:
-            return context.pycore.get_module(
+            return context.project.get_module(
                 self.module_name, context.folder)
         else:
-            return context.pycore.get_relative_module(
+            return context.project.get_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_import_statement(self):
@@ -180,7 +180,7 @@ class FromImport(ImportInfo):
 
     def is_star_import(self):
         return len(self.names_and_aliases) > 0 and \
-               self.names_and_aliases[0][0] == '*'
+            self.names_and_aliases[0][0] == '*'
 
 
 class EmptyImport(ImportInfo):
@@ -196,6 +196,6 @@ class EmptyImport(ImportInfo):
 
 class ImportContext(object):
 
-    def __init__(self, pycore, folder):
-        self.pycore = pycore
+    def __init__(self, project, folder):
+        self.project = project
         self.folder = folder

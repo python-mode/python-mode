@@ -3,15 +3,19 @@ import difflib
 import sys
 import warnings
 
+import rope.base.libutils
+import rope.base.resourceobserver
+import rope.base.resources
 import rope.base.oi.doa
 import rope.base.oi.objectinfo
 import rope.base.oi.soa
-from rope.base import ast, exceptions, taskhandle, utils, stdmods
-from rope.base.exceptions import ModuleNotFoundError
-from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
-import rope.base.resources
-import rope.base.resourceobserver
 from rope.base import builtins
+from rope.base import exceptions
+from rope.base import stdmods
+from rope.base import taskhandle
+from rope.base import utils
+from rope.base.exceptions import ModuleNotFoundError
+from rope.base.pyobjectsdef import PyModule, PyPackage
 
 
 class PyCore(object):
@@ -25,7 +29,6 @@ class PyCore(object):
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
         self._init_automatic_soa()
-        self._init_source_folders()
 
     def _init_python_files(self):
         self.python_matcher = None
@@ -38,14 +41,9 @@ class PyCore(object):
         callback = self._invalidate_resource_cache
         observer = rope.base.resourceobserver.ResourceObserver(
             changed=callback, moved=callback, removed=callback)
-        self.observer = rope.base.resourceobserver.FilteredResourceObserver(observer)
+        self.observer = \
+            rope.base.resourceobserver.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
-
-    def _init_source_folders(self):
-        self._custom_source_folders = []
-        for path in self.project.prefs.get('source_folders', []):
-            folder = self.project.get_resource(path)
-            self._custom_source_folders.append(folder)
 
     def _init_automatic_soa(self):
         if not self.automatic_soa:
@@ -62,7 +60,7 @@ class PyCore(object):
 
     def _file_changed_for_soa(self, resource, new_resource=None):
         old_contents = self.project.history.\
-                       contents_before_current_change(resource)
+            contents_before_current_change(resource)
         if old_contents is not None:
             perform_soa_on_changed_scopes(self.project, resource, old_contents)
 
@@ -73,16 +71,10 @@ class PyCore(object):
             return resource.name.endswith('.py')
         return self.python_matcher.does_match(resource)
 
+    @utils.deprecated('Use `project.get_module` instead')
     def get_module(self, name, folder=None):
         """Returns a `PyObject` if the module was found."""
-        # check if this is a builtin module
-        pymod = self._builtin_module(name)
-        if pymod is not None:
-             return pymod
-        module = self.find_module(name, folder)
-        if module is None:
-            raise ModuleNotFoundError('Module %s not found' % name)
-        return self.resource_to_pyobject(module)
+        return self.project.get_module(name, folder)
 
     def _builtin_submodules(self, modname):
         result = {}
@@ -90,18 +82,17 @@ class PyCore(object):
             if extension.startswith(modname + '.'):
                 name = extension[len(modname) + 1:]
                 if '.' not in name:
-                    result[name] = self._builtin_module(extension)
+                    result[name] = self.builtin_module(extension)
         return result
 
-    def _builtin_module(self, name):
+    def builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
+    @utils.deprecated('Use `project.get_relative_module` instead')
     def get_relative_module(self, name, folder, level):
-        module = self.find_relative_module(name, folder, level)
-        if module is None:
-            raise ModuleNotFoundError('Module %s not found' % name)
-        return self.resource_to_pyobject(module)
+        return self.project.get_relative_module(name, folder, level)
 
+    @utils.deprecated('Use `libutils.get_string_module` instead')
     def get_string_module(self, code, resource=None, force_errors=False):
         """Returns a `PyObject` object for the given code
 
@@ -112,92 +103,48 @@ class PyCore(object):
         """
         return PyModule(self, code, resource, force_errors=force_errors)
 
+    @utils.deprecated('Use `libutils.get_string_scope` instead')
     def get_string_scope(self, code, resource=None):
         """Returns a `Scope` object for the given code"""
-        return self.get_string_module(code, resource).get_scope()
+        return rope.base.libutils.get_string_scope(code, resource)
 
     def _invalidate_resource_cache(self, resource, new_resource=None):
         for observer in self.cache_observers:
             observer(resource)
 
-    def _find_module_in_folder(self, folder, modname):
-        module = folder
-        packages = modname.split('.')
-        for pkg in packages[:-1]:
-            if  module.is_folder() and module.has_child(pkg):
-                module = module.get_child(pkg)
-            else:
-                return None
-        if module.is_folder():
-            if module.has_child(packages[-1]) and \
-               module.get_child(packages[-1]).is_folder():
-                return module.get_child(packages[-1])
-            elif module.has_child(packages[-1] + '.py') and \
-                 not module.get_child(packages[-1] + '.py').is_folder():
-                return module.get_child(packages[-1] + '.py')
-
+    @utils.deprecated('Use `project.get_python_path_folders` instead')
     def get_python_path_folders(self):
-        import rope.base.project
-        result = []
-        for src in self.project.prefs.get('python_path', []) + sys.path:
-            try:
-                src_folder = rope.base.project.get_no_project().get_resource(src)
-                result.append(src_folder)
-            except rope.base.exceptions.ResourceNotFoundError:
-                pass
-        return result
+        return self.project.get_python_path_folders()
 
+    @utils.deprecated('Use `project.find_module` instead')
     def find_module(self, modname, folder=None):
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
         """
-        return self._find_module(modname, folder)
+        return self.project.find_module(modname, folder)
 
+    @utils.deprecated('Use `project.find_relative_module` instead')
     def find_relative_module(self, modname, folder, level):
-        for i in range(level - 1):
-            folder = folder.parent
-        if modname == '':
-            return folder
-        else:
-            return self._find_module_in_folder(folder, modname)
-
-    def _find_module(self, modname, folder=None):
-        """Return `modname` module resource"""
-        for src in self.get_source_folders():
-            module = self._find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        for src in self.get_python_path_folders():
-            module = self._find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        if folder is not None:
-            module = self._find_module_in_folder(folder, modname)
-            if module is not None:
-                return module
-        return None
+        return self.project.find_relative_module(modname, folder, level)
 
     # INFO: It was decided not to cache source folders, since:
     #  - Does not take much time when the root folder contains
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
+    @utils.deprecated('Use `project.get_source_folders` instead')
     def get_source_folders(self):
         """Returns project source folders"""
-        if self.project.root is None:
-            return []
-        result = list(self._custom_source_folders)
-        result.extend(self._find_source_folders(self.project.root))
-        return result
+        return self.project.get_source_folders()
 
     def resource_to_pyobject(self, resource, force_errors=False):
         return self.module_cache.get_pymodule(resource, force_errors)
 
+    @utils.deprecated('Use `project.get_python_files` instead')
     def get_python_files(self):
         """Returns all python files available in the project"""
-        return [resource for resource in self.project.get_files()
-                if self.is_python_file(resource)]
+        return self.project.get_python_files()
 
     def _is_package(self, folder):
         if folder.has_child('__init__.py') and \
@@ -270,22 +217,9 @@ class PyCore(object):
     def __str__(self):
         return str(self.module_cache) + str(self.object_info)
 
+    @utils.deprecated('Use `libutils.modname` instead')
     def modname(self, resource):
-        if resource.is_folder():
-            module_name = resource.name
-            source_folder = resource.parent
-        elif resource.name == '__init__.py':
-            module_name = resource.parent.name
-            source_folder = resource.parent.parent
-        else:
-            module_name = resource.name[:-3]
-            source_folder = resource.parent
-
-        while source_folder != source_folder.parent and \
-              source_folder.has_child('__init__.py'):
-            module_name = source_folder.name + '.' + module_name
-            source_folder = source_folder.parent
-        return module_name
+        return rope.base.libutils.modname(resource)
 
     @property
     @utils.cacheit
@@ -355,9 +289,11 @@ def perform_soa_on_changed_scopes(project, resource, old_contents):
             new_contents = resource.read()
             # detecting changes in new_contents relative to old_contents
             detector = _TextChangeDetector(new_contents, old_contents)
+
             def search_subscopes(pydefined):
                 scope = pydefined.get_scope()
                 return detector.is_changed(scope.get_start(), scope.get_end())
+
             def should_analyze(pydefined):
                 scope = pydefined.get_scope()
                 start = scope.get_start()

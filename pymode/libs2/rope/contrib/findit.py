@@ -7,7 +7,8 @@ from rope.refactor import occurrences
 
 
 def find_occurrences(project, resource, offset, unsure=False, resources=None,
-                     in_hierarchy=False, task_handle=taskhandle.NullTaskHandle()):
+                     in_hierarchy=False,
+                     task_handle=taskhandle.NullTaskHandle()):
     """Return a list of `Location`\s
 
     If `unsure` is `True`, possible matches are returned, too.  You
@@ -18,16 +19,17 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
 
     """
     name = worder.get_name_at(resource, offset)
-    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    this_pymodule = project.get_pymodule(resource)
     primary, pyname = rope.base.evaluate.eval_location2(
         this_pymodule, offset)
+
     def is_match(occurrence):
         return unsure
     finder = occurrences.create_finder(
-        project.pycore, name, pyname, unsure=is_match,
+        project, name, pyname, unsure=is_match,
         in_hierarchy=in_hierarchy, instance=primary)
     if resources is None:
-        resources = project.pycore.get_python_files()
+        resources = project.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
                                         count=len(resources))
     return _find_locations(finder, resources, job_set)
@@ -41,7 +43,7 @@ def find_implementations(project, resource, offset, resources=None,
     `Location`\s.
     """
     name = worder.get_name_at(resource, offset)
-    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    this_pymodule = project.get_pymodule(resource)
     pyname = rope.base.evaluate.eval_location(this_pymodule, offset)
     if pyname is not None:
         pyobject = pyname.get_object()
@@ -50,17 +52,19 @@ def find_implementations(project, resource, offset, resources=None,
             raise exceptions.BadIdentifierError('Not a method!')
     else:
         raise exceptions.BadIdentifierError('Cannot resolve the identifier!')
+
     def is_defined(occurrence):
         if not occurrence.is_defined():
             return False
+
     def not_self(occurrence):
         if occurrence.get_pyname().get_object() == pyname.get_object():
             return False
     filters = [is_defined, not_self,
                occurrences.InHierarchyFilter(pyname, True)]
-    finder = occurrences.Finder(project.pycore, name, filters=filters)
+    finder = occurrences.Finder(project, name, filters=filters)
     if resources is None:
-        resources = project.pycore.get_python_files()
+        resources = project.get_python_files()
     job_set = task_handle.create_jobset('Finding Implementations',
                                         count=len(resources))
     return _find_locations(finder, resources, job_set)
@@ -72,19 +76,19 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
     A `Location` object is returned if the definition location can be
     determined, otherwise ``None`` is returned.
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, code, resource, maxfixes)
-    main_module = fixer.get_pymodule()
+    fixer = fixsyntax.FixSyntax(project, code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         name = rope.base.worder.Worder(code).get_word_at(offset)
         if lineno is not None:
             start = module.lines.get_line_start(lineno)
+
             def check_offset(occurrence):
                 if occurrence.offset < start:
                     return False
             pyname_filter = occurrences.PyNameFilter(pyname)
-            finder = occurrences.Finder(project.pycore, name,
+            finder = occurrences.Finder(project, name,
                                         [check_offset, pyname_filter])
             for occurrence in finder.find_occurrences(pymodule=module):
                 return Location(occurrence)

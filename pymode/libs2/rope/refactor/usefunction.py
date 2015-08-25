@@ -1,6 +1,7 @@
 from rope.base import (change, taskhandle, evaluate,
                        exceptions, pyobjects, pynames, ast)
-from rope.refactor import restructure, sourceutils, similarfinder, importutils
+from rope.base import libutils
+from rope.refactor import restructure, sourceutils, similarfinder
 
 
 class UseFunction(object):
@@ -9,7 +10,7 @@ class UseFunction(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.offset = offset
-        this_pymodule = project.pycore.resource_to_pyobject(resource)
+        this_pymodule = project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None:
             raise exceptions.RefactoringError('Unresolvable name selected')
@@ -37,7 +38,7 @@ class UseFunction(object):
     def get_changes(self, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.project.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = change.ChangeSet('Using function <%s>' %
                                    self.pyfunction.get_name())
         if self.resource in resources:
@@ -55,7 +56,6 @@ class UseFunction(object):
         return self.pyfunction.get_name()
 
     def _restructure(self, resources, task_handle, others=True):
-        body = self._get_body()
         pattern = self._make_pattern()
         goal = self._make_goal(import_=others)
         imports = None
@@ -75,7 +75,7 @@ class UseFunction(object):
         return find_temps(self.project, self._get_body())
 
     def _module_name(self):
-        return self.project.pycore.modname(self.resource)
+        return libutils.modname(self.resource)
 
     def _make_pattern(self):
         params = self.pyfunction.get_param_names()
@@ -123,7 +123,7 @@ class UseFunction(object):
 
 def find_temps(project, code):
     code = 'def f():\n' + sourceutils.indent_lines(code, 4)
-    pymodule = project.pycore.get_string_module(code)
+    pymodule = libutils.get_string_module(project, code)
     result = []
     function_scope = pymodule.get_scope().get_scopes()[0]
     for name, pyname in function_scope.get_names().items():
@@ -135,15 +135,18 @@ def find_temps(project, code):
 def _returns_last(node):
     return node.body and isinstance(node.body[-1], ast.Return)
 
+
 def _yield_count(node):
     visitor = _ReturnOrYieldFinder()
     visitor.start_walking(node)
     return visitor.yields
 
+
 def _return_count(node):
     visitor = _ReturnOrYieldFinder()
     visitor.start_walking(node)
     return visitor.returns
+
 
 class _ReturnOrYieldFinder(object):
 
