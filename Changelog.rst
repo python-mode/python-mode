@@ -2,11 +2,13 @@ Changelog
 =========
 
 * Pylama updated to version 5.0.5
+* Rope libs updated
 * Add 'pymode_options_max_line_length' option
 * Add ability to set related checker options `:help pymode-lint-options`
   Options added: 'pymode_lint_options_pep8', 'pymode_lint_options_pep257',
   'pymode_lint_options_mccabe', 'pymode_lint_options_pyflakes',
   'pymode_lint_options_pylint'
+
 
 ## 2014-06-11 0.8.1
 -------------------

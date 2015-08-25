@@ -183,7 +183,7 @@ call pymode#default('g:pymode_rope_completion', 1)
 
 " Complete keywords from not imported modules (could make completion slower)
 " Enable autoimport used modules
-call pymode#default('g:pymode_rope_autoimport', 1)
+call pymode#default('g:pymode_rope_autoimport', 0)
 
 " Offer to import object after complete (if that not be imported before)
 call pymode#default('g:pymode_rope_autoimport_import_after_complete', 0)

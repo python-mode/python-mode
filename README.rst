@@ -187,8 +187,8 @@ License
 
 Licensed under a `GNU lesser general public license`_.
 
-If you like this plugin, you can send me postcard :)
-My address is here: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill Klenov".
+If you like this plugin, I would very appreciated if you kindly send me a postcard :)
+My address is here: "Russia, 143500, MO, Istra, pos. Severny 8-3" to "Kirill Klenov".
 **Thanks for support!**
 
 .. _GNU lesser general public license: http://www.gnu.org/copyleft/lesser.html

@@ -1,7 +1,6 @@
 """ Rope support in pymode. """
 from __future__ import absolute_import, print_function
 
-import multiprocessing
 import os.path
 import re
 import site
@@ -13,7 +12,6 @@ from rope.base.taskhandle import TaskHandle # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
 from rope.refactor import ModuleToPackage, ImportOrganizer, rename, extract, inline, usefunction, move, change_signature, importutils # noqa
 
-from ._compat import StringIO
 from .environment import env
 
 
@@ -352,8 +350,7 @@ class RopeContext(object):
         """ Init Rope context. """
         self.path = path
 
-        self.project = project.Project(
-            project_path, fscommands=FileSystemCommands())
+        self.project = project.Project(project_path, fscommands=FileSystemCommands())
 
         self.importer = rope_autoimport.AutoImport(
             project=self.project, observe=False)
@@ -462,8 +459,8 @@ class Refactoring(object): # noqa
 
                 action = env.user_input_choices(
                     'Choose what to do:', 'perform', 'preview',
-                        'perform in class hierarchy',
-                        'preview in class hierarchy')
+                    'perform in class hierarchy',
+                    'preview in class hierarchy')
 
                 in_hierarchy = action.endswith("in class hierarchy")
 
@@ -512,7 +509,7 @@ class Refactoring(object): # noqa
         """
         progress = ProgressHandler('Calculate changes ...')
         return refactor.get_changes(
-            input_str, task_handle=progress.handle, in_hierarchy = in_hierarchy)
+            input_str, task_handle=progress.handle, in_hierarchy=in_hierarchy)
 
 
 class RenameRefactoring(Refactoring):
@@ -746,13 +743,12 @@ class ChangeSignatureRefactoring(Refactoring):
         return change_signature.ChangeSignature(
             ctx.project, ctx.resource, offset)
 
-    def get_changes(self, refactor, input_string):
+    def get_changes(self, refactor, input_string, in_hierarchy=False):
         """ Function description.
 
         :return Rope.changes:
 
         """
-
         args = re.sub(r'[\s\(\)]+', '', input_string).split(',')
         olds = [arg[0] for arg in refactor.get_args()]
 
@@ -793,7 +789,7 @@ class GenerateElementRefactoring(Refactoring):
         return generate.create_generate(
             self.kind, ctx.project, ctx.resource, offset)
 
-    def get_changes(self, refactor, input_str):
+    def get_changes(self, refactor, input_str, in_hierarchy=False):
         """ Function description.
 
         :return Rope.changes:
@@ -938,5 +934,3 @@ def _insert_import(name, module, ctx):
     progress = ProgressHandler('Apply changes ...')
     ctx.project.do(changes, task_handle=progress.handle)
     reload_changes(changes)
-
-# pylama:ignore=W1401,E1120,D

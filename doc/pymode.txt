@@ -482,7 +482,7 @@ Keymap for autocomplete                        *'g:pymode_rope_completion_bind'*
 Extended autocompletion (rope could complete objects which have not been
 imported) from project                              *'g:pymode_rope_autoimport'*
 >
-    let g:pymode_rope_autoimport = 1
+    let g:pymode_rope_autoimport = 0
 
 Load modules to autoimport by default       *'g:pymode_rope_autoimport_modules'*
 >
@@ -781,10 +781,10 @@ The sequence of commands that fixed this:
 Python-mode is released under the GNU lesser general public license.
 See: http://www.gnu.org/copyleft/lesser.html
 
-If you like this plugin, you can send me a postcard :)
+If you like this plugin, I would very appreciated if you kindly send me a postcard :)
 
-My address is: "Russia, 143401, Krasnogorsk, Shkolnaya 1-19" to "Kirill
-Klenov". Thanks for your support!
+My address is: "Russia, 143500, MO, Istra, pos. Severny 8-3" to "Kirill Klenov".
+Thanks for your support!
 
 
 ------------------------------------------------------------------------------
