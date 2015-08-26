@@ -98,10 +98,6 @@ Setup default python options                                *'g:pymode_options'*
 >
     let g:pymode_options = 1
 
-Setup max line length                       *'g:pymode_options_max_line_length'*
->
-    let g:pymode_options_max_line_length = 79
-
 If this option is set to 1, pymode will enable the following options for
 python buffers: >
 
@@ -114,6 +110,10 @@ python buffers: >
     setlocal textwidth=79
     setlocal commentstring=#%s
     setlocal define=^\s*\\(def\\\\|class\\)
+
+Setup max line length                       *'g:pymode_options_max_line_length'*
+>
+    let g:pymode_options_max_line_length = 79
 
 Enable colorcolumn display at max_line_length   *'g:pymode_options_colorcolumn'*
 >
