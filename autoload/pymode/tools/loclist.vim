@@ -10,7 +10,6 @@ fun! g:PymodeLocList.init(raw_list) "{{{
     let obj = copy(self)
     let loc_list = filter(copy(a:raw_list), 'v:val["valid"] == 1')
     call obj.clear()
-    let obj._title = 'CodeCheck'
     return obj
 endfunction "}}}
 
@@ -19,6 +18,7 @@ fun! g:PymodeLocList.current() "{{{
     if !exists("b:pymode_loclist")
         let b:pymode_loclist = g:PymodeLocList.init([])
     endif
+    let b:pymode_loclist._bufnr = bufnr('.')
     return b:pymode_loclist
 endfunction "}}}
 
@@ -31,7 +31,7 @@ endfunction "}}}
 fun! g:PymodeLocList.clear() "{{{
     let self._loclist = []
     let self._messages = {}
-    let self._name = expand('%:t')
+    let self._bufnr = bufnr('')
 endfunction "}}}
 
 
@@ -61,21 +61,4 @@ fun! g:PymodeLocList.filter(filters) "{{{
 
     endfor
     return loclist
-endfunction "}}}
-
-
-fun! g:PymodeLocList.show() "{{{
-    call setloclist(0, self._loclist)
-    if self.is_empty()
-        lclose
-    else
-        let num = winnr()
-        lopen
-        setl nowrap
-        execute max([min([line("$"), g:pymode_quickfix_maxheight]), g:pymode_quickfix_minheight]) . "wincmd _"
-        if num != winnr()
-            call setwinvar(winnr(), 'quickfix_title', self._title . ' <' . self._name . '>')
-            exe num . "wincmd w"
-        endif
-    end
 endfunction "}}}
