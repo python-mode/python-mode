@@ -50,6 +50,10 @@ fun! pymode#folding#expr(lnum) "{{{
     endif
 
     if line =~ s:def_regex
+        " single line def
+        if indent(a:lnum) >= indent(a:lnum+1)
+            return '='
+        endif
         " Check if last decorator is before the last def
         let decorated = 0
         let lnum = a:lnum - 1
