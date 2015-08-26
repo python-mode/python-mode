@@ -17,7 +17,7 @@ fun! pymode#breakpoint#init() "{{{
 
 from imp import find_module
 
-for module in ('pudb', 'ipdb'):
+for module in ('wdb', 'pudb', 'ipdb'):
     try:
         find_module(module)
         vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
