@@ -62,7 +62,7 @@ Using pathogen (recommended)
 
     % cd ~/.vim
     % mkdir -p bundle && cd bundle
-    % git clone git://github.com/klen/python-mode.git
+    % git clone https://github.com/klen/python-mode.git
 
 - Enable `pathogen <https://github.com/tpope/vim-pathogen>`_
   in your ``~/.vimrc``: ::
@@ -81,7 +81,7 @@ Manually
 --------
 ::
 
-    % git clone git://github.com/klen/python-mode.git
+    % git clone https://github.com/klen/python-mode.git
     % cd python-mode
     % cp -R * ~/.vim
 
