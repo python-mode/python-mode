@@ -51,7 +51,7 @@ fun! pymode#folding#expr(lnum) "{{{
 
     if line =~ s:def_regex
         " single line def
-        if indent(a:lnum) >= indent(a:lnum+1)
+        if indent(a:lnum) >= indent(a:lnum+1) && getline(prevnonblank(a:lnum)) !~ ':\s*$'
             return '='
         endif
         " Check if last decorator is before the last def
