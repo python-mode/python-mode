@@ -8,6 +8,7 @@ from .environment import env
 
 encoding = re(r'#.*coding[:=]\s*([-\w.]+)')
 
+
 def run_code():
     """ Run python code in current buffer.
 

@@ -483,7 +483,7 @@ class Refactoring(object): # noqa
             except exceptions.RefactoringError as e:
                 env.error(str(e))
 
-            except Exception as e:
+            except Exception as e: # noqa
                 env.error('Unhandled exception in Pymode: %s' % e)
 
     @staticmethod

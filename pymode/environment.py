@@ -1,40 +1,40 @@
-""" Define interfaces. """
+"""Define interfaces."""
 
 from __future__ import print_function
 
-import vim
 import json
-import time
 import os.path
+import time
+import vim # noqa
 
 from ._compat import PY2
 
 
 class VimPymodeEnviroment(object):
 
-    """ Vim User interface. """
+    """Vim User interface."""
 
     prefix = '[Pymode]'
 
     def __init__(self):
-        """ Init VIM environment. """
+        """Init VIM environment."""
         self.current = vim.current
         self.options = dict(encoding=vim.eval('&enc'))
         self.options['debug'] = self.var('g:pymode_debug', True)
 
     @property
     def curdir(self):
-        """ Return current working directory. """
+        """Return current working directory."""
         return self.var('getcwd()')
 
     @property
     def curbuf(self):
-        """ Return current buffer. """
+        """Return current buffer."""
         return self.current.buffer
 
     @property
     def cursor(self):
-        """ Return current window position.
+        """Return current window position.
 
         :return tuple: (row, col)
 
@@ -43,12 +43,12 @@ class VimPymodeEnviroment(object):
 
     @property
     def source(self):
-        """ Return source of current buffer. """
+        """Return source of current buffer."""
         return "\n".join(self.lines)
 
     @property
     def lines(self):
-        """ Iterate by lines in current file.
+        """Iterate by lines in current file.
 
         :return list:
 
@@ -60,7 +60,7 @@ class VimPymodeEnviroment(object):
 
     @staticmethod
     def var(name, to_bool=False, silence=False):
-        """ Get vim variable.
+        """Get vim variable.
 
         :return vimobj:
 
@@ -81,7 +81,7 @@ class VimPymodeEnviroment(object):
 
     @staticmethod
     def message(msg, history=False):
-        """ Show message to user.
+        """Show message to user.
 
         :return: :None
 
@@ -92,7 +92,7 @@ class VimPymodeEnviroment(object):
         return vim.command('call pymode#wide_message("%s")' % str(msg))
 
     def user_input(self, msg, default=''):
-        """ Return user input or default.
+        """Return user input or default.
 
         :return str:
 
@@ -112,7 +112,7 @@ class VimPymodeEnviroment(object):
         return input_str or default
 
     def user_confirm(self, msg, yes=False):
-        """ Get user confirmation.
+        """Get user confirmation.
 
         :return bool:
 
@@ -122,7 +122,7 @@ class VimPymodeEnviroment(object):
         return action and 'yes'.startswith(action)
 
     def user_input_choices(self, msg, *options):
-        """ Get one of many options.
+        """Get one of many options.
 
         :return str: A choosen option
 
@@ -148,24 +148,24 @@ class VimPymodeEnviroment(object):
 
     @staticmethod
     def error(msg):
-        """ Show error to user. """
+        """Show error to user."""
         vim.command('call pymode#error("%s")' % str(msg))
 
     def debug(self, msg, *args):
-        """ Print debug information. """
+        """Print debug information."""
         if self.options.get('debug'):
             print("%s %s [%s]" % (
                 int(time.time()), msg, ', '.join([str(a) for a in args])))
 
     def stop(self, value=None):
-        """ Break Vim function. """
+        """Break Vim function."""
         cmd = 'return'
         if value is not None:
             cmd += ' ' + self.prepare_value(value)
         vim.command(cmd)
 
     def catch_exceptions(self, func):
-        """ Decorator. Make execution more silence.
+        """Decorator. Make execution more silence.
 
         :return func:
 
@@ -181,19 +181,19 @@ class VimPymodeEnviroment(object):
         return _wrapper
 
     def run(self, name, *args):
-        """ Run vim function. """
+        """Run vim function."""
         vim.command('call %s(%s)' % (name, ", ".join([
             self.prepare_value(a) for a in args
         ])))
 
     def let(self, name, value):
-        """ Set variable. """
+        """Set variable."""
         cmd = 'let %s = %s' % (name, self.prepare_value(value))
         self.debug(cmd)
         vim.command(cmd)
 
     def prepare_value(self, value, dumps=True):
-        """ Decode bstr to vim encoding.
+        """Decode bstr to vim encoding.
 
         :return unicode string:
 
@@ -207,7 +207,7 @@ class VimPymodeEnviroment(object):
         return value
 
     def get_offset_params(self, cursor=None, base=""):
-        """ Calculate current offset.
+        """Calculate current offset.
 
         :return tuple: (source, offset)
 
@@ -228,11 +228,11 @@ class VimPymodeEnviroment(object):
 
     @staticmethod
     def goto_line(line):
-        """ Go to line. """
+        """Go to line."""
         vim.command('normal %sggzz' % line)
 
     def goto_file(self, path, cmd='e', force=False):
-        """ Function description. """
+        """Open file by path."""
         if force or os.path.abspath(path) != self.curbuf.name:
             self.debug('read', path)
             if ' ' in path and os.name == 'posix':
@@ -241,7 +241,7 @@ class VimPymodeEnviroment(object):
 
     @staticmethod
     def goto_buffer(bufnr):
-        """ Open buffer. """
+        """Open buffer."""
         if str(bufnr) != '-1':
             vim.command('buffer %s' % bufnr)
 

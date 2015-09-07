@@ -1,12 +1,10 @@
 """ Pylint support. """
 from os import path as op, environ
-import sys
 import logging
 
 from pylama.lint import Linter as BaseLinter
 
 CURDIR = op.abspath(op.dirname(__file__))
-sys.path.insert(0, CURDIR)
 
 from astroid import MANAGER
 from pylint.lint import Run

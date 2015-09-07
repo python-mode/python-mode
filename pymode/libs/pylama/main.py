@@ -1,4 +1,4 @@
-""" Pylama's shell support. """
+"""Pylama's shell support."""
 
 from __future__ import absolute_import, with_statement
 
@@ -6,11 +6,58 @@ import sys
 from os import walk, path as op
 
 from .config import parse_options, CURDIR, setup_logger
-from .core import LOGGER
+from .core import LOGGER, run
+from .async import check_async
+
+
+def check_path(options, rootdir=None, candidates=None, code=None):
+    """Check path.
+
+    :param rootdir: Root directory (for making relative file paths)
+    :param options: Parsed pylama options (from pylama.config.parse_options)
+
+    :returns: (list) Errors list
+
+    """
+    if not candidates:
+        candidates = []
+        for path_ in options.paths:
+            path = op.abspath(path_)
+            if op.isdir(path):
+                for root, _, files in walk(path):
+                    candidates += [op.relpath(op.join(root, f), CURDIR) for f in files]
+            else:
+                candidates.append(path)
+
+    if rootdir is None:
+        rootdir = path if op.isdir(path) else op.dirname(path)
+
+    paths = []
+    for path in candidates:
+
+        if not options.force and not any(l.allow(path) for _, l in options.linters):
+            continue
+
+        if not op.exists(path):
+            continue
+
+        if options.skip and any(p.match(path) for p in options.skip):
+            LOGGER.info('Skip path: %s', path)
+            continue
+
+        paths.append(path)
+
+    if options.async:
+        return check_async(paths, options, rootdir)
+
+    errors = []
+    for path in paths:
+        errors += run(path=path, code=code, rootdir=rootdir, options=options)
+    return errors
 
 
 def shell(args=None, error=True):
-    """ Endpoint for console.
+    """Endpoint for console.
 
     Parse a command arguments, configuration files and run a checkers.
 
@@ -30,49 +77,20 @@ def shell(args=None, error=True):
         from .hook import install_hook
         return install_hook(options.path)
 
-    paths = [options.path]
-
-    if op.isdir(options.path):
-        paths = []
-        for root, _, files in walk(options.path):
-            paths += [op.relpath(op.join(root, f), CURDIR) for f in files]
-
-    return check_files(paths, options, error=error)
+    return process_paths(options, error=error)
 
 
-def check_files(paths, options, rootpath=None, error=True):
-    """ Check files.
+def process_paths(options, candidates=None, error=True):
+    """Process files and log errors."""
+    errors = check_path(options, rootdir=CURDIR, candidates=candidates)
 
-    :return list: list of errors
-    :raise SystemExit:
-
-    """
-    from .tasks import async_check_files
-
-    if rootpath is None:
-        rootpath = CURDIR
-
-    pattern = "%(rel)s:%(lnum)s:%(col)s: %(text)s"
+    pattern = "%(filename)s:%(lnum)s:%(col)s: %(text)s"
     if options.format == 'pylint':
-        pattern = "%(rel)s:%(lnum)s: [%(type)s] %(text)s"
-
-    work_paths = []
-    for path in paths:
-
-        if not options.force and not any(l.allow(path) for _, l in options.linters): # noqa
-            continue
-
-        if not op.exists(path):
-            continue
-
-        if options.skip and any(p.match(path) for p in options.skip):
-            LOGGER.info('Skip path: %s', path)
-            continue
-        work_paths.append(path)
-
-    errors = async_check_files(work_paths, options, rootpath=rootpath)
+        pattern = "%(filename)s:%(lnum)s: [%(type)s] %(text)s"
 
     for er in errors:
+        if options.abspath:
+            er._info['filename'] = op.abspath(er.filename)
         LOGGER.warning(pattern, er._info)
 
     if error:
@@ -83,3 +101,5 @@ def check_files(paths, options, rootpath=None, error=True):
 
 if __name__ == '__main__':
     shell()
+
+# pylama:ignore=F0001

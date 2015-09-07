@@ -1,4 +1,4 @@
-""" Pylama integration. """
+"""Pylama integration."""
 
 from .environment import env
 from .utils import silence_stderr
@@ -6,16 +6,21 @@ from .utils import silence_stderr
 import os.path
 
 
+from pylama.lint.extensions import LINTERS
+from pylama.lint.pylama_pylint import Linter
+
+LINTERS['pylint'] = Linter()
+
+
 def code_check():
-    """ Run pylama and check current file.
+    """Run pylama and check current file.
 
     :return bool:
 
     """
     with silence_stderr():
 
-        from pylama.main import parse_options
-        from pylama.tasks import check_path
+        from pylama.main import parse_options, check_path
 
         if not env.curbuf.name:
             return env.stop()
@@ -49,8 +54,9 @@ def code_check():
             from pylama.core import LOGGER, logging
             LOGGER.setLevel(logging.DEBUG)
 
+        options.paths = [path]
         errors = check_path(
-            path, options=options, code='\n'.join(env.curbuf) + '\n')
+            options=options, code='\n'.join(env.curbuf) + '\n', rootdir=env.curdir)
 
     env.debug("Find errors: ", len(errors))
     sort_rules = env.var('g:pymode_lint_sort')
