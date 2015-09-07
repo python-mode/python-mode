@@ -109,7 +109,7 @@ endfunction "}}}
 
 fun! pymode#buffer_pre_write() "{{{
     let b:pymode_modified = &modified
-endfunction
+endfunction "}}}
 
 fun! pymode#buffer_post_write() "{{{
     if g:pymode_rope
