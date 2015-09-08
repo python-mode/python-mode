@@ -21,10 +21,11 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
     """
     errors = []
     fileconfig = dict()
-    lname = 'undefined'
-    params = dict()
     linters = LINTERS
     linters_params = dict()
+    lname = 'undefined'
+    params = dict()
+    path = op.relpath(path, rootdir)
 
     if options:
         linters = options.linters
@@ -35,7 +36,6 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
 
     try:
         with CodeContext(code, path) as ctx:
-            path = op.relpath(path, rootdir)
             code = ctx.code
             params = prepare_params(parse_modeline(code), fileconfig, options)
             LOGGER.debug('Checking params: %s', params)
@@ -71,7 +71,7 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
             Error(linter=lname, lnum=e.lineno, col=e.offset, text=e.args[0],
                   filename=path))
 
-    except Exception as e:
+    except Exception as e: # noqa
         import traceback
         LOGGER.info(traceback.format_exc())
 
