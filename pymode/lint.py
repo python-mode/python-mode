@@ -73,6 +73,8 @@ def code_check():
 
     for e in errors:
         e._info['bufnr'] = env.curbuf.number
+        if e._info['col'] is None:
+            e._info['col'] = 1
 
     env.run('g:PymodeLocList.current().extend', [e._info for e in errors])
 
