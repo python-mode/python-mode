@@ -20,7 +20,8 @@ def code_check():
     """
     with silence_stderr():
 
-        from pylama.main import parse_options, check_path
+        from pylama.core import run
+        from pylama.main import parse_options
 
         if not env.curbuf.name:
             return env.stop()
@@ -54,9 +55,7 @@ def code_check():
             from pylama.core import LOGGER, logging
             LOGGER.setLevel(logging.DEBUG)
 
-        options.paths = [path]
-        errors = check_path(
-            options=options, code='\n'.join(env.curbuf) + '\n', rootdir=env.curdir)
+        errors = run(path, code='\n'.join(env.curbuf) + '\n', options=options)
 
     env.debug("Find errors: ", len(errors))
     sort_rules = env.var('g:pymode_lint_sort')
