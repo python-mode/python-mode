@@ -34,6 +34,10 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
             if mask.match(path):
                 fileconfig.update(options.file_params[mask])
 
+        if options.skip and any(p.match(path) for p in options.skip):
+            LOGGER.info('Skip checking for path: %s', path)
+            return []
+
     try:
         with CodeContext(code, path) as ctx:
             code = ctx.code

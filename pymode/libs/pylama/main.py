@@ -41,10 +41,6 @@ def check_path(options, rootdir=None, candidates=None, code=None):
         if not op.exists(path):
             continue
 
-        if options.skip and any(p.match(path) for p in options.skip):
-            LOGGER.info('Skip path: %s', path)
-            continue
-
         paths.append(path)
 
     if options.async:
