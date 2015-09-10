@@ -65,12 +65,12 @@ endfunction "}}}
 
 
 fun! g:PymodeLocList.show() "{{{
-    call setloclist(0, self._loclist)
+    call setqflist(self._loclist)
     if self.is_empty()
-        lclose
+        cclose
     else
         let num = winnr()
-        lopen
+        copen
         setl nowrap
         execute max([min([line("$"), g:pymode_quickfix_maxheight]), g:pymode_quickfix_minheight]) . "wincmd _"
         if num != winnr()
