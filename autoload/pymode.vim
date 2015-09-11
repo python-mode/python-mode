@@ -12,13 +12,6 @@ endfunction "}}}
 " DESC: Import python libs
 fun! pymode#init(plugin_root, paths) "{{{
 
-    if g:pymode_python == 'disable'
-        if g:pymode_warning
-            call pymode#error("Pymode requires vim compiled with +python. Most of features will be disabled.")
-        endif
-        return
-    endif
-
     PymodePython import sys, vim
     PymodePython sys.path.insert(0, vim.eval('a:plugin_root'))
     PymodePython sys.path = vim.eval('a:paths') + sys.path
