@@ -7,9 +7,12 @@ import os.path
 
 
 from pylama.lint.extensions import LINTERS
-from pylama.lint.pylama_pylint import Linter
 
-LINTERS['pylint'] = Linter()
+try:
+    from pylama.lint.pylama_pylint import Linter
+    LINTERS['pylint'] = Linter()
+except Exception: # noqa
+    pass
 
 
 def code_check():

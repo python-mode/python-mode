@@ -26,13 +26,14 @@ try:
 except ImportError:
     pass
 
-try:
-    from pkg_resources import iter_entry_points
 
-    for entry in iter_entry_points('pylama.linter'):
-        if entry.name not in LINTERS:
+from pkg_resources import iter_entry_points
+
+for entry in iter_entry_points('pylama.linter'):
+    if entry.name not in LINTERS:
+        try:
             LINTERS[entry.name] = entry.load()()
-except ImportError:
-    pass
+        except ImportError:
+            pass
 
 #  pylama:ignore=E0611
