@@ -11,9 +11,25 @@ let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
 if s:symbol == ''
     let s:symbol = ' '
 endif
+let foldtextprev=foldtext()
 
+fun! pymode#folding#enable() " {{{
+    setlocal foldmethod=expr
+    setlocal foldexpr=pymode#folding#expr(v:lnum)
+    setlocal foldtext=pymode#folding#text()
+endfunction "}}}
+
+fun! pymode#folding#disable() " {{{
+    " setlocal foldmethod=expr
+    setlocal foldexpr="0"
+    setlocal foldtext=&foldtextprev
+endfunction "}}}
 
 fun! pymode#folding#text() " {{{
+    if &diff
+        call pymode#folding#disable()
+        return
+    endif
     let fs = v:foldstart
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
@@ -40,6 +56,9 @@ endfunction "}}}
 
 
 fun! pymode#folding#expr(lnum) "{{{
+    if &diff
+        pymode#folding#disable()
+    endif
 
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
