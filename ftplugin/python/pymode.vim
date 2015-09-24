@@ -55,9 +55,10 @@ endif
 " Python folding
 if g:pymode_folding
 
-    setlocal foldmethod=expr
-    setlocal foldexpr=pymode#folding#expr(v:lnum)
-    setlocal foldtext=pymode#folding#text()
+    " setlocal foldmethod=expr
+    " setlocal foldexpr=pymode#folding#expr(v:lnum)
+    " setlocal foldtext=pymode#folding#text()
+    call pymode#folding#enable()
 
 endif
 
