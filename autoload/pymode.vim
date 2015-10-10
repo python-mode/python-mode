@@ -54,7 +54,7 @@ fun! pymode#quickfix_open(onlyRecognized, maxHeight, minHeight, jumpError) "{{{
     redraw
     if numOthers > 0
         call pymode#wide_message(printf('Quickfix: %d(+%d)', numErrors, numOthers))
-    else
+    elseif numErrors > 0
         call pymode#wide_message(printf('Quickfix: %d', numErrors))
     endif
 endfunction "}}}

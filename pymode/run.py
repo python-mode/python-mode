@@ -62,7 +62,7 @@ def run_code():
     errors += [er for er in err.splitlines() if er and "<string>" not in er]
 
     env.let('l:traceback', errors[2:])
-    env.let('l:output', [s for s in output.split('\n')])
+    env.let('l:output', [s for s in output.splitlines()])
 
 
 def __prepare_lines(line1, line2):
