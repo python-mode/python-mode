@@ -128,6 +128,6 @@ endfunction "}}}
 
 fun! pymode#quit() "{{{
     augroup pymode
-        au!
+        au! * <buffer>
     augroup END
 endfunction "}}}
