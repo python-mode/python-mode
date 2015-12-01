@@ -242,7 +242,7 @@ def read_str_coding(source):
     if not isinstance(source, str):
         source = source.decode("utf-8", "ignore")
     #TODO: change it to precompiled version
-    mex = re.search("\-\*\-\s+coding:\s+(.*?)\s+\-\*\-", source)
+    mex = re.search("\-\*\-\s+coding:\s*(.*?)\s+\-\*\-", source)
     if mex:
         return mex.group(1)
     return "utf-8"
