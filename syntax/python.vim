@@ -78,9 +78,9 @@ endif
     syn keyword pythonStatement await
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
-    syn match pythonStatement   "\<async\s\+def\>" nextgroup=pythonFunction skipwhite
-    syn match pythonStatement   "\<async\s\+with\>" display
-    syn match pythonStatement   "\<async\s\+for\>" nextgroup=pythonRepeat skipwhite
+    syn match pythonStatement "\<async\s\+def\>" nextgroup=pythonFunction skipwhite
+    syn match pythonStatement "\<async\s\+with\>" display
+    syn match pythonStatement "\<async\s\+for\>" nextgroup=pythonRepeat skipwhite
     syn match pythonFunction "\%(\%(def\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonVars
     syn region pythonVars start="(" skip=+\(".*"\|'.*'\)+ end=")" contained contains=pythonParameters transparent keepend
     syn match pythonParameters "[^,]*" contained contains=pythonParam skipwhite
