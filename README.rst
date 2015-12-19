@@ -316,7 +316,7 @@ PEP8 VIM indentation
 Copyright
 =========
 
-Copyright © 2013 Kirill Klenov (klen_)
+Copyright © 2013-2015 Kirill Klenov (klen_)
 
 License
 =======
