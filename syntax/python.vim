@@ -75,7 +75,7 @@ endif
     syn keyword pythonStatement yield
     syn keyword pythonLambdaExpr lambda
     syn keyword pythonStatement with as
-    syn keyword pythonStatement await
+    syn keyword pythonStatement async await
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
     syn match pythonStatement "\<async\s\+def\>" nextgroup=pythonFunction skipwhite
