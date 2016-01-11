@@ -13,6 +13,7 @@ describe 'pymode-syntax'
         Expect g:pymode_syntax == 1
         Expect g:pymode_syntax_all == 1
         Expect g:pymode_syntax_print_as_function == 0
+        Expect g:pymode_syntax_highlight_async_await == 1
         Expect g:pymode_syntax_highlight_equal_operator == 1
         Expect g:pymode_syntax_highlight_stars_operator == 1
         Expect g:pymode_syntax_highlight_self == 1

@@ -16,6 +16,9 @@ call pymode#default('g:pymode_syntax_all', 1)
 
 " Highlight 'print' as function
 call pymode#default("g:pymode_syntax_print_as_function", 0)
+"
+" Highlight 'async/await' keywords
+call pymode#default("g:pymode_syntax_highlight_async_await", g:pymode_syntax_all)
 
 " Highlight '=' operator
 call pymode#default('g:pymode_syntax_highlight_equal_operator', g:pymode_syntax_all)
@@ -99,6 +102,13 @@ endif
 
     if !g:pymode_syntax_print_as_function
         syn keyword pythonStatement print
+    endif
+
+    if g:pymode_syntax_highlight_async_await
+        syn keyword pythonStatement async await
+        syn match pythonStatement "\<async\s\+def\>" nextgroup=pythonFunction skipwhite
+        syn match pythonStatement "\<async\s\+with\>" display
+        syn match pythonStatement "\<async\s\+for\>" nextgroup=pythonRepeat skipwhite
     endif
 
     if g:pymode_syntax_highlight_equal_operator

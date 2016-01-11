@@ -628,6 +628,10 @@ Highlight "print" as a function            *'g:pymode_syntax_print_as_function'*
 >
     let g:pymode_syntax_print_as_function = 0
 
+Highlight "async/await" keywords       *'g:pymode_syntax_highlight_async_await'*
+>
+    let g:pymode_syntax_highlight_async_await = g:pymode_syntax_all
+
 Highlight '=' operator              *'g:pymode_syntax_highlight_equal_operator'*
 >
     let g:pymode_syntax_highlight_equal_operator = g:pymode_syntax_all
