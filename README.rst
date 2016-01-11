@@ -4,9 +4,14 @@
 .. image:: https://travis-ci.org/klen/python-mode.png?branch=develop
     :target: https://travis-ci.org/klen/python-mode
 
-.. image:: https://dl.dropboxusercontent.com/u/487440/reformal/donate.png
-    :target: https://www.gittip.com/klen/
-    :alt: Donate
+-----
+
+*The project needs maintainers and contributors*
+
+Actually I have no time for support the project, so if you feel yourself as
+strong don't be hesistate to contact me.
+
+-----
 
 |
 | Src:  https://github.com/klen/python-mode
