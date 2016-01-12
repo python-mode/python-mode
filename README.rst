@@ -89,6 +89,33 @@ Using pathogen (recommended)
     filetype plugin indent on
     syntax on
 
+Using Vundle (recommended as well)
+----------------------------
+::
+
+    git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+Place this in your .vimrc:
+
+    Plugin 'klen/python-mode' (above of the line "All of your Plugins must be added before the following line")
+… then run the following in Vim:
+
+    :source %
+    :PluginInstall
+    
+- Enable `Vundle <https://github.com/VundleVim/Vundle.vim>`_
+  in your ``~/.vimrc``: ::
+  
+    "======= Vundle settings ======="
+    "set the runtime path to include Vundle and initialize
+    set rtp+=~/.vim/bundle/Vundle.vim
+    call vundle#begin()
+
+    " let Vundle manage Vundle, required
+    Plugin 'gmarik/Vundle.vim'
+
+    " All of your Plugins must be added before the following line
+    call vundle#end()            " required
+    filetype plugin indent on    " required
 
 Manually
 --------
