@@ -20,13 +20,21 @@ def code_check():
         if not env.curbuf.name:
             return env.stop()
 
+        lint_checkers = env.var('g:pymode_lint_checkers')
         options = parse_options(
             ignore=env.var('g:pymode_lint_ignore'),
             select=env.var('g:pymode_lint_select'),
-            linters=env.var('g:pymode_lint_checkers'),
+            linters=lint_checkers,
             force=1,
         )
         env.debug(options)
+
+        for linter in lint_checkers:
+            try:
+                params = env.var('g:pymode_lint_options_' + linter)
+            except:
+                continue
+            options.linter_params[linter] = params
 
         path = os.path.relpath(env.curbuf.name, env.curdir)
         env.debug("Start code check: ", path)
