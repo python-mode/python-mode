@@ -4,6 +4,16 @@ from .environment import env
 from .utils import silence_stderr
 
 import os.path
+import vim
+
+
+from pylama.lint.extensions import LINTERS
+
+try:
+    from pylama.lint.pylama_pylint import Linter
+    LINTERS['pylint'] = Linter()
+except Exception: # noqa
+    pass
 
 
 from pylama.lint.extensions import LINTERS
@@ -37,6 +47,9 @@ def code_check():
             ignore=env.var('g:pymode_lint_ignore'),
             select=env.var('g:pymode_lint_select'),
         )
+        linters_keys = [l[0] for l in options.linters]
+        if vim.current.buffer.options['modified'] and 'pylint' in linters_keys:
+            del options.linters[linters_keys.index('pylint')]
 
         for linter in linters:
             opts = env.var('g:pymode_lint_options_%s' % linter, silence=True)
