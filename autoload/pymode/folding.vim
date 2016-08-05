@@ -45,7 +45,9 @@ fun! pymode#folding#expr(lnum) "{{{
     let indent = indent(a:lnum)
     let prev_line = getline(a:lnum - 1)
 
-    if line =~ s:decorator_regex
+    if line =~ s:decorator_regex && prev_line !~ s:decorator_regex
+        return ">".(indent / &shiftwidth + 1)
+    elseif line =~ s:decorator_regex
         return "="
     endif
 
@@ -54,7 +56,23 @@ fun! pymode#folding#expr(lnum) "{{{
         if indent(a:lnum) >= indent(a:lnum+1) && getline(prevnonblank(a:lnum)) !~ ':\s*$'
             return '='
         endif
-        return ">".(indent / &shiftwidth + 1)
+        " Check if last decorator is before the last def
+        let decorated = 0
+        let lnum = a:lnum - 1
+        while lnum > 0
+            if getline(lnum) =~ s:def_regex
+                break
+            elseif getline(lnum) =~ s:decorator_regex
+                let decorated = 1
+                break
+            endif
+            let lnum -= 1
+        endwhile
+        if decorated
+            return '='
+        else
+            return ">".(indent / &shiftwidth + 1)
+        endif
     endif
 
     if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && prev_line =~ s:def_regex
