@@ -9,7 +9,7 @@
 *The project needs maintainers and contributors*
 
 Actually, I have no time for support the project, so if you feel yourself as
-strong don't be hesitate to contact me.
+strong don't be hesitatant to contact me.
 
 -----
 
