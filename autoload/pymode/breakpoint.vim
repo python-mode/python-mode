@@ -35,7 +35,13 @@ fun! pymode#breakpoint#operate(lnum) "{{{
         normal dd
     else
         let plnum = prevnonblank(a:lnum)
-        call append(line('.')-1, repeat(' ', indent(plnum)).g:pymode_breakpoint_cmd)
+        if &expandtab
+            let indents = repeat(' ', indent(plnum))
+        else
+            let indents = repeat("\t", plnum / &shiftwidth)
+        endif
+
+        call append(line('.')-1, indents.g:pymode_breakpoint_cmd)
         normal k
     endif
 
