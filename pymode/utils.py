@@ -6,7 +6,7 @@ import warnings
 from contextlib import contextmanager
 
 import vim # noqa
-from ._compat import StringIO, PY2
+from ._compat import StringIO
 
 
 DEBUG = int(vim.eval('g:pymode_debug'))
@@ -37,4 +37,3 @@ def patch_paths():
     Load required modules from the plugin's sources.
     """
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs2' if PY2 else 'libs3'))
