@@ -163,6 +163,22 @@ You can override the default key bindings by redefining them in your `.vimrc`, f
     let g:pymode_doc_bind = "<C-S-d>"
 
 
+Frequent Problems
+=================
+
+Read this section before opening an issue on the tracker.
+
+Python 3 Syntax
+---------------
+
+By default python-mode uses python 2 syntax checking. To enable python 3
+syntax checking (e.g. for async) add::
+
+    let g:pymode_python = 'python3'
+
+To your vimrc or exrc file
+
+
 Documentation
 =============
 
