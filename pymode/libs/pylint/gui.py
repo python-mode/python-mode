@@ -1,18 +1,8 @@
-# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """Tkinker gui for pylint"""
 from __future__ import print_function
 
@@ -27,7 +17,7 @@ from six.moves.tkinter import (
     Tk, Frame, Listbox, Entry, Label, Button, Scrollbar,
     Checkbutton, Radiobutton, IntVar, StringVar, PanedWindow,
     TOP, LEFT, RIGHT, BOTTOM, END, X, Y, BOTH, SUNKEN, W,
-    HORIZONTAL, DISABLED, NORMAL, W,
+    HORIZONTAL, DISABLED, NORMAL,
 )
 from six.moves.tkinter_tkfiledialog import (
     askopenfilename, askdirectory,
@@ -455,7 +445,7 @@ class LintGui(object):
         try:
             view_history = open(HOME+HISTORY, 'r')
             for hist in view_history.readlines():
-                if not hist in self.filenames:
+                if hist not in self.filenames:
                     self.filenames.append(hist)
                 self.showhistory.insert(END, hist.split('\n')[0])
             view_history.close()

@@ -1,4 +1,4 @@
-""" Parse arguments from command line and configuration files. """
+"""Parse arguments from command line and configuration files."""
 import fnmatch
 import os
 import sys
@@ -12,7 +12,7 @@ from .libs.inirama import Namespace
 from .lint.extensions import LINTERS
 
 #: A default checkers
-DEFAULT_LINTERS = 'pep8', 'pyflakes', 'mccabe'
+DEFAULT_LINTERS = 'pycodestyle', 'pyflakes', 'mccabe'
 
 CURDIR = os.getcwd()
 CONFIG_FILES = 'pylama.ini', 'setup.cfg', 'tox.ini', 'pytest.ini'
@@ -43,14 +43,14 @@ class _Default(object):
 
 
 def split_csp_str(s):
-    """ Split commaseparated string.
+    """ Split comma separated string into unique values, keeping their order.
 
     :returns: list of splitted values
 
     """
-    if isinstance(s, (list, tuple)):
-        return s
-    return list(set(i for i in s.strip().split(',') if i))
+    seen = set()
+    values = s if isinstance(s, (list, tuple)) else s.strip().split(',')
+    return [x for x in values if x and not (x in seen or seen.add(x))]
 
 
 def parse_linters(linters):
@@ -81,8 +81,9 @@ PARSER.add_argument('--version', action='version',
                     version='%(prog)s ' + __version__)
 
 PARSER.add_argument(
-    "--format", "-f", default=_Default('pep8'), choices=['pep8', 'pylint'],
-    help="Choose errors format (pep8, pylint).")
+    "--format", "-f", default=_Default('pycodestyle'),
+    choices=['pep8', 'pycodestyle', 'pylint', 'parsable'],
+    help="Choose errors format (pycodestyle, pylint, parsable).")
 
 PARSER.add_argument(
     "--select", "-s", default=_Default(''), type=split_csp_str,
@@ -148,21 +149,23 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
     options.linters_params = dict()
 
     # Override options
-    for k, v in overrides.items():
-        passed_value = getattr(options, k, _Default())
+    for opt, val in overrides.items():
+        passed_value = getattr(options, opt, _Default())
         if isinstance(passed_value, _Default):
-            setattr(options, k, _Default(v))
+            setattr(options, opt, process_value(opt, val))
 
     # Compile options from ini
     if config:
         cfg = get_config(str(options.options), rootdir=rootdir)
-        for k, v in cfg.default.items():
-            LOGGER.info('Find option %s (%s)', k, v)
-            passed_value = getattr(options, k, _Default())
+        for opt, val in cfg.default.items():
+            LOGGER.info('Find option %s (%s)', opt, val)
+            passed_value = getattr(options, opt, _Default())
             if isinstance(passed_value, _Default):
-                if k == 'paths':
-                    v = v.split()
-                setattr(options, k, _Default(v))
+                if opt == 'paths':
+                    val = val.split()
+                setattr(options, opt, _Default(val))
+            elif opt in ('ignore', 'select'):
+                setattr(options, opt, passed_value + process_value(opt, val))
 
         # Parse file related options
         for name, opts in cfg.sections.items():
@@ -183,8 +186,8 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
             options.file_params[mask] = dict(opts)
 
     # Postprocess options
-    opts = dict(options.__dict__.items())
-    for name, value in opts.items():
+    for name in options.__dict__:
+        value = getattr(options, name)
         if isinstance(value, _Default):
             setattr(options, name, process_value(name, value.value))
 

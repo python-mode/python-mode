@@ -1,4 +1,4 @@
-""" SCM hooks. Integration with git and mercurial. """
+"""SCM hooks. Integration with git and mercurial."""
 
 from __future__ import absolute_import
 
@@ -17,10 +17,9 @@ except ImportError:   # Python 2
 
 
 def run(command):
-    """ Run a shell command.
+    """Run a shell command.
 
     :return str: Stdout
-
     """
     p = Popen(command.split(), stdout=PIPE, stderr=PIPE)
     (stdout, stderr) = p.communicate()
@@ -28,19 +27,19 @@ def run(command):
             [line.strip() for line in stderr.splitlines()])
 
 
-def git_hook():
-    """ Run pylama after git commit. """
+def git_hook(error=True):
+    """Run pylama after git commit."""
     _, files_modified, _ = run("git diff-index --cached --name-only HEAD")
 
     options = parse_options()
     setup_logger(options)
     candidates = list(map(str, files_modified))
     if candidates:
-        process_paths(options, candidates=candidates)
+        process_paths(options, candidates=candidates, error=error)
 
 
 def hg_hook(ui, repo, node=None, **kwargs):
-    """ Run pylama after mercurial commit. """
+    """Run pylama after mercurial commit."""
     seen = set()
     paths = []
     if len(repo):
@@ -59,7 +58,7 @@ def hg_hook(ui, repo, node=None, **kwargs):
 
 
 def install_git(path):
-    """ Install hook in Git repository. """
+    """Install hook in Git repository."""
     hook = op.join(path, 'pre-commit')
     with open(hook, 'w') as fd:
         fd.write("""#!/usr/bin/env python

@@ -1,0 +1,11 @@
+backports.functools_lru_cache-1.3-py3.5-nspkg.pth,sha256=JHydVi7598aklfRVCkCh9f5qqKRWgzZ9rAwKAApSu4w,314
+backports/functools_lru_cache.py,sha256=Rz9eeee4g7nSELRnqQCYwf7_i19lGXCZlLzfqa_Zjsk,7317
+backports.functools_lru_cache-1.3.dist-info/DESCRIPTION.rst,sha256=iYa72BvLZDki4qjxP2qLBxLIDop4i1c1SQS-mwkabsU,997
+backports.functools_lru_cache-1.3.dist-info/METADATA,sha256=M3kggZIt4_i_Q0rkatLxYI-9oQTI_vLqVJSGHXgv674,1565
+backports.functools_lru_cache-1.3.dist-info/RECORD,,
+backports.functools_lru_cache-1.3.dist-info/WHEEL,sha256=o2k-Qa-RMNIJmUdIc7KU6VWR_ErNRbWNlxDIpl7lm34,110
+backports.functools_lru_cache-1.3.dist-info/metadata.json,sha256=kJgZvBIl8AQCESL4_9mDLCbaEBEW7-Xe0jHuHte_iVU,695
+backports.functools_lru_cache-1.3.dist-info/namespace_packages.txt,sha256=cGjaLMOoBR1FK0ApojtzWVmViTtJ7JGIK_HwXiEsvtU,10
+backports.functools_lru_cache-1.3.dist-info/top_level.txt,sha256=cGjaLMOoBR1FK0ApojtzWVmViTtJ7JGIK_HwXiEsvtU,10
+backports.functools_lru_cache-1.3.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+backports/functools_lru_cache.pyc,,

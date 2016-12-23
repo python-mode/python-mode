@@ -22,8 +22,9 @@
 * :func:`dump` function return an internal representation of nodes found
   in the tree, useful for debugging or understanding the tree structure
 """
-
 import sys
+
+import six
 
 INDENT = '    ' # 4 spaces ; keep indentation variable
 
@@ -89,9 +90,9 @@ class AsStringVisitor(object):
         """return an astroid.Function node as string"""
         return node.format_args()
 
-    def visit_assattr(self, node):
+    def visit_assignattr(self, node):
         """return an astroid.AssAttr node as string"""
-        return self.visit_getattr(node)
+        return self.visit_attribute(node)
 
     def visit_assert(self, node):
         """return an astroid.Assert node as string"""
@@ -100,7 +101,7 @@ class AsStringVisitor(object):
                                       node.fail.accept(self))
         return 'assert %s' % node.test.accept(self)
 
-    def visit_assname(self, node):
+    def visit_assignname(self, node):
         """return an astroid.AssName node as string"""
         return node.name
 
@@ -113,8 +114,8 @@ class AsStringVisitor(object):
         """return an astroid.AugAssign node as string"""
         return '%s %s %s' % (node.target.accept(self), node.op, node.value.accept(self))
 
-    def visit_backquote(self, node):
-        """return an astroid.Backquote node as string"""
+    def visit_repr(self, node):
+        """return an astroid.Repr node as string"""
         return '`%s`' % node.value.accept(self)
 
     def visit_binop(self, node):
@@ -130,18 +131,20 @@ class AsStringVisitor(object):
         """return an astroid.Break node as string"""
         return 'break'
 
-    def visit_callfunc(self, node):
-        """return an astroid.CallFunc node as string"""
+    def visit_call(self, node):
+        """return an astroid.Call node as string"""
         expr_str = node.func.accept(self)
         args = [arg.accept(self) for arg in node.args]
-        if node.starargs:
-            args.append('*' + node.starargs.accept(self))
-        if node.kwargs:
-            args.append('**' + node.kwargs.accept(self))
+        if node.keywords:
+            keywords = [kwarg.accept(self) for kwarg in node.keywords]
+        else:
+            keywords = []
+
+        args.extend(keywords)
         return '%s(%s)' % (expr_str, ', '.join(args))
 
-    def visit_class(self, node):
-        """return an astroid.Class node as string"""
+    def visit_classdef(self, node):
+        """return an astroid.ClassDef node as string"""
         decorate = node.decorators and node.decorators.accept(self)  or ''
         bases = ', '.join([n.accept(self) for n in node.bases])
         if sys.version_info[0] == 2:
@@ -186,7 +189,7 @@ class AsStringVisitor(object):
 
     def visit_delattr(self, node):
         """return an astroid.DelAttr node as string"""
-        return self.visit_getattr(node)
+        return self.visit_attribute(node)
 
     def visit_delname(self, node):
         """return an astroid.DelName node as string"""
@@ -198,16 +201,27 @@ class AsStringVisitor(object):
 
     def visit_dict(self, node):
         """return an astroid.Dict node as string"""
-        return '{%s}' % ', '.join(['%s: %s' % (key.accept(self),
-                                               value.accept(self))
-                                   for key, value in node.items])
+        return '{%s}' % ', '.join(self._visit_dict(node))
+
+    def _visit_dict(self, node):
+        for key, value in node.items:
+             key = key.accept(self)
+             value = value.accept(self)
+             if key == '**':
+                 # It can only be a DictUnpack node.
+                 yield key + value
+             else:
+                 yield '%s: %s' % (key, value)
+
+    def visit_dictunpack(self, node):
+        return '**'
 
     def visit_dictcomp(self, node):
         """return an astroid.DictComp node as string"""
         return '{%s: %s %s}' % (node.key.accept(self), node.value.accept(self),
                                 ' '.join([n.accept(self) for n in node.generators]))
 
-    def visit_discard(self, node):
+    def visit_expr(self, node):
         """return an astroid.Discard node as string"""
         return node.value.accept(self)
 
@@ -258,24 +272,33 @@ class AsStringVisitor(object):
             fors = '%s\nelse:\n%s' % (fors, self._stmt_list(node.orelse))
         return fors
 
-    def visit_from(self, node):
-        """return an astroid.From node as string"""
+    def visit_importfrom(self, node):
+        """return an astroid.ImportFrom node as string"""
         return 'from %s import %s' % ('.' * (node.level or 0) + node.modname,
                                       _import_string(node.names))
 
-    def visit_function(self, node):
+    def visit_functiondef(self, node):
         """return an astroid.Function node as string"""
         decorate = node.decorators and node.decorators.accept(self)  or ''
         docs = node.doc and '\n%s"""%s"""' % (INDENT, node.doc) or ''
-        return '\n%sdef %s(%s):%s\n%s' % (decorate, node.name, node.args.accept(self),
-                                          docs, self._stmt_list(node.body))
+        return_annotation = ''
+        if six.PY3 and node.returns:
+            return_annotation = '->' + node.returns.as_string()
+            trailer = return_annotation + ":"
+        else:
+            trailer = ":"
+        def_format = "\n%sdef %s(%s)%s%s\n%s"
+        return def_format % (decorate, node.name,
+                             node.args.accept(self),
+                             trailer, docs,
+                             self._stmt_list(node.body))
 
-    def visit_genexpr(self, node):
-        """return an astroid.GenExpr node as string"""
+    def visit_generatorexp(self, node):
+        """return an astroid.GeneratorExp node as string"""
         return '(%s %s)' % (node.elt.accept(self),
                             ' '.join([n.accept(self) for n in node.generators]))
 
-    def visit_getattr(self, node):
+    def visit_attribute(self, node):
         """return an astroid.Getattr node as string"""
         return '%s.%s' % (node.expr.accept(self), node.attrname)
 
@@ -302,6 +325,8 @@ class AsStringVisitor(object):
 
     def visit_keyword(self, node):
         """return an astroid.Keyword node as string"""
+        if node.arg is None:
+            return '**%s' % node.value.accept(self)
         return '%s=%s' % (node.arg, node.value.accept(self))
 
     def visit_lambda(self, node):
@@ -438,6 +463,22 @@ class AsStringVisitor(object):
         else:
             return "(%s)" % (expr,)
 
+    def visit_starred(self, node):
+        """return Starred node as string"""
+        return "*" + node.value.accept(self)
+
+
+    # These aren't for real AST nodes, but for inference objects.
+
+    def visit_frozenset(self, node):
+        return node.parent.accept(self)
+
+    def visit_super(self, node):
+        return node.parent.accept(self)
+
+    def visit_yes(self, node):
+        return "Uninferable"
+
 
 class AsStringVisitor3k(AsStringVisitor):
     """AsStringVisitor3k overwrites some AsStringVisitor methods"""
@@ -466,10 +507,6 @@ class AsStringVisitor3k(AsStringVisitor):
             return 'raise %s' % node.exc.accept(self)
         return 'raise'
 
-    def visit_starred(self, node):
-        """return Starred node as string"""
-        return "*" + node.value.accept(self)
-
     def visit_yieldfrom(self, node):
         """ Return an astroid.YieldFrom node as string. """
         yi_val = node.value and (" " + node.value.accept(self)) or ""
@@ -478,6 +515,19 @@ class AsStringVisitor3k(AsStringVisitor):
             return expr
         else:
             return "(%s)" % (expr,)
+
+    def visit_asyncfunctiondef(self, node):
+        function = super(AsStringVisitor3k, self).visit_functiondef(node)
+        return 'async ' + function.strip()
+
+    def visit_await(self, node):
+        return 'await %s' % node.value.accept(self)
+
+    def visit_asyncwith(self, node):
+        return 'async %s' % self.visit_with(node)
+
+    def visit_asyncfor(self, node):
+        return 'async %s' % self.visit_for(node)
 
 
 def _import_string(names):
@@ -496,4 +546,3 @@ if sys.version_info >= (3, 0):
 
 # this visitor is stateless, thus it can be reused
 to_code = AsStringVisitor()
-

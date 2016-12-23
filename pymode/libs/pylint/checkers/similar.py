@@ -1,32 +1,22 @@
-# pylint: disable=W0622
-# Copyright (c) 2004-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2004-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
+# pylint: disable=W0622
 """a similarities / code duplication command line tool and pylint checker
 """
+
 from __future__ import print_function
 import sys
 from collections import defaultdict
 
-from logilab.common.ureports import Table
+import six
+from six.moves import zip
 
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker, table_lines_from_stats
-
-import six
-from six.moves import zip
+from pylint.reporters.ureports.nodes import Table
 
 
 class Similar(object):
@@ -306,7 +296,7 @@ class SimilarChecker(BaseChecker, Similar):
 
     def close(self):
         """compute and display similarities on closing (i.e. end of parsing)"""
-        total = sum([len(lineset) for lineset in self.linesets])
+        total = sum(len(lineset) for lineset in self.linesets)
         duplicated = 0
         stats = self.stats
         for num, couples in self._compute_sims():

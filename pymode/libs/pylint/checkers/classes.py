@@ -1,18 +1,8 @@
-# Copyright (c) 2003-2014 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """classes checker for Python code
 """
 from __future__ import generators
@@ -20,30 +10,68 @@ from __future__ import generators
 import sys
 from collections import defaultdict
 
-import astroid
-from astroid import YES, Instance, are_exclusive, AssAttr, Class
-from astroid.bases import Generator, BUILTINS
-from astroid.inference import InferenceContext
+import six
 
+import astroid
+from astroid.bases import Generator, BUILTINS
+from astroid.exceptions import InconsistentMroError, DuplicateBasesError
+from astroid import objects
+from astroid.scoped_nodes import function_to_method
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import (
-    PYMETHODS, overrides_a_method, check_messages, is_attr_private,
-    is_attr_protected, node_frame_class, safe_infer, is_builtin_object,
-    decorated_with_property, unimplemented_abstract_methods)
-import six
+    PYMETHODS, SPECIAL_METHODS_PARAMS,
+    overrides_a_method, check_messages, is_attr_private,
+    is_attr_protected, node_frame_class, is_builtin_object,
+    decorated_with_property, unimplemented_abstract_methods,
+    decorated_with, class_is_abstract,
+    safe_infer, has_known_bases)
+from pylint.utils import deprecated_option, get_global_option
+
 
 if sys.version_info >= (3, 0):
     NEXT_METHOD = '__next__'
 else:
     NEXT_METHOD = 'next'
 ITER_METHODS = ('__iter__', '__getitem__')
+INVALID_BASE_CLASSES = {'bool', 'range', 'slice', 'memoryview'}
+
+
+def _get_method_args(method):
+    args = method.args.args
+    if method.type in ('classmethod', 'method'):
+        return len(args) - 1
+    return len(args)
+
+
+def _is_invalid_base_class(cls):
+    return cls.name in INVALID_BASE_CLASSES and is_builtin_object(cls)
+
+
+def _has_data_descriptor(cls, attr):
+    attributes = cls.getattr(attr)
+    for attribute in attributes:
+        try:
+            for inferred in attribute.infer():
+                if isinstance(inferred, astroid.Instance):
+                    try:
+                        inferred.getattr('__get__')
+                        inferred.getattr('__set__')
+                    except astroid.NotFoundError:
+                        continue
+                    else:
+                        return True
+        except astroid.InferenceError:
+            # Can't infer, avoid emitting a false positive in this case.
+            return True
+    return False
+
 
 def _called_in_methods(func, klass, methods):
     """ Check if the func was called in any of the given methods,
     belonging to the *klass*. Returns True if so, False otherwise.
     """
-    if not isinstance(func, astroid.Function):
+    if not isinstance(func, astroid.FunctionDef):
         return False
     for method in methods:
         try:
@@ -51,7 +79,7 @@ def _called_in_methods(func, klass, methods):
         except astroid.NotFoundError:
             continue
         for infer_method in infered:
-            for callfunc in infer_method.nodes_of_class(astroid.CallFunc):
+            for callfunc in infer_method.nodes_of_class(astroid.Call):
                 try:
                     bound = next(callfunc.func.infer())
                 except (astroid.InferenceError, StopIteration):
@@ -65,15 +93,6 @@ def _called_in_methods(func, klass, methods):
                     return True
     return False
 
-def class_is_abstract(node):
-    """return true if the given class node should be considered as an abstract
-    class
-    """
-    for method in node.methods():
-        if method.parent.frame() is node:
-            if method.is_abstract(pass_is_abstract=False):
-                return True
-    return False
 
 def _is_attribute_property(name, klass):
     """ Check if the given attribute *name* is a property
@@ -96,13 +115,43 @@ def _is_attribute_property(name, klass):
             infered = next(attr.infer())
         except astroid.InferenceError:
             continue
-        if (isinstance(infered, astroid.Function) and
+        if (isinstance(infered, astroid.FunctionDef) and
                 decorated_with_property(infered)):
             return True
         if infered.pytype() == property_name:
             return True
     return False
 
+def _has_bare_super_call(fundef_node):
+    for call in fundef_node.nodes_of_class(astroid.Call):
+        func = call.func
+        if (isinstance(func, astroid.Name) and
+                func.name == 'super' and
+                not call.args):
+            return True
+    return False
+
+def _safe_infer_call_result(node, caller, context=None):
+    """
+    Safely infer the return value of a function.
+
+    Returns None if inference failed or if there is some ambiguity (more than
+    one node has been inferred). Otherwise returns infered value.
+    """
+    try:
+        inferit = node.infer_call_result(caller, context=context)
+        value = next(inferit)
+    except astroid.InferenceError:
+        return  # inference failed
+    except StopIteration:
+        return  # no values infered
+    try:
+        next(inferit)
+        return  # there is ambiguity on the inferred node
+    except astroid.InferenceError:
+        return  # there is some kind of ambiguity
+    except StopIteration:
+        return value
 
 MSGS = {
     'F0202': ('Unable to check methods signature (%s / %s)',
@@ -170,15 +219,6 @@ MSGS = {
               'Used when a method doesn\'t use its bound instance, and so could '
               'be written as a function.'
              ),
-
-    'E0221': ('Interface resolved to %s is not a class',
-              'interface-is-not-class',
-              'Used when a class claims to implement an interface which is not '
-              'a class.'),
-    'E0222': ('Missing method %r from %s interface',
-              'missing-interface-method',
-              'Used when a method declared in an interface is missing from a '
-              'class implementing this interface'),
     'W0221': ('Arguments number differs from %s %r method',
               'arguments-differ',
               'Used when a method has a different number of arguments than in '
@@ -192,12 +232,6 @@ MSGS = {
               'Used when an abstract method (i.e. raise NotImplementedError) is '
               'not overridden in concrete class.'
              ),
-    'F0220': ('failed to resolve interfaces implemented by %s (%s)',
-              'unresolved-interface',
-              'Used when a Pylint as failed to find interfaces implemented by '
-              ' a class'),
-
-
     'W0231': ('__init__ method from base class %r is not called',
               'super-init-not-called',
               'Used when an ancestor class method has an __init__ method '
@@ -210,15 +244,6 @@ MSGS = {
               'non-parent-init-called',
               'Used when an __init__ method is called on a class which is not '
               'in the direct ancestors for the analysed class.'),
-    'W0234': ('__iter__ returns non-iterator',
-              'non-iterator-returned',
-              'Used when an __iter__ method returns something which is not an '
-               'iterable (i.e. has no `%s` method)' % NEXT_METHOD),
-    'E0235': ('__exit__ must accept 3 arguments: type, value, traceback',
-              'bad-context-manager',
-              'Used when the __exit__ special method, belonging to a '
-              'context manager, does not accept 3 arguments '
-              '(type, value, traceback).'),
     'E0236': ('Invalid object %r in __slots__, must contain '
               'only non empty strings',
               'invalid-slots-object',
@@ -235,8 +260,20 @@ MSGS = {
               'inherit-non-class',
               'Used when a class inherits from something which is not a '
               'class.'),
-
-
+    'E0240': ('Inconsistent method resolution order for class %r',
+              'inconsistent-mro',
+              'Used when a class has an inconsistent method resolutin order.'),
+    'E0241': ('Duplicate bases for class %r',
+              'duplicate-bases',
+              'Used when a class has duplicate bases.'),
+    'R0202': ('Consider using a decorator instead of calling classmethod',
+              'no-classmethod-decorator',
+              'Used when a class method is defined without using the decorator '
+              'syntax.'),
+    'R0203': ('Consider using a decorator instead of calling staticmethod',
+              'no-staticmethod-decorator',
+              'Used when a static method is defined without using the decorator '
+              'syntax.'),
     }
 
 
@@ -246,7 +283,6 @@ class ClassChecker(BaseChecker):
     * overridden methods signature
     * access only to existent members via self
     * attributes not defined in the __init__ method
-    * supported interfaces implementation
     * unreachable code
     """
 
@@ -259,22 +295,11 @@ class ClassChecker(BaseChecker):
     priority = -2
     # configuration options
     options = (('ignore-iface-methods',
-                {'default' : (#zope interface
-                    'isImplementedBy', 'deferred', 'extends', 'names',
-                    'namesAndDescriptions', 'queryDescriptionFor', 'getBases',
-                    'getDescriptionFor', 'getDoc', 'getName', 'getTaggedValue',
-                    'getTaggedValueTags', 'isEqualOrExtendedBy', 'setTaggedValue',
-                    'isImplementedByInstancesOf',
-                    # twisted
-                    'adaptWith',
-                    # logilab.common interface
-                    'is_implemented_by'),
-                 'type' : 'csv',
-                 'metavar' : '<method names>',
-                 'help' : 'List of interface methods to ignore, \
-separated by a comma. This is used for instance to not check methods defines \
-in Zope\'s Interface base class.'}
-               ),
+                deprecated_option(opt_type="csv",
+                                  help_msg="This is deprecated, because "
+                                           "it is not used anymore.",
+                                  deprecation_msg="This option %r will be "
+                                                  "removed in Pylint 2.0")),
                ('defining-attr-methods',
                 {'default' : ('__init__', '__new__', 'setUp'),
                  'type' : 'csv',
@@ -313,22 +338,33 @@ a metaclass class method.'}
         self._first_attrs = []
         self._meth_could_be_func = None
 
-    def visit_class(self, node):
-        """init visit variable _accessed and check interfaces
+    def visit_classdef(self, node):
+        """init visit variable _accessed
         """
         self._accessed.append(defaultdict(list))
         self._check_bases_classes(node)
-        self._check_interfaces(node)
-        # if not an interface, exception, metaclass
-        if node.type == 'class':
+        # if not an exception or a metaclass
+        if node.type == 'class' and has_known_bases(node):
             try:
                 node.local_attr('__init__')
             except astroid.NotFoundError:
                 self.add_message('no-init', args=node, node=node)
         self._check_slots(node)
         self._check_proper_bases(node)
+        self._check_consistent_mro(node)
 
-    @check_messages('inherit-non-class')
+    def _check_consistent_mro(self, node):
+        """Detect that a class has a consistent mro or duplicate bases."""
+        try:
+            node.mro()
+        except InconsistentMroError:
+            self.add_message('inconsistent-mro', args=node.name, node=node)
+        except DuplicateBasesError:
+            self.add_message('duplicate-bases', args=node.name, node=node)
+        except NotImplementedError:
+            # Old style class, there's no mro so don't do anything.
+            pass
+
     def _check_proper_bases(self, node):
         """
         Detect that a class inherits something which is not
@@ -336,23 +372,31 @@ a metaclass class method.'}
         """
         for base in node.bases:
             ancestor = safe_infer(base)
-            if ancestor in (YES, None):
+            if ancestor in (astroid.YES, None):
                 continue
             if (isinstance(ancestor, astroid.Instance) and
                     ancestor.is_subtype_of('%s.type' % (BUILTINS,))):
                 continue
-            if not isinstance(ancestor, astroid.Class):
+
+            if (not isinstance(ancestor, astroid.ClassDef) or
+                    _is_invalid_base_class(ancestor)):
                 self.add_message('inherit-non-class',
                                  args=base.as_string(), node=node)
 
-    @check_messages('access-member-before-definition',
-                    'attribute-defined-outside-init')
-    def leave_class(self, cnode):
+    def leave_classdef(self, cnode):
         """close a class node:
         check that instance attributes are defined in __init__ and check
         access to existent members
         """
         # check access to existent members on non metaclass classes
+        ignore_mixins = get_global_option(self, 'ignore-mixin-members',
+                                          default=True)
+        if ignore_mixins and cnode.name[-5:].lower() == 'mixin':
+            # We are in a mixin class. No need to try to figure out if
+            # something is missing, since it is most likely that it will
+            # miss.
+            return
+
         accessed = self._accessed.pop()
         if cnode.type != 'metaclass':
             self._check_accessed_members(cnode, accessed)
@@ -400,7 +444,7 @@ a metaclass class method.'}
                             self.add_message('attribute-defined-outside-init',
                                              args=attr, node=node)
 
-    def visit_function(self, node):
+    def visit_functiondef(self, node):
         """check method arguments, overriding"""
         # ignore actual functions
         if not node.is_method():
@@ -422,13 +466,13 @@ a metaclass class method.'}
                 # dictionary.
                 # This may happen with astroid build from living objects
                 continue
-            if not isinstance(meth_node, astroid.Function):
+            if not isinstance(meth_node, astroid.FunctionDef):
                 continue
-            self._check_signature(node, meth_node, 'overridden')
+            self._check_signature(node, meth_node, 'overridden', klass)
             break
         if node.decorators:
             for decorator in node.decorators.nodes:
-                if isinstance(decorator, astroid.Getattr) and \
+                if isinstance(decorator, astroid.Attribute) and \
                         decorator.attrname in ('getter', 'setter', 'deleter'):
                     # attribute affectation will call this method, not hiding it
                     return
@@ -440,21 +484,17 @@ a metaclass class method.'}
         try:
             overridden = klass.instance_attr(node.name)[0] # XXX
             overridden_frame = overridden.frame()
-            if (isinstance(overridden_frame, astroid.Function)
+            if (isinstance(overridden_frame, astroid.FunctionDef)
                     and overridden_frame.type == 'method'):
                 overridden_frame = overridden_frame.parent.frame()
-            if (isinstance(overridden_frame, Class)
+            if (isinstance(overridden_frame, astroid.ClassDef)
                     and klass.is_subtype_of(overridden_frame.qname())):
                 args = (overridden.root().name, overridden.fromlineno)
                 self.add_message('method-hidden', args=args, node=node)
         except astroid.NotFoundError:
             pass
 
-        # check non-iterators in __iter__
-        if node.name == '__iter__':
-            self._check_iter(node)
-        elif node.name == '__exit__':
-            self._check_exit(node)
+    visit_asyncfunctiondef = visit_functiondef
 
     def _check_slots(self, node):
         if '__slots__' not in node.locals:
@@ -482,7 +522,7 @@ a metaclass class method.'}
                 values = [item[0] for item in slots.items]
             else:
                 values = slots.itered()
-            if values is YES:
+            if values is astroid.YES:
                 return
 
             for elt in values:
@@ -493,7 +533,7 @@ a metaclass class method.'}
 
     def _check_slots_elt(self, elt):
         for infered in elt.infer():
-            if infered is YES:
+            if infered is astroid.YES:
                 continue
             if (not isinstance(infered, astroid.Const) or
                     not isinstance(infered.value, six.string_types)):
@@ -506,39 +546,11 @@ a metaclass class method.'}
                                  args=infered.as_string(),
                                  node=elt)
 
-    def _check_iter(self, node):
-        try:
-            infered = node.infer_call_result(node)
-        except astroid.InferenceError:
-            return
-
-        for infered_node in infered:
-            if (infered_node is YES
-                    or isinstance(infered_node, Generator)):
-                continue
-            if isinstance(infered_node, astroid.Instance):
-                try:
-                    infered_node.local_attr(NEXT_METHOD)
-                except astroid.NotFoundError:
-                    self.add_message('non-iterator-returned',
-                                     node=node)
-                    break
-
-    def _check_exit(self, node):
-        positional = sum(1 for arg in node.args.args if arg.name != 'self')
-        if positional < 3 and not node.args.vararg:
-            self.add_message('bad-context-manager',
-                             node=node)
-        elif positional > 3:
-            self.add_message('bad-context-manager',
-                             node=node)
-
-    def leave_function(self, node):
+    def leave_functiondef(self, node):
         """on method node, check if this method couldn't be a function
 
         ignore class, static and abstract methods, initializer,
-        methods overridden from a parent class and any
-        kind of method defined in an interface for this warning
+        methods overridden from a parent class.
         """
         if node.is_method():
             if node.args.args is not None:
@@ -547,13 +559,14 @@ a metaclass class method.'}
                 return
             class_node = node.parent.frame()
             if (self._meth_could_be_func and node.type == 'method'
-                    and not node.name in PYMETHODS
+                    and node.name not in PYMETHODS
                     and not (node.is_abstract() or
-                             overrides_a_method(class_node, node.name))
-                    and class_node.type != 'interface'):
+                             overrides_a_method(class_node, node.name) or
+                             decorated_with_property(node) or
+                             (six.PY3 and _has_bare_super_call(node)))):
                 self.add_message('no-self-use', node=node)
 
-    def visit_getattr(self, node):
+    def visit_attribute(self, node):
         """check if the getattr is an access to a class member
         if so, register it. Also check for access to protected
         class member from outside its class (but ignore __special__
@@ -569,8 +582,8 @@ a metaclass class method.'}
 
         self._check_protected_attribute_access(node)
 
-    def visit_assattr(self, node):
-        if isinstance(node.ass_type(), astroid.AugAssign) and self.is_first_attr(node):
+    def visit_assignattr(self, node):
+        if isinstance(node.assign_type(), astroid.AugAssign) and self.is_first_attr(node):
             self._accessed[-1][node.attrname].append(node)
         self._check_in_slots(node)
 
@@ -579,7 +592,7 @@ a metaclass class method.'}
         is defined in the class slots.
         """
         infered = safe_infer(node.expr)
-        if infered and isinstance(infered, Instance):
+        if infered and isinstance(infered, astroid.Instance):
             klass = infered._proxied
             if '__slots__' not in klass.locals or not klass.newstyle:
                 return
@@ -602,19 +615,59 @@ a metaclass class method.'}
                         # Properties circumvent the slots mechanism,
                         # so we should not emit a warning for them.
                         return
+                    if (node.attrname in klass.locals
+                            and _has_data_descriptor(klass, node.attrname)):
+                        # Descriptors circumvent the slots mechanism as well.
+                        return
                     self.add_message('assigning-non-slot',
                                      args=(node.attrname, ), node=node)
 
-    @check_messages('protected-access')
+    @check_messages('protected-access', 'no-classmethod-decorator',
+                    'no-staticmethod-decorator')
     def visit_assign(self, assign_node):
+        self._check_classmethod_declaration(assign_node)
         node = assign_node.targets[0]
-        if not isinstance(node, AssAttr):
+        if not isinstance(node, astroid.AssignAttr):
             return
 
         if self.is_first_attr(node):
             return
-
         self._check_protected_attribute_access(node)
+
+    def _check_classmethod_declaration(self, node):
+        """Checks for uses of classmethod() or staticmethod()
+
+        When a @classmethod or @staticmethod decorator should be used instead.
+        A message will be emitted only if the assignment is at a class scope
+        and only if the classmethod's argument belongs to the class where it
+        is defined.
+        `node` is an assign node.
+        """
+        if not isinstance(node.value, astroid.Call):
+            return
+
+        # check the function called is "classmethod" or "staticmethod"
+        func = node.value.func
+        if (not isinstance(func, astroid.Name) or
+                func.name not in ('classmethod', 'staticmethod')):
+            return
+
+        msg = ('no-classmethod-decorator' if func.name == 'classmethod' else
+               'no-staticmethod-decorator')
+        # assignment must be at a class scope
+        parent_class = node.scope()
+        if not isinstance(parent_class, astroid.ClassDef):
+            return
+
+        # Check if the arg passed to classmethod is a class member
+        classmeth_arg = node.value.args[0]
+        if not isinstance(classmeth_arg, astroid.Name):
+            return
+
+        method_name = classmeth_arg.name
+        if any(method_name == member.name
+               for member in parent_class.mymethods()):
+            self.add_message(msg, node=node.targets[0])
 
     def _check_protected_attribute_access(self, node):
         '''Given an attribute access node (set or get), check if attribute
@@ -644,7 +697,7 @@ a metaclass class method.'}
                 return
 
             # If the expression begins with a call to super, that's ok.
-            if isinstance(node.expr, astroid.CallFunc) and \
+            if isinstance(node.expr, astroid.Call) and \
                isinstance(node.expr.func, astroid.Name) and \
                node.expr.func.name == 'super':
                 return
@@ -659,16 +712,13 @@ a metaclass class method.'}
                 #     b = property(lambda: self._b)
 
                 stmt = node.parent.statement()
-                try:
-                    if (isinstance(stmt, astroid.Assign) and
-                            (stmt in klass.body or klass.parent_of(stmt)) and
-                            isinstance(stmt.value, astroid.CallFunc) and
-                            isinstance(stmt.value.func, astroid.Name) and
-                            stmt.value.func.name == 'property' and
-                            is_builtin_object(next(stmt.value.func.infer(), None))):
+                if (isinstance(stmt, astroid.Assign)
+                        and len(stmt.targets) == 1
+                        and isinstance(stmt.targets[0], astroid.AssignName)):
+                    name = stmt.targets[0].name
+                    if _is_attribute_property(name, klass):
                         return
-                except astroid.InferenceError:
-                    pass
+
                 self.add_message('protected-access', node=node, args=attrname)
 
     def visit_name(self, node):
@@ -682,9 +732,8 @@ a metaclass class method.'}
     def _check_accessed_members(self, node, accessed):
         """check that accessed members are defined"""
         # XXX refactor, probably much simpler now that E0201 is in type checker
+        excs = ('AttributeError', 'Exception', 'BaseException')
         for attr, nodes in six.iteritems(accessed):
-            # deactivate "except doesn't do anything", that's expected
-            # pylint: disable=W0704
             try:
                 # is it a class attribute ?
                 node.local_attr(attr)
@@ -726,8 +775,7 @@ a metaclass class method.'}
                     lno = defstmt.fromlineno
                     for _node in nodes:
                         if _node.frame() is frame and _node.fromlineno < lno \
-                           and not are_exclusive(_node.statement(), defstmt,
-                                                 ('AttributeError', 'Exception', 'BaseException')):
+                           and not astroid.are_exclusive(_node.statement(), defstmt, excs):
                             self.add_message('access-member-before-definition',
                                              node=_node, args=(attr, lno))
 
@@ -823,55 +871,6 @@ a metaclass class method.'}
             self.add_message('abstract-method', node=node,
                              args=(name, owner.name))
 
-    def _check_interfaces(self, node):
-        """check that the given class node really implements declared
-        interfaces
-        """
-        e0221_hack = [False]
-        def iface_handler(obj):
-            """filter interface objects, it should be classes"""
-            if not isinstance(obj, astroid.Class):
-                e0221_hack[0] = True
-                self.add_message('interface-is-not-class', node=node,
-                                 args=(obj.as_string(),))
-                return False
-            return True
-        ignore_iface_methods = self.config.ignore_iface_methods
-        try:
-            for iface in node.interfaces(handler_func=iface_handler):
-                for imethod in iface.methods():
-                    name = imethod.name
-                    if name.startswith('_') or name in ignore_iface_methods:
-                        # don't check method beginning with an underscore,
-                        # usually belonging to the interface implementation
-                        continue
-                    # get class method astroid
-                    try:
-                        method = node_method(node, name)
-                    except astroid.NotFoundError:
-                        self.add_message('missing-interface-method',
-                                         args=(name, iface.name),
-                                         node=node)
-                        continue
-                    # ignore inherited methods
-                    if method.parent.frame() is not node:
-                        continue
-                    # check signature
-                    self._check_signature(method, imethod,
-                                          '%s interface' % iface.name)
-        except astroid.InferenceError:
-            if e0221_hack[0]:
-                return
-            implements = Instance(node).getattr('__implements__')[0]
-            assignment = implements.parent
-            assert isinstance(assignment, astroid.Assign)
-            # assignment.expr can be a Name or a Tuple or whatever.
-            # Use as_string() for the message
-            # FIXME: in case of multiple interfaces, find which one could not
-            #        be resolved
-            self.add_message('unresolved-interface', node=implements,
-                             args=(node.name, assignment.value.as_string()))
-
     def _check_init(self, node):
         """check that the __init__ method call super or ancestors'__init__
         method
@@ -882,19 +881,19 @@ a metaclass class method.'}
         klass_node = node.parent.frame()
         to_call = _ancestors_to_call(klass_node)
         not_called_yet = dict(to_call)
-        for stmt in node.nodes_of_class(astroid.CallFunc):
+        for stmt in node.nodes_of_class(astroid.Call):
             expr = stmt.func
-            if not isinstance(expr, astroid.Getattr) \
+            if not isinstance(expr, astroid.Attribute) \
                    or expr.attrname != '__init__':
                 continue
             # skip the test if using super
-            if isinstance(expr.expr, astroid.CallFunc) and \
+            if isinstance(expr.expr, astroid.Call) and \
                    isinstance(expr.expr.func, astroid.Name) and \
                expr.expr.func.name == 'super':
                 return
             try:
                 for klass in expr.expr.infer():
-                    if klass is YES:
+                    if klass is astroid.YES:
                         continue
                     # The infered klass can be super(), which was
                     # assigned to a variable and the `__init__`
@@ -904,9 +903,11 @@ a metaclass class method.'}
                     # base.__init__(...)
 
                     if (isinstance(klass, astroid.Instance) and
-                            isinstance(klass._proxied, astroid.Class) and
+                            isinstance(klass._proxied, astroid.ClassDef) and
                             is_builtin_object(klass._proxied) and
                             klass._proxied.name == 'super'):
+                        return
+                    elif isinstance(klass, objects.Super):
                         return
                     try:
                         del not_called_yet[klass]
@@ -917,29 +918,44 @@ a metaclass class method.'}
             except astroid.InferenceError:
                 continue
         for klass, method in six.iteritems(not_called_yet):
-            if klass.name == 'object' or method.parent.name == 'object':
+            cls = node_frame_class(method)
+            if klass.name == 'object' or (cls and cls.name == 'object'):
                 continue
             self.add_message('super-init-not-called', args=klass.name, node=node)
 
-    def _check_signature(self, method1, refmethod, class_type):
+    def _check_signature(self, method1, refmethod, class_type, cls):
         """check that the signature of the two given methods match
-
-        class_type is in 'class', 'interface'
         """
-        if not (isinstance(method1, astroid.Function)
-                and isinstance(refmethod, astroid.Function)):
+        if not (isinstance(method1, astroid.FunctionDef)
+                and isinstance(refmethod, astroid.FunctionDef)):
             self.add_message('method-check-failed',
                              args=(method1, refmethod), node=method1)
             return
-        # don't care about functions with unknown argument (builtins)
+
+        instance = cls.instanciate_class()
+        method1 = function_to_method(method1, instance)
+        refmethod = function_to_method(refmethod, instance)
+
+        # Don't care about functions with unknown argument (builtins).
         if method1.args.args is None or refmethod.args.args is None:
             return
-        # if we use *args, **kwargs, skip the below checks
+        # If we use *args, **kwargs, skip the below checks.
         if method1.args.vararg or method1.args.kwarg:
             return
+        # Ignore private to class methods.
         if is_attr_private(method1.name):
             return
-        if len(method1.args.args) != len(refmethod.args.args):
+        # Ignore setters, they have an implicit extra argument,
+        # which shouldn't be taken in consideration.
+        if method1.decorators:
+            for decorator in method1.decorators.nodes:
+                if (isinstance(decorator, astroid.Attribute) and
+                        decorator.attrname == 'setter'):
+                    return
+
+        method1_args = _get_method_args(method1)
+        refmethod_args = _get_method_args(refmethod)
+        if method1_args != refmethod_args:
             self.add_message('arguments-differ',
                              args=(class_type, method1.name),
                              node=method1)
@@ -954,6 +970,137 @@ a metaclass class method.'}
         """
         return self._first_attrs and isinstance(node.expr, astroid.Name) and \
                    node.expr.name == self._first_attrs[-1]
+
+
+class SpecialMethodsChecker(BaseChecker):
+    """Checker which verifies that special methods
+    are implemented correctly.
+    """
+    __implements__ = (IAstroidChecker, )
+    name = 'classes'
+    msgs = {
+        'E0301': ('__iter__ returns non-iterator',
+                  'non-iterator-returned',
+                  'Used when an __iter__ method returns something which is not an '
+                  'iterable (i.e. has no `%s` method)' % NEXT_METHOD,
+                  {'old_names': [('W0234', 'non-iterator-returned'),
+                                 ('E0234', 'non-iterator-returned')]}),
+        'E0302': ('The special method %r expects %s param(s), %d %s given',
+                  'unexpected-special-method-signature',
+                  'Emitted when a special method was defined with an '
+                  'invalid number of parameters. If it has too few or '
+                  'too many, it might not work at all.',
+                  {'old_names': [('E0235', 'bad-context-manager')]}),
+        'E0303': ('__len__ does not return non-negative integer',
+                  'invalid-length-returned',
+                  'Used when an __len__ method returns something which is not a '
+                  'non-negative integer', {}),
+    }
+    priority = -2
+
+    @check_messages('unexpected-special-method-signature',
+                    'non-iterator-returned', 'invalid-length-returned')
+    def visit_functiondef(self, node):
+        if not node.is_method():
+            return
+        if node.name == '__iter__':
+            self._check_iter(node)
+        if node.name == '__len__':
+            self._check_len(node)
+        if node.name in PYMETHODS:
+            self._check_unexpected_method_signature(node)
+
+    visit_asyncfunctiondef = visit_functiondef
+
+    def _check_unexpected_method_signature(self, node):
+        expected_params = SPECIAL_METHODS_PARAMS[node.name]
+
+        if expected_params is None:
+            # This can support a variable number of parameters.
+            return
+        if not len(node.args.args) and not node.args.vararg:
+            # Method has no parameter, will be catched
+            # by no-method-argument.
+            return
+
+        if decorated_with(node, [BUILTINS + ".staticmethod"]):
+            # We expect to not take in consideration self.
+            all_args = node.args.args
+        else:
+            all_args = node.args.args[1:]
+        mandatory = len(all_args) - len(node.args.defaults)
+        optional = len(node.args.defaults)
+        current_params = mandatory + optional
+
+        if isinstance(expected_params, tuple):
+            # The expected number of parameters can be any value from this
+            # tuple, although the user should implement the method
+            # to take all of them in consideration.
+            emit = mandatory not in expected_params
+            expected_params = "between %d or %d" % expected_params
+        else:
+            # If the number of mandatory parameters doesn't
+            # suffice, the expected parameters for this
+            # function will be deduced from the optional
+            # parameters.
+            rest = expected_params - mandatory
+            if rest == 0:
+                emit = False
+            elif rest < 0:
+                emit = True
+            elif rest > 0:
+                emit = not ((optional - rest) >= 0 or node.args.vararg)
+
+        if emit:
+            verb = "was" if current_params <= 1 else "were"
+            self.add_message('unexpected-special-method-signature',
+                             args=(node.name, expected_params, current_params, verb),
+                             node=node)
+
+    @staticmethod
+    def _is_iterator(node):
+        if node is astroid.YES:
+            # Just ignore YES objects.
+            return True
+        if isinstance(node, Generator):
+            # Generators can be itered.
+            return True
+
+        if isinstance(node, astroid.Instance):
+            try:
+                node.local_attr(NEXT_METHOD)
+                return True
+            except astroid.NotFoundError:
+                pass
+        elif isinstance(node, astroid.ClassDef):
+            metaclass = node.metaclass()
+            if metaclass and isinstance(metaclass, astroid.ClassDef):
+                try:
+                    metaclass.local_attr(NEXT_METHOD)
+                    return True
+                except astroid.NotFoundError:
+                    pass
+        return False
+
+    def _check_iter(self, node):
+        infered = _safe_infer_call_result(node, node)
+        if infered is not None:
+            if not self._is_iterator(infered):
+                self.add_message('non-iterator-returned', node=node)
+
+    def _check_len(self, node):
+        inferred = _safe_infer_call_result(node, node)
+        if inferred is None or inferred is astroid.YES:
+            return
+
+        if not isinstance(inferred, astroid.Const):
+            self.add_message('invalid-length-returned', node=node)
+            return
+
+        value = inferred.value
+        if not isinstance(value, six.integer_types) or value < 0:
+            self.add_message('invalid-length-returned', node=node)
+
 
 def _ancestors_to_call(klass_node, method='__init__'):
     """return a dictionary where keys are the list of base classes providing
@@ -972,11 +1119,12 @@ def node_method(node, method_name):
     """get astroid for <method_name> on the given class node, ensuring it
     is a Function node
     """
-    for n in node.local_attr(method_name):
-        if isinstance(n, astroid.Function):
-            return n
+    for node_attr in node.local_attr(method_name):
+        if isinstance(node_attr, astroid.Function):
+            return node_attr
     raise astroid.NotFoundError(method_name)
 
 def register(linter):
     """required method to auto register this checker """
     linter.register_checker(ClassChecker(linter))
+    linter.register_checker(SpecialMethodsChecker(linter))

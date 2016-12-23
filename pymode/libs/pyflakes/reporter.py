@@ -38,7 +38,7 @@ class Reporter(object):
 
     def syntaxError(self, filename, msg, lineno, offset, text):
         """
-        There was a syntax errror in C{filename}.
+        There was a syntax error in C{filename}.
 
         @param filename: The path to the file with the syntax error.
         @ptype filename: C{unicode}

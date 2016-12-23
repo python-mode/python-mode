@@ -18,16 +18,16 @@
 """This module contains some mixins for the different nodes.
 """
 
-from logilab.common.decorators import cachedproperty
+import warnings
 
-from astroid.exceptions import (AstroidBuildingException, InferenceError,
-                                NotFoundError)
+from astroid import decorators
+from astroid import exceptions
 
 
 class BlockRangeMixIn(object):
     """override block range """
 
-    @cachedproperty
+    @decorators.cachedproperty
     def blockstart_tolineno(self):
         return self.lineno
 
@@ -55,14 +55,28 @@ class FilterStmtsMixin(object):
             return [node], True
         return _stmts, False
 
-    def ass_type(self):
+    def assign_type(self):
         return self
+
+    def ass_type(self):
+        warnings.warn('%s.ass_type() is deprecated and slated for removal '
+                      'in astroid 2.0, use %s.assign_type() instead.'
+                      % (type(self).__name__, type(self).__name__),
+                      PendingDeprecationWarning, stacklevel=2)
+        return self.assign_type()
 
 
 class AssignTypeMixin(object):
 
-    def ass_type(self):
+    def assign_type(self):
         return self
+
+    def ass_type(self):
+        warnings.warn('%s.ass_type() is deprecated and slated for removal '
+                      'in astroid 2.0, use %s.assign_type() instead.'
+                      % (type(self).__name__, type(self).__name__),
+                      PendingDeprecationWarning, stacklevel=2)
+        return self.assign_type()
 
     def _get_filtered_stmts(self, lookup_node, node, _stmts, mystmt):
         """method used in filter_stmts"""
@@ -77,11 +91,18 @@ class AssignTypeMixin(object):
 
 class ParentAssignTypeMixin(AssignTypeMixin):
 
+    def assign_type(self):
+        return self.parent.assign_type()
+
     def ass_type(self):
-        return self.parent.ass_type()
+        warnings.warn('%s.ass_type() is deprecated and slated for removal '
+                      'in astroid 2.0, use %s.assign_type() instead.'
+                      % (type(self).__name__, type(self).__name__),
+                      PendingDeprecationWarning, stacklevel=2)
+        return self.assign_type()
 
 
-class FromImportMixIn(FilterStmtsMixin):
+class ImportFromMixin(FilterStmtsMixin):
     """MixIn for From and Import Nodes"""
 
     def _infer_name(self, frame, name):
@@ -104,11 +125,14 @@ class FromImportMixIn(FilterStmtsMixin):
             # FIXME: we used to raise InferenceError here, but why ?
             return mymodule
         try:
-            return mymodule.import_module(modname, level=level)
-        except AstroidBuildingException:
-            raise InferenceError(modname)
+            return mymodule.import_module(modname, level=level,
+                                          relative_only=level and level >= 1)
+        except exceptions.AstroidBuildingException as ex:
+            if isinstance(ex.args[0], SyntaxError):
+                raise exceptions.InferenceError(str(ex))
+            raise exceptions.InferenceError(modname)
         except SyntaxError as ex:
-            raise InferenceError(str(ex))
+            raise exceptions.InferenceError(str(ex))
 
     def real_name(self, asname):
         """get name from 'as' name"""
@@ -120,5 +144,4 @@ class FromImportMixIn(FilterStmtsMixin):
                 _asname = name
             if asname == _asname:
                 return name
-        raise NotFoundError(asname)
-
+        raise exceptions.NotFoundError(asname)

@@ -1,0 +1,31 @@
+Metadata-Version: 2.0
+Name: pylint
+Version: 1.6.4
+Summary: python code static checker
+Home-page: https://github.com/PyCQA/pylint
+Author: Python Code Quality Authority
+Author-email: code-quality@python.org
+License: GPL
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development :: Debuggers
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: Software Development :: Testing
+Requires-Dist: astroid (<1.5.0,>=1.4.5)
+Requires-Dist: isort (>=4.2.5)
+Requires-Dist: mccabe
+Requires-Dist: six
+Requires-Dist: backports.functools-lru-cache; python_version=="2.7"
+Requires-Dist: configparser; python_version=="2.7"
+Requires-Dist: colorama; sys_platform=="win32"
+
+UNKNOWN
+
+

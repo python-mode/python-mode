@@ -1,36 +1,25 @@
 # Copyright (c) 2009-2010 Arista Networks, Inc. - James Lingard
-# Copyright (c) 2004-2013 LOGILAB S.A. (Paris, FRANCE).
-# Copyright 2012 Google Inc.
-#
+# Copyright (c) 2004-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """Checker for string formatting operations.
 """
 
-import sys
+import numbers
 import tokenize
 import string
-import numbers
+import sys
+
+import six
 
 import astroid
-
 from pylint.interfaces import ITokenChecker, IAstroidChecker, IRawChecker
 from pylint.checkers import BaseChecker, BaseTokenChecker
 from pylint.checkers import utils
 from pylint.checkers.utils import check_messages
-
-import six
 
 
 _PY3K = sys.version_info[:2] >= (3, 0)
@@ -62,7 +51,7 @@ MSGS = {
     'W1301': ("Unused key %r in format string dictionary",
               "unused-format-string-key",
               "Used when a format string that uses named conversion specifiers \
-              is used with a dictionary that conWtains keys not required by the \
+              is used with a dictionary that contains keys not required by the \
               format string."),
     'E1304': ("Missing key %r in format string dictionary",
               "missing-format-string-key",
@@ -77,7 +66,10 @@ MSGS = {
               "too-few-format-args",
               "Used when a format string that uses unnamed conversion \
               specifiers is given too few arguments"),
-
+    'E1310': ("Suspicious argument in %s.%s call",
+              "bad-str-strip-call",
+              "The argument to a str.{l,r,}strip call contains a"
+              " duplicate character, "),
     'W1302': ("Invalid format string",
               "bad-format-string",
               "Used when a PEP 3101 format string is invalid.",
@@ -114,12 +106,12 @@ MSGS = {
               {'minversion': (2, 7)})
     }
 
-OTHER_NODES = (astroid.Const, astroid.List, astroid.Backquote,
-               astroid.Lambda, astroid.Function,
-               astroid.ListComp, astroid.SetComp, astroid.GenExpr)
+OTHER_NODES = (astroid.Const, astroid.List, astroid.Repr,
+               astroid.Lambda, astroid.FunctionDef,
+               astroid.ListComp, astroid.SetComp, astroid.GeneratorExp)
 
 if _PY3K:
-    import _string
+    import _string # pylint: disable=wrong-import-position, wrong-import-order
 
     def split_format_field_names(format_string):
         return _string.formatter_field_name_split(format_string)
@@ -157,9 +149,18 @@ def collect_string_fields(format_string):
             if nested:
                 for field in collect_string_fields(nested):
                     yield field
-    except ValueError:
-        # probably the format string is invalid
-        # should we check the argument of the ValueError?
+    except ValueError as exc:
+        # Probably the format string is invalid.
+        if exc.args[0].startswith("cannot switch from manual"):
+            # On Jython, parsing a string with both manual
+            # and automatic positions will fail with a ValueError,
+            # while on CPython it will simply return the fields,
+            # the validation being done in the interpreter (?).
+            # We're just returning two mixed fields in order
+            # to trigger the format-combined-specification check.
+            yield ""
+            yield "1"
+            return
         raise utils.IncompleteFormatString(format_string)
 
 def parse_format_method_string(format_string):
@@ -189,19 +190,18 @@ def parse_format_method_string(format_string):
     return keys, num_args, len(manual_pos_arg)
 
 def get_args(callfunc):
-    """ Get the arguments from the given `CallFunc` node.
+    """Get the arguments from the given `CallFunc` node.
+
     Return a tuple, where the first element is the
     number of positional arguments and the second element
     is the keyword arguments in a dict.
     """
-    positional = 0
-    named = {}
-
-    for arg in callfunc.args:
-        if isinstance(arg, astroid.Keyword):
-            named[arg.arg] = utils.safe_infer(arg.value)
-        else:
-            positional += 1
+    if callfunc.keywords:
+        named = {arg.arg: utils.safe_infer(arg.value)
+                 for arg in callfunc.keywords}
+    else:
+        named = {}
+    positional = len(callfunc.args)
     return positional, named
 
 def get_access_path(key, parts):
@@ -312,18 +312,8 @@ class StringFormatChecker(BaseChecker):
                     self.add_message('too-few-format-args', node=node)
 
 
-class StringMethodsChecker(BaseChecker):
-    __implements__ = (IAstroidChecker,)
-    name = 'string'
-    msgs = {
-        'E1310': ("Suspicious argument in %s.%s call",
-                  "bad-str-strip-call",
-                  "The argument to a str.{l,r,}strip call contains a"
-                  " duplicate character, "),
-        }
-
     @check_messages(*(MSGS.keys()))
-    def visit_callfunc(self, node):
+    def visit_call(self, node):
         func = utils.safe_infer(node.func)
         if (isinstance(func, astroid.BoundMethod)
                 and isinstance(func.bound, astroid.Instance)
@@ -352,7 +342,7 @@ class StringMethodsChecker(BaseChecker):
         #
         #    fmt = 'some string {}'.format
         #    fmt('arg')
-        if (isinstance(node.func, astroid.Getattr)
+        if (isinstance(node.func, astroid.Attribute)
                 and not isinstance(node.func.expr, astroid.Const)):
             return
         try:
@@ -361,8 +351,10 @@ class StringMethodsChecker(BaseChecker):
             return
         if not isinstance(strnode, astroid.Const):
             return
+        if not isinstance(strnode.value, six.string_types):
+            return
+
         if node.starargs or node.kwargs:
-            # TODO: Don't complicate the logic, skip these for now.
             return
         try:
             positional, named = get_args(node)
@@ -482,6 +474,8 @@ class StringMethodsChecker(BaseChecker):
                             previous = previous.getitem(specifier)
                         except (IndexError, TypeError):
                             warn_error = True
+                        except astroid.InferenceError:
+                            break
                     else:
                         try:
                             # Lookup __getitem__ in the current node,
@@ -611,5 +605,4 @@ class StringConstantChecker(BaseTokenChecker):
 def register(linter):
     """required method to auto register this checker """
     linter.register_checker(StringFormatChecker(linter))
-    linter.register_checker(StringMethodsChecker(linter))
     linter.register_checker(StringConstantChecker(linter))
