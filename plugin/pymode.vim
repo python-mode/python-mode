@@ -314,4 +314,3 @@ endif
 command! PymodeVersion echomsg "Pymode version: " . g:pymode_version . " interpreter: " . g:pymode_python . " lint: " . g:pymode_lint . " rope: " . g:pymode_rope
 
 augroup pymode
-
