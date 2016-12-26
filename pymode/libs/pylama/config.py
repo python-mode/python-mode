@@ -148,12 +148,6 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
     options.file_params = dict()
     options.linters_params = dict()
 
-    # Override options
-    for opt, val in overrides.items():
-        passed_value = getattr(options, opt, _Default())
-        if isinstance(passed_value, _Default):
-            setattr(options, opt, process_value(opt, val))
-
     # Compile options from ini
     if config:
         cfg = get_config(str(options.options), rootdir=rootdir)
@@ -164,8 +158,6 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
                 if opt == 'paths':
                     val = val.split()
                 setattr(options, opt, _Default(val))
-            elif opt in ('ignore', 'select'):
-                setattr(options, opt, passed_value + process_value(opt, val))
 
         # Parse file related options
         for name, opts in cfg.sections.items():
@@ -184,6 +176,14 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
 
             mask = re.compile(fnmatch.translate(name))
             options.file_params[mask] = dict(opts)
+
+    # Override options
+    for opt, val in overrides.items():
+        passed_value = getattr(options, opt, _Default())
+        if opt in ('ignore', 'select') and passed_value:
+            setattr(options, opt, process_value(opt, passed_value.value) + process_value(opt, val))
+        elif isinstance(passed_value, _Default):
+            setattr(options, opt, process_value(opt, val))
 
     # Postprocess options
     for name in options.__dict__:

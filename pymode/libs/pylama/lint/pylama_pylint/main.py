@@ -28,7 +28,9 @@ class Linter(BaseLinter):
         """
         logger.debug('Start pylint')
 
-        MANAGER.astroid_cache.clear()
+        clear_cache = params.pop('clear_cache', False)
+        if clear_cache:
+            MANAGER.astroid_cache.clear()
 
         class Reporter(BaseReporter):
 
@@ -39,22 +41,22 @@ class Linter(BaseLinter):
             def _display(self, layout):
                 pass
 
-            def add_message(self, msg_id, location, msg):
-                _, _, line, col = location[1:]
+            def handle_message(self, msg):
                 self.errors.append(dict(
-                    lnum=line,
-                    col=col,
-                    text="%s %s" % (msg_id, msg),
-                    type=msg_id[0]
+                    lnum=msg.line,
+                    col=msg.column,
+                    text="%s %s" % (msg.msg_id, msg.msg),
+                    type=msg.msg_id[0]
                 ))
 
         params = _Params(ignore=ignore, select=select, params=params)
         logger.debug(params)
 
-        runner = Run(
-            [path] + params.to_attrs(), reporter=Reporter(), exit=False)
+        reporter = Reporter()
 
-        return runner.linter.reporter.errors
+        Run([path] + params.to_attrs(), reporter=reporter, exit=False)
+
+        return reporter.errors
 
 
 class _Params(object):
