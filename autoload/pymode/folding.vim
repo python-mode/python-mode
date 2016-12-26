@@ -45,8 +45,10 @@ fun! pymode#folding#expr(lnum) "{{{
     let indent = indent(a:lnum)
     let prev_line = getline(a:lnum - 1)
 
-    if line =~ s:decorator_regex
+    if line =~ s:decorator_regex && prev_line !~ s:decorator_regex
         return ">".(indent / &shiftwidth + 1)
+    elseif line =~ s:decorator_regex
+        return "="
     endif
 
     if line =~ s:def_regex
