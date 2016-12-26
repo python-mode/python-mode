@@ -212,8 +212,8 @@ Bind keys to show documentation for current word (selection)
                                                              *pymode-virtualenv*
 
 Commands:
-*:PymodeVirtualenv* <path> -- Activate virtualenv (path is related to
-current working directory)
+*:PymodeVirtualenv* <path> -- Activate virtualenv (path can be absolute or
+relative to current working directory)
 
 Enable automatic virtualenv detection                     *'g:pymode_virtualenv'*
 >
