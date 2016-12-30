@@ -78,6 +78,7 @@ endif
     syn keyword pythonStatement yield
     syn keyword pythonLambdaExpr lambda
     syn keyword pythonStatement with as
+    syn keyword pythonStatement async await
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
     syn match pythonFunction "\%(\%(def\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonVars
