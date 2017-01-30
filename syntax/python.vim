@@ -240,8 +240,10 @@ endif
 
     " DocStrings
     if g:pymode_syntax_docstrings
-        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?"""+ end=+"""+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
-        syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonDocstring  start=+^\s*[uU]\?"""+ end=+"""+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonDocstring  start=+^\s*[uU]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonRawDocstring  start=+^\s*[uU]\?[rR]"""+ end=+"""+ keepend excludenl contains=@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
+        syn region pythonRawDocstring  start=+^\s*[uU]\?[rR]'''+ end=+'''+ keepend excludenl contains=@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
     endif
 
 
@@ -368,6 +370,7 @@ endif
 
     hi def link  pythonString       String
     hi def link  pythonDocstring    String
+    hi def link  pythonRawDocstring String
     hi def link  pythonUniString    String
     hi def link  pythonRawString    String
     hi def link  pythonUniRawString String
