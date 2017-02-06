@@ -8,7 +8,7 @@ let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 " Spyder, a very popular IDE for python has a template which includes
 " '@author:' ; thus the regex below.
-let s:decorator_regex = '^\s*@\(author:\)\@!'
+let s:decorator_regex = '^\s*@\(author:\)\@!' 
 let s:doc_begin_regex = '^\s*[uU]\=\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 " This one is needed for the while loop to count for opening and closing
@@ -200,7 +200,7 @@ fun! s:BlockStart(lnum) "{{{
 
     " Now find the class/def one shiftwidth lower than the start of the
     " aforementioned indent block.
-    if next_stmt_at_def_indent && next_stmt_at_def_indent < a:lnum
+    if next_stmt_at_def_indent && a:lnum <= next_stmt_at_def_indent 
         let max_indent = max([indent(next_stmt_at_def_indent) - &shiftwidth, 0])
     else
         let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
@@ -211,6 +211,14 @@ endfunction "}}}
 fun! s:BlockEnd(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
+    " Regex translation:
+        "   \v: very magic
+        "   \s: any space char
+        "   {...}: zero to more as many as possible
+        "   \S: non whitespace
+        "   index [0]: gets the line returned by searchpos
+        "   flag 'n': do not move cursor
+        "   flag 'W': don't wrap around the end of the file
     return searchpos('\v^\s{,'.indent('.').'}\S', 'nW')[0] - 1
 endfunction "}}}
 
@@ -227,7 +235,7 @@ function! s:Is_opening_folding(lnum) "{{{
     for i in range(1, a:lnum)
         let i_line = getline(i)
 
-        if i_line =~ s:doc_line_regex
+        if i_line =~ s:doc_line_regex 
             " echom "case 00 on line " . i
             continue
         endif
@@ -252,7 +260,7 @@ function! s:Is_opening_folding(lnum) "{{{
         elseif i_line =~ s:doc_general_regex
             " echom "extra docstrings on line " . i
             let extra_docstrings = extra_docstrings + 1
-        endif
+        endif 
     endfor
 
     if fmod(number_of_folding, 2) == 1 "If odd then it is an opening
