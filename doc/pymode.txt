@@ -6,7 +6,7 @@
     (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.8.1
+                          Version: 0.9.0
 
 ==============================================================================
 CONTENTS                                                       *pymode-contents*
@@ -212,8 +212,8 @@ Bind keys to show documentation for current word (selection)
                                                              *pymode-virtualenv*
 
 Commands:
-*:PymodeVirtualenv* <path> -- Activate virtualenv (path is related to
-current working directory)
+*:PymodeVirtualenv* <path> -- Activate virtualenv (path can be absolute or
+relative to current working directory)
 
 Enable automatic virtualenv detection                     *'g:pymode_virtualenv'*
 >
@@ -486,7 +486,7 @@ imported) from project                              *'g:pymode_rope_autoimport'*
 
 Load modules to autoimport by default       *'g:pymode_rope_autoimport_modules'*
 >
-    let g:pymode_rope_autoimport_modules = ['os', 'shutil', 'datetime'])
+    let g:pymode_rope_autoimport_modules = ['os', 'shutil', 'datetime']
 
 Offer to unresolved import object after completion.
 >

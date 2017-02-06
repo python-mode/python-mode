@@ -11,7 +11,7 @@ fun! pymode#virtualenv#init() "{{{
 
 endfunction "}}}
 
-fun! pymode#virtualenv#activate(relpath) "{{{
-    let g:pymode_virtualenv_path = getcwd() . '/' . a:relpath
+fun! pymode#virtualenv#activate(path) "{{{
+    let g:pymode_virtualenv_path = a:path
     call pymode#virtualenv#init()
 endfunction "}}}
