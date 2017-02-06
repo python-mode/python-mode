@@ -6,10 +6,9 @@
 
 -----
 
-*The project needs maintainers and contributors*
+*The project needs contributors*
 
-Actually, I have no time for support the project, so if you feel yourself as
-strong don't be hesitate to contact me.
+** Python-mode Slack Channel is here: https://python-mode.herokuapp.com/ **
 
 -----
 
@@ -164,6 +163,22 @@ You can override the default key bindings by redefining them in your `.vimrc`, f
     let g:pymode_doc_bind = "<C-S-d>"
 
 
+Frequent Problems
+=================
+
+Read this section before opening an issue on the tracker.
+
+Python 3 Syntax
+---------------
+
+By default python-mode uses python 2 syntax checking. To enable python 3
+syntax checking (e.g. for async) add::
+
+    let g:pymode_python = 'python3'
+
+To your vimrc or exrc file
+
+
 Documentation
 =============
 
@@ -181,7 +196,10 @@ at https://github.com/klen/python-mode/issues
 Contributing
 ============
 
-See the `AUTHORS` file.
+* Kirill Klenov (horneds@gmail.com)
+* Bryce Guinta (https://github.com/brycepg)
+
+Also see the `AUTHORS` file.
 
 Development of python-mode happens at github:
 https://github.com/klen/python-mode

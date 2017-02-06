@@ -15,6 +15,11 @@ def enable_virtualenv():
 
     """
     path = env.var('g:pymode_virtualenv_path')
+    # Normalize path to be an absolute path
+    # If an absolute path is provided, that path will be returned, otherwise
+    # the returned path will be an absolute path but computed relative
+    # to the current working directory
+    path = os.path.abspath(path)
     enabled = env.var('g:pymode_virtualenv_enabled')
     if path == enabled:
         env.message('Virtualenv %s already enabled.' % path)

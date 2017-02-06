@@ -8,6 +8,31 @@ clean:
 	rm -rf $(CURDIR)/build
 	rm -rf *.deb
 
+VERSION?=minor
+# target: release - Bump version
+release:
+	git fetch origin
+	git checkout master
+	git rebase
+	git merge develop
+	bumpversion $(VERSION)
+	git checkout develop
+	git rebase
+	git merge master
+	git push origin develop master
+	git push --tags
+
+.PHONY: minor
+minor: release
+
+.PHONY: patch
+patch:
+	make release VERSION=patch
+
+.PHONY: major
+major:
+	make release VERSION=major
+
 # Temporary disable rope tests on Travis
 .PHONY: travis
 travis:
