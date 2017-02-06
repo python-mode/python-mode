@@ -200,7 +200,7 @@ fun! s:BlockStart(lnum) "{{{
 
     " Now find the class/def one shiftwidth lower than the start of the
     " aforementioned indent block.
-    if next_stmt_at_def_indent && a:lnum <= next_stmt_at_def_indent 
+    if next_stmt_at_def_indent && next_stmt_at_def_indent < a:lnum
         let max_indent = max([indent(next_stmt_at_def_indent) - &shiftwidth, 0])
     else
         let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
@@ -211,14 +211,6 @@ endfunction "}}}
 fun! s:BlockEnd(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
-    " Regex translation:
-        "   \v: very magic
-        "   \s: any space char
-        "   {...}: zero to more as many as possible
-        "   \S: non whitespace
-        "   index [0]: gets the line returned by searchpos
-        "   flag 'n': do not move cursor
-        "   flag 'W': don't wrap around the end of the file
     return searchpos('\v^\s{,'.indent('.').'}\S', 'nW')[0] - 1
 endfunction "}}}
 
