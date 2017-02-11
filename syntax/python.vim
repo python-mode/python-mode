@@ -254,10 +254,10 @@ endif
     syn match   pythonHexNumber "\<0[xX][0-9a-fA-F_]*[0-9a-fA-F][0-9a-fA-F_]*[lL]\=\>" display
     syn match   pythonOctNumber "\<0[oO][0-7_]*[0-7][0-7_]*[lL]\=\>" display
     syn match   pythonBinNumber "\<0[bB][01_]*[01][01_]*[lL]\=\>" display
-    syn match   pythonNumber    "\<[0-9_]*[0-9][0-9_]*[lLjJ]\=\>" display
+    syn match   pythonNumber    "\<[0-9][0-9_]*[lLjJ]\=\>" display
     syn match   pythonFloat "\.[0-9_]*[0-9][0-9_]*\([eE][+-]\=[0-9_]*[0-9][0-9_]*\)\=[jJ]\=\>" display
-    syn match   pythonFloat "\<[0-9_]*[0-9][0-9_]*[eE][+-]\=[0-9_]\+[jJ]\=\>" display
-    syn match   pythonFloat "\<[0-9_]*[0-9][0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*[0-9][0-9_]*\)\=[jJ]\=" display
+    syn match   pythonFloat "\<[0-9][0-9_]*[eE][+-]\=[0-9_]\+[jJ]\=\>" display
+    syn match   pythonFloat "\<[0-9][0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*[0-9][0-9_]*\)\=[jJ]\=" display
     syn match   pythonOctError  "\<0[oO]\=[0-7_]*[8-9][0-9_]*[lL]\=\>" display
     syn match   pythonBinError  "\<0[bB][01_]*[2-9][0-9_]*[lL]\=\>" display
 
