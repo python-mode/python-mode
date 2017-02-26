@@ -30,6 +30,26 @@ class AstroidBuildingException(AstroidError):
 class ResolveError(AstroidError):
     """base class of astroid resolution/inference error"""
 
+class MroError(ResolveError):
+    """Error raised when there is a problem with method resolution of a class."""
+
+
+class DuplicateBasesError(MroError):
+    """Error raised when there are duplicate bases in the same class bases."""
+
+
+class InconsistentMroError(MroError):
+    """Error raised when a class's MRO is inconsistent."""
+
+
+class SuperError(ResolveError):
+    """Error raised when there is a problem with a super call."""
+
+
+class SuperArgumentTypeError(SuperError):
+    """Error raised when the super arguments are invalid."""
+
+
 class NotFoundError(ResolveError):
     """raised when we are unable to resolve a name"""
 

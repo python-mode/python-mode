@@ -7,9 +7,11 @@ from textwrap import dedent
 import six
 from astroid import (MANAGER, UseInferenceDefault,
                      inference_tip, YES, InferenceError, UnresolvableName)
+from astroid import arguments
 from astroid import nodes
+from astroid import objects
 from astroid.builder import AstroidBuilder
-
+from astroid import util
 
 def _extend_str(class_node, rvalue):
     """function to extend builtin str/unicode class"""
@@ -51,7 +53,7 @@ def _extend_str(class_node, rvalue):
         def rstrip(self, chars=None):
             return {rvalue}
         def rjust(self, width, fillchar=None):
-            return {rvalue} 
+            return {rvalue}
         def center(self, width, fillchar=None):
             return {rvalue}
         def ljust(self, width, fillchar=None):
@@ -60,7 +62,7 @@ def _extend_str(class_node, rvalue):
     code = code.format(rvalue=rvalue)
     fake = AstroidBuilder(MANAGER).string_build(code)['whatever']
     for method in fake.mymethods():
-        class_node.locals[method.name] = [method]
+        class_node._locals[method.name] = [method]
         method.parent = class_node
 
 def extend_builtins(class_transforms):
@@ -86,12 +88,17 @@ def register_builtin_transform(transform, builtin_name):
     def _transform_wrapper(node, context=None):
         result = transform(node, context=context)
         if result:
-            result.parent = node
+            if not result.parent:
+                # Let the transformation function determine
+                # the parent for its result. Otherwise,
+                # we set it to be the node we transformed from.
+                result.parent = node
+
             result.lineno = node.lineno
             result.col_offset = node.col_offset
         return iter([result])
 
-    MANAGER.register_transform(nodes.CallFunc,
+    MANAGER.register_transform(nodes.Call,
                                inference_tip(_transform_wrapper),
                                lambda n: (isinstance(n.func, nodes.Name) and
                                           n.func.name == builtin_name))
@@ -108,13 +115,13 @@ def _generic_inference(node, context, node_type, transform):
     transformed = transform(arg)
     if not transformed:
         try:
-            infered = next(arg.infer(context=context))
+            inferred = next(arg.infer(context=context))
         except (InferenceError, StopIteration):
             raise UseInferenceDefault()
-        if infered is YES:
+        if inferred is util.YES:
             raise UseInferenceDefault()
-        transformed = transform(infered)
-    if not transformed or transformed is YES:
+        transformed = transform(inferred)
+    if not transformed or transformed is util.YES:
         raise UseInferenceDefault()
     return transformed
 
@@ -172,19 +179,25 @@ infer_set = partial(
     iterables=(nodes.List, nodes.Tuple),
     build_elts=set)
 
+infer_frozenset = partial(
+    _infer_builtin,
+    klass=objects.FrozenSet,
+    iterables=(nodes.List, nodes.Tuple, nodes.Set),
+    build_elts=frozenset)
+
 
 def _get_elts(arg, context):
     is_iterable = lambda n: isinstance(n,
                                        (nodes.List, nodes.Tuple, nodes.Set))
     try:
-        infered = next(arg.infer(context))
+        inferred = next(arg.infer(context))
     except (InferenceError, UnresolvableName):
         raise UseInferenceDefault()
-    if isinstance(infered, nodes.Dict):
-        items = infered.items
-    elif is_iterable(infered):
+    if isinstance(inferred, nodes.Dict):
+        items = inferred.items
+    elif is_iterable(inferred):
         items = []
-        for elt in infered.elts:
+        for elt in inferred.elts:
             # If an item is not a pair of two items,
             # then fallback to the default inference.
             # Also, take in consideration only hashable items,
@@ -213,24 +226,28 @@ def infer_dict(node, context=None):
         * dict(mapping, **kwargs)
         * dict(**kwargs)
 
-    If a case can't be infered, we'll fallback to default inference.
+    If a case can't be inferred, we'll fallback to default inference.
     """
-    has_keywords = lambda args: all(isinstance(arg, nodes.Keyword)
-                                    for arg in args)
-    if not node.args and not node.kwargs:
+    call = arguments.CallSite.from_call(node)
+    if call.has_invalid_arguments() or call.has_invalid_keywords():
+        raise UseInferenceDefault
+
+    args = call.positional_arguments
+    kwargs = list(call.keyword_arguments.items())
+
+    if not args and not kwargs:
         # dict()
         return nodes.Dict()
-    elif has_keywords(node.args) and node.args:
+    elif kwargs and not args:
         # dict(a=1, b=2, c=4)
-        items = [(nodes.Const(arg.arg), arg.value) for arg in node.args]
-    elif (len(node.args) >= 2 and
-          has_keywords(node.args[1:])):
+        items = [(nodes.Const(key), value) for key, value in kwargs]
+    elif len(args) == 1 and kwargs:
         # dict(some_iterable, b=2, c=4)
-        elts = _get_elts(node.args[0], context)
-        keys = [(nodes.Const(arg.arg), arg.value) for arg in node.args[1:]]
+        elts = _get_elts(args[0], context)
+        keys = [(nodes.Const(key), value) for key, value in kwargs]
         items = elts + keys
-    elif len(node.args) == 1:
-        items = _get_elts(node.args[0], context)
+    elif len(args) == 1:
+        items = _get_elts(args[0], context)
     else:
         raise UseInferenceDefault()
 
@@ -238,8 +255,82 @@ def infer_dict(node, context=None):
     empty.items = items
     return empty
 
+
+def _node_class(node):
+    klass = node.frame()
+    while klass is not None and not isinstance(klass, nodes.ClassDef):
+        if klass.parent is None:
+            klass = None
+        else:
+            klass = klass.parent.frame()
+    return klass
+
+
+def infer_super(node, context=None):
+    """Understand super calls.
+
+    There are some restrictions for what can be understood:
+
+        * unbounded super (one argument form) is not understood.
+
+        * if the super call is not inside a function (classmethod or method),
+          then the default inference will be used.
+
+        * if the super arguments can't be infered, the default inference
+          will be used.
+    """
+    if len(node.args) == 1:
+        # Ignore unbounded super.
+        raise UseInferenceDefault
+
+    scope = node.scope()
+    if not isinstance(scope, nodes.FunctionDef):
+        # Ignore non-method uses of super.
+        raise UseInferenceDefault
+    if scope.type not in ('classmethod', 'method'):
+        # Not interested in staticmethods.
+        raise UseInferenceDefault
+
+    cls = _node_class(scope)
+    if not len(node.args):
+        mro_pointer = cls
+        # In we are in a classmethod, the interpreter will fill
+        # automatically the class as the second argument, not an instance.
+        if scope.type == 'classmethod':
+            mro_type = cls
+        else:
+            mro_type = cls.instantiate_class()
+    else:
+        # TODO(cpopa): support flow control (multiple inference values).
+        try:
+            mro_pointer = next(node.args[0].infer(context=context))
+        except InferenceError:
+            raise UseInferenceDefault
+        try:
+            mro_type = next(node.args[1].infer(context=context))
+        except InferenceError:
+            raise UseInferenceDefault
+
+    if mro_pointer is YES or mro_type is YES:
+        # No way we could understand this.
+        raise UseInferenceDefault
+
+    super_obj = objects.Super(mro_pointer=mro_pointer,
+                              mro_type=mro_type,
+                              self_class=cls,
+                              scope=scope)
+    super_obj.parent = node
+    return iter([super_obj])
+
+
 # Builtins inference
+MANAGER.register_transform(nodes.Call,
+                           inference_tip(infer_super),
+                           lambda n: (isinstance(n.func, nodes.Name) and
+                                      n.func.name == 'super'))
+
 register_builtin_transform(infer_tuple, 'tuple')
 register_builtin_transform(infer_set, 'set')
 register_builtin_transform(infer_list, 'list')
 register_builtin_transform(infer_dict, 'dict')
+register_builtin_transform(infer_frozenset, 'frozenset')

@@ -23,7 +23,12 @@ from textwrap import dedent
 
 from astroid import MANAGER, register_module_extender
 from astroid.builder import AstroidBuilder
-from astroid.exceptions import AstroidBuildingException
+from astroid.exceptions import AstroidBuildingException, InferenceError
+from astroid import nodes
+
+
+SIX_ADD_METACLASS = 'six.add_metaclass'
+
 
 def _indent(text, prefix, predicate=None):
     """Adds 'prefix' to the beginning of selected lines in 'text'.
@@ -254,8 +259,30 @@ def _six_fail_hook(modname):
     module.name = 'six.moves'
     return module
 
+def transform_six_add_metaclass(node):
+    """Check if the given class node is decorated with *six.add_metaclass*
+
+    If so, inject its argument as the metaclass of the underlying class.
+    """
+    if not node.decorators:
+        return
+
+    for decorator in node.decorators.nodes:
+        if not isinstance(decorator, nodes.Call):
+            continue
+
+        try:
+            func = next(decorator.func.infer())
+        except InferenceError:
+            continue
+        if func.qname() == SIX_ADD_METACLASS and decorator.args:
+            metaclass = decorator.args[0]
+            node._metaclass = metaclass
+            return node
+
 
 register_module_extender(MANAGER, 'six', six_moves_transform)
 register_module_extender(MANAGER, 'requests.packages.urllib3.packages.six',
                          six_moves_transform)
 MANAGER.register_failed_import_hook(_six_fail_hook)
+MANAGER.register_transform(nodes.ClassDef, transform_six_add_metaclass)
