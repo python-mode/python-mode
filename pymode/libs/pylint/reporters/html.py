@@ -1,26 +1,19 @@
-# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """HTML reporter"""
 
 import itertools
 import string
 import sys
+import warnings
 
-from logilab.common.ureports import HTMLWriter, Section, Table
+import six
 
 from pylint.interfaces import IReporter
 from pylint.reporters import BaseReporter
+from pylint.reporters.ureports.html_writer import HTMLWriter
+from pylint.reporters.ureports.nodes import Section, Table
 
 
 class HTMLReporter(BaseReporter):
@@ -36,6 +29,9 @@ class HTMLReporter(BaseReporter):
         # Add placeholders for title and parsed messages
         self.header = None
         self.msgargs = []
+
+        warnings.warn("This reporter will be removed in Pylint 2.0.",
+                      DeprecationWarning)
 
     @staticmethod
     def _parse_msg_template(msg_template):
@@ -67,7 +63,9 @@ class HTMLReporter(BaseReporter):
             self._parse_template()
 
         # We want to add the lines given by the template
-        self.msgs += [str(getattr(msg, field)) for field in self.msgargs]
+        values = [getattr(msg, field) for field in self.msgargs]
+        self.msgs += [value if isinstance(value, six.text_type) else str(value)
+                      for value in values]
 
     def set_output(self, output=None):
         """set output stream
@@ -84,6 +82,9 @@ class HTMLReporter(BaseReporter):
         (in add_message, message is not displayed, just collected so it
         can be displayed in an html table)
         """
+        HTMLWriter().format(layout, self.out)
+
+    def display_messages(self, layout):
         if self.msgs:
             # add stored messages to the layout
             msgs = self.header
@@ -93,7 +94,7 @@ class HTMLReporter(BaseReporter):
             layout.append(sect)
             sect.append(Table(cols=cols, children=msgs, rheaders=1))
             self.msgs = []
-        HTMLWriter().format(layout, self.out)
+            self._display(layout)
 
 
 def register(linter):

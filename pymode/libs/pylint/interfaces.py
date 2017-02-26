@@ -1,19 +1,17 @@
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2009-2010, 2012-2013 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2013-2014 Google, Inc.
+# Copyright (c) 2014 Michal Nowikowski <godfryd@gmail.com>
+# Copyright (c) 2014 Arun Persaud <arun@nubati.net>
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2015 Florian Bruhin <me@the-compiler.org>
+# Copyright (c) 2015 Ionel Cristian Maries <contact@ionelmc.ro>
+
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """Interfaces for Pylint objects"""
 from collections import namedtuple
-
-from logilab.common.interface import Interface
 
 Confidence = namedtuple('Confidence', ['name', 'description'])
 # Warning Certainties
@@ -25,6 +23,26 @@ UNDEFINED = Confidence('UNDEFINED',
                        'Warning without any associated confidence level.')
 
 CONFIDENCE_LEVELS = [HIGH, INFERENCE, INFERENCE_FAILURE, UNDEFINED]
+
+
+class Interface(object):
+    """Base class for interfaces."""
+    @classmethod
+    def is_implemented_by(cls, instance):
+        return implements(instance, cls)
+
+
+def implements(obj, interface):
+    """Return true if the give object (maybe an instance or class) implements
+    the interface.
+    """
+    kimplements = getattr(obj, '__implements__', ())
+    if not isinstance(kimplements, (list, tuple)):
+        kimplements = (kimplements,)
+    for implementedinterface in kimplements:
+        if issubclass(implementedinterface, interface):
+            return True
+    return False
 
 
 class IChecker(Interface):
@@ -68,15 +86,11 @@ class IAstroidChecker(IChecker):
 class IReporter(Interface):
     """ reporter collect messages and display results encapsulated in a layout
     """
-    def add_message(self, msg_id, location, msg):
-        """add a message of a given type
 
-        msg_id is a message identifier
-        location is a 3-uple (module, object, line)
-        msg is the actual message
-        """
+    def handle_message(self, msg):
+        """Handle the given message object."""
 
-    def display_results(self, layout):
+    def display_reports(self, layout):
         """display results encapsulated in the layout tree
         """
 
