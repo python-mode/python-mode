@@ -71,7 +71,8 @@ def shell(args=None, error=True):
     # Install VSC hook
     if options.hook:
         from .hook import install_hook
-        return install_hook(options.path)
+        for path in options.paths:
+            return install_hook(path)
 
     return process_paths(options, error=error)
 
@@ -80,9 +81,12 @@ def process_paths(options, candidates=None, error=True):
     """Process files and log errors."""
     errors = check_path(options, rootdir=CURDIR, candidates=candidates)
 
-    pattern = "%(filename)s:%(lnum)s:%(col)s: %(text)s"
-    if options.format == 'pylint':
+    if options.format in ['pycodestyle', 'pep8']:
+        pattern = "%(filename)s:%(lnum)s:%(col)s: %(text)s"
+    elif options.format == 'pylint':
         pattern = "%(filename)s:%(lnum)s: [%(type)s] %(text)s"
+    else:  # 'parsable'
+        pattern = "%(filename)s:%(lnum)s:%(col)s: [%(type)s] %(text)s"
 
     for er in errors:
         if options.abspath:
