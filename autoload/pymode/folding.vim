@@ -216,6 +216,15 @@ endfunction "}}}
 
 function! s:Is_opening_folding(lnum) "{{{
     " Helper function to see if docstring is opening or closing
+
+    " Cache the result so the loop runs only once per change
+    if get(b:, 'fold_changenr', -1) == changenr()
+        return b:fold_cache[a:lnum]  "If odd then it is an opening
+    else
+        let b:fold_changenr = changenr()
+        let b:fold_cache = []
+    endif
+
     let number_of_folding = 0  " To be analized if odd/even to inform if it is opening or closing.
     let has_open_docstring = 0  " To inform is already has an open docstring.
     let extra_docstrings = 0  " To help skipping ''' and """ which are not docstrings
@@ -224,7 +233,9 @@ function! s:Is_opening_folding(lnum) "{{{
     " not just triple quotes (that could be a regular string).
     "
     " Iterater over all lines from the start until current line (inclusive)
-    for i in range(1, a:lnum)
+    for i in range(1, line('$'))
+        call add(b:fold_cache, number_of_folding % 2)
+
         let i_line = getline(i)
 
         if i_line =~ s:doc_line_regex 
@@ -255,11 +266,9 @@ function! s:Is_opening_folding(lnum) "{{{
         endif 
     endfor
 
-    if fmod(number_of_folding, 2) == 1 "If odd then it is an opening
-        return 1
-    else
-        return 0
-    endif
+    call add(b:fold_cache, number_of_folding % 2)
+
+    return b:fold_cache[a:lnum]
 endfunction "}}}
 
 " vim: fdm=marker:fdl=0
