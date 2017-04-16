@@ -373,7 +373,7 @@ class RopeContext(object):
         if os.path.exists("%s/__init__.py" % project_path):
             sys.path.append(project_path)
 
-        if self.options.get('autoimport'):
+        if self.options.get('autoimport') == '1':
             self.generate_autoimport_cache()
 
         env.debug('Context init', project_path)
