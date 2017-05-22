@@ -55,6 +55,37 @@ fun! pymode#rope#organize_imports()
     PymodePython rope.organize_imports()
 endfunction
 
+fun! pymode#rope#expand_star_imports()
+    if !pymode#save()
+        return 0
+    endif
+    call pymode#wide_message('Expand star imports ... ')
+    PymodePython rope.expand_star_imports()
+endfunction
+
+fun! pymode#rope#froms_to_imports()
+    if !pymode#save()
+        return 0
+    endif
+    call pymode#wide_message('From to imports ... ')
+    PymodePython rope.froms_to_imports()
+endfunction
+
+fun! pymode#rope#relatives_to_absolutes()
+    if !pymode#save()
+        return 0
+    endif
+    call pymode#wide_message('Relatives to absolutes ... ')
+    PymodePython rope.relatives_to_absolutes()
+endfunction
+
+fun! pymode#rope#handle_long_imports()
+    if !pymode#save()
+        return 0
+    endif
+    call pymode#wide_message('Handle long imports ... ')
+    PymodePython rope.handle_long_imports()
+endfunction
 
 fun! pymode#rope#find_it()
     let loclist = g:PymodeLocList.current()

@@ -6,6 +6,7 @@ import os.path
 import re
 import site
 import sys
+import functools
 
 from rope.base import project, libutils, exceptions, change, worder, pycore
 from rope.base.fscommands import FileSystemCommands # noqa
@@ -203,16 +204,43 @@ def update_python_path(paths):
     new_sys_path_items = set(sys.path) - set(old_sys_path_items)
     sys.path = list(new_sys_path_items) + old_sys_path_items
 
+def import_organizer(fn):
+    """Execute method from ImportOrganizer"""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwds):
+        with RopeContext() as ctx:
+            organizer = ImportOrganizer(ctx.project)
+            changes, progress_label = fn(organizer, ctx.resource)
+            if changes is not None:
+                progress = ProgressHandler(progress_label)
+                ctx.project.do(changes, task_handle=progress.handle)
+                reload_changes(changes)
+    return wrapper
 
-def organize_imports():
-    """ Organize imports in current file. """
-    with RopeContext() as ctx:
-        organizer = ImportOrganizer(ctx.project)
-        changes = organizer.organize_imports(ctx.resource)
-        if changes is not None:
-            progress = ProgressHandler('Organize imports')
-            ctx.project.do(changes, task_handle=progress.handle)
-            reload_changes(changes)
+
+@import_organizer
+def organize_imports(organizer, resource):
+    return organizer.organize_imports(resource), 'Organize imports'
+
+
+@import_organizer
+def expand_star_imports(organizer, resource):
+    return organizer.expand_star_imports(resource), 'Expand star imports'
+
+
+@import_organizer
+def froms_to_imports(organizer, resource):
+    return organizer.froms_to_imports(resource), 'Froms to imports'
+
+
+@import_organizer
+def relatives_to_absolutes(organizer, resource):
+    return organizer.relatives_to_absolutes(resource), 'Relatives to absolutes'
+
+
+@import_organizer
+def handle_long_imports(organizer, resource):
+    return organizer.handle_long_imports(resource), 'Handle long imports'
 
 
 @env.catch_exceptions

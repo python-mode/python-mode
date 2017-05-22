@@ -204,6 +204,10 @@ if g:pymode_rope
     command! -buffer PymodeRopeRenameModule call pymode#rope#rename_module()
     command! -buffer PymodeRopeModuleToPackage call pymode#rope#module_to_package()
     command! -buffer PymodeRopeRegenerate call pymode#rope#regenerate()
+    command! -buffer PymodeRopeExpandStarImports call pymode#rope#expand_star_imports()
+    command! -buffer PymodeRopeFromsToImports call pymode#rope#froms_to_imports()
+    command! -buffer PymodeRopeRelateToAbsolutes call pymode#rope#relatives_to_absolutes()
+    command! -buffer PymodeRopeHandleLongImports call pymode#rope#handle_long_imports()
 
     if g:pymode_rope_autoimport
         command! -buffer PymodeRopeAutoImport call pymode#rope#autoimport(expand('<cword>'))
