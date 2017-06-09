@@ -10,6 +10,7 @@ checker.messages.RedefinedWhileUnused.message = "W0404 redefinition of unused %r
 checker.messages.RedefinedInListComp.message = "W0621 list comprehension redefines %r from line %r"
 checker.messages.ImportShadowedByLoopVar.message = "W0621 import %r from line %r shadowed by loop variable"
 checker.messages.ImportStarUsed.message = "W0401 'from %s import *' used; unable to detect undefined names"
+checker.messages.ImportStarUsage.message = "W0401 '%s may be undefined, or defined from star imports: %s'"
 checker.messages.UndefinedName.message = "E0602 undefined name %r"
 checker.messages.DoctestSyntaxError.message = "W0511 syntax error in doctest"
 checker.messages.UndefinedExport.message = "E0603 undefined name %r in __all__"
@@ -21,8 +22,8 @@ checker.messages.ReturnWithArgsInsideGenerator.message = "E0106 'return' with ar
 checker.messages.ReturnOutsideFunction.message = "E0104 'return' outside function"
 
 
-class Linter(Abstract):
 
+class Linter(Abstract):
     """Pyflakes runner."""
 
     @staticmethod
@@ -41,9 +42,10 @@ class Linter(Abstract):
         tree = compile(code, path, "exec", _ast.PyCF_ONLY_AST)
         w = checker.Checker(tree, path, builtins=builtins)
         w.messages = sorted(w.messages, key=lambda m: m.lineno)
-        return [
-            {'lnum': m.lineno, 'text': m.message % m.message_args}
-            for m in sorted(w.messages, key=lambda m: m.lineno)
-        ]
+        return [{
+            'lnum': m.lineno,
+            'text': m.message % m.message_args,
+            'type': m.message[0]
+        } for m in w.messages]
 
 #  pylama:ignore=E501,C0301

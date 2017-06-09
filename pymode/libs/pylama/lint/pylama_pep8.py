@@ -20,6 +20,8 @@ class Linter(Abstract):
 
         :return list: List of errors.
         """
+        if params:
+            params.update(meta)
         parser = get_parser()
         for option in parser.option_list:
             if option.dest and option.dest in params:

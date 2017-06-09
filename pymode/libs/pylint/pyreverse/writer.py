@@ -1,25 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2008-2013 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Copyright (c) 2008-2010, 2013-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2014 Arun Persaud <arun@nubati.net>
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2015 Florian Bruhin <me@the-compiler.org>
+# Copyright (c) 2015 Mike Frysinger <vapier@gentoo.org>
+# Copyright (c) 2015 Ionel Cristian Maries <contact@ionelmc.ro>
+
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """Utilities for creating VCG and Dot diagrams"""
 
-from logilab.common.vcgutils import VCGPrinter
-from logilab.common.graph import DotBackend
-
 from pylint.pyreverse.utils import is_exception
+from pylint.pyreverse.vcgutils import VCGPrinter
+from pylint.graph import DotBackend
 
 class DiagramWriter(object):
     """base class for writing project diagrams
@@ -106,7 +100,7 @@ class DotWriter(DiagramWriter):
         """initialize DotWriter and add options for layout.
         """
         layout = dict(rankdir="BT")
-        self.printer = DotBackend(basename, additionnal_param=layout)
+        self.printer = DotBackend(basename, additional_param=layout)
         self.file_name = file_name
 
     def get_title(self, obj):
@@ -196,4 +190,3 @@ class VCGWriter(DiagramWriter):
         """close graph and file"""
         self.printer.close_graph()
         self.graph_file.close()
-

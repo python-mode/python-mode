@@ -1,7 +1,6 @@
 """Utility functions for test code that uses astroid ASTs as input."""
 import functools
 import sys
-import textwrap
 
 from astroid import nodes
 from astroid import builder
@@ -13,7 +12,6 @@ _TRANSIENT_FUNCTION = '__'
 # The comment used to select a statement to be extracted
 # when calling extract_node.
 _STATEMENT_SELECTOR = '#@'
-
 
 def _extract_expressions(node):
     """Find expressions in a call to _TRANSIENT_FUNCTION and extract them.
@@ -28,7 +26,7 @@ def _extract_expressions(node):
     :yields: The sequence of wrapped expressions on the modified tree
     expression can be found.
     """
-    if (isinstance(node, nodes.CallFunc)
+    if (isinstance(node, nodes.Call)
             and isinstance(node.func, nodes.Name)
             and node.func.name == _TRANSIENT_FUNCTION):
         real_expr = node.args[0]
@@ -68,7 +66,7 @@ def _find_statement_by_line(node, line):
       can be found.
     :rtype:  astroid.bases.NodeNG or None
     """
-    if isinstance(node, (nodes.Class, nodes.Function)):
+    if isinstance(node, (nodes.ClassDef, nodes.FunctionDef)):
         # This is an inaccuracy in the AST: the nodes that can be
         # decorated do not carry explicit information on which line
         # the actual definition (class/def), but .fromline seems to
@@ -142,7 +140,7 @@ def extract_node(code, module_name=''):
     :rtype: astroid.bases.NodeNG, or a list of nodes.
     """
     def _extract(node):
-        if isinstance(node, nodes.Discard):
+        if isinstance(node, nodes.Expr):
             return node.value
         else:
             return node
@@ -152,7 +150,7 @@ def extract_node(code, module_name=''):
         if line.strip().endswith(_STATEMENT_SELECTOR):
             requested_lines.append(idx + 1)
 
-    tree = build_module(code, module_name=module_name)
+    tree = builder.parse(code, module_name=module_name)
     extracted = []
     if requested_lines:
         for line in requested_lines:
@@ -169,21 +167,6 @@ def extract_node(code, module_name=''):
         return extracted[0]
     else:
         return extracted
-
-
-def build_module(code, module_name='', path=None):
-    """Parses a string module with a builder.
-    :param code: The code for the module.
-    :type code: str
-    :param module_name: The name for the module
-    :type module_name: str
-    :param path: The path for the module
-    :type module_name: str
-    :returns: The module AST.
-    :rtype:  astroid.bases.NodeNG
-    """
-    code = textwrap.dedent(code)
-    return builder.AstroidBuilder(None).string_build(code, modname=module_name, path=path)
 
 
 def require_version(minver=None, maxver=None):

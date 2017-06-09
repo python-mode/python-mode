@@ -48,11 +48,14 @@ def _nose_tools_functions():
         if method.name.startswith('assert') and '_' not in method.name:
             pep8_name = _pep8(method.name)
             yield pep8_name, astroid.BoundMethod(method, case)
+        if method.name == 'assertEqual':
+            # nose also exports assert_equals.
+            yield 'assert_equals', astroid.BoundMethod(method, case)
 
 
 def _nose_tools_transform(node):
     for method_name, method in _nose_tools_functions():
-        node.locals[method_name] = [method]
+        node._locals[method_name] = [method]
 
 
 def _nose_tools_trivial_transform():

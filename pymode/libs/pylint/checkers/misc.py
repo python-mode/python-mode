@@ -1,27 +1,26 @@
-# pylint: disable=W0511
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-""" Copyright (c) 2000-2010 LOGILAB S.A. (Paris, FRANCE).
- http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# -*- coding: utf-8 -*-
+# Copyright (c) 2006, 2009-2013 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2012-2014 Google, Inc.
+# Copyright (c) 2014 Brett Cannon <brett@python.org>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2014 Arun Persaud <arun@nubati.net>
+# Copyright (c) 2014 Alexandru Coman <fcoman@bitdefender.com>
+# Copyright (c) 2015 Ionel Cristian Maries <contact@ionelmc.ro>
 
-Check source code is ascii only or has an encoding declaration (PEP 263)
-"""
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
+
+"""Check source code is ascii only or has an encoding declaration (PEP 263)"""
+
+# pylint: disable=W0511
 
 import re
 
+import six
+
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
-import six
 
 
 MSGS = {

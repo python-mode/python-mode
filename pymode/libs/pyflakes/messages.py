@@ -49,12 +49,28 @@ class ImportShadowedByLoopVar(Message):
         self.message_args = (name, orig_loc.lineno)
 
 
+class ImportStarNotPermitted(Message):
+    message = "'from %s import *' only allowed at module level"
+
+    def __init__(self, filename, loc, modname):
+        Message.__init__(self, filename, loc)
+        self.message_args = (modname,)
+
+
 class ImportStarUsed(Message):
     message = "'from %s import *' used; unable to detect undefined names"
 
     def __init__(self, filename, loc, modname):
         Message.__init__(self, filename, loc)
         self.message_args = (modname,)
+
+
+class ImportStarUsage(Message):
+    message = "%r may be undefined, or defined from star imports: %s"
+
+    def __init__(self, filename, loc, name, from_list):
+        Message.__init__(self, filename, loc)
+        self.message_args = (name, from_list)
 
 
 class UndefinedName(Message):
@@ -100,17 +116,42 @@ class DuplicateArgument(Message):
         self.message_args = (name,)
 
 
+class MultiValueRepeatedKeyLiteral(Message):
+    message = 'dictionary key %r repeated with different values'
+
+    def __init__(self, filename, loc, key):
+        Message.__init__(self, filename, loc)
+        self.message_args = (key,)
+
+
+class MultiValueRepeatedKeyVariable(Message):
+    message = 'dictionary key variable %s repeated with different values'
+
+    def __init__(self, filename, loc, key):
+        Message.__init__(self, filename, loc)
+        self.message_args = (key,)
+
+
 class LateFutureImport(Message):
-    message = 'future import(s) %r after other statements'
+    message = 'from __future__ imports must occur at the beginning of the file'
 
     def __init__(self, filename, loc, names):
         Message.__init__(self, filename, loc)
-        self.message_args = (names,)
+        self.message_args = ()
+
+
+class FutureFeatureNotDefined(Message):
+    """An undefined __future__ feature name was imported."""
+    message = 'future feature %s is not defined'
+
+    def __init__(self, filename, loc, name):
+        Message.__init__(self, filename, loc)
+        self.message_args = (name,)
 
 
 class UnusedVariable(Message):
     """
-    Indicates that a variable has been explicity assigned to but not actually
+    Indicates that a variable has been explicitly assigned to but not actually
     used.
     """
     message = 'local variable %r is assigned to but never used'
@@ -132,3 +173,61 @@ class ReturnOutsideFunction(Message):
     Indicates a return statement outside of a function/method.
     """
     message = '\'return\' outside function'
+
+
+class YieldOutsideFunction(Message):
+    """
+    Indicates a yield or yield from statement outside of a function/method.
+    """
+    message = '\'yield\' outside function'
+
+
+# For whatever reason, Python gives different error messages for these two. We
+# match the Python error message exactly.
+class ContinueOutsideLoop(Message):
+    """
+    Indicates a continue statement outside of a while or for loop.
+    """
+    message = '\'continue\' not properly in loop'
+
+
+class BreakOutsideLoop(Message):
+    """
+    Indicates a break statement outside of a while or for loop.
+    """
+    message = '\'break\' outside loop'
+
+
+class ContinueInFinally(Message):
+    """
+    Indicates a continue statement in a finally block in a while or for loop.
+    """
+    message = '\'continue\' not supported inside \'finally\' clause'
+
+
+class DefaultExceptNotLast(Message):
+    """
+    Indicates an except: block as not the last exception handler.
+    """
+    message = 'default \'except:\' must be last'
+
+
+class TwoStarredExpressions(Message):
+    """
+    Two or more starred expressions in an assignment (a, *b, *c = d).
+    """
+    message = 'two starred expressions in assignment'
+
+
+class TooManyExpressionsInStarredAssignment(Message):
+    """
+    Too many expressions in an assignment with star-unpacking
+    """
+    message = 'too many expressions in star-unpacking assignment'
+
+
+class AssertTuple(Message):
+    """
+    Assertion test is a tuple, which are always True.
+    """
+    message = 'assertion is always true, perhaps remove parentheses?'
