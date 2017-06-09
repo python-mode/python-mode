@@ -117,10 +117,14 @@ call pymode#default("g:pymode_lint_select", "")
 " Auto open cwindow if any errors has been finded
 call pymode#default("g:pymode_lint_cwindow", 1)
 
-" If not emply, errors will be sort by defined relevance
+" If not empty, errors will be sort by defined relevance
 " E.g. let g:pymode_lint_sort = ['E', 'C', 'I']  " Errors first 'E',
 " after them 'C' and ...
 call pymode#default("g:pymode_lint_sort", [])
+
+" If not empty, run lint using the given Python binary
+" instead of vim's built-in Python.
+call pymode#default("g:pymode_lint_external_python", "")
 
 " Place error signs
 call pymode#default("g:pymode_lint_signs", 1)

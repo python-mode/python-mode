@@ -289,7 +289,7 @@ Check code on every save (every)                    *'g:pymode_lint_unmodified'*
 >
     let g:pymode_lint_unmodified = 0
 
-Check code when editing (on the fly)                        *'g:pymode_lint_on_fly'*
+Check code when editing (on the fly)                    *'g:pymode_lint_on_fly'*
 >
     let g:pymode_lint_on_fly = 0
 
@@ -325,6 +325,14 @@ Auto open cwindow (quickfix) if any errors have been found
                                                        *'g:pymode_lint_cwindow'*
 >
     let g:pymode_lint_cwindow = 1
+
+External python binary to use while linting.   *'g:pymode_lint_external_python'*
+If empty, linter runs within Vim's python interpreter.  The version of Python
+runnning the linter determines the version of Python for which checks are run.
+Setting this allows lint checks to be performed against a different version of
+Python than what Vim was compiled with.
+>
+    let g:pymode_lint_external_python = "/usr/bin/python3"
 
 Place error |signs|                                             *'g:pymode_signs'*
 >
