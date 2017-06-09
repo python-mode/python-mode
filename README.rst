@@ -1,8 +1,8 @@
 |logo| Python-mode, Python in VIM
 #################################
 
-.. image:: https://travis-ci.org/klen/python-mode.png?branch=develop
-    :target: https://travis-ci.org/klen/python-mode
+.. image:: https://travis-ci.org/python-mode/python-mode.png?branch=develop
+    :target: https://travis-ci.org/python-mode/python-mode
 
 -----
 
@@ -13,9 +13,9 @@
 -----
 
 |
-| Src:  https://github.com/klen/python-mode
+| Src:  https://github.com/python-mode/python-mode
 | Homepage: https://klen.github.io/python-mode/
-| Docs: https://github.com/klen/python-mode/blob/develop/doc/pymode.txt
+| Docs: https://github.com/python-mode/python-mode/blob/develop/doc/pymode.txt
 |
 
 Python-mode is a vim plugin that helps you to create python code very quickly
@@ -74,7 +74,7 @@ Using pathogen (recommended)
 
     % cd ~/.vim
     % mkdir -p bundle && cd bundle
-    % git clone https://github.com/klen/python-mode.git
+    % git clone https://github.com/python-mode/python-mode.git
 
 - Enable `pathogen <https://github.com/tpope/vim-pathogen>`_
   in your ``~/.vimrc``: ::
@@ -93,7 +93,7 @@ Manually
 --------
 ::
 
-    % git clone https://github.com/klen/python-mode.git
+    % git clone https://github.com/python-mode/python-mode.git
     % cd python-mode
     % cp -R * ~/.vim
 
@@ -144,7 +144,7 @@ plugin.
 2. Type `:PymodeTroubleshooting`
 
 And fix any warnings or copy the output and send it to me. (For example, by
-creating a `new github issue <https://github.com/klen/python-mode/issues/new>`_
+creating a `new github issue <https://github.com/python-mode/python-mode/issues/new>`_
 if one does not already exist for the problem).
 
 
@@ -190,7 +190,7 @@ Bugtracker
 
 If you have any suggestions, bug reports or
 annoyances please report them to the issue tracker
-at https://github.com/klen/python-mode/issues
+at https://github.com/python-mode/python-mode/issues
 
 
 Contributing
@@ -202,7 +202,7 @@ Contributing
 Also see the `AUTHORS` file.
 
 Development of python-mode happens at github:
-https://github.com/klen/python-mode
+https://github.com/python-mode/python-mode
 
 Please make a pull request to `development` branch and add yourself to
 `AUTHORS`.
@@ -210,25 +210,25 @@ Please make a pull request to `development` branch and add yourself to
 Source Links
 ===================
 - `doc/pymode.txt
-  <https://github.com/klen/python-mode/blob/develop/doc/pymode.txt>`__
+  <https://github.com/python-mode/python-mode/blob/develop/doc/pymode.txt>`__
   -- ``:help pymode``
 - `plugin/pymode.vim
-  <https://github.com/klen/python-mode/blob/develop/plugin/pymode.vim>`__
+  <https://github.com/python-mode/python-mode/blob/develop/plugin/pymode.vim>`__
   -- python-mode VIM plugin
 - `syntax/python.vim
-  <https://github.com/klen/python-mode/blob/develop/syntax/python.vim>`__
+  <https://github.com/python-mode/python-mode/blob/develop/syntax/python.vim>`__
   -- python-mode ``python.vim`` VIM syntax
 - `syntax/pyrex.vim
-  <https://github.com/klen/python-mode/blob/develop/syntax/pyrex.vim>`__
+  <https://github.com/python-mode/python-mode/blob/develop/syntax/pyrex.vim>`__
   -- ``pyrex.vim`` VIM syntax (pyrex, Cython)
 - `t/
-  <https://github.com/klen/python-mode/tree/develop/t>`__
+  <https://github.com/python-mode/python-mode/tree/develop/t>`__
   -- ``*.vim`` more python-mode VIM configuration
 - `pymode/
-  <https://github.com/klen/python-mode/tree/develop/pymode>`__
+  <https://github.com/python-mode/python-mode/tree/develop/pymode>`__
   -- ``*.py`` -- python-mode Python module
 - `pymode/libs/
-  <https://github.com/klen/python-mode/tree/develop/pymode/libs>`__
+  <https://github.com/python-mode/python-mode/tree/develop/pymode/libs>`__
   -- ``*.py`` -- `Python Libraries <#python-libraries>`__
 
 
@@ -236,7 +236,7 @@ Python Libraries
 ------------------
 Vendored Python modules are located
 mostly in
-`pymode/libs/ <https://github.com/klen/python-mode/tree/develop/pymode/libs>`__.
+`pymode/libs/ <https://github.com/python-mode/python-mode/tree/develop/pymode/libs>`__.
 
 
 ======
@@ -364,4 +364,4 @@ My address is here: "Russia, 143500, MO, Istra, pos. Severny 8-3" to "Kirill Kle
 .. _pythonvim: http://www.hlabs.spb.ru/vim/python.vim
 .. _pep8_: http://github.com/jcrocholl/pep8
 .. _pep8indent: http://github.com/hynek/vim-python-pep8-indent
-.. |logo| image:: https://raw.github.com/klen/python-mode/develop/logo.png
+.. |logo| image:: https://raw.github.com/python-mode/python-mode/develop/logo.png
