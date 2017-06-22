@@ -38,6 +38,8 @@ call pymode#default("g:pymode_indent", 1)
 call pymode#default("g:pymode_folding", 1)
 " Maximum file length to check for nested class/def statements
 call pymode#default("g:pymode_folding_nest_limit", 1000)
+" Enable/disable pymode folding of docstrings.
+call pymode#default("g:pymode_fold_docstrings", 1)
 " Change for folding customization (by example enable fold for 'if', 'for')
 call pymode#default("g:pymode_folding_regex", '^\s*\%(class\|def\|async\s\+def\) .\+\(:\s\+\w\)\@!')
 
