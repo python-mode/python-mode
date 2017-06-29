@@ -19,9 +19,8 @@
 (build_* functions) or from living object (object_build_* functions)
 """
 
-__docformat__ = "restructuredtext en"
-
 import sys
+import os
 from os.path import abspath
 from inspect import (getargspec, isdatadescriptor, isfunction, ismethod,
                      ismethoddescriptor, isclass, isbuiltin, ismodule)
@@ -35,6 +34,8 @@ from astroid.manager import AstroidManager
 MANAGER = AstroidManager()
 
 _CONSTANTS = tuple(CONST_CLS) # the keys of CONST_CLS eg python builtin types
+_JYTHON = os.name == 'java'
+_BUILTINS = vars(six.moves.builtins)
 
 def _io_discrepancy(member):
     # _io module names itself `io`: http://bugs.python.org/issue18602
@@ -47,6 +48,18 @@ def _io_discrepancy(member):
 def _attach_local_node(parent, node, name):
     node.name = name # needed by add_local_node
     parent.add_local_node(node)
+
+
+def _add_dunder_class(func, member):
+    """Add a __class__ member to the given func node, if we can determine it."""
+    python_cls = member.__class__
+    cls_name = getattr(python_cls, '__name__', None)
+    if not cls_name:
+        return
+    bases = [ancestor.__name__ for ancestor in python_cls.__bases__]
+    ast_klass = build_class(cls_name, bases, python_cls.__doc__)
+    func._instance_attrs['__class__'] = [ast_klass]
+
 
 _marker = object()
 
@@ -170,6 +183,7 @@ def object_build_methoddescriptor(node, member, localname):
     # and empty argument list
     func.args.args = None
     node.add_local_node(func, localname)
+    _add_dunder_class(func, member)
 
 def _base_class_object_build(node, member, basenames, name=None, localname=None):
     """create astroid for a living class object, with a given set of base names
@@ -196,7 +210,7 @@ def _base_class_object_build(node, member, basenames, name=None, localname=None)
             valnode.object = obj
             valnode.parent = klass
             valnode.lineno = 1
-            klass.instance_attrs[name] = [valnode]
+            klass._instance_attrs[name] = [valnode]
     return klass
 
 
@@ -228,7 +242,7 @@ class InspectBuilder(object):
         except AttributeError:
             # in jython, java modules have no __doc__ (see #109562)
             node = build_module(modname)
-        node.file = node.path = path and abspath(path) or path
+        node.source_file = path and abspath(path) or path
         node.name = modname
         MANAGER.cache_module(node)
         node.package = hasattr(module, '__path__')
@@ -273,7 +287,7 @@ class InspectBuilder(object):
                     continue
                 if member in self._done:
                     class_node = self._done[member]
-                    if not class_node in node.locals.get(name, ()):
+                    if not class_node in node._locals.get(name, ()):
                         node.add_local_node(class_node, name)
                 else:
                     class_node = object_build_class(node, member, name)
@@ -307,7 +321,8 @@ class InspectBuilder(object):
             traceback.print_exc()
             modname = None
         if modname is None:
-            if name in ('__new__', '__subclasshook__'):
+            if (name in ('__new__', '__subclasshook__')
+                    or (name in _BUILTINS and _JYTHON)):
                 # Python 2.5.1 (r251:54863, Sep  1 2010, 22:03:14)
                 # >>> print object.__new__.__module__
                 # None
@@ -315,7 +330,13 @@ class InspectBuilder(object):
             else:
                 attach_dummy_node(node, name, member)
                 return True
-        if {'gtk': 'gtk._gtk'}.get(modname, modname) != self._module.__name__:
+
+        real_name = {
+            'gtk': 'gtk_gtk',
+            '_io': 'io',
+        }.get(modname, modname)
+
+        if real_name != self._module.__name__:
             # check if it sounds valid and then add an import node, else use a
             # dummy node
             try:
@@ -337,12 +358,15 @@ def _astroid_bootstrapping(astroid_builtin=None):
     # this boot strapping is necessary since we need the Const nodes to
     # inspect_build builtins, and then we can proxy Const
     if astroid_builtin is None:
-        from logilab.common.compat import builtins
+        from six.moves import builtins
         astroid_builtin = Astroid_BUILDER.inspect_build(builtins)
 
     for cls, node_cls in CONST_CLS.items():
         if cls is type(None):
             proxy = build_class('NoneType')
+            proxy.parent = astroid_builtin
+        elif cls is type(NotImplemented):
+            proxy = build_class('NotImplementedType')
             proxy.parent = astroid_builtin
         else:
             proxy = astroid_builtin.getattr(cls.__name__)[0]

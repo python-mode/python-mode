@@ -1,26 +1,19 @@
-# Copyright (c) 2004-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2004-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """diagram objects
 """
 
 import astroid
 from pylint.pyreverse.utils import is_interface, FilterMixIn
+from pylint.checkers.utils import decorated_with_property
+
 
 class Figure(object):
     """base class for counter handling"""
+
 
 class Relationship(Figure):
     """a relation ship from an object in the diagram to another
@@ -40,6 +33,7 @@ class DiagramEntity(Figure):
         Figure.__init__(self)
         self.title = title
         self.node = node
+
 
 class ClassDiagram(Figure, FilterMixIn):
     """main class diagram handling
@@ -77,8 +71,13 @@ class ClassDiagram(Figure, FilterMixIn):
     def get_attrs(self, node):
         """return visible attributes, possibly with class name"""
         attrs = []
+        properties = [
+            (n, m) for n, m in node.items()
+            if isinstance(m, astroid.FunctionDef)
+            and decorated_with_property(m)
+        ]
         for node_name, ass_nodes in list(node.instance_attrs_type.items()) + \
-                                list(node.locals_type.items()):
+                                    list(node.locals_type.items()) + properties:
             if not self.show_attr(node_name):
                 continue
             names = self.class_names(ass_nodes)
@@ -91,7 +90,9 @@ class ClassDiagram(Figure, FilterMixIn):
         """return visible methods"""
         methods = [
             m for m in node.values()
-            if isinstance(m, astroid.Function) and self.show_attr(m.name)
+            if isinstance(m, astroid.FunctionDef)
+            and not decorated_with_property(m)
+            and self.show_attr(m.name)
         ]
         return sorted(methods, key=lambda n: n.name)
 
@@ -109,7 +110,7 @@ class ClassDiagram(Figure, FilterMixIn):
         for ass_node in nodes:
             if isinstance(ass_node, astroid.Instance):
                 ass_node = ass_node._proxied
-            if isinstance(ass_node, astroid.Class) \
+            if isinstance(ass_node, astroid.ClassDef) \
                 and hasattr(ass_node, "name") and not self.has_node(ass_node):
                 if ass_node.name not in names:
                     ass_name = ass_node.name
@@ -133,7 +134,7 @@ class ClassDiagram(Figure, FilterMixIn):
 
     def classes(self):
         """return all class nodes in the diagram"""
-        return [o for o in self.objects if isinstance(o.node, astroid.Class)]
+        return [o for o in self.objects if isinstance(o.node, astroid.ClassDef)]
 
     def classe(self, name):
         """return a class by its name, raise KeyError if not found

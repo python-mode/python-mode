@@ -1,45 +1,35 @@
-# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """functional/non regression tests for pylint"""
 from __future__ import print_function
 
 import collections
 import contextlib
 import functools
+from glob import glob
 import os
+from os import linesep, getcwd, sep
+from os.path import abspath, basename, dirname, isdir, join, splitext
 import sys
 import re
 import unittest
 import tempfile
+import warnings
 import tokenize
 
-from glob import glob
-from os import linesep, getcwd, sep
-from os.path import abspath, basename, dirname, isdir, join, splitext
+import six
+from six.moves import StringIO
 
-from astroid import test_utils
-
+import astroid
 from pylint import checkers
 from pylint.utils import PyLintASTWalker
 from pylint.reporters import BaseReporter
 from pylint.interfaces import IReporter
 from pylint.lint import PyLinter
 
-import six
-from six.moves import StringIO
 
 
 # Utils
@@ -105,9 +95,12 @@ class TestReporter(BaseReporter):
         self.out = StringIO()
         self.messages = []
 
-    def add_message(self, msg_id, location, msg):
+    def handle_message(self, msg):
         """manage message of different type and in the context of path """
-        _, _, obj, line, _ = location
+        obj = msg.obj
+        line = msg.line
+        msg_id = msg.msg_id
+        msg = msg.msg
         self.message_ids[msg_id] = 1
         if obj:
             obj = ':%s' % obj
@@ -126,8 +119,10 @@ class TestReporter(BaseReporter):
         self.reset()
         return result
 
-    def display_results(self, layout):
+    def display_reports(self, layout):
         """ignore layouts"""
+
+    _display = None
 
 
 class Message(collections.namedtuple('Message',
@@ -168,9 +163,9 @@ class UnittestLinter(object):
 
 def set_config(**kwargs):
     """Decorator for setting config values on a checker."""
-    def _Wrapper(fun):
+    def _wrapper(fun):
         @functools.wraps(fun)
-        def _Forward(self):
+        def _forward(self):
             for key, value in six.iteritems(kwargs):
                 setattr(self.checker.config, key, value)
             if isinstance(self, CheckerTestCase):
@@ -178,8 +173,8 @@ def set_config(**kwargs):
                 self.checker.open()
             fun(self)
 
-        return _Forward
-    return _Wrapper
+        return _forward
+    return _wrapper
 
 
 class CheckerTestCase(unittest.TestCase):
@@ -228,7 +223,6 @@ linter = PyLinter()
 linter.set_reporter(test_reporter)
 linter.config.persistent = 0
 checkers.initialize(linter)
-linter.global_set_option('required-attributes', ('__revision__',))
 
 if linesep != '\n':
     LINE_RGX = re.compile(linesep)
@@ -271,6 +265,7 @@ class LintTestUsingModule(unittest.TestCase):
 
     def test_functionality(self):
         tocheck = [self.package+'.'+self.module]
+        # pylint: disable=not-an-iterable; can't handle boolean checks for now
         if self.depends:
             tocheck += [self.package+'.%s' % name.replace('.py', '')
                         for name, _ in self.depends]
@@ -316,8 +311,9 @@ class LintTestUsingFile(LintTestUsingModule):
         if not isdir(importable):
             importable += '.py'
         tocheck = [importable]
+        # pylint: disable=not-an-iterable; can't handle boolean checks for now
         if self.depends:
-            tocheck += [join(self.INPUT_DIR, name) for name, _file in self.depends]
+            tocheck += [join(self.INPUT_DIR, name) for name, _ in self.depends]
         self._test(tocheck)
 
 class LintTestUpdate(LintTestUsingModule):
@@ -363,7 +359,7 @@ def make_tests(input_dir, msg_dir, filter_rgx, callbacks):
     for module_file, messages_file in (
             get_tests_info(input_dir, msg_dir, 'func_', '')
     ):
-        if not is_to_run(module_file) or module_file.endswith('.pyc'):
+        if not is_to_run(module_file) or module_file.endswith(('.pyc', "$py.class")):
             continue
         base = module_file.replace('func_', '').replace('.py', '')
 
@@ -390,23 +386,31 @@ def create_tempfile(content=None):
     # Can't use tempfile.NamedTemporaryFile here
     # because on Windows the file must be closed before writing to it,
     # see http://bugs.python.org/issue14243
-    fd, tmp = tempfile.mkstemp()
+    file_handle, tmp = tempfile.mkstemp()
     if content:
         if sys.version_info >= (3, 0):
             # erff
-            os.write(fd, bytes(content, 'ascii'))
+            os.write(file_handle, bytes(content, 'ascii'))
         else:
-            os.write(fd, content)
+            os.write(file_handle, content)
     try:
         yield tmp
     finally:
-        os.close(fd)
+        os.close(file_handle)
         os.remove(tmp)
 
 @contextlib.contextmanager
 def create_file_backed_module(code):
     """Create an astroid module for the given code, backed by a real file."""
     with create_tempfile() as temp:
-        module = test_utils.build_module(code)
+        module = astroid.parse(code)
         module.file = temp
         yield module
+
+
+@contextlib.contextmanager
+def catch_warnings(warnfilter="always"):
+    """Suppress the warnings in the surrounding block."""
+    with warnings.catch_warnings(record=True) as cm:
+        warnings.simplefilter(warnfilter)
+        yield cm

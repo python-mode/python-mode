@@ -1,40 +1,27 @@
-# Copyright 2012 Google Inc.
-#
+# Copyright (c) 2012-2016 Google, Inc.
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """Checkers for various standard library functions."""
 
-import six
 import sys
+
+import six
 
 import astroid
 from astroid.bases import Instance
-
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers import utils
 
 
-TYPECHECK_COMPARISON_OPERATORS = frozenset(('is', 'is not', '==', '!=', 'in', 'not in'))
-LITERAL_NODE_TYPES = (astroid.Const, astroid.Dict, astroid.List, astroid.Set)
-
+OPEN_FILES = {'open', 'file'}
+UNITTEST_CASE = 'unittest.case'
 if sys.version_info >= (3, 0):
     OPEN_MODULE = '_io'
-    TYPE_QNAME = 'builtins.type'
 else:
     OPEN_MODULE = '__builtin__'
-    TYPE_QNAME = '__builtin__.type'
 
 
 def _check_mode_str(mode):
@@ -79,15 +66,6 @@ def _check_mode_str(mode):
     return True
 
 
-def _is_one_arg_pos_call(call):
-    """Is this a call with exactly 1 argument,
-    where that argument is positional?
-    """
-    return (isinstance(call, astroid.CallFunc)
-            and len(call.args) == 1
-            and not isinstance(call.args[0], astroid.Keyword))
-
-
 class StdlibChecker(BaseChecker):
     __implements__ = (IAstroidChecker,)
     name = 'stdlib'
@@ -112,25 +90,99 @@ class StdlibChecker(BaseChecker):
                   'a condition. If a constant is passed as parameter, that '
                   'condition will be always true. In this case a warning '
                   'should be emitted.'),
-        'W1504': ('Using type() instead of isinstance() for a typecheck.',
-                  'unidiomatic-typecheck',
-                  'The idiomatic way to perform an explicit typecheck in '
-                  'Python is to use isinstance(x, Y) rather than '
-                  'type(x) == Y, type(x) is Y. Though there are unusual '
-                  'situations where these give different results.')
+        'W1505': ('Using deprecated method %s()',
+                  'deprecated-method',
+                  'The method is marked as deprecated and will be removed in '
+                  'a future version of Python. Consider looking for an '
+                  'alternative in the documentation.'),
     }
 
-    @utils.check_messages('bad-open-mode', 'redundant-unittest-assert')
-    def visit_callfunc(self, node):
+    deprecated = {
+        0: [
+            'cgi.parse_qs', 'cgi.parse_qsl',
+            'ctypes.c_buffer',
+            'distutils.command.register.register.check_metadata',
+            'distutils.command.sdist.sdist.check_metadata',
+            'tkinter.Misc.tk_menuBar',
+            'tkinter.Menu.tk_bindForTraversal',
+        ],
+        2: {
+            (2, 6, 0): [
+                'commands.getstatus',
+                'os.popen2',
+                'os.popen3',
+                'os.popen4',
+                'macostools.touched',
+            ],
+            (2, 7, 0): [
+                'unittest.case.TestCase.assertEquals',
+                'unittest.case.TestCase.assertNotEquals',
+                'unittest.case.TestCase.assertAlmostEquals',
+                'unittest.case.TestCase.assertNotAlmostEquals',
+                'unittest.case.TestCase.assert_',
+                'xml.etree.ElementTree.Element.getchildren',
+                'xml.etree.ElementTree.Element.getiterator',
+                'xml.etree.ElementTree.XMLParser.getiterator',
+                'xml.etree.ElementTree.XMLParser.doctype',
+            ],
+        },
+        3: {
+            (3, 0, 0): [
+                'inspect.getargspec',
+                'unittest.case.TestCase._deprecate.deprecated_func',
+            ],
+            (3, 1, 0): [
+                'base64.encodestring', 'base64.decodestring',
+                'ntpath.splitunc',
+            ],
+            (3, 2, 0): [
+                'cgi.escape',
+                'configparser.RawConfigParser.readfp',
+                'xml.etree.ElementTree.Element.getchildren',
+                'xml.etree.ElementTree.Element.getiterator',
+                'xml.etree.ElementTree.XMLParser.getiterator',
+                'xml.etree.ElementTree.XMLParser.doctype',
+            ],
+            (3, 3, 0): [
+                'inspect.getmoduleinfo',
+                'logging.warn', 'logging.Logger.warn',
+                'logging.LoggerAdapter.warn',
+                'nntplib._NNTPBase.xpath',
+                'platform.popen',
+            ],
+            (3, 4, 0): [
+                'importlib.find_loader',
+                'plistlib.readPlist', 'plistlib.writePlist',
+                'plistlib.readPlistFromBytes',
+                'plistlib.writePlistToBytes',
+            ],
+            (3, 4, 4): [
+                'asyncio.tasks.async',
+            ],
+            (3, 5, 0): [
+                'fractions.gcd',
+                'inspect.getfullargspec', 'inspect.getargvalues',
+                'inspect.formatargspec', 'inspect.formatargvalues',
+                'inspect.getcallargs',
+                'platform.linux_distribution', 'platform.dist',
+            ],
+        },
+    }
+
+    @utils.check_messages('bad-open-mode', 'redundant-unittest-assert',
+                          'deprecated-method')
+    def visit_call(self, node):
         """Visit a CallFunc node."""
-        if hasattr(node, 'func'):
-            infer = utils.safe_infer(node.func)
-            if infer:
-                if infer.root().name == OPEN_MODULE:
-                    if getattr(node.func, 'name', None) in ('open', 'file'):
+        try:
+            for inferred in node.func.infer():
+                if inferred.root().name == OPEN_MODULE:
+                    if getattr(node.func, 'name', None) in OPEN_FILES:
                         self._check_open_mode(node)
-                if infer.root().name == 'unittest.case':
-                    self._check_redundant_assert(node, infer)
+                if inferred.root().name == UNITTEST_CASE:
+                    self._check_redundant_assert(node, inferred)
+                self._check_deprecated_method(node, inferred)
+        except astroid.InferenceError:
+            return
 
     @utils.check_messages('boolean-datetime')
     def visit_unaryop(self, node):
@@ -150,13 +202,34 @@ class StdlibChecker(BaseChecker):
         for value in node.values:
             self._check_datetime(value)
 
-    @utils.check_messages('unidiomatic-typecheck')
-    def visit_compare(self, node):
-        operator, right = node.ops[0]
-        if operator in TYPECHECK_COMPARISON_OPERATORS:
-            left = node.left
-            if _is_one_arg_pos_call(left):
-                self._check_type_x_is_y(node, left, operator, right)
+    def _check_deprecated_method(self, node, inferred):
+        py_vers = sys.version_info[0]
+
+        if isinstance(node.func, astroid.Attribute):
+            func_name = node.func.attrname
+        elif isinstance(node.func, astroid.Name):
+            func_name = node.func.name
+        else:
+            # Not interested in other nodes.
+            return
+
+        # Reject nodes which aren't of interest to us.
+        acceptable_nodes = (astroid.BoundMethod,
+                            astroid.UnboundMethod,
+                            astroid.FunctionDef)
+        if not isinstance(inferred, acceptable_nodes):
+            return
+
+        qname = inferred.qname()
+        if qname in self.deprecated[0]:
+            self.add_message('deprecated-method', node=node,
+                             args=(func_name, ))
+        else:
+            for since_vers, func_list in self.deprecated[py_vers].items():
+                if since_vers <= sys.version_info and qname in func_list:
+                    self.add_message('deprecated-method', node=node,
+                                     args=(func_name, ))
+                    break
 
     def _check_redundant_assert(self, node, infer):
         if (isinstance(infer, astroid.BoundMethod) and
@@ -191,24 +264,6 @@ class StdlibChecker(BaseChecker):
                     and not _check_mode_str(mode_arg.value)):
                 self.add_message('bad-open-mode', node=node,
                                  args=mode_arg.value)
-
-    def _check_type_x_is_y(self, node, left, operator, right):
-        """Check for expressions like type(x) == Y."""
-        left_func = utils.safe_infer(left.func)
-        if not (isinstance(left_func, astroid.Class)
-                and left_func.qname() == TYPE_QNAME):
-            return
-
-        if operator in ('is', 'is not') and _is_one_arg_pos_call(right):
-            right_func = utils.safe_infer(right.func)
-            if (isinstance(right_func, astroid.Class)
-                    and right_func.qname() == TYPE_QNAME):
-                # type(x) == type(a)
-                right_arg = utils.safe_infer(right.args[0])
-                if not isinstance(right_arg, LITERAL_NODE_TYPES):
-                    # not e.g. type(x) == type([])
-                    return
-        self.add_message('unidiomatic-typecheck', node=node)
 
 
 def register(linter):

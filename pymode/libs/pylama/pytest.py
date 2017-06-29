@@ -43,7 +43,7 @@ class PylamaItem(pytest.Item, pytest.File):
 
     def __init__(self, path, parent):
         super(PylamaItem, self).__init__(path, parent)
-        self.add_marker("pep8")
+        self.add_marker("pycodestyle")
         self.cache = None
         self._pylamamtimes = None
 

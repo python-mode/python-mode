@@ -58,13 +58,15 @@ from astroid import inference
 
 # more stuff available
 from astroid import raw_building
-from astroid.bases import YES, Instance, BoundMethod, UnboundMethod
+from astroid.bases import Instance, BoundMethod, UnboundMethod
 from astroid.node_classes import are_exclusive, unpack_infer
 from astroid.scoped_nodes import builtin_lookup
+from astroid.builder import parse
+from astroid.util import YES
 
 # make a manager instance (borg) as well as Project and Package classes
 # accessible from astroid package
-from astroid.manager import AstroidManager, Project
+from astroid.manager import AstroidManager
 MANAGER = AstroidManager()
 del AstroidManager
 
@@ -100,7 +102,7 @@ def inference_tip(infer_function):
 
     .. sourcecode:: python
 
-       MANAGER.register_transform(CallFunc, inference_tip(infer_named_tuple),
+       MANAGER.register_transform(Call, inference_tip(infer_named_tuple),
                                   predicate)
     """
     def transform(node, infer_function=infer_function):
@@ -112,8 +114,11 @@ def inference_tip(infer_function):
 def register_module_extender(manager, module_name, get_extension_mod):
     def transform(node):
         extension_module = get_extension_mod()
-        for name, obj in extension_module.locals.items():
-            node.locals[name] = obj
+        for name, objs in extension_module._locals.items():
+            node._locals[name] = objs
+            for obj in objs:
+                if obj.parent is extension_module:
+                    obj.parent = node
 
     manager.register_transform(Module, transform, lambda n: n.name == module_name)
 

@@ -1,22 +1,14 @@
-# Copyright (c) 2003-2014 LOGILAB S.A. (Paris, FRANCE).
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
+# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """JSON reporter"""
 from __future__ import absolute_import, print_function
 
+import cgi
 import json
 import sys
-from cgi import escape
 
 from pylint.interfaces import IReporter
 from pylint.reporters import BaseReporter
@@ -35,7 +27,6 @@ class JSONReporter(BaseReporter):
 
     def handle_message(self, message):
         """Manage message of different type and in the context of path."""
-
         self.messages.append({
             'type': message.category,
             'module': message.module,
@@ -44,13 +35,20 @@ class JSONReporter(BaseReporter):
             'column': message.column,
             'path': message.path,
             'symbol': message.symbol,
-            'message': escape(message.msg or ''),
+            # pylint: disable=deprecated-method; deprecated since 3.2.
+            'message': cgi.escape(message.msg or ''),
         })
 
-    def _display(self, layout):
+    def display_messages(self, layout):
         """Launch layouts display"""
         if self.messages:
             print(json.dumps(self.messages, indent=4), file=self.out)
+
+    def display_reports(self, _):
+        """Don't do nothing in this reporter."""
+
+    def _display(self, layout):
+        """Don't do nothing."""
 
 
 def register(linter):

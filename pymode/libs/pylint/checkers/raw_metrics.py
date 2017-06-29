@@ -1,18 +1,8 @@
-# Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """ Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE).
  http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
@@ -25,12 +15,12 @@ import tokenize
 #if not hasattr(tokenize, 'NL'):
 #    raise ValueError("tokenize.NL doesn't exist -- tokenize module too old")
 
-from logilab.common.ureports import Table
-
 from pylint.interfaces import ITokenChecker
 from pylint.utils import EmptyReport
 from pylint.checkers import BaseTokenChecker
 from pylint.reporters import diff_string
+from pylint.reporters.ureports.nodes import Table
+
 
 def report_raw_stats(sect, stats, old_stats):
     """calculate percentage of code / doc / comment / empty
@@ -118,7 +108,7 @@ def get_type(tokens, start_index):
         i += 1
     if line_type is None:
         line_type = 'empty_lines'
-    elif i < len(tokens) and tok_type == tokenize.NEWLINE:
+    elif i < len(tokens) and tokens[i][0] == tokenize.NEWLINE:
         i += 1
     return i, pos[0] - start[0] + 1, line_type
 
@@ -126,4 +116,3 @@ def get_type(tokens, start_index):
 def register(linter):
     """ required method to auto register this checker """
     linter.register_checker(RawMetricsChecker(linter))
-

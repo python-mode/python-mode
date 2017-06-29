@@ -87,6 +87,9 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
         result.update(self.initial)
         return result
 
+    def get_module(self):
+        return builtins
+
 
 class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
 

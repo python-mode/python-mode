@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import hint_return, hint_param, hint_attr, hint_pep0484
+from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -32,6 +32,7 @@ def infer_returned_object(pyfunction, args):
     result = object_info.get_returned(pyfunction, args)
     if result is not None:
         return result
+    hint_return = get_type_hinting_factory(pyfunction.pycore.project).make_return_provider()
     type_ = hint_return(pyfunction)
     if type_ is not None:
         return rope.base.pyobjects.PyObject(type_)
@@ -75,34 +76,11 @@ def infer_assigned_object(pyname):
         elif result is not None:
             return result
 
-    hinting_result = hint_pep0484(pyname)
+    hint_assignment = get_type_hinting_factory(pyname.module.pycore.project).make_assignment_provider()
+    hinting_result = hint_assignment(pyname)
     if hinting_result is not None:
-        return hinting_result
-
-    hinting_result = _infer_assigned_object_by_hint(pyname)
-    if hinting_result is not None:
-        return hinting_result
-
+        return rope.base.pyobjects.PyObject(hinting_result)
     return result
-
-
-def _infer_assigned_object_by_hint(pyname):
-    lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
-    holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
-    pyobject = holding_scope.pyobject
-    if isinstance(pyobject, rope.base.pyobjects.PyClass):
-        pyclass = pyobject
-    elif (isinstance(pyobject, rope.base.pyobjectsdef.PyFunction) and
-          isinstance(pyobject.parent, rope.base.pyobjects.PyClass)):
-        pyclass = pyobject.parent
-    else:
-        return
-    for name, attr in pyclass.get_attributes().items():
-        if attr is pyname:
-            type_ = hint_attr(pyclass, name)
-            if type_ is not None:
-                return rope.base.pyobjects.PyObject(type_)
-            break
 
 
 def get_passed_objects(pyfunction, parameter_index):
@@ -147,6 +125,7 @@ def _infer_returned(pyobject, args):
 def _parameter_objects(pyobject):
     result = []
     params = pyobject.get_param_names(special_args=False)
+    hint_param = get_type_hinting_factory(pyobject.pycore.project).make_param_provider()
     for name in params:
         type_ = hint_param(pyobject, name)
         if type_ is not None:

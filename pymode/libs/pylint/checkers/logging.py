@@ -1,26 +1,19 @@
-# Copyright (c) 2009-2010 Google, Inc.
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Copyright (c) 2009-2016 Google, Inc.
+# Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+# For details: https://github.com/PyCQA/pylint/blob/master/COPYING
+
 """checker for use of Python logging
 """
 
+import six
+
 import astroid
+
 from pylint import checkers
 from pylint import interfaces
 from pylint.checkers import utils
 from pylint.checkers.utils import check_messages
 
-import six
 
 
 MSGS = {
@@ -35,7 +28,7 @@ MSGS = {
               'interpolation in those cases in which no message will be '
               'logged. For more, see '
               'http://www.python.org/dev/peps/pep-0282/.'),
-    'W1202': ('Use % formatting in logging functions but pass the % '
+    'W1202': ('Use % formatting in logging functions and pass the % '
               'parameters as arguments',
               'logging-format-interpolation',
               'Used when a logging statement has a call form of '
@@ -66,17 +59,15 @@ CHECKED_CONVENIENCE_FUNCTIONS = set([
 
 def is_method_call(callfunc_node, types=(), methods=()):
     """Determines if a CallFunc node represents a method call.
-
     Args:
-      callfunc_node: The CallFunc AST node to check.
-      types: Optional sequence of caller type names to restrict check.
-      methods: Optional sequence of method names to restrict check.
-
+      callfunc_node (astroid.CallFunc): The CallFunc AST node to check.
+      types (Optional[String]): Optional sequence of caller type names to restrict check.
+      methods (Optional[String]): Optional sequence of method names to restrict check.
     Returns:
-      True, if the node represents a method call for the given type and
+      bool: true if the node represents a method call for the given type and
       method names, False otherwise.
     """
-    if not isinstance(callfunc_node, astroid.CallFunc):
+    if not isinstance(callfunc_node, astroid.Call):
         return False
     func = utils.safe_infer(callfunc_node.func)
     return (isinstance(func, astroid.BoundMethod)
@@ -117,7 +108,7 @@ class LoggingChecker(checkers.BaseChecker):
             if len(parts) > 1:
                 self._from_imports[parts[0]] = parts[1]
 
-    def visit_from(self, node):
+    def visit_importfrom(self, node):
         """Checks to see if a module uses a non-Python logging module."""
         try:
             logging_name = self._from_imports[node.modname]
@@ -134,10 +125,10 @@ class LoggingChecker(checkers.BaseChecker):
                 self._logging_names.add(as_name or module)
 
     @check_messages(*(MSGS.keys()))
-    def visit_callfunc(self, node):
+    def visit_call(self, node):
         """Checks calls to logging methods."""
         def is_logging_name():
-            return (isinstance(node.func, astroid.Getattr) and
+            return (isinstance(node.func, astroid.Attribute) and
                     isinstance(node.func.expr, astroid.Name) and
                     node.func.expr.name in self._logging_names)
 
@@ -146,7 +137,7 @@ class LoggingChecker(checkers.BaseChecker):
                 for inferred in node.func.infer():
                     if isinstance(inferred, astroid.BoundMethod):
                         parent = inferred._proxied.parent
-                        if (isinstance(parent, astroid.Class) and
+                        if (isinstance(parent, astroid.ClassDef) and
                                 (parent.qname() == 'logging.Logger' or
                                  any(ancestor.qname() == 'logging.Logger'
                                      for ancestor in parent.ancestors()))):
@@ -182,7 +173,7 @@ class LoggingChecker(checkers.BaseChecker):
 
         if isinstance(node.args[format_pos], astroid.BinOp) and node.args[format_pos].op == '%':
             self.add_message('logging-not-lazy', node=node)
-        elif isinstance(node.args[format_pos], astroid.CallFunc):
+        elif isinstance(node.args[format_pos], astroid.Call):
             self._check_call_func(node.args[format_pos])
         elif isinstance(node.args[format_pos], astroid.Const):
             self._check_format_string(node, format_pos)
@@ -191,7 +182,8 @@ class LoggingChecker(checkers.BaseChecker):
         """Checks that function call is not format_string.format().
 
         Args:
-          callfunc_node: CallFunc AST node to be checked.
+          callfunc_node (astroid.node_classes.NodeNG):
+            CallFunc AST node to be checked.
         """
         if is_method_call(callfunc_node, ('str', 'unicode'), ('format',)):
             self.add_message('logging-format-interpolation', node=callfunc_node)
@@ -200,8 +192,8 @@ class LoggingChecker(checkers.BaseChecker):
         """Checks that format string tokens match the supplied arguments.
 
         Args:
-          node: AST node to be checked.
-          format_arg: Index of the format string in the node arguments.
+          node (astroid.node_classes.NodeNG): AST node to be checked.
+          format_arg (int): Index of the format string in the node arguments.
         """
         num_args = _count_supplied_tokens(node.args[format_arg + 1:])
         if not num_args:
@@ -243,10 +235,10 @@ def _count_supplied_tokens(args):
     arguments that aren't keywords.
 
     Args:
-      args: List of AST nodes that are arguments for a log format string.
+      args (list): AST nodes that are arguments for a log format string.
 
     Returns:
-      Number of AST nodes that aren't keywords.
+      int: Number of AST nodes that aren't keywords.
     """
     return sum(1 for arg in args if not isinstance(arg, astroid.Keyword))
 
