@@ -3,6 +3,7 @@
 Prepare params, check a modeline and run the checkers.
 """
 import logging
+import sys
 
 import os.path as op
 from .config import process_value, LOGGER, MODELINE_RE, SKIP_PATTERN, CURDIR
@@ -131,7 +132,7 @@ def prepare_params(modeline, fileconfig, options):
 
 
 def filter_errors(errors, select=None, ignore=None, **params):
-    """Filter a erros by select and ignore options.
+    """Filter errors by select and ignore options.
 
     :return bool:
 
@@ -186,7 +187,12 @@ class CodeContext(object):
         """ Open a file and read it. """
         if self.code is None:
             LOGGER.info("File is reading: %s", self.path)
-            self._file = open(self.path, 'rU')
+            if sys.version_info >= (3, ):
+                # 'U' mode is deprecated in python 3
+                mode = 'r'
+            else:
+                mode = 'rU'
+            self._file = open(self.path, mode)
             self.code = self._file.read()
         return self
 

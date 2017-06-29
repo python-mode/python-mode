@@ -6,12 +6,15 @@ import sys
 import tokenize as tk
 from itertools import takewhile
 from re import compile as re
+from collections import namedtuple
 
 from . import violations
 from .config import IllegalConfiguration
-# TODO: handle
-from .parser import *
-from .utils import log, is_blank
+from .parser import (Package, Module, Class, NestedClass, Definition, AllError,
+                     Method, Function, NestedFunction, Parser, StringIO,
+                     ParseError)
+from .utils import log, is_blank, pairwise
+from .wordlists import IMPERATIVE_VERBS, IMPERATIVE_BLACKLIST, stem
 
 
 __all__ = ('check', )
@@ -33,8 +36,8 @@ def check_for(kind, terminal=False):
     return decorator
 
 
-class PEP257Checker(object):
-    """Checker for PEP 257.
+class ConventionChecker(object):
+    """Checker for PEP 257 and numpy conventions.
 
     D10x: Missing docstrings
     D20x: Whitespace issues
@@ -43,26 +46,45 @@ class PEP257Checker(object):
 
     """
 
-    def check_source(self, source, filename):
+    SECTION_NAMES = ['Short Summary',
+                     'Extended Summary',
+                     'Parameters',
+                     'Returns',
+                     'Yields',
+                     'Other Parameters',
+                     'Raises',
+                     'See Also',
+                     'Notes',
+                     'References',
+                     'Examples',
+                     'Attributes',
+                     'Methods']
+
+    def check_source(self, source, filename, ignore_decorators):
         module = parse(StringIO(source), filename)
         for definition in module:
-            for check in self.checks:
+            for this_check in self.checks:
                 terminate = False
-                if isinstance(definition, check._check_for):
-                    if definition.skipped_error_codes != 'all':
-                        error = check(None, definition, definition.docstring)
+                if isinstance(definition, this_check._check_for):
+                    skipping_all = (definition.skipped_error_codes == 'all')
+                    decorator_skip = ignore_decorators is not None and any(
+                        len(ignore_decorators.findall(dec.name)) > 0
+                        for dec in definition.decorators)
+                    if not skipping_all and not decorator_skip:
+                        error = this_check(self, definition,
+                                           definition.docstring)
                     else:
                         error = None
                     errors = error if hasattr(error, '__iter__') else [error]
                     for error in errors:
                         if error is not None and error.code not in \
                                 definition.skipped_error_codes:
-                            partition = check.__doc__.partition('.\n')
+                            partition = this_check.__doc__.partition('.\n')
                             message, _, explanation = partition
                             error.set_context(explanation=explanation,
                                               definition=definition)
                             yield error
-                            if check._terminal:
+                            if this_check._terminal:
                                 terminate = True
                                 break
                 if terminate:
@@ -70,9 +92,9 @@ class PEP257Checker(object):
 
     @property
     def checks(self):
-        all = [check for check in vars(type(self)).values()
-               if hasattr(check, '_check_for')]
-        return sorted(all, key=lambda check: not check._terminal)
+        all = [this_check for this_check in vars(type(self)).values()
+               if hasattr(this_check, '_check_for')]
+        return sorted(all, key=lambda this_check: not this_check._terminal)
 
     @check_for(Definition, terminal=True)
     def check_docstring_missing(self, definition, docstring):
@@ -185,6 +207,13 @@ class PEP257Checker(object):
                 if blanks_count != 1:
                     return violations.D205(blanks_count)
 
+    @staticmethod
+    def _get_docstring_indent(definition, docstring):
+        """Return the indentation of the docstring's opening quotes."""
+        before_docstring, _, _ = definition.source.partition(docstring)
+        _, _, indent = before_docstring.rpartition('\n')
+        return indent
+
     @check_for(Definition)
     def check_indent(self, definition, docstring):
         """D20{6,7,8}: The entire docstring should be indented same as code.
@@ -194,8 +223,7 @@ class PEP257Checker(object):
 
         """
         if docstring:
-            before_docstring, _, _ = definition.source.partition(docstring)
-            _, _, indent = before_docstring.rpartition('\n')
+            indent = self._get_docstring_indent(definition, docstring)
             lines = docstring.split('\n')
             if len(lines) > 1:
                 lines = lines[1:]  # First line does not need indent.
@@ -270,16 +298,18 @@ class PEP257Checker(object):
 
         '''
         if docstring:
-            opening = docstring[:5].lower()
-            if '"""' in ast.literal_eval(docstring) and opening.startswith(
-                    ("'''", "r'''", "u'''", "ur'''")):
+            if '"""' in ast.literal_eval(docstring):
                 # Allow ''' quotes if docstring contains """, because
                 # otherwise """ quotes could not be expressed inside
                 # docstring. Not in PEP 257.
-                return
-            if not opening.startswith(('"""', 'r"""', 'u"""', 'ur"""')):
-                quotes = "'''" if "'''" in opening else "'"
-                return violations.D300(quotes)
+                regex = re(r"[uU]?[rR]?'''[^'].*")
+            else:
+                regex = re(r'[uU]?[rR]?"""[^"].*')
+
+            if not regex.match(docstring):
+                illegal_matcher = re(r"""[uU]?[rR]?("+|'+).*""")
+                illegal_quotes = illegal_matcher.match(docstring).group(1)
+                return violations.D300(illegal_quotes)
 
     @check_for(Definition)
     def check_backslashes(self, definition, docstring):
@@ -302,7 +332,7 @@ class PEP257Checker(object):
         For Unicode docstrings, use u"""Unicode triple-quoted strings""".
 
         '''
-        if definition.module.future_imports['unicode_literals']:
+        if 'unicode_literals' in definition.module.future_imports:
             return
 
         # Just check that docstring is unicode, check_triple_double_quotes
@@ -333,12 +363,21 @@ class PEP257Checker(object):
         "Returns the pathname ...".
 
         """
-        if docstring:
+        if docstring and not function.is_test:
             stripped = ast.literal_eval(docstring).strip()
             if stripped:
                 first_word = stripped.split()[0]
-                if first_word.endswith('s') and not first_word.endswith('ss'):
-                    return violations.D401(first_word[:-1], first_word)
+                check_word = first_word.lower()
+
+                if check_word in IMPERATIVE_BLACKLIST:
+                    return violations.D401b(first_word)
+
+                correct_form = IMPERATIVE_VERBS.get(stem(check_word))
+                if correct_form and correct_form != check_word:
+                    return violations.D401(
+                        correct_form.capitalize(),
+                        first_word
+                    )
 
     @check_for(Function)
     def check_no_signature(self, function, docstring):  # def context
@@ -383,11 +422,231 @@ class PEP257Checker(object):
             if first_word.lower() == 'this':
                 return violations.D404()
 
+    @staticmethod
+    def _get_leading_words(line):
+        """Return any leading set of words from `line`.
+
+        For example, if `line` is "  Hello world!!!", returns "Hello world".
+        """
+        result = re("[A-Za-z ]+").match(line.strip())
+        if result is not None:
+            return result.group()
+
+    @staticmethod
+    def _is_a_docstring_section(context):
+        """Check if the suspected context is really a section header.
+
+        Lets have a look at the following example docstring:
+            '''Title.
+
+            Some part of the docstring that specifies what the function
+            returns. <----- Not a real section name. It has a suffix and the
+                            previous line is not empty and does not end with
+                            a punctuation sign.
+
+            This is another line in the docstring. It describes stuff,
+            but we forgot to add a blank line between it and the section name.
+            Returns  <----- A real section name. The previous line ends with
+            -------         a period, therefore it is in a new
+                            grammatical context.
+            Bla.
+
+            '''
+
+        To make sure this is really a section we check these conditions:
+            * There's no suffix to the section name.
+            * The previous line ends with punctuation.
+            * The previous line is empty.
+
+        If one of the conditions is true, we will consider the line as
+        a section name.
+        """
+        section_name_suffix = context.line.lstrip(context.section_name).strip()
+
+        punctuation = [',', ';', '.', '-', '\\', '/', ']', '}', ')']
+        prev_line_ends_with_punctuation = \
+            any(context.previous_line.strip().endswith(x) for x in punctuation)
+
+        return (is_blank(section_name_suffix) or
+                prev_line_ends_with_punctuation or
+                is_blank(context.previous_line))
+
+    @classmethod
+    def _check_section_underline(cls, section_name, context, indentation):
+        """D4{07,08,09,12}, D215: Section underline checks.
+
+        Check for correct formatting for docstring sections. Checks that:
+            * The line that follows the section name contains
+              dashes (D40{7,8}).
+            * The amount of dashes is equal to the length of the section
+              name (D409).
+            * The section's content does not begin in the line that follows
+              the section header (D412).
+            * The indentation of the dashed line is equal to the docstring's
+              indentation (D215).
+        """
+        blank_lines_after_header = 0
+
+        for line in context.following_lines:
+            if not is_blank(line):
+                break
+            blank_lines_after_header += 1
+        else:
+            # There are only blank lines after the header.
+            yield violations.D407(section_name)
+            return
+
+        non_empty_line = context.following_lines[blank_lines_after_header]
+        dash_line_found = ''.join(set(non_empty_line.strip())) == '-'
+
+        if not dash_line_found:
+            yield violations.D407(section_name)
+            if blank_lines_after_header > 0:
+                yield violations.D412(section_name)
+        else:
+            if blank_lines_after_header > 0:
+                yield violations.D408(section_name)
+
+            if non_empty_line.strip() != "-" * len(section_name):
+                yield violations.D409(len(section_name),
+                                      section_name,
+                                      len(non_empty_line.strip()))
+
+            if leading_space(non_empty_line) > indentation:
+                yield violations.D215(section_name)
+
+            line_after_dashes_index = blank_lines_after_header + 1
+            # If the line index after the dashes is in range (perhaps we have
+            # a header + underline followed by another section header).
+            if line_after_dashes_index < len(context.following_lines):
+                line_after_dashes = \
+                    context.following_lines[line_after_dashes_index]
+                if is_blank(line_after_dashes):
+                    rest_of_lines = \
+                        context.following_lines[line_after_dashes_index:]
+                    if not is_blank(''.join(rest_of_lines)):
+                        yield violations.D412(section_name)
+                    else:
+                        yield violations.D414(section_name)
+            else:
+                yield violations.D414(section_name)
+
+    @classmethod
+    def _check_section(cls, docstring, definition, context):
+        """D4{05,06,10,11,13}, D214: Section name checks.
+
+        Check for valid section names. Checks that:
+            * The section name is properly capitalized (D405).
+            * The section is not over-indented (D214).
+            * The section name has no superfluous suffix to it (D406).
+            * There's a blank line after the section (D410, D413).
+            * There's a blank line before the section (D411).
+
+        Also yields all the errors from `_check_section_underline`.
+        """
+        capitalized_section = context.section_name.title()
+        indentation = cls._get_docstring_indent(definition, docstring)
+
+        if (context.section_name not in cls.SECTION_NAMES and
+                capitalized_section in cls.SECTION_NAMES):
+            yield violations.D405(capitalized_section, context.section_name)
+
+        if leading_space(context.line) > indentation:
+            yield violations.D214(capitalized_section)
+
+        suffix = context.line.strip().lstrip(context.section_name)
+        if suffix:
+            yield violations.D406(capitalized_section, context.line.strip())
+
+        if (not context.following_lines or
+                not is_blank(context.following_lines[-1])):
+            if context.is_last_section:
+                yield violations.D413(capitalized_section)
+            else:
+                yield violations.D410(capitalized_section)
+
+        if not is_blank(context.previous_line):
+            yield violations.D411(capitalized_section)
+
+        for err in cls._check_section_underline(capitalized_section,
+                                                context,
+                                                indentation):
+            yield err
+
+    @check_for(Definition)
+    def check_docstring_sections(self, definition, docstring):
+        """D21{4,5}, D4{05,06,07,08,09,10}: Docstring sections checks.
+
+        Check the general format of a sectioned docstring:
+            '''This is my one-liner.
+
+            Short Summary
+            -------------
+            This is my summary.
+
+            Returns
+            -------
+            None.
+
+            '''
+
+        Section names appear in `SECTION_NAMES`.
+        """
+        if not docstring:
+            return
+
+        lines = docstring.split("\n")
+        if len(lines) < 2:
+            return
+
+        lower_section_names = [s.lower() for s in self.SECTION_NAMES]
+
+        def _suspected_as_section(_line):
+            result = self._get_leading_words(_line.lower())
+            return result in lower_section_names
+
+        # Finding our suspects.
+        suspected_section_indices = [i for i, line in enumerate(lines) if
+                                     _suspected_as_section(line)]
+
+        SectionContext = namedtuple('SectionContext', ('section_name',
+                                                       'previous_line',
+                                                       'line',
+                                                       'following_lines',
+                                                       'original_index',
+                                                       'is_last_section'))
+
+        # First - create a list of possible contexts. Note that the
+        # `following_linex` member is until the end of the docstring.
+        contexts = (SectionContext(self._get_leading_words(lines[i].strip()),
+                                   lines[i - 1],
+                                   lines[i],
+                                   lines[i + 1:],
+                                   i,
+                                   False)
+                    for i in suspected_section_indices)
+
+        # Now that we have manageable objects - rule out false positives.
+        contexts = (c for c in contexts if self._is_a_docstring_section(c))
+
+        # Now we shall trim the `following lines` field to only reach the
+        # next section name.
+        for a, b in pairwise(contexts, None):
+            end = -1 if b is None else b.original_index
+            new_ctx = SectionContext(a.section_name,
+                                     a.previous_line,
+                                     a.line,
+                                     lines[a.original_index + 1:end],
+                                     a.original_index,
+                                     b is None)
+            for err in self._check_section(docstring, definition, new_ctx):
+                yield err
+
 
 parse = Parser()
 
 
-def check(filenames, select=None, ignore=None):
+def check(filenames, select=None, ignore=None, ignore_decorators=None):
     """Generate docstring errors that exist in `filenames` iterable.
 
     By default, the PEP-257 convention is checked. To specifically define the
@@ -432,12 +691,14 @@ def check(filenames, select=None, ignore=None):
         try:
             with tokenize_open(filename) as file:
                 source = file.read()
-            for error in PEP257Checker().check_source(source, filename):
+            for error in ConventionChecker().check_source(source, filename,
+                                                          ignore_decorators):
                 code = getattr(error, 'code', None)
                 if code in checked_codes:
                     yield error
-        except (EnvironmentError, AllError):
-            yield sys.exc_info()[1]
+        except (EnvironmentError, AllError, ParseError) as error:
+            log.warning('Error in file %s: %s', filename, error)
+            yield error
         except tk.TokenError:
             yield SyntaxError('invalid syntax in file %s' % filename)
 

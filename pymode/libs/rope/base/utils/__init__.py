@@ -1,3 +1,4 @@
+import sys
 import warnings
 
 
@@ -57,10 +58,11 @@ def deprecated(message=None):
     return _decorator
 
 
-def cached(count):
+def cached(size):
     """A caching decorator based on parameter objects"""
     def decorator(func):
-        return _Cached(func, count)
+        cached_func = _Cached(func, size)
+        return lambda *a, **kw: cached_func(*a, **kw)
     return decorator
 
 
@@ -81,3 +83,16 @@ class _Cached(object):
         if len(self.cache) > self.count:
             del self.cache[0]
         return result
+
+
+def resolve(str_or_obj):
+    """Returns object from string"""
+    from rope.base.utils.pycompat import string_types
+    if not isinstance(str_or_obj, string_types):
+        return str_or_obj
+    if '.' not in str_or_obj:
+        str_or_obj += '.'
+    mod_name, obj_name = str_or_obj.rsplit('.', 1)
+    __import__(mod_name)
+    mod = sys.modules[mod_name]
+    return getattr(mod, obj_name) if obj_name else mod

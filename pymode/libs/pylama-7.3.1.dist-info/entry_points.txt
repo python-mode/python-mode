@@ -1,6 +1,0 @@
-[console_scripts]
-pylama = pylama.main:shell
-
-[pytest11]
-pylama = pylama.pytest
-

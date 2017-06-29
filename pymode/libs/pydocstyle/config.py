@@ -34,9 +34,10 @@ class ConfigurationParser(object):
 
     Run Configurations:
     ------------------
-    Responsible for deciding things that are related to the user interface,
-    e.g. verbosity, debug options, etc.
-    All run configurations default to `False` and are decided only by CLI.
+    Responsible for deciding things that are related to the user interface and
+    configuration discovery, e.g. verbosity, debug options, etc.
+    All run configurations default to `False` or `None` and are decided only 
+    by CLI.
 
     Check Configurations:
     --------------------
@@ -64,18 +65,22 @@ class ConfigurationParser(object):
     """
 
     CONFIG_FILE_OPTIONS = ('convention', 'select', 'ignore', 'add-select',
-                           'add-ignore', 'match', 'match-dir')
+                           'add-ignore', 'match', 'match-dir',
+                           'ignore-decorators')
     BASE_ERROR_SELECTION_OPTIONS = ('ignore', 'select', 'convention')
 
     DEFAULT_MATCH_RE = '(?!test_).*\.py'
     DEFAULT_MATCH_DIR_RE = '[^\.].*'
+    DEFAULT_IGNORE_DECORATORS_RE = ''
     DEFAULT_CONVENTION = conventions.pep257
 
     PROJECT_CONFIG_FILES = (
         'setup.cfg',
         'tox.ini',
         '.pydocstyle',
+        '.pydocstyle.ini',
         '.pydocstylerc',
+        '.pydocstylerc.ini',
         # The following is deprecated, but remains for backwards compatibility.
         '.pep257',
     )
@@ -112,7 +117,7 @@ class ConfigurationParser(object):
 
         self._run_conf = self._create_run_config(self._options)
 
-        config = self._create_check_config(self._options, use_dafaults=False)
+        config = self._create_check_config(self._options, use_defaults=False)
         self._override_by_cli = config
 
     @check_initialized
@@ -139,11 +144,20 @@ class ConfigurationParser(object):
             match_dir_func = re(config.match_dir + '$').match
             return match_func, match_dir_func
 
+        def _get_ignore_decorators(config):
+            """Return the `ignore_decorators` as None or regex."""
+            if config.ignore_decorators:  # not None and not ''
+                ignore_decorators = re(config.ignore_decorators)
+            else:
+                ignore_decorators = None
+            return ignore_decorators
+
         for name in self._arguments:
             if os.path.isdir(name):
                 for root, dirs, filenames in os.walk(name):
                     config = self._get_config(root)
                     match, match_dir = _get_matches(config)
+                    ignore_decorators = _get_ignore_decorators(config)
 
                     # Skip any dirs that do not match match_dir
                     dirs[:] = [dir for dir in dirs if match_dir(dir)]
@@ -151,46 +165,29 @@ class ConfigurationParser(object):
                     for filename in filenames:
                         if match(filename):
                             full_path = os.path.join(root, filename)
-                            yield full_path, list(config.checked_codes)
+                            yield (full_path, list(config.checked_codes),
+                                   ignore_decorators)
             else:
                 config = self._get_config(name)
                 match, _ = _get_matches(config)
+                ignore_decorators = _get_ignore_decorators(config)
                 if match(name):
-                    yield name, list(config.checked_codes)
+                    yield (name, list(config.checked_codes), ignore_decorators)
 
     # --------------------------- Private Methods -----------------------------
 
-    def _get_config(self, node):
-        """Get and cache the run configuration for `node`.
-
-        If no configuration exists (not local and not for the parend node),
-        returns and caches a default configuration.
-
-        The algorithm:
-        -------------
-        * If the current directory's configuration exists in
-           `self._cache` - return it.
-        * If a configuration file does not exist in this directory:
-          * If the directory is not a root directory:
-            * Cache its configuration as this directory's and return it.
-          * Else:
-            * Cache a default configuration and return it.
-        * Else:
-          * Read the configuration file.
-          * If a parent directory exists AND the configuration file
-            allows inheritance:
-            * Read the parent configuration by calling this function with the
-              parent directory as `node`.
-            * Merge the parent configuration with the current one and
-              cache it.
-        * If the user has specified one of `BASE_ERROR_SELECTION_OPTIONS` in
-          the CLI - return the CLI configuration with the configuration match
-          clauses
-        * Set the `--add-select` and `--add-ignore` CLI configurations.
-
+    def _get_config_by_discovery(self, node):
+        """Get a configuration for checking `node` by config discovery.
+        
+        Config discovery happens when no explicit config file is specified. The
+        file system is searched for config files starting from the directory
+        containing the file being checked, and up until the root directory of
+        the project.
+        
+        See `_get_config` for further details.
+        
         """
-        path = os.path.abspath(node)
-        path = path if os.path.isdir(path) else os.path.dirname(path)
+        path = self._get_node_dir(node)
 
         if path in self._cache:
             return self._cache[path]
@@ -219,6 +216,51 @@ class ConfigurationParser(object):
                 # No need to merge or parent dir does not exist.
                 config = self._create_check_config(options)
 
+        return config
+
+    def _get_config(self, node):
+        """Get and cache the run configuration for `node`.
+
+        If no configuration exists (not local and not for the parent node),
+        returns and caches a default configuration.
+
+        The algorithm:
+        -------------
+        * If the current directory's configuration exists in
+           `self._cache` - return it.
+        * If a configuration file does not exist in this directory:
+          * If the directory is not a root directory:
+            * Cache its configuration as this directory's and return it.
+          * Else:
+            * Cache a default configuration and return it.
+        * Else:
+          * Read the configuration file.
+          * If a parent directory exists AND the configuration file
+            allows inheritance:
+            * Read the parent configuration by calling this function with the
+              parent directory as `node`.
+            * Merge the parent configuration with the current one and
+              cache it.
+        * If the user has specified one of `BASE_ERROR_SELECTION_OPTIONS` in
+          the CLI - return the CLI configuration with the configuration match
+          clauses
+        * Set the `--add-select` and `--add-ignore` CLI configurations.
+
+        """
+        if self._run_conf.config is None:
+            log.debug('No config file specified, discovering.')
+            config = self._get_config_by_discovery(node)
+        else:
+            log.debug('Using config file %r', self._run_conf.config)
+            if not os.path.exists(self._run_conf.config):
+                raise IllegalConfiguration('Configuration file {!r} specified '
+                                           'via --config was not found.'
+                                           .format(self._run_conf.config))
+            if None in self._cache:
+                return self._cache[None]
+            options, _ = self._read_configuration_file(self._run_conf.config)
+            config = self._create_check_config(options)
+
         # Make the CLI always win
         final_config = {}
         for attr in CheckConfiguration._fields:
@@ -229,8 +271,19 @@ class ConfigurationParser(object):
         config = CheckConfiguration(**final_config)
 
         self._set_add_options(config.checked_codes, self._options)
-        self._cache[path] = config
-        return self._cache[path]
+
+        # Handle caching
+        if self._run_conf.config is not None:
+            self._cache[None] = config
+        else:
+            self._cache[self._get_node_dir(node)] = config
+        return config
+
+    @staticmethod
+    def _get_node_dir(node):
+        """Return the absolute path of the directory of a filesystem node."""
+        path = os.path.abspath(node)
+        return path if os.path.isdir(path) else os.path.dirname(path)
 
     def _read_configuration_file(self, path):
         """Try to read and parse `path` as a configuration file.
@@ -260,7 +313,7 @@ class ConfigurationParser(object):
                     continue
 
                 if opt.replace('_', '-') not in self.CONFIG_FILE_OPTIONS:
-                    log.warning("Unknown option '{0}' ignored".format(opt))
+                    log.warning("Unknown option '{}' ignored".format(opt))
                     continue
 
                 normalized_opt = opt.replace('-', '_')
@@ -279,7 +332,7 @@ class ConfigurationParser(object):
 
         if options is not None:
             if not self._validate_options(options):
-                raise IllegalConfiguration('in file: {0}'.format(path))
+                raise IllegalConfiguration('in file: {}'.format(path))
 
         return options, should_inherit
 
@@ -298,14 +351,11 @@ class ConfigurationParser(object):
 
         self._set_add_options(error_codes, child_options)
 
-        match = child_options.match \
-            if child_options.match is not None else parent_config.match
-        match_dir = child_options.match_dir \
-            if child_options.match_dir is not None else parent_config.match_dir
-
-        return CheckConfiguration(checked_codes=error_codes,
-                                  match=match,
-                                  match_dir=match_dir)
+        kwargs = dict(checked_codes=error_codes)
+        for key in ('match', 'match_dir', 'ignore_decorators'):
+            kwargs[key] = \
+                getattr(child_options, key) or getattr(parent_config, key)
+        return CheckConfiguration(**kwargs)
 
     def _parse_args(self, args=None, values=None):
         """Parse the options using `self._parser` and reformat the options."""
@@ -320,29 +370,25 @@ class ConfigurationParser(object):
         return RunConfiguration(**values)
 
     @classmethod
-    def _create_check_config(cls, options, use_dafaults=True):
+    def _create_check_config(cls, options, use_defaults=True):
         """Create a `CheckConfiguration` object from `options`.
 
-        If `use_dafaults`, any of the match options that are `None` will
+        If `use_defaults`, any of the match options that are `None` will
         be replaced with their default value and the default convention will be
         set for the checked codes.
 
         """
-        match = cls.DEFAULT_MATCH_RE \
-            if options.match is None and use_dafaults \
-            else options.match
-
-        match_dir = cls.DEFAULT_MATCH_DIR_RE \
-            if options.match_dir is None and use_dafaults \
-            else options.match_dir
-
         checked_codes = None
 
-        if cls._has_exclusive_option(options) or use_dafaults:
+        if cls._has_exclusive_option(options) or use_defaults:
             checked_codes = cls._get_checked_errors(options)
 
-        return CheckConfiguration(checked_codes=checked_codes,
-                                  match=match, match_dir=match_dir)
+        kwargs = dict(checked_codes=checked_codes)
+        for key in ('match', 'match_dir', 'ignore_decorators'):
+            kwargs[key] = getattr(cls, 'DEFAULT_{0}_RE'.format(key.upper())) \
+                if getattr(options, key) is None and use_defaults \
+                else getattr(options, key)
+        return CheckConfiguration(**kwargs)
 
     @classmethod
     def _get_section_name(cls, parser):
@@ -357,7 +403,7 @@ class ConfigurationParser(object):
     def _get_config_file_in_folder(cls, path):
         """Look for a configuration file in `path`.
 
-        If exists return it's full path, otherwise None.
+        If exists return its full path, otherwise None.
 
         """
         if os.path.isfile(path):
@@ -369,27 +415,47 @@ class ConfigurationParser(object):
             if config.read(full_path) and cls._get_section_name(config):
                 return full_path
 
-    @staticmethod
-    def _get_exclusive_error_codes(options):
+    @classmethod
+    def _get_exclusive_error_codes(cls, options):
         """Extract the error codes from the selected exclusive option."""
         codes = set(ErrorRegistry.get_error_codes())
         checked_codes = None
 
         if options.ignore is not None:
-            checked_codes = codes - options.ignore
+            ignored = cls._expand_error_codes(options.ignore)
+            checked_codes = codes - ignored
         elif options.select is not None:
-            checked_codes = options.select
+            checked_codes = cls._expand_error_codes(options.select)
         elif options.convention is not None:
             checked_codes = getattr(conventions, options.convention)
 
         # To not override the conventions nor the options - copy them.
         return copy.deepcopy(checked_codes)
 
-    @staticmethod
-    def _set_add_options(checked_codes, options):
+    @classmethod
+    def _set_add_options(cls, checked_codes, options):
         """Set `checked_codes` by the `add_ignore` or `add_select` options."""
-        checked_codes |= options.add_select
-        checked_codes -= options.add_ignore
+        checked_codes |= cls._expand_error_codes(options.add_select)
+        checked_codes -= cls._expand_error_codes(options.add_ignore)
+
+    @staticmethod
+    def _expand_error_codes(code_parts):
+        """Return an expanded set of error codes to ignore."""
+        codes = set(ErrorRegistry.get_error_codes())
+        expanded_codes = set()
+
+        try:
+            for part in code_parts:
+                if len(part) < 4:
+                    for code in codes:
+                        if code.startswith(part):
+                            expanded_codes.add(code)
+                else:
+                    expanded_codes.add(part)
+        except TypeError as e:
+            raise IllegalConfiguration(e)
+
+        return expanded_codes
 
     @classmethod
     def _get_checked_errors(cls, options):
@@ -413,12 +479,12 @@ class ConfigurationParser(object):
         for opt1, opt2 in \
                 itertools.permutations(cls.BASE_ERROR_SELECTION_OPTIONS, 2):
             if getattr(options, opt1) and getattr(options, opt2):
-                log.error('Cannot pass both {0} and {1}. They are '
+                log.error('Cannot pass both {} and {}. They are '
                           'mutually exclusive.'.format(opt1, opt2))
                 return False
 
         if options.convention and options.convention not in conventions:
-            log.error("Illegal convention '{0}'. Possible conventions: {1}"
+            log.error("Illegal convention '{}'. Possible conventions: {}"
                       .format(options.convention,
                               ', '.join(conventions.keys())))
             return False
@@ -442,7 +508,7 @@ class ConfigurationParser(object):
             Removes any occurrences of '' in the set.
 
             """
-            return set(value_str.split(',')) - set([''])
+            return set(value_str.split(',')) - {''}
 
         for opt in optional_set_options:
             value = getattr(options, opt)
@@ -483,21 +549,23 @@ class ConfigurationParser(object):
                help='print status information')
         option('--count', action='store_true', default=False,
                help='print total number of errors to stdout')
+        option('--config', metavar='<path>', default=None,
+               help='use given config file and disable config discovery')
 
         # Error check options
         option('--select', metavar='<codes>', default=None,
                help='choose the basic list of checked errors by '
                     'specifying which errors to check for (with a list of '
-                    'comma-separated error codes). '
-                    'for example: --select=D101,D202')
+                    'comma-separated error codes or prefixes). '
+                    'for example: --select=D101,D2')
         option('--ignore', metavar='<codes>', default=None,
                help='choose the basic list of checked errors by '
                     'specifying which errors to ignore (with a list of '
-                    'comma-separated error codes). '
-                    'for example: --ignore=D101,D202')
+                    'comma-separated error codes or prefixes). '
+                    'for example: --ignore=D101,D2')
         option('--convention', metavar='<name>', default=None,
                help='choose the basic list of checked errors by specifying an '
-                    'existing convention. Possible conventions: {0}'
+                    'existing convention. Possible conventions: {}'
                     .format(', '.join(conventions)))
         option('--add-select', metavar='<codes>', default=None,
                help='amend the list of errors to check for by specifying '
@@ -509,21 +577,29 @@ class ConfigurationParser(object):
         # Match clauses
         option('--match', metavar='<pattern>', default=None,
                help=("check only files that exactly match <pattern> regular "
-                     "expression; default is --match='{0}' which matches "
+                     "expression; default is --match='{}' which matches "
                      "files that don't start with 'test_' but end with "
                      "'.py'").format(cls.DEFAULT_MATCH_RE))
         option('--match-dir', metavar='<pattern>', default=None,
                help=("search only dirs that exactly match <pattern> regular "
-                     "expression; default is --match-dir='{0}', which "
+                     "expression; default is --match-dir='{}', which "
                      "matches all dirs that don't start with "
                      "a dot").format(cls.DEFAULT_MATCH_DIR_RE))
 
+        # Decorators
+        option('--ignore-decorators', metavar='<decorators>', default=None,
+               help=("ignore any functions or methods that are decorated "
+                     "by a function with a name fitting the <decorators> "
+                     "regular expression; default is --ignore-decorators='{0}'"
+                     " which does not ignore any decorated functions."
+                     .format(cls.DEFAULT_IGNORE_DECORATORS_RE)))
         return parser
 
 
 # Check configuration - used by the ConfigurationParser class.
 CheckConfiguration = namedtuple('CheckConfiguration',
-                                ('checked_codes', 'match', 'match_dir'))
+                                ('checked_codes', 'match', 'match_dir',
+                                 'ignore_decorators'))
 
 
 class IllegalConfiguration(Exception):
@@ -535,4 +611,4 @@ class IllegalConfiguration(Exception):
 # General configurations for pydocstyle run.
 RunConfiguration = namedtuple('RunConfiguration',
                               ('explain', 'source', 'debug',
-                               'verbose', 'count'))
+                               'verbose', 'count', 'config'))

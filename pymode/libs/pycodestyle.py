@@ -66,7 +66,7 @@ try:
 except ImportError:
     from ConfigParser import RawConfigParser
 
-__version__ = '2.2.0'
+__version__ = '2.3.1'
 
 DEFAULT_EXCLUDE = '.svn,CVS,.bzr,.hg,.git,__pycache__,.tox'
 DEFAULT_IGNORE = 'E121,E123,E126,E226,E24,E704,W503'
@@ -121,6 +121,20 @@ KEYWORD_REGEX = re.compile(r'(\s*)\b(?:%s)\b(\s*)' % r'|'.join(KEYWORDS))
 OPERATOR_REGEX = re.compile(r'(?:[^,\s])(\s*)(?:[-+*/|!<=>%&^]+)(\s*)')
 LAMBDA_REGEX = re.compile(r'\blambda\b')
 HUNK_REGEX = re.compile(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@.*$')
+STARTSWITH_DEF_REGEX = re.compile(r'^(async\s+def|def)')
+STARTSWITH_TOP_LEVEL_REGEX = re.compile(r'^(async\s+def\s+|def\s+|class\s+|@)')
+STARTSWITH_INDENT_STATEMENT_REGEX = re.compile(
+    r'^\s*({0})'.format('|'.join(s.replace(' ', '\s+') for s in (
+        'def', 'async def',
+        'for', 'async for',
+        'if', 'elif', 'else',
+        'try', 'except', 'finally',
+        'with', 'async with',
+        'class',
+        'while',
+    )))
+)
+DUNDER_REGEX = re.compile(r'^__([^\s]+)__ = ')
 
 # Work around Python < 2.6 behaviour, which does not generate NL after
 # a comment which is on a line by itself.
@@ -264,6 +278,7 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
     E303: def a():\n\n\n\n    pass
     E304: @decorator\n\ndef a():\n    pass
     E305: def a():\n    pass\na()
+    E306: def a():\n    def b():\n        pass\n    def c():\n        pass
     """
     if line_number < 3 and not previous_logical:
         return  # Don't expect blank lines before the first line
@@ -272,7 +287,7 @@ def blank_lines(logical_line, blank_lines, indent_level, line_number,
             yield 0, "E304 blank lines found after function decorator"
     elif blank_lines > 2 or (indent_level and blank_lines == 2):
         yield 0, "E303 too many blank lines (%d)" % blank_lines
-    elif logical_line.startswith(('def ', 'async def', 'class ', '@')):
+    elif STARTSWITH_TOP_LEVEL_REGEX.match(logical_line):
         if indent_level:
             if not (blank_before or previous_indent_level < indent_level or
                     DOCSTRING_REGEX.match(previous_logical)):
@@ -813,7 +828,7 @@ def whitespace_around_named_parameter_equals(logical_line, tokens):
     no_space = False
     prev_end = None
     annotated_func_arg = False
-    in_def = logical_line.startswith(('def', 'async def'))
+    in_def = bool(STARTSWITH_DEF_REGEX.match(logical_line))
     message = "E251 unexpected spaces around keyword / parameter equals"
     for token_type, text, start, end, line in tokens:
         if token_type == tokenize.NL:
@@ -912,8 +927,10 @@ def module_imports_on_top_of_file(
     Okay: # this is a comment\nimport os
     Okay: '''this is a module docstring'''\nimport os
     Okay: r'''this is a module docstring'''\nimport os
-    Okay: try:\n    import x\nexcept:\n    pass\nelse:\n    pass\nimport y
-    Okay: try:\n    import x\nexcept:\n    pass\nfinally:\n    pass\nimport y
+    Okay:
+    try:\n\timport x\nexcept ImportError:\n\tpass\nelse:\n\tpass\nimport y
+    Okay:
+    try:\n\timport x\nexcept ImportError:\n\tpass\nfinally:\n\tpass\nimport y
     E402: a=1\nimport os
     E402: 'One string'\n"Two string"\nimport os
     E402: a=1\nfrom sys import x
@@ -939,6 +956,8 @@ def module_imports_on_top_of_file(
     if line.startswith('import ') or line.startswith('from '):
         if checker_state.get('seen_non_imports', False):
             yield 0, "E402 module level import not at top of file"
+    elif re.match(DUNDER_REGEX, line):
+        return
     elif any(line.startswith(kw) for kw in allowed_try_keywords):
         # Allow try, except, else, finally keywords intermixed with imports in
         # order to support conditional importing
@@ -998,9 +1017,9 @@ def compound_statements(logical_line):
                     yield 0, ("E731 do not assign a lambda expression, use a "
                               "def")
                 break
-            if line.startswith('def '):
+            if STARTSWITH_DEF_REGEX.match(line):
                 yield 0, "E704 multiple statements on one line (def)"
-            else:
+            elif STARTSWITH_INDENT_STATEMENT_REGEX.match(line):
                 yield found, "E701 multiple statements on one line (colon)"
         prev_found = found
         found = line.find(':', found + 1)
@@ -1177,6 +1196,22 @@ def comparison_type(logical_line, noqa):
         if inst and isidentifier(inst) and inst not in SINGLETONS:
             return  # Allow comparison for types which are not obvious
         yield match.start(), "E721 do not compare types, use 'isinstance()'"
+
+
+def bare_except(logical_line, noqa):
+    r"""When catching exceptions, mention specific exceptions whenever possible.
+
+    Okay: except Exception:
+    Okay: except BaseException:
+    E722: except:
+    """
+    if noqa:
+        return
+
+    regex = re.compile(r"except\s*:")
+    match = regex.match(logical_line)
+    if match:
+        yield match.start(), "E722 do not use bare except'"
 
 
 def ambiguous_identifier(logical_line, tokens):

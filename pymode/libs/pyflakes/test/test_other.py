@@ -1800,3 +1800,72 @@ class TestAsyncStatements(TestCase):
         def foo(a, b):
             return a @ b
         ''')
+
+    @skipIf(version_info < (3, 6), 'new in Python 3.6')
+    def test_formatstring(self):
+        self.flakes('''
+        hi = 'hi'
+        mom = 'mom'
+        f'{hi} {mom}'
+        ''')
+
+    @skipIf(version_info < (3, 6), 'new in Python 3.6')
+    def test_variable_annotations(self):
+        self.flakes('''
+        name: str
+        age: int
+        ''')
+        self.flakes('''
+        name: str = 'Bob'
+        age: int = 18
+        ''')
+        self.flakes('''
+        class C:
+            name: str
+            age: int
+        ''')
+        self.flakes('''
+        class C:
+            name: str = 'Bob'
+            age: int = 18
+        ''')
+        self.flakes('''
+        def f():
+            name: str
+            age: int
+        ''')
+        self.flakes('''
+        def f():
+            name: str = 'Bob'
+            age: int = 18
+            foo: not_a_real_type = None
+        ''', m.UnusedVariable, m.UnusedVariable, m.UnusedVariable)
+        self.flakes('''
+        def f():
+            name: str
+            print(name)
+        ''', m.UndefinedName)
+        self.flakes('''
+        foo: not_a_real_type
+        ''', m.UndefinedName)
+        self.flakes('''
+        foo: not_a_real_type = None
+        ''', m.UndefinedName)
+        self.flakes('''
+        class C:
+            foo: not_a_real_type
+        ''', m.UndefinedName)
+        self.flakes('''
+        class C:
+            foo: not_a_real_type = None
+        ''', m.UndefinedName)
+        self.flakes('''
+        def f():
+            class C:
+                foo: not_a_real_type
+        ''', m.UndefinedName)
+        self.flakes('''
+        def f():
+            class C:
+                foo: not_a_real_type = None
+        ''', m.UndefinedName)

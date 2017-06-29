@@ -66,7 +66,7 @@ class ImportStarUsed(Message):
 
 
 class ImportStarUsage(Message):
-    message = "%s may be undefined, or defined from star imports: %s"
+    message = "%r may be undefined, or defined from star imports: %s"
 
     def __init__(self, filename, loc, name, from_list):
         Message.__init__(self, filename, loc)

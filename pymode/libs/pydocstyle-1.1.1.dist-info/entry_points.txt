@@ -1,4 +1,0 @@
-[console_scripts]
-pep257 = pydocstyle.cli:main_pep257
-pydocstyle = pydocstyle.cli:main
-

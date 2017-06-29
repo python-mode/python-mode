@@ -17,7 +17,7 @@ class ReturnCode(object):
     invalid_options = 2
 
 
-def run_pydocstyle(use_pep257=False):
+def run_pydocstyle():
     log.setLevel(logging.DEBUG)
     conf = ConfigurationParser()
     setup_stream_handlers(conf.get_default_run_configuration())
@@ -32,12 +32,6 @@ def run_pydocstyle(use_pep257=False):
     # Reset the logger according to the command line arguments
     setup_stream_handlers(run_conf)
 
-    if use_pep257:
-        log.warning("Deprecation Warning:\n"
-                    "pep257 has been renamed to pydocstyle and the use of the "
-                    "pep257 executable is deprecated and will be removed in "
-                    "the next major version. Please use `pydocstyle` instead.")
-
     log.debug("starting in debug mode.")
 
     Error.explain = run_conf.explain
@@ -45,15 +39,19 @@ def run_pydocstyle(use_pep257=False):
 
     errors = []
     try:
-        for filename, checked_codes in conf.get_files_to_check():
-            errors.extend(check((filename,), select=checked_codes))
-    except IllegalConfiguration:
+        for filename, checked_codes, ignore_decorators in \
+                conf.get_files_to_check():
+            errors.extend(check((filename,), select=checked_codes,
+                                ignore_decorators=ignore_decorators))
+    except IllegalConfiguration as error:
         # An illegal configuration file was found during file generation.
+        log.error(error.args[0])
         return ReturnCode.invalid_options
 
     count = 0
     for error in errors:
-        sys.stderr.write('%s\n' % error)
+        if hasattr(error, 'code'):
+            sys.stdout.write('%s\n' % error)
         count += 1
     if count == 0:
         exit_code = ReturnCode.no_violations_found
@@ -64,21 +62,12 @@ def run_pydocstyle(use_pep257=False):
     return exit_code
 
 
-def main(use_pep257=False):
-    """Run pydocstyle as a script.
-
-    `use_pep257` is True if the script was invoked with the deprecated script
-    name `pep257`, in which case a deprecation warning will be printed.
-
-    """
+def main():
+    """Run pydocstyle as a script."""
     try:
-        sys.exit(run_pydocstyle(use_pep257))
+        sys.exit(run_pydocstyle())
     except KeyboardInterrupt:
         pass
-
-
-def main_pep257():
-    main(use_pep257=True)
 
 
 def setup_stream_handlers(conf):

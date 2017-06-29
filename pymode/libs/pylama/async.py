@@ -1,4 +1,4 @@
-"""Support for asyncronious checking."""
+"""Support for checking code asynchronously."""
 
 import logging
 import threading

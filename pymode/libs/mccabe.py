@@ -16,7 +16,7 @@ try:
 except ImportError:   # Python 2.5
     from flake8.util import ast, iter_child_nodes
 
-__version__ = '0.5.3'
+__version__ = '0.6.1'
 
 
 class ASTVisitor(object):
@@ -160,10 +160,11 @@ class PathGraphingAstVisitor(ASTVisitor):
         name = "Stmt %d" % lineno
         self.appendPathNode(name)
 
-    visitAssert = visitAssign = visitAugAssign = visitDelete = visitPrint = \
-        visitRaise = visitYield = visitImport = visitCall = visitSubscript = \
-        visitPass = visitContinue = visitBreak = visitGlobal = visitReturn = \
-        visitAwait = visitSimpleStatement
+    def default(self, node, *args):
+        if isinstance(node, ast.stmt):
+            self.visitSimpleStatement(node)
+        else:
+            super(PathGraphingAstVisitor, self).default(node, *args)
 
     def visitLoop(self, node):
         name = "Loop %d" % node.lineno

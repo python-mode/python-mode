@@ -1,12 +1,12 @@
 """Python code parser."""
 
 import logging
-import sys
+import six
 import textwrap
 import tokenize as tk
-from collections import defaultdict
 from itertools import chain, dropwhile
 from re import compile as re
+from .utils import log
 
 try:
     from StringIO import StringIO
@@ -30,7 +30,12 @@ except NameError:  # Python 2.5 and earlier
 
 __all__ = ('Parser', 'Definition', 'Module', 'Package', 'Function',
            'NestedFunction', 'Method', 'Class', 'NestedClass', 'AllError',
-           'StringIO')
+           'StringIO', 'ParseError')
+
+
+class ParseError(Exception):
+    def __str__(self):
+        return "Cannot parse file."
 
 
 def humanize(string):
@@ -42,7 +47,7 @@ class Value(object):
 
     def __init__(self, *args):
         if len(self._fields) != len(args):
-            raise ValueError('got {0} arguments for {1} fields for {2}: {3}'
+            raise ValueError('got {} arguments for {} fields for {}: {}'
                              .format(len(args), len(self._fields),
                                      self.__class__.__name__, self._fields))
         vars(self).update(zip(self._fields, args))
@@ -54,9 +59,9 @@ class Value(object):
         return other and vars(self) == vars(other)
 
     def __repr__(self):
-        kwargs = ', '.join('{0}={1!r}'.format(field, getattr(self, field))
+        kwargs = ', '.join('{}={!r}'.format(field, getattr(self, field))
                            for field in self._fields)
-        return '{0}({1})'.format(self.__class__.__name__, kwargs)
+        return '{}({})'.format(self.__class__.__name__, kwargs)
 
 
 class Definition(Value):
@@ -91,10 +96,9 @@ class Definition(Value):
         return ''.join(reversed(list(filtered_src)))
 
     def __str__(self):
-        out = 'in {0} {1} `{2}`'.format(self._publicity, self._human,
-                                        self.name)
+        out = 'in {} {} `{}`'.format(self._publicity, self._human, self.name)
         if self.skipped_error_codes:
-            out += ' (skipping {0})'.format(self.skipped_error_codes)
+            out += ' (skipping {})'.format(self.skipped_error_codes)
         return out
 
 
@@ -104,10 +108,13 @@ class Module(Definition):
     _fields = ('name', '_source', 'start', 'end', 'decorators', 'docstring',
                'children', 'parent', '_all', 'future_imports',
                'skipped_error_codes')
-    is_public = True
     _nest = staticmethod(lambda s: {'def': Function, 'class': Class}[s])
     module = property(lambda self: self)
     all = property(lambda self: self._all)
+
+    @property
+    def is_public(self):
+        return not self.name.startswith('_') or self.name.startswith('__')
 
     def __str__(self):
         return 'at module level'
@@ -130,6 +137,17 @@ class Function(Definition):
             return self.name in self.all
         else:
             return not self.name.startswith('_')
+
+    @property
+    def is_test(self):
+        """Return True if this function is a test function/method.
+
+        We exclude tests from the imperative mood check, because to phrase
+        their docstring in the imperative mood, they would have to start with
+        a highly redundant "Test that ...".
+
+        """
+        return self.name.startswith('test') or self.name == 'runTest'
 
 
 class NestedFunction(Function):
@@ -154,7 +172,7 @@ class Method(Function):
         # Check if we are a setter/deleter method, and mark as private if so.
         for decorator in self.decorators:
             # Given 'foo', match 'foo.bar' but not 'foobar' or 'sfoo'
-            if re(r"^{0}\.".format(self.name)).match(decorator.name):
+            if re(r"^{}\.".format(self.name)).match(decorator.name):
                 return False
         name_is_public = (not self.name.startswith('_') or
                           self.name in VARIADIC_MAGIC_METHODS or
@@ -206,17 +224,34 @@ class AllError(Exception):
 
 
 class TokenStream(object):
+    # A logical newline is where a new expression or statement begins. When
+    # there is a physical new line, but not a logical one, for example:
+    # (x +
+    #  y)
+    # The token will be tk.NL, not tk.NEWLINE.
+    LOGICAL_NEWLINES = {tk.NEWLINE, tk.INDENT, tk.DEDENT}
+
     def __init__(self, filelike):
         self._generator = tk.generate_tokens(filelike.readline)
         self.current = Token(*next(self._generator, None))
         self.line = self.current.start[0]
+        self.log = log
+        self.got_logical_newline = True
 
     def move(self):
         previous = self.current
-        current = next(self._generator, None)
+        current = self._next_from_generator()
         self.current = None if current is None else Token(*current)
         self.line = self.current.start[0] if self.current else self.line
+        self.got_logical_newline = (previous.kind in self.LOGICAL_NEWLINES)
         return previous
+
+    def _next_from_generator(self):
+        try:
+            return next(self._generator, None)
+        except (SyntaxError, tk.TokenError):
+            self.log.warning('error generating tokens', exc_info=True)
+            return None
 
     def __iter__(self):
         while True:
@@ -229,7 +264,7 @@ class TokenStream(object):
 
 class TokenKind(int):
     def __repr__(self):
-        return "tk.{0}".format(tk.tok_name[self])
+        return "tk.{}".format(tk.tok_name[self])
 
 
 class Token(Value):
@@ -245,14 +280,17 @@ class Parser(object):
 
     def parse(self, filelike, filename):
         """Parse the given file-like object and return its Module object."""
-        # TODO: fix log
-        self.log = logging.getLogger()
+        self.log = log
         self.source = filelike.readlines()
         src = ''.join(self.source)
+        try:
+            compile(src, filename, 'exec')
+        except SyntaxError as error:
+            six.raise_from(ParseError(), error)
         self.stream = TokenStream(StringIO(src))
         self.filename = filename
         self.all = None
-        self.future_imports = defaultdict(lambda: False)
+        self.future_imports = set()
         self._accumulated_decorators = []
         return self.parse_module()
 
@@ -307,6 +345,8 @@ class Parser(object):
         at_arguments = False
 
         while self.current is not None:
+            self.log.debug("parsing decorators, current token is %r (%s)",
+                           self.current.kind, self.current.value)
             if (self.current.kind == tk.NAME and
                     self.current.value in ['def', 'class']):
                 # Done with decorators - found function or class proper
@@ -344,9 +384,12 @@ class Parser(object):
         while self.current is not None:
             self.log.debug("parsing definition list, current token is %r (%s)",
                            self.current.kind, self.current.value)
+            self.log.debug('got_newline: %s', self.stream.got_logical_newline)
             if all and self.current.value == '__all__':
                 self.parse_all()
-            elif self.current.kind == tk.OP and self.current.value == '@':
+            elif (self.current.kind == tk.OP and
+                  self.current.value == '@' and
+                  self.stream.got_logical_newline):
                 self.consume(tk.OP)
                 self.parse_decorators()
             elif self.current.value in ['def', 'class']:
@@ -372,18 +415,6 @@ class Parser(object):
         self.consume(tk.OP)
         if self.current.value not in '([':
             raise AllError('Could not evaluate contents of __all__. ')
-        if self.current.value == '[':
-            sys.stderr.write(
-                "{0} WARNING: __all__ is defined as a list, this means "
-                "pydocstyle cannot reliably detect contents of the __all__ "
-                "variable, because it can be mutated. Change __all__ to be "
-                "an (immutable) tuple, to remove this warning. Note, "
-                "pydocstyle uses __all__ to detect which definitions are "
-                "public, to warn if public definitions are missing "
-                "docstrings. If __all__ is a (mutable) list, pydocstyle "
-                "cannot reliably assume its contents. pydocstyle will "
-                "proceed assuming __all__ is not mutated.\n"
-                .format(self.filename))
         self.consume(tk.OP)
 
         self.all = []
@@ -395,7 +426,7 @@ class Parser(object):
                     self.current.value == ','):
                 all_content += self.current.value
             else:
-                raise AllError('Unexpected token kind in  __all__: {0!r}. '
+                raise AllError('Unexpected token kind in  __all__: {!r}. '
                                .format(self.current.kind))
             self.stream.move()
         self.consume(tk.OP)
@@ -404,7 +435,7 @@ class Parser(object):
             self.all = eval(all_content, {})
         except BaseException as e:
             raise AllError('Could not evaluate contents of __all__.'
-                           '\bThe value was {0}. The exception was:\n{1}'
+                           '\bThe value was {}. The exception was:\n{}'
                            .format(all_content, e))
 
     def parse_module(self):
@@ -454,6 +485,7 @@ class Parser(object):
             assert self.current.kind != tk.INDENT
             docstring = self.parse_docstring()
             decorators = self._accumulated_decorators
+            self.log.debug("current accumulated decorators: %s", decorators)
             self._accumulated_decorators = []
             self.log.debug("parsing nested definitions.")
             children = list(self.parse_definitions(class_))
@@ -548,7 +580,7 @@ class Parser(object):
                            self.current.kind, self.current.value)
             if is_future_import:
                 self.log.debug('found future import: %s', self.current.value)
-                self.future_imports[self.current.value] = True
+                self.future_imports.add(self.current.value)
             self.consume(tk.NAME)
             self.log.debug("parsing import, token is %r (%s)",
                            self.current.kind, self.current.value)

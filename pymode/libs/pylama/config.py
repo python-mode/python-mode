@@ -30,7 +30,7 @@ STREAM = logging.StreamHandler(sys.stdout)
 LOGGER.addHandler(STREAM)
 
 
-class _Default(object):
+class _Default(object):  # pylint: disable=too-few-public-methods
 
     def __init__(self, value=None):
         self.value = value
@@ -42,14 +42,14 @@ class _Default(object):
         return "<_Default [%s]>" % self.value
 
 
-def split_csp_str(s):
+def split_csp_str(val):
     """ Split comma separated string into unique values, keeping their order.
 
     :returns: list of splitted values
 
     """
     seen = set()
-    values = s if isinstance(s, (list, tuple)) else s.strip().split(',')
+    values = val if isinstance(val, (list, tuple)) else val.strip().split(',')
     return [x for x in values if x and not (x in seen or seen.add(x))]
 
 
@@ -65,8 +65,22 @@ def parse_linters(linters):
         if linter:
             result.append((name, linter))
         else:
-            logging.warn("Linter `%s` not found.", name)
+            logging.warning("Linter `%s` not found.", name)
     return result
+
+
+def get_default_config_file(rootdir=None):
+    """Search for configuration file."""
+    if rootdir is None:
+        return DEFAULT_CONFIG_FILE
+
+    for path in CONFIG_FILES:
+        path = os.path.join(rootdir, path)
+        if os.path.isfile(path) and os.access(path, os.R_OK):
+            return path
+
+
+DEFAULT_CONFIG_FILE = get_default_config_file(CURDIR)
 
 
 PARSER = ArgumentParser(description="Code audit tool for python.")
@@ -115,23 +129,26 @@ PARSER.add_argument(
 
 PARSER.add_argument(
     "--async", action="store_true",
-    help="Enable async mode. Usefull for checking a lot of files. "
-    "Dont supported with pylint.")
+    help="Enable async mode. Useful for checking a lot of files. "
+    "Unsupported with pylint.")
 
 PARSER.add_argument(
-    "--options", "-o", default="",
-    help="Select configuration file. By default is '<CURDIR>/pylama.ini'")
+    "--options", "-o", default=DEFAULT_CONFIG_FILE, metavar='FILE',
+    help="Specify configuration file. "
+    "Looks for {}, or {} in the current directory (default: {}).".format(
+        ", ".join(CONFIG_FILES[:-1]), CONFIG_FILES[-1],
+        DEFAULT_CONFIG_FILE))
 
 PARSER.add_argument(
     "--force", "-F", action='store_true', default=_Default(False),
-    help="Force code checking (if linter doesnt allow)")
+    help="Force code checking (if linter doesn't allow)")
 
 PARSER.add_argument(
     "--abspath", "-a", action='store_true', default=_Default(False),
     help="Use absolute paths in output.")
 
 
-ACTIONS = dict((a.dest, a) for a in PARSER._actions)
+ACTIONS = dict((a.dest, a) for a in PARSER._actions)  # pylint: disable=protected-access
 
 
 def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
@@ -140,8 +157,7 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
     :return argparse.Namespace:
 
     """
-    if args is None:
-        args = []
+    args = args or []
 
     # Parse args from command string
     options = PARSER.parse_args(args)
@@ -162,10 +178,7 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
         # Parse file related options
         for name, opts in cfg.sections.items():
 
-            if not name.startswith('pylama'):
-                continue
-
-            if name == cfg.default_section:
+            if not name.startswith('pylama') or name == cfg.default_section:
                 continue
 
             name = name[7:]
@@ -178,12 +191,7 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
             options.file_params[mask] = dict(opts)
 
     # Override options
-    for opt, val in overrides.items():
-        passed_value = getattr(options, opt, _Default())
-        if opt in ('ignore', 'select') and passed_value:
-            setattr(options, opt, process_value(opt, passed_value.value) + process_value(opt, val))
-        elif isinstance(passed_value, _Default):
-            setattr(options, opt, process_value(opt, val))
+    _override_options(options, **overrides)
 
     # Postprocess options
     for name in options.__dict__:
@@ -192,10 +200,22 @@ def parse_options(args=None, config=True, rootdir=CURDIR, **overrides): # noqa
             setattr(options, name, process_value(name, value.value))
 
     if options.async and 'pylint' in options.linters:
-        LOGGER.warn('Cant parse code asynchronously while pylint is enabled.')
+        LOGGER.warning('Can\'t parse code asynchronously with pylint enabled.')
         options.async = False
 
     return options
+
+
+def _override_options(options, **overrides):
+    """Override options."""
+    for opt, val in overrides.items():
+        passed_value = getattr(options, opt, _Default())
+        if opt in ('ignore', 'select') and passed_value:
+            value = process_value(opt, passed_value.value)
+            value += process_value(opt, val)
+            setattr(options, opt, value)
+        elif isinstance(passed_value, _Default):
+            setattr(options, opt, process_value(opt, val))
 
 
 def process_value(name, value):
@@ -213,7 +233,7 @@ def process_value(name, value):
     return value
 
 
-def get_config(ini_path=None, rootdir=CURDIR):
+def get_config(ini_path=None, rootdir=None):
     """ Load configuration from INI.
 
     :return Namespace:
@@ -223,10 +243,9 @@ def get_config(ini_path=None, rootdir=CURDIR):
     config.default_section = 'pylama'
 
     if not ini_path:
-        for path in CONFIG_FILES:
-            path = os.path.join(rootdir, path)
-            if os.path.isfile(path) and os.access(path, os.R_OK):
-                config.read(path)
+        path = get_default_config_file(rootdir)
+        if path:
+            config.read(path)
     else:
         config.read(ini_path)
 
@@ -234,11 +253,13 @@ def get_config(ini_path=None, rootdir=CURDIR):
 
 
 def setup_logger(options):
-    """ Setup logger with options. """
+    """Do the logger setup with options."""
     LOGGER.setLevel(logging.INFO if options.verbose else logging.WARN)
     if options.report:
         LOGGER.removeHandler(STREAM)
         LOGGER.addHandler(logging.FileHandler(options.report, mode='w'))
-    LOGGER.info('Try to read configuration from: ' + options.options)
+
+    if options.options:
+        LOGGER.info('Try to read configuration from: ' + options.options)
 
 # pylama:ignore=W0212,D210,F0001

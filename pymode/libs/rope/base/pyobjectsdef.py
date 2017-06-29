@@ -215,6 +215,8 @@ class PyModule(pyobjects.PyModule):
         """A `LogicalLinesFinder`"""
         return rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
 
+    def get_name(self):
+        return rope.base.libutils.modname(self.get_resource())
 
 class PyPackage(pyobjects.PyPackage):
 
