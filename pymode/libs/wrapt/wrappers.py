@@ -18,14 +18,14 @@ def with_metaclass(meta, *bases):
 
 class _ObjectProxyMethods(object):
 
-     # We use properties to override the values of __module__ and
-     # __doc__. If we add these in ObjectProxy, the derived class
-     # __dict__ will still be setup to have string variants of these
-     # attributes and the rules of descriptors means that they appear to
-     # take precedence over the properties in the base class. To avoid
-     # that, we copy the properties into the derived class type itself
-     # via a meta class. In that way the properties will always take
-     # precedence.
+    # We use properties to override the values of __module__ and
+    # __doc__. If we add these in ObjectProxy, the derived class
+    # __dict__ will still be setup to have string variants of these
+    # attributes and the rules of descriptors means that they appear to
+    # take precedence over the properties in the base class. To avoid
+    # that, we copy the properties into the derived class type itself
+    # via a meta class. In that way the properties will always take
+    # precedence.
 
     @property
     def __module__(self):
@@ -60,15 +60,15 @@ class _ObjectProxyMethods(object):
         return self.__wrapped__.__weakref__
 
 class _ObjectProxyMetaType(type):
-     def __new__(cls, name, bases, dictionary):
-         # Copy our special properties into the class so that they
-         # always take precedence over attributes of the same name added
-         # during construction of a derived class. This is to save
-         # duplicating the implementation for them in all derived classes.
+    def __new__(cls, name, bases, dictionary):
+        # Copy our special properties into the class so that they
+        # always take precedence over attributes of the same name added
+        # during construction of a derived class. This is to save
+        # duplicating the implementation for them in all derived classes.
 
-         dictionary.update(vars(_ObjectProxyMethods))
+        dictionary.update(vars(_ObjectProxyMethods))
 
-         return type.__new__(cls, name, bases, dictionary)
+        return type.__new__(cls, name, bases, dictionary)
 
 class ObjectProxy(with_metaclass(_ObjectProxyMetaType)):
 
@@ -418,7 +418,7 @@ class CallableObjectProxy(ObjectProxy):
 class _FunctionWrapperBase(ObjectProxy):
 
     __slots__ = ('_self_instance', '_self_wrapper', '_self_enabled',
-            '_self_binding', '_self_parent') 
+            '_self_binding', '_self_parent')
 
     def __init__(self, wrapped, instance, wrapper, enabled=None,
             binding='function', parent=None):
@@ -440,7 +440,7 @@ class _FunctionWrapperBase(ObjectProxy):
         #
         # The distinguishing attribute which determines whether we are
         # being called in an unbound or bound wrapper is the parent
-        # attribute. If binding has never occured, then the parent will
+        # attribute. If binding has never occurred, then the parent will
         # be None.
         #
         # First therefore, is if we are called in an unbound wrapper. In
@@ -467,7 +467,7 @@ class _FunctionWrapperBase(ObjectProxy):
 
             return self
 
-        # Now we have the case of binding occuring a second time on what
+        # Now we have the case of binding occurring a second time on what
         # was already a bound function. In this case we would usually
         # return ourselves again. This mirrors what Python does.
         #
@@ -702,7 +702,7 @@ def resolve_path(module, name):
         # to work. For the case of a class we therefore access
         # the __dict__ directly. To cope though with the wrong
         # class being given to us, or a method being moved into
-        # a base class, we need to walk the class heirarchy to
+        # a base class, we need to walk the class hierarchy to
         # work out exactly which __dict__ the method was defined
         # in, as accessing it from __dict__ will fail if it was
         # not actually on the class given. Fallback to using

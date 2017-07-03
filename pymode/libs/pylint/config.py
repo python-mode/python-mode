@@ -1,5 +1,7 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2006-2010, 2012-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2015 Aru Sahni <arusahni@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -28,10 +30,7 @@ import re
 import sys
 import time
 
-try:
-    import configparser
-except ImportError:
-    from six.moves import configparser
+import configparser
 from six.moves import range
 
 from pylint import utils
@@ -133,10 +132,10 @@ class UnsupportedAction(Exception):
 
 def _multiple_choice_validator(choices, name, value):
     values = utils._check_csv(value)
-    for value in values:
-        if value not in choices:
+    for csv_value in values:
+        if csv_value not in choices:
             msg = "option %s: invalid value: %r, should be in %s"
-            raise optparse.OptionValueError(msg % (name, value, choices))
+            raise optparse.OptionValueError(msg % (name, csv_value, choices))
     return values
 
 
@@ -172,6 +171,13 @@ def _yn_validator(opt, _, value):
     raise optparse.OptionValueError(msg % (opt, value))
 
 
+def _non_empty_string_validator(opt, _, value):
+    if not value:
+        msg = "indent string can't be empty."
+        raise optparse.OptionValueError(msg)
+    return utils._unquote(value)
+
+
 VALIDATORS = {
     'string': utils._unquote,
     'int': int,
@@ -182,6 +188,7 @@ VALIDATORS = {
     'choice': lambda opt, name, value: _choice_validator(opt['choices'], name, value),
     'multiple_choice': lambda opt, name, value: _multiple_choice_validator(opt['choices'],
                                                                            name, value),
+    'non_empty_string': _non_empty_string_validator,
 }
 
 def _call_validator(opttype, optdict, option, value):
@@ -257,7 +264,6 @@ class Option(optparse.Option):
     TYPES = optparse.Option.TYPES + ('regexp', 'regexp_csv', 'csv', 'yn',
                                      'multiple_choice',
                                      'non_empty_string')
-
     ATTRS = optparse.Option.ATTRS + ['hide', 'level']
     TYPE_CHECKER = copy.copy(optparse.Option.TYPE_CHECKER)
     TYPE_CHECKER['regexp'] = _regexp_validator
@@ -265,6 +271,7 @@ class Option(optparse.Option):
     TYPE_CHECKER['csv'] = _csv_validator
     TYPE_CHECKER['yn'] = _yn_validator
     TYPE_CHECKER['multiple_choice'] = _multiple_choices_validating_option
+    TYPE_CHECKER['non_empty_string'] = _non_empty_string_validator
 
     def __init__(self, *opts, **attrs):
         optparse.Option.__init__(self, *opts, **attrs)
@@ -290,10 +297,10 @@ class Option(optparse.Option):
         # value(s) are bogus.
         value = self.convert_value(opt, value)
         if self.type == 'named':
-            existant = getattr(values, self.dest)
-            if existant:
-                existant.update(value)
-                value = existant
+            existent = getattr(values, self.dest)
+            if existent:
+                existent.update(value)
+                value = existent
         # And then take whatever action is expected of us.
         # This is a separate method to make life easier for
         # subclasses to add new actions.
@@ -384,7 +391,7 @@ class _ManHelpFormatter(optparse.HelpFormatter):
     def format_short_description(pgm, short_desc):
         return '''.SH NAME
 .B %s
-\- %s
+\\- %s
 ''' % (pgm, short_desc.strip())
 
     @staticmethod
@@ -452,7 +459,7 @@ class OptionsManagerMixIn(object):
 
     def reset_parsers(self, usage='', version=None):
         # configuration file parser
-        self.cfgfile_parser = configparser.ConfigParser()
+        self.cfgfile_parser = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
         # command line parser
         self.cmdline_parser = OptionParser(usage=usage, version=version)
         self.cmdline_parser.options_manager = self
@@ -493,7 +500,8 @@ class OptionsManagerMixIn(object):
             group.level = provider.level
             self._mygroups[group_name] = group
             # add section to the config file
-            if group_name != "DEFAULT":
+            if group_name != "DEFAULT" and \
+                    group_name not in self.cfgfile_parser._sections:
                 self.cfgfile_parser.add_section(group_name)
         # add provider's specific options
         for opt, optdict in options:
@@ -579,7 +587,7 @@ class OptionsManagerMixIn(object):
             if printed:
                 print('\n', file=stream)
             utils.format_section(stream, section.upper(),
-                                 options_by_section[section],
+                                 sorted(options_by_section[section]),
                                  encoding)
             printed = True
 
@@ -728,36 +736,36 @@ class OptionsProviderMixIn(object):
         """get the current value for the given option"""
         return getattr(self.config, self.option_attrname(opt), None)
 
-    def set_option(self, opt, value, action=None, optdict=None):
+    def set_option(self, optname, value, action=None, optdict=None):
         """method called to set an option (registered in the options list)"""
         if optdict is None:
-            optdict = self.get_option_def(opt)
+            optdict = self.get_option_def(optname)
         if value is not None:
-            value = _validate(value, optdict, opt)
+            value = _validate(value, optdict, optname)
         if action is None:
             action = optdict.get('action', 'store')
         if action == 'store':
-            setattr(self.config, self.option_attrname(opt, optdict), value)
+            setattr(self.config, self.option_attrname(optname, optdict), value)
         elif action in ('store_true', 'count'):
-            setattr(self.config, self.option_attrname(opt, optdict), 0)
+            setattr(self.config, self.option_attrname(optname, optdict), 0)
         elif action == 'store_false':
-            setattr(self.config, self.option_attrname(opt, optdict), 1)
+            setattr(self.config, self.option_attrname(optname, optdict), 1)
         elif action == 'append':
-            opt = self.option_attrname(opt, optdict)
-            _list = getattr(self.config, opt, None)
+            optname = self.option_attrname(optname, optdict)
+            _list = getattr(self.config, optname, None)
             if _list is None:
                 if isinstance(value, (list, tuple)):
                     _list = value
                 elif value is not None:
                     _list = []
                     _list.append(value)
-                setattr(self.config, opt, _list)
+                setattr(self.config, optname, _list)
             elif isinstance(_list, tuple):
-                setattr(self.config, opt, _list + (value,))
+                setattr(self.config, optname, _list + (value,))
             else:
                 _list.append(value)
         elif action == 'callback':
-            optdict['callback'](None, opt, value, None)
+            optdict['callback'](None, optname, value, None)
         else:
             raise UnsupportedAction(action)
 

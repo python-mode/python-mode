@@ -1,17 +1,18 @@
-# Copyright (c) 2009-2010 Arista Networks, Inc. - James Lingard
-# Copyright (c) 2004-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2009-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2013-2014 Google, Inc.
+# Copyright (c) 2013-2016 Claudiu Popa <pcmanticore@gmail.com>
+
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
 """Checker for string formatting operations.
 """
 
-import numbers
+import sys
 import tokenize
 import string
-import sys
+import numbers
 
 import six
 
@@ -88,7 +89,7 @@ MSGS = {
     'W1305': ("Format string contains both automatic field numbering "
               "and manual field specification",
               "format-combined-specification",
-              "Usen when a PEP 3101 format string contains both automatic "
+              "Used when a PEP 3101 format string contains both automatic "
               "field numbering (e.g. '{}') and manual field "
               "specification (e.g. '{0}').",
               {'minversion': (2, 7)}),
@@ -124,7 +125,10 @@ else:
                 yield is_attr, key
 
     def split_format_field_names(format_string):
-        keyname, fielditerator = format_string._formatter_field_name_split()
+        try:
+            keyname, fielditerator = format_string._formatter_field_name_split()
+        except ValueError:
+            raise utils.IncompleteFormatString
         # it will return longs, instead of ints, which will complicate
         # the output
         return keyname, _field_iterator_convertor(fielditerator)
@@ -184,7 +188,10 @@ def parse_format_method_string(format_string):
                 # to different output between 2 and 3
                 manual_pos_arg.add(str(keyname))
                 keyname = int(keyname)
-            keys.append((keyname, list(fielditerator)))
+            try:
+                keys.append((keyname, list(fielditerator)))
+            except ValueError:
+                raise utils.IncompleteFormatString()
         else:
             num_args += 1
     return keys, num_args, len(manual_pos_arg)
@@ -271,7 +278,7 @@ class StringFormatChecker(BaseChecker):
                     else:
                         # One of the keys was something other than a
                         # constant.  Since we can't tell what it is,
-                        # supress checks for missing keys in the
+                        # suppress checks for missing keys in the
                         # dictionary.
                         unknown_keys = True
                 if not unknown_keys:
@@ -297,7 +304,10 @@ class StringFormatChecker(BaseChecker):
             # the % operator matches the number required by the format
             # string.
             if isinstance(args, astroid.Tuple):
-                num_args = len(args.elts)
+                rhs_tuple = utils.safe_infer(args)
+                num_args = None
+                if rhs_tuple not in (None, astroid.Uninferable):
+                    num_args = len(rhs_tuple.elts)
             elif isinstance(args, OTHER_NODES + (astroid.Dict, astroid.DictComp)):
                 num_args = 1
             else:
@@ -471,10 +481,14 @@ class StringFormatChecker(BaseChecker):
                     warn_error = False
                     if hasattr(previous, 'getitem'):
                         try:
-                            previous = previous.getitem(specifier)
-                        except (IndexError, TypeError):
+                            previous = previous.getitem(astroid.Const(specifier))
+                        except (astroid.AstroidIndexError,
+                                astroid.AstroidTypeError,
+                                astroid.AttributeInferenceError):
                             warn_error = True
                         except astroid.InferenceError:
+                            break
+                        if previous is astroid.Uninferable:
                             break
                     else:
                         try:
@@ -497,7 +511,6 @@ class StringFormatChecker(BaseChecker):
                 except astroid.InferenceError:
                     # can't check further if we can't infer it
                     break
-
 
 
 class StringConstantChecker(BaseTokenChecker):

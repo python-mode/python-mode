@@ -1,5 +1,8 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2006, 2009-2013 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2013-2014 Google, Inc.
+# Copyright (c) 2014 Alexandru Coman <fcoman@bitdefender.com>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -61,7 +64,7 @@ class EncodingChecker(BaseChecker):
         match = notes.search(line)
         if not match:
             return
-        self.add_message('fixme', args=line[match.start(1):-1], line=lineno)
+        self.add_message('fixme', args=line[match.start(1):].rstrip(), line=lineno)
 
     def _check_encoding(self, lineno, line, file_encoding):
         try:
@@ -76,7 +79,7 @@ class EncodingChecker(BaseChecker):
         """
         if self.config.notes:
             notes = re.compile(
-                r'.*?#\s*(%s)(:*\s*.+)' % "|".join(self.config.notes))
+                r'.*?#\s*(%s)(:*\s*.*)' % "|".join(self.config.notes))
         else:
             notes = None
         if module.file_encoding:

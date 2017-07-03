@@ -1,30 +1,56 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2006-2015 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2013-2014 Google, Inc.
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
 # pylint: disable=W0622,C0103
 """pylint packaging information"""
+
 from __future__ import absolute_import
 
 from os.path import join
+from sys import version_info as py_version
 
+from pkg_resources import parse_version
+from setuptools import __version__ as setuptools_version
 
 modname = distname = 'pylint'
 
-numversion = (1, 6, 4)
+numversion = (1, 7, 2)
 version = '.'.join([str(num) for num in numversion])
 
 install_requires = [
-    'astroid>=1.4.5,<1.5.0',
+    'astroid>=1.5.1',
     'six',
     'isort >= 4.2.5',
     'mccabe',
 ]
 
+dependency_links = []
+
 extras_require = {}
 extras_require[':sys_platform=="win32"'] = ['colorama']
-extras_require[':python_version=="2.7"'] = ['configparser', 'backports.functools_lru_cache']
+
+
+def has_environment_marker_range_operators_support():
+    """Code extracted from 'pytest/setup.py'
+    https://github.com/pytest-dev/pytest/blob/7538680c/setup.py#L31
+    The first known release to support environment marker with range operators
+    it is 17.1, see: https://setuptools.readthedocs.io/en/latest/history.html#id113
+    """
+    return parse_version(setuptools_version) >= parse_version('17.1')
+
+
+if has_environment_marker_range_operators_support():
+    extras_require[':python_version=="2.7"'] = ['configparser', 'backports.functools_lru_cache']
+    extras_require[':python_version<"3.4"'] = ['singledispatch']
+else:
+    if (py_version.major, py_version.minor) == (2, 7):
+        install_requires.extend(['configparser', 'backports.functools_lru_cache'])
+    if py_version < (3, 4):
+        install_requires.extend(['singledispatch'])
 
 
 license = 'GPL'
@@ -62,11 +88,11 @@ long_desc = """\
  .
  Additionally, it is possible to write plugins to add your own checks.
  .
- Pylint is shipped with "pylint-gui", "pyreverse" (UML diagram generator)
+ Pylint is shipped with "pyreverse" (UML diagram generator)
  and "symilar" (an independent similarities checker)."""
 
 scripts = [join('bin', filename)
-           for filename in ('pylint', 'pylint-gui', "symilar", "epylint",
+           for filename in ('pylint', "symilar", "epylint",
                             "pyreverse")]
 
 include_dirs = [join('pylint', 'test')]

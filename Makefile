@@ -54,7 +54,10 @@ pylama:
 	@pip install --upgrade --force-reinstall --target=$(LIBS) pycodestyle
 	@pip install --upgrade --force-reinstall --target=$(LIBS) pyflakes
 	@pip install --upgrade --force-reinstall --target=$(LIBS) mccabe
-	@find $(LIBS)/*.dist-info | xargs rm -rf
+	@pip install --upgrade --force-reinstall --target=$(LIBS) pylint
+	@find $(LIBS) -name *.dist-info -type d | xargs rm -rf
+	@find $(LIBS) -name *.egg-info  -type d | xargs rm -rf
+	@find $(LIBS) -name test*  -type d | xargs rm -rf
 
 .PHONY: rope
 rope:

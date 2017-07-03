@@ -26,9 +26,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import fnmatch
 import os
+import posixpath
 from collections import namedtuple
 
-from .pie_slice import *
+from .pie_slice import itemsview, lru_cache, native_str
 
 try:
     import configparser
@@ -36,7 +37,7 @@ except ImportError:
     import ConfigParser as configparser
 
 MAX_CONFIG_SEARCH_DEPTH = 25 # The number of parent directories isort will look for a config file within
-DEFAULT_SECTIONS = ("FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER")
+DEFAULT_SECTIONS = ('FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER')
 
 WrapModes = ('GRID', 'VERTICAL', 'HANGING_INDENT', 'VERTICAL_HANGING_INDENT', 'VERTICAL_GRID', 'VERTICAL_GRID_GROUPED', 'NOQA')
 WrapModes = namedtuple('WrapModes', WrapModes)(*range(len(WrapModes)))
@@ -50,26 +51,51 @@ default = {'force_to_top': [],
            'sections': DEFAULT_SECTIONS,
            'no_sections': False,
            'known_future_library': ['__future__'],
-           'known_standard_library': ["abc", "anydbm", "argparse", "array", "asynchat", "asyncore", "atexit", "base64",
-                                      "BaseHTTPServer", "bisect", "bz2", "calendar", "cgitb", "cmd", "codecs",
-                                      "collections", "commands", "compileall", "ConfigParser", "contextlib", "Cookie",
-                                      "copy", "cPickle", "cProfile", "cStringIO", "csv", "datetime", "dbhash", "dbm",
-                                      "decimal", "difflib", "dircache", "dis", "doctest", "dumbdbm", "EasyDialogs",
-                                      "errno", "exceptions", "filecmp", "fileinput", "fnmatch", "fractions",
-                                      "functools", "gc", "gdbm", "getopt", "getpass", "gettext", "glob", "grp", "gzip",
-                                      "hashlib", "heapq", "hmac", "imaplib", "imp", "inspect", "io", "itertools", "json",
-                                      "linecache", "locale", "logging", "mailbox", "math", "mhlib", "mmap",
-                                      "multiprocessing", "operator", "optparse", "os", "pdb", "pickle", "pipes",
-                                      "pkgutil", "platform", "plistlib", "pprint", "profile", "pstats", "pwd", "pyclbr",
-                                      "pydoc", "Queue", "random", "re", "readline", "resource", "rlcompleter",
-                                      "robotparser", "sched", "select", "shelve", "shlex", "shutil", "signal",
-                                      "SimpleXMLRPCServer", "site", "sitecustomize", "smtpd", "smtplib", "socket",
-                                      "SocketServer", "sqlite3", "string", "StringIO", "struct", "subprocess", "sys",
-                                      "sysconfig", "tabnanny", "tarfile", "tempfile", "textwrap", "threading", "time",
-                                      "timeit", "trace", "traceback", "unittest", "urllib", "urllib2", "urlparse",
-                                      "usercustomize", "uuid", "warnings", "weakref", "webbrowser", "whichdb", "xml",
-                                      "xmlrpclib", "zipfile", "zipimport", "zlib", 'builtins', '__builtin__', 'thread',
-                                      "binascii", "statistics", "unicodedata", "fcntl", 'pathlib'],
+           'known_standard_library': ['AL', 'BaseHTTPServer', 'Bastion', 'CGIHTTPServer', 'Carbon', 'ColorPicker',
+                                      'ConfigParser', 'Cookie', 'DEVICE', 'DocXMLRPCServer', 'EasyDialogs', 'FL',
+                                      'FrameWork', 'GL', 'HTMLParser', 'MacOS', 'MimeWriter', 'MiniAEFrame', 'Nav',
+                                      'PixMapWrapper', 'Queue', 'SUNAUDIODEV', 'ScrolledText', 'SimpleHTTPServer',
+                                      'SimpleXMLRPCServer', 'SocketServer', 'StringIO', 'Tix', 'Tkinter', 'UserDict',
+                                      'UserList', 'UserString', 'W', '__builtin__', 'abc', 'aepack', 'aetools',
+                                      'aetypes', 'aifc', 'al', 'anydbm', 'applesingle', 'argparse', 'array', 'ast',
+                                      'asynchat', 'asyncio', 'asyncore', 'atexit', 'audioop', 'autoGIL', 'base64',
+                                      'bdb', 'binascii', 'binhex', 'bisect', 'bsddb', 'buildtools', 'builtins',
+                                      'bz2', 'cPickle', 'cProfile', 'cStringIO', 'calendar', 'cd', 'cfmfile', 'cgi',
+                                      'cgitb', 'chunk', 'cmath', 'cmd', 'code', 'codecs', 'codeop', 'collections',
+                                      'colorsys', 'commands', 'compileall', 'compiler', 'concurrent', 'configparser',
+                                      'contextlib', 'cookielib', 'copy', 'copy_reg', 'copyreg', 'crypt', 'csv',
+                                      'ctypes', 'curses', 'datetime', 'dbhash', 'dbm', 'decimal', 'difflib',
+                                      'dircache', 'dis', 'distutils', 'dl', 'doctest', 'dumbdbm', 'dummy_thread',
+                                      'dummy_threading', 'email', 'encodings', 'ensurepip', 'enum', 'errno',
+                                      'exceptions', 'faulthandler', 'fcntl', 'filecmp', 'fileinput', 'findertools',
+                                      'fl', 'flp', 'fm', 'fnmatch', 'formatter', 'fpectl', 'fpformat', 'fractions',
+                                      'ftplib', 'functools', 'future_builtins', 'gc', 'gdbm', 'gensuitemodule',
+                                      'getopt', 'getpass', 'gettext', 'gl', 'glob', 'grp', 'gzip', 'hashlib',
+                                      'heapq', 'hmac', 'hotshot', 'html', 'htmlentitydefs', 'htmllib', 'http',
+                                      'httplib', 'ic', 'icopen', 'imageop', 'imaplib', 'imgfile', 'imghdr', 'imp',
+                                      'importlib', 'imputil', 'inspect', 'io', 'ipaddress', 'itertools', 'jpeg',
+                                      'json', 'keyword', 'lib2to3', 'linecache', 'locale', 'logging', 'lzma',
+                                      'macerrors', 'macostools', 'macpath', 'macresource', 'mailbox', 'mailcap',
+                                      'marshal', 'math', 'md5', 'mhlib', 'mimetools', 'mimetypes', 'mimify', 'mmap',
+                                      'modulefinder', 'msilib', 'msvcrt', 'multifile', 'multiprocessing', 'mutex',
+                                      'netrc', 'new', 'nis', 'nntplib', 'numbers', 'operator', 'optparse', 'os',
+                                      'ossaudiodev', 'parser', 'pathlib', 'pdb', 'pickle', 'pickletools', 'pipes',
+                                      'pkgutil', 'platform', 'plistlib', 'popen2', 'poplib', 'posix', 'posixfile',
+                                      'pprint', 'profile', 'pstats', 'pty', 'pwd', 'py_compile', 'pyclbr', 'pydoc',
+                                      'queue', 'quopri', 'random', 're', 'readline', 'reprlib', 'resource', 'rexec',
+                                      'rfc822', 'rlcompleter', 'robotparser', 'runpy', 'sched', 'secrets', 'select',
+                                      'selectors', 'sets', 'sgmllib', 'sha', 'shelve', 'shlex', 'shutil', 'signal',
+                                      'site', 'sitecustomize', 'smtpd', 'smtplib', 'sndhdr', 'socket', 'socketserver',
+                                      'spwd', 'sqlite3', 'ssl', 'stat', 'statistics', 'statvfs', 'string', 'stringprep',
+                                      'struct', 'subprocess', 'sunau', 'sunaudiodev', 'symbol', 'symtable', 'sys',
+                                      'sysconfig', 'syslog', 'tabnanny', 'tarfile', 'telnetlib', 'tempfile', 'termios',
+                                      'test', 'textwrap', 'this', 'thread', 'threading', 'time', 'timeit', 'tkinter',
+                                      'token', 'tokenize', 'trace', 'traceback', 'tracemalloc', 'ttk', 'tty', 'turtle',
+                                      'turtledemo', 'types', 'typing', 'unicodedata', 'unittest', 'urllib', 'urllib2',
+                                      'urlparse', 'user', 'usercustomize', 'uu', 'uuid', 'venv', 'videoreader',
+                                      'warnings', 'wave', 'weakref', 'webbrowser', 'whichdb', 'winreg', 'winsound',
+                                      'wsgiref', 'xdrlib', 'xml', 'xmlrpc', 'xmlrpclib', 'zipapp', 'zipfile',
+                                      'zipimport', 'zlib'],
            'known_third_party': ['google.appengine.api'],
            'known_first_party': [],
            'multi_line_output': WrapModes.GRID,
@@ -101,9 +127,10 @@ default = {'force_to_top': [],
            'force_adds': False,
            'force_alphabetical_sort_within_sections': False,
            'force_alphabetical_sort': False,
-           'force_grid_wrap': False,
+           'force_grid_wrap': 0,
            'force_sort_within_sections': False,
-           'show_diff': False}
+           'show_diff': False,
+           'ignore_whitespace': False}
 
 
 @lru_cache()
@@ -112,6 +139,7 @@ def from_path(path):
     _update_settings_with_config(path, '.editorconfig', '~/.editorconfig', ('*', '*.py', '**.py'), computed_settings)
     _update_settings_with_config(path, '.isort.cfg', '~/.isort.cfg', ('settings', 'isort'), computed_settings)
     _update_settings_with_config(path, 'setup.cfg', None, ('isort', ), computed_settings)
+    _update_settings_with_config(path, 'tox.ini', None, ('isort', ), computed_settings)
     return computed_settings
 
 
@@ -140,17 +168,17 @@ def _update_with_config_file(file_path, sections, computed_settings):
     if not settings:
         return
 
-    if file_path.endswith(".editorconfig"):
-        indent_style = settings.pop('indent_style', "").strip()
-        indent_size = settings.pop('indent_size', "").strip()
-        if indent_style == "space":
-            computed_settings['indent'] = " " * (indent_size and int(indent_size) or 4)
-        elif indent_style == "tab":
-            computed_settings['indent'] = "\t" * (indent_size and int(indent_size) or 1)
+    if file_path.endswith('.editorconfig'):
+        indent_style = settings.pop('indent_style', '').strip()
+        indent_size = settings.pop('indent_size', '').strip()
+        if indent_style == 'space':
+            computed_settings['indent'] = ' ' * (indent_size and int(indent_size) or 4)
+        elif indent_style == 'tab':
+            computed_settings['indent'] = '\t' * (indent_size and int(indent_size) or 1)
 
-        max_line_length = settings.pop('max_line_length', "").strip()
+        max_line_length = settings.pop('max_line_length', '').strip()
         if max_line_length:
-            computed_settings['line_length'] = int(max_line_length)
+            computed_settings['line_length'] = float('inf') if max_line_length == 'off' else int(max_line_length)
 
     for key, value in itemsview(settings):
         access_key = key.replace('not_', '').lower()
@@ -165,27 +193,34 @@ def _update_with_config_file(file_path, sections, computed_settings):
                     computed_settings[access_key] = list(existing_data.difference(_as_list(value)))
                 else:
                     computed_settings[access_key] = list(existing_data.union(_as_list(value)))
-        elif existing_value_type == bool and value.lower().strip() == "false":
+        elif existing_value_type == bool and value.lower().strip() == 'false':
             computed_settings[access_key] = False
         elif key.startswith('known_'):
             computed_settings[access_key] = list(_as_list(value))
+        elif key == 'force_grid_wrap':
+            try:
+                result = existing_value_type(value)
+            except ValueError:
+                # backwards compat
+                result = default.get(access_key) if value.lower().strip() == 'false' else 2
+            computed_settings[access_key] = result
         else:
             computed_settings[access_key] = existing_value_type(value)
 
 
 def _as_list(value):
-    return filter(bool, [item.strip() for item in value.replace('\n', ',').split(",")])
+    return filter(bool, [item.strip() for item in value.replace('\n', ',').split(',')])
 
 
 @lru_cache()
 def _get_config_data(file_path, sections):
     with open(file_path, 'rU') as config_file:
-        if file_path.endswith(".editorconfig"):
-            line = "\n"
+        if file_path.endswith('.editorconfig'):
+            line = '\n'
             last_position = config_file.tell()
             while line:
                 line = config_file.readline()
-                if "[" in line:
+                if '[' in line:
                     config_file.seek(last_position)
                     break
                 last_position = config_file.tell()
@@ -205,7 +240,7 @@ def _get_config_data(file_path, sections):
 def should_skip(filename, config, path='/'):
     """Returns True if the file should be skipped based on the passed in settings."""
     for skip_path in config['skip']:
-        if os.path.join(path, filename).endswith('/' + skip_path.lstrip('/')):
+        if posixpath.abspath(posixpath.join(path, filename)) == posixpath.abspath(skip_path.replace('\\', '/')):
             return True
 
     position = os.path.split(filename)

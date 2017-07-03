@@ -1,39 +1,45 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of astroid.
-#
-# astroid is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by the
-# Free Software Foundation, either version 2.1 of the License, or (at your
-# option) any later version.
-#
-# astroid is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-# for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with astroid. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (c) 2009-2011, 2013-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2014 Google, Inc.
+# Copyright (c) 2015-2016 Cara Vinson <ceridwenv@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """this module contains a set of functions to handle python protocols for nodes
 where it makes sense.
 """
 
 import collections
-import operator
+import operator as operator_mod
 import sys
+
+import six
 
 from astroid import arguments
 from astroid import bases
 from astroid import context as contextmod
 from astroid import exceptions
+from astroid import decorators
 from astroid import node_classes
+from astroid import helpers
 from astroid import nodes
 from astroid import util
 
+raw_building = util.lazy_import('raw_building')
+objects = util.lazy_import('objects')
+
+def _reflected_name(name):
+    return "__r" + name[2:]
+
+def _augmented_name(name):
+    return "__i" + name[2:]
+
+
+_CONTEXTLIB_MGR = 'contextlib.contextmanager'
 BIN_OP_METHOD = {'+':  '__add__',
                  '-':  '__sub__',
-                 '/':  '__div__',
+                 '/':  '__div__' if six.PY2 else '__truediv__',
                  '//': '__floordiv__',
                  '*':  '__mul__',
                  '**': '__pow__',
@@ -46,41 +52,40 @@ BIN_OP_METHOD = {'+':  '__add__',
                  '@': '__matmul__'
                 }
 
+REFLECTED_BIN_OP_METHOD = {
+    key: _reflected_name(value)
+    for (key, value) in BIN_OP_METHOD.items()
+}
+AUGMENTED_OP_METHOD = {
+    key + "=": _augmented_name(value)
+    for (key, value) in BIN_OP_METHOD.items()
+}
+
 UNARY_OP_METHOD = {'+': '__pos__',
                    '-': '__neg__',
                    '~': '__invert__',
                    'not': None, # XXX not '__nonzero__'
                   }
-
-# unary operations ############################################################
-
-def tl_infer_unary_op(self, operator):
-    if operator == 'not':
-        return node_classes.const_factory(not bool(self.elts))
-    raise TypeError() # XXX log unsupported operation
-nodes.Tuple.infer_unary_op = tl_infer_unary_op
-nodes.List.infer_unary_op = tl_infer_unary_op
+_UNARY_OPERATORS = {
+    '+': operator_mod.pos,
+    '-': operator_mod.neg,
+    '~': operator_mod.invert,
+    'not': operator_mod.not_,
+}
 
 
-def dict_infer_unary_op(self, operator):
-    if operator == 'not':
-        return node_classes.const_factory(not bool(self.items))
-    raise TypeError() # XXX log unsupported operation
-nodes.Dict.infer_unary_op = dict_infer_unary_op
+def _infer_unary_op(obj, op):
+    func = _UNARY_OPERATORS[op]
+    value = func(obj)
+    return nodes.const_factory(value)
 
+nodes.Tuple.infer_unary_op = lambda self, op: _infer_unary_op(tuple(self.elts), op)
+nodes.List.infer_unary_op = lambda self, op: _infer_unary_op(self.elts, op)
+nodes.Set.infer_unary_op = lambda self, op: _infer_unary_op(set(self.elts), op)
+nodes.Const.infer_unary_op = lambda self, op: _infer_unary_op(self.value, op)
+nodes.Dict.infer_unary_op = lambda self, op: _infer_unary_op(dict(self.items), op)
 
-def const_infer_unary_op(self, operator):
-    if operator == 'not':
-        return node_classes.const_factory(not self.value)
-    # XXX log potentially raised TypeError
-    elif operator == '+':
-        return node_classes.const_factory(+self.value)
-    else: # operator == '-':
-        return node_classes.const_factory(-self.value)
-nodes.Const.infer_unary_op = const_infer_unary_op
-
-
-# binary operations ###########################################################
+# Binary operations
 
 BIN_OP_IMPL = {'+':  lambda a, b: a + b,
                '-':  lambda a, b: a - b,
@@ -95,50 +100,45 @@ BIN_OP_IMPL = {'+':  lambda a, b: a + b,
                '<<': lambda a, b: a << b,
                '>>': lambda a, b: a >> b,
               }
-
 if sys.version_info >= (3, 5):
     # MatMult is available since Python 3.5+.
-    BIN_OP_IMPL['@'] = operator.matmul
+    BIN_OP_IMPL['@'] = operator_mod.matmul
 
-for key, impl in list(BIN_OP_IMPL.items()):
-    BIN_OP_IMPL[key+'='] = impl
+for _KEY, _IMPL in list(BIN_OP_IMPL.items()):
+    BIN_OP_IMPL[_KEY + '='] = _IMPL
 
-def const_infer_binary_op(self, binop, other, context):
-    operator = binop.op
-    for other in other.infer(context):
-        if isinstance(other, nodes.Const):
+
+@decorators.yes_if_nothing_inferred
+def const_infer_binary_op(self, opnode, operator, other, context, _):
+    not_implemented = nodes.Const(NotImplemented)
+    if isinstance(other, nodes.Const):
+        try:
+            impl = BIN_OP_IMPL[operator]
             try:
-                impl = BIN_OP_IMPL[operator]
-
-                try:
-                    yield node_classes.const_factory(impl(self.value, other.value))
-                except Exception:
-                    # ArithmeticError is not enough: float >> float is a TypeError
-                    # TODO : let pylint know about the problem
-                    pass
+                yield nodes.const_factory(impl(self.value, other.value))
             except TypeError:
-                # XXX log TypeError
-                continue
-        elif other is util.YES:
-            yield other
-        else:
-            try:
-                for val in other.infer_binary_op(binop, self, context):
-                    yield val
-            except AttributeError:
-                yield util.YES
-nodes.Const.infer_binary_op = bases.yes_if_nothing_inferred(const_infer_binary_op)
+                # ArithmeticError is not enough: float >> float is a TypeError
+                yield not_implemented
+            except Exception: # pylint: disable=broad-except
+                yield util.Uninferable
+        except TypeError:
+            yield not_implemented
+    elif isinstance(self.value, six.string_types) and operator == '%':
+        # TODO(cpopa): implement string interpolation later on.
+        yield util.Uninferable
+    else:
+        yield not_implemented
+
+nodes.Const.infer_binary_op = const_infer_binary_op
 
 
-
-def _multiply_seq_by_int(self, binop, other, context):
-    node = self.__class__()
-    node.parent = binop
+def _multiply_seq_by_int(self, opnode, other, context):
+    node = self.__class__(parent=opnode)
     elts = []
     for elt in self.elts:
-        infered = util.safe_infer(elt, context)
+        infered = helpers.safe_infer(elt, context)
         if infered is None:
-            infered = util.YES
+            infered = util.Uninferable
         elts.append(infered)
     node.elts = elts * other.value
     return node
@@ -146,61 +146,50 @@ def _multiply_seq_by_int(self, binop, other, context):
 
 def _filter_uninferable_nodes(elts, context):
     for elt in elts:
-        if elt is util.YES:
-            yield elt
+        if elt is util.Uninferable:
+            yield nodes.Unknown()
         else:
             for inferred in elt.infer(context):
-                yield inferred
+                if inferred is not util.Uninferable:
+                    yield inferred
+                else:
+                    yield nodes.Unknown()
 
 
-def tl_infer_binary_op(self, binop, other, context):
-    operator = binop.op
-    for other in other.infer(context):
-        if isinstance(other, self.__class__) and operator == '+':
-            node = self.__class__()
-            node.parent = binop
-            elts = list(_filter_uninferable_nodes(self.elts, context))
-            elts += list(_filter_uninferable_nodes(other.elts, context))
-            node.elts = elts
-            yield node
-        elif isinstance(other, nodes.Const) and operator == '*':
-            if not isinstance(other.value, int):
-                yield util.YES
-                continue
-            yield _multiply_seq_by_int(self, binop, other, context)
-        elif isinstance(other, bases.Instance) and not isinstance(other, nodes.Const):
-            yield util.YES
-    # XXX else log TypeError
-nodes.Tuple.infer_binary_op = bases.yes_if_nothing_inferred(tl_infer_binary_op)
-nodes.List.infer_binary_op = bases.yes_if_nothing_inferred(tl_infer_binary_op)
-
-
-def dict_infer_binary_op(self, binop, other, context):
-    for other in other.infer(context):
-        if isinstance(other, bases.Instance) and isinstance(other._proxied, nodes.ClassDef):
-            yield util.YES
-        # XXX else log TypeError
-nodes.Dict.infer_binary_op = bases.yes_if_nothing_inferred(dict_infer_binary_op)
-
-def instance_infer_binary_op(self, binop, other, context):
-    operator = binop.op
-    try:
-        methods = self.getattr(BIN_OP_METHOD[operator])
-    except (exceptions.NotFoundError, KeyError):
-        # Unknown operator
-        yield util.YES
+@decorators.yes_if_nothing_inferred
+def tl_infer_binary_op(self, opnode, operator, other, context, method):
+    not_implemented = nodes.Const(NotImplemented)
+    if isinstance(other, self.__class__) and operator == '+':
+        node = self.__class__(parent=opnode)
+        elts = list(_filter_uninferable_nodes(self.elts, context))
+        elts += list(_filter_uninferable_nodes(other.elts, context))
+        node.elts = elts
+        yield node
+    elif isinstance(other, nodes.Const) and operator == '*':
+        if not isinstance(other.value, int):
+            yield not_implemented
+            return
+        yield _multiply_seq_by_int(self, opnode, other, context)
+    elif isinstance(other, bases.Instance) and operator == '*':
+        # Verify if the instance supports __index__.
+        as_index = helpers.class_instance_as_index(other)
+        if not as_index:
+            yield util.Uninferable
+        else:
+            yield _multiply_seq_by_int(self, opnode, as_index, context)
     else:
-        for method in methods:
-            if not isinstance(method, nodes.FunctionDef):
-                continue
-            for result in method.infer_call_result(self, context):
-                if result is not util.YES:
-                    yield result
-            # We are interested only in the first infered method,
-            # don't go looking in the rest of the methods of the ancestors.
-            break
+        yield not_implemented
 
-bases.Instance.infer_binary_op = bases.yes_if_nothing_inferred(instance_infer_binary_op)
+nodes.Tuple.infer_binary_op = tl_infer_binary_op
+nodes.List.infer_binary_op = tl_infer_binary_op
+
+
+@decorators.yes_if_nothing_inferred
+def instance_class_infer_binary_op(self, opnode, operator, other, context, method):
+    return method.infer_call_result(self, context)
+
+bases.Instance.infer_binary_op = instance_class_infer_binary_op
+nodes.ClassDef.infer_binary_op = instance_class_infer_binary_op
 
 
 # assignment ##################################################################
@@ -221,7 +210,7 @@ def _resolve_looppart(parts, asspath, context):
     asspath = asspath[:]
     index = asspath.pop(0)
     for part in parts:
-        if part is util.YES:
+        if part is util.Uninferable:
             continue
         # XXX handle __iter__ and log potentially detected errors
         if not hasattr(part, 'itered'):
@@ -231,31 +220,35 @@ def _resolve_looppart(parts, asspath, context):
         except TypeError:
             continue # XXX log error
         for stmt in itered:
+            index_node = nodes.Const(index)
             try:
-                assigned = stmt.getitem(index, context)
-            except (AttributeError, IndexError):
-                continue
-            except TypeError: # stmt is unsubscriptable Const
+                assigned = stmt.getitem(index_node, context)
+            except (AttributeError,
+                    exceptions.AstroidTypeError,
+                    exceptions.AstroidIndexError):
                 continue
             if not asspath:
                 # we achieved to resolved the assignment path,
                 # don't infer the last part
                 yield assigned
-            elif assigned is util.YES:
+            elif assigned is util.Uninferable:
                 break
             else:
                 # we are not yet on the last part of the path
                 # search on each possibly inferred value
                 try:
                     for inferred in _resolve_looppart(assigned.infer(context),
-                                                     asspath, context):
+                                                      asspath, context):
                         yield inferred
                 except exceptions.InferenceError:
                     break
 
-
-@bases.raise_if_nothing_inferred
+@decorators.raise_if_nothing_inferred
 def for_assigned_stmts(self, node=None, context=None, asspath=None):
+    if isinstance(self, nodes.AsyncFor) or getattr(self, 'is_async', False):
+        # Skip inferring of async code for now
+        raise StopIteration(dict(node=self, unknown=node,
+                                 assign_path=asspath, context=context))
     if asspath is None:
         for lst in self.iter.infer(context):
             if isinstance(lst, (nodes.Tuple, nodes.List)):
@@ -263,8 +256,12 @@ def for_assigned_stmts(self, node=None, context=None, asspath=None):
                     yield item
     else:
         for inferred in _resolve_looppart(self.iter.infer(context),
-                                         asspath, context):
+                                          asspath, context):
             yield inferred
+    # Explicit StopIteration to return error information, see comment
+    # in raise_if_nothing_inferred.
+    raise StopIteration(dict(node=self, unknown=node,
+                             assign_path=asspath, context=context))
 
 nodes.For.assigned_stmts = for_assigned_stmts
 nodes.Comprehension.assigned_stmts = for_assigned_stmts
@@ -276,9 +273,9 @@ def sequence_assigned_stmts(self, node=None, context=None, asspath=None):
     try:
         index = self.elts.index(node)
     except ValueError:
-         util.reraise(exceptions.InferenceError(
-             'Tried to retrieve a node {node!r} which does not exist',
-             node=self, assign_path=asspath, context=context))
+        util.reraise(exceptions.InferenceError(
+            'Tried to retrieve a node {node!r} which does not exist',
+            node=self, assign_path=asspath, context=context))
 
     asspath.insert(0, index)
     return self.parent.assigned_stmts(node=self, context=context, asspath=asspath)
@@ -297,16 +294,20 @@ def _arguments_infer_argname(self, name, context):
     # arguments information may be missing, in which case we can't do anything
     # more
     if not (self.args or self.vararg or self.kwarg):
-        yield util.YES
+        yield util.Uninferable
         return
     # first argument of instance/class method
     if self.args and getattr(self.args[0], 'name', None) == name:
         functype = self.parent.type
+        cls = self.parent.parent.scope()
+        is_metaclass = isinstance(cls, nodes.ClassDef) and cls.type == 'metaclass'
+        # If this is a metaclass, then the first argument will always
+        # be the class, not an instance.
+        if is_metaclass or functype == 'classmethod':
+            yield cls
+            return
         if functype == 'method':
             yield bases.Instance(self.parent.parent.frame())
-            return
-        if functype == 'classmethod':
-            yield self.parent.parent.frame()
             return
 
     if context and context.callcontext:
@@ -317,24 +318,24 @@ def _arguments_infer_argname(self, name, context):
 
     # TODO: just provide the type here, no need to have an empty Dict.
     if name == self.vararg:
-        vararg = node_classes.const_factory(())
+        vararg = nodes.const_factory(())
         vararg.parent = self
         yield vararg
         return
     if name == self.kwarg:
-        kwarg = node_classes.const_factory({})
+        kwarg = nodes.const_factory({})
         kwarg.parent = self
         yield kwarg
         return
-    # if there is a default value, yield it. And then yield YES to reflect
+    # if there is a default value, yield it. And then yield Uninferable to reflect
     # we can't guess given argument value
     try:
         context = contextmod.copy_context(context)
         for inferred in self.default_value(name).infer(context):
             yield inferred
-        yield util.YES
+        yield util.Uninferable
     except exceptions.NoDefault:
-        yield util.YES
+        yield util.Uninferable
 
 
 def arguments_assigned_stmts(self, node=None, context=None, asspath=None):
@@ -350,15 +351,28 @@ def arguments_assigned_stmts(self, node=None, context=None, asspath=None):
 nodes.Arguments.assigned_stmts = arguments_assigned_stmts
 
 
-@bases.raise_if_nothing_inferred
+@decorators.raise_if_nothing_inferred
 def assign_assigned_stmts(self, node=None, context=None, asspath=None):
     if not asspath:
         yield self.value
         return
     for inferred in _resolve_asspart(self.value.infer(context), asspath, context):
         yield inferred
+    # Explicit StopIteration to return error information, see comment
+    # in raise_if_nothing_inferred.
+    raise StopIteration(dict(node=self, unknown=node,
+                             assign_path=asspath, context=context))
+
+
+def assign_annassigned_stmts(self, node=None, context=None, asspath=None):
+    for inferred in assign_assigned_stmts(self, node, context, asspath):
+        if inferred is None:
+            yield util.Uninferable
+        else:
+            yield inferred
 
 nodes.Assign.assigned_stmts = assign_assigned_stmts
+nodes.AnnAssign.assigned_stmts = assign_annassigned_stmts
 nodes.AugAssign.assigned_stmts = assign_assigned_stmts
 
 
@@ -368,96 +382,212 @@ def _resolve_asspart(parts, asspath, context):
     index = asspath.pop(0)
     for part in parts:
         if hasattr(part, 'getitem'):
+            index_node = nodes.Const(index)
             try:
-                assigned = part.getitem(index, context)
+                assigned = part.getitem(index_node, context)
             # XXX raise a specific exception to avoid potential hiding of
             # unexpected exception ?
-            except (TypeError, IndexError):
+            except (exceptions.AstroidTypeError, exceptions.AstroidIndexError):
                 return
             if not asspath:
                 # we achieved to resolved the assignment path, don't infer the
                 # last part
                 yield assigned
-            elif assigned is util.YES:
+            elif assigned is util.Uninferable:
                 return
             else:
                 # we are not yet on the last part of the path search on each
                 # possibly inferred value
                 try:
                     for inferred in _resolve_asspart(assigned.infer(context),
-                                                    asspath, context):
+                                                     asspath, context):
                         yield inferred
                 except exceptions.InferenceError:
                     return
 
 
-@bases.raise_if_nothing_inferred
+@decorators.raise_if_nothing_inferred
 def excepthandler_assigned_stmts(self, node=None, context=None, asspath=None):
     for assigned in node_classes.unpack_infer(self.type):
         if isinstance(assigned, nodes.ClassDef):
-            assigned = bases.Instance(assigned)
+            assigned = objects.ExceptionInstance(assigned)
+
         yield assigned
-nodes.ExceptHandler.assigned_stmts = bases.raise_if_nothing_inferred(excepthandler_assigned_stmts)
+    # Explicit StopIteration to return error information, see comment
+    # in raise_if_nothing_inferred.
+    raise StopIteration(dict(node=self, unknown=node,
+                             assign_path=asspath, context=context))
 
 
-@bases.raise_if_nothing_inferred
+nodes.ExceptHandler.assigned_stmts = excepthandler_assigned_stmts
+
+
+def _infer_context_manager(self, mgr, context):
+    try:
+        inferred = next(mgr.infer(context=context))
+    except exceptions.InferenceError:
+        return
+    if isinstance(inferred, bases.Generator):
+        # Check if it is decorated with contextlib.contextmanager.
+        func = inferred.parent
+        if not func.decorators:
+            return
+        for decorator_node in func.decorators.nodes:
+            decorator = next(decorator_node.infer(context))
+            if isinstance(decorator, nodes.FunctionDef):
+                if decorator.qname() == _CONTEXTLIB_MGR:
+                    break
+        else:
+            # It doesn't interest us.
+            return
+
+        # Get the first yield point. If it has multiple yields,
+        # then a RuntimeError will be raised.
+        # TODO(cpopa): Handle flows.
+        yield_point = next(func.nodes_of_class(nodes.Yield), None)
+        if yield_point:
+            if not yield_point.value:
+                # TODO(cpopa): an empty yield. Should be wrapped to Const.
+                const = nodes.Const(None)
+                const.parent = yield_point
+                const.lineno = yield_point.lineno
+                yield const
+            else:
+                for inferred in yield_point.value.infer(context=context):
+                    yield inferred
+    elif isinstance(inferred, bases.Instance):
+        try:
+            enter = next(inferred.igetattr('__enter__', context=context))
+        except (exceptions.InferenceError, exceptions.AttributeInferenceError):
+            return
+        if not isinstance(enter, bases.BoundMethod):
+            return
+        if not context.callcontext:
+            context.callcontext = contextmod.CallContext(args=[inferred])
+        for result in enter.infer_call_result(self, context):
+            yield result
+
+
+@decorators.raise_if_nothing_inferred
 def with_assigned_stmts(self, node=None, context=None, asspath=None):
+    """Infer names and other nodes from a *with* statement.
+
+    This enables only inference for name binding in a *with* statement.
+    For instance, in the following code, inferring `func` will return
+    the `ContextManager` class, not whatever ``__enter__`` returns.
+    We are doing this intentionally, because we consider that the context
+    manager result is whatever __enter__ returns and what it is binded
+    using the ``as`` keyword.
+
+        class ContextManager(object):
+            def __enter__(self):
+                return 42
+        with ContextManager() as f:
+            pass
+        # ContextManager().infer() will return ContextManager
+        # f.infer() will return 42.
+
+    Arguments:
+        self: nodes.With
+        node: The target of the assignment, `as (a, b)` in `with foo as (a, b)`.
+        context: TODO
+        asspath: TODO
+    """
+    mgr = next(mgr for (mgr, vars) in self.items if vars == node)
     if asspath is None:
-        for _, vars in self.items:
-            if vars is None:
-                continue
-            for lst in vars.infer(context):
-                if isinstance(lst, (nodes.Tuple, nodes.List)):
-                    for item in lst.nodes:
-                        yield item
+        for result in _infer_context_manager(self, mgr, context):
+            yield result
+    else:
+        for result in _infer_context_manager(self, mgr, context):
+            # Walk the asspath and get the item at the final index.
+            obj = result
+            for index in asspath:
+                if not hasattr(obj, 'elts'):
+                    raise exceptions.InferenceError(
+                        'Wrong type ({targets!r}) for {node!r} assignment',
+                        node=self, targets=node, assign_path=asspath,
+                        context=context)
+                try:
+                    obj = obj.elts[index]
+                except IndexError:
+                    util.reraise(exceptions.InferenceError(
+                        'Tried to infer a nonexistent target with index {index} '
+                        'in {node!r}.', node=self, targets=node,
+                        assign_path=asspath, context=context))
+                except TypeError:
+                    util.reraise(exceptions.InferenceError(
+                        'Tried to unpack an non-iterable value '
+                        'in {node!r}.', node=self, targets=node,
+                        assign_path=asspath, context=context))
+            yield obj
+    # Explicit StopIteration to return error information, see comment
+    # in raise_if_nothing_inferred.
+    raise StopIteration(dict(node=self, unknown=node,
+                             assign_path=asspath, context=context))
+
 nodes.With.assigned_stmts = with_assigned_stmts
 
 
-@bases.yes_if_nothing_inferred
+@decorators.yes_if_nothing_inferred
 def starred_assigned_stmts(self, node=None, context=None, asspath=None):
+    """
+    Arguments:
+        self: nodes.Starred
+        node: TODO
+        context: TODO
+        asspath: TODO
+    """
     stmt = self.statement()
     if not isinstance(stmt, (nodes.Assign, nodes.For)):
-        raise exceptions.InferenceError()
+        raise exceptions.InferenceError('Statement {stmt!r} enclosing {node!r} '
+                                        'must be an Assign or For node.',
+                                        node=self, stmt=stmt, unknown=node,
+                                        context=context)
 
     if isinstance(stmt, nodes.Assign):
         value = stmt.value
         lhs = stmt.targets[0]
 
         if sum(1 for node in lhs.nodes_of_class(nodes.Starred)) > 1:
-            # Too many starred arguments in the expression.
-            raise exceptions.InferenceError()
+            raise exceptions.InferenceError('Too many starred arguments in the '
+                                            ' assignment targets {lhs!r}.',
+                                            node=self, targets=lhs,
+                                            unknown=node, context=context)
 
         if context is None:
             context = contextmod.InferenceContext()
         try:
             rhs = next(value.infer(context))
         except exceptions.InferenceError:
-            yield util.YES
+            yield util.Uninferable
             return
-        if rhs is util.YES or not hasattr(rhs, 'elts'):
+        if rhs is util.Uninferable or not hasattr(rhs, 'elts'):
             # Not interested in inferred values without elts.
-            yield util.YES
+            yield util.Uninferable
             return
 
         elts = collections.deque(rhs.elts[:])
         if len(lhs.elts) > len(rhs.elts):
-            # a, *b, c = (1, 2)
-            raise exceptions.InferenceError()
+            raise exceptions.InferenceError('More targets, {targets!r}, than '
+                                            'values to unpack, {values!r}.',
+                                            node=self, targets=lhs,
+                                            values=rhs, unknown=node,
+                                            context=context)
 
         # Unpack iteratively the values from the rhs of the assignment,
         # until the find the starred node. What will remain will
         # be the list of values which the Starred node will represent
         # This is done in two steps, from left to right to remove
         # anything before the starred node and from right to left
-        # to remvoe anything after the starred node.
+        # to remove anything after the starred node.
 
-        for index, node in enumerate(lhs.elts):
-            if not isinstance(node, nodes.Starred):
+        for index, left_node in enumerate(lhs.elts):
+            if not isinstance(left_node, nodes.Starred):
                 elts.popleft()
                 continue
             lhs_elts = collections.deque(reversed(lhs.elts[index:]))
-            for node in lhs_elts:
-                if not isinstance(node, nodes.Starred):
+            for right_node in lhs_elts:
+                if not isinstance(right_node, nodes.Starred):
                     elts.pop()
                     continue
                 # We're done

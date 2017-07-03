@@ -1,20 +1,10 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of astroid.
-#
-# astroid is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by the
-# Free Software Foundation, either version 2.1 of the License, or (at your
-# option) any later version.
-#
-# astroid is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-# for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with astroid. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (c) 2006-2013, 2015 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2014 Google, Inc.
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """Python Abstract Syntax Tree New Generation
 
 The aim of this module is to provide a common base representation of
@@ -39,13 +29,26 @@ Main modules are:
 
 * builder contains the class responsible to build astroid trees
 """
-__doctype__ = "restructuredtext en"
 
+import os
 import sys
 import re
 from operator import attrgetter
 
+import enum
+
+
+_Context = enum.Enum('Context', 'Load Store Del')
+Load = _Context.Load
+Store = _Context.Store
+Del = _Context.Del
+del _Context
+
+
+from .__pkginfo__ import version as __version__
 # WARNING: internal imports order matters !
+
+# pylint: disable=redefined-builtin, wildcard-import
 
 # make all exception classes accessible from astroid package
 from astroid.exceptions import *
@@ -58,14 +61,13 @@ from astroid import inference
 
 # more stuff available
 from astroid import raw_building
-from astroid.bases import Instance, BoundMethod, UnboundMethod
+from astroid.bases import BaseInstance, Instance, BoundMethod, UnboundMethod
 from astroid.node_classes import are_exclusive, unpack_infer
 from astroid.scoped_nodes import builtin_lookup
-from astroid.builder import parse
-from astroid.util import YES
+from astroid.builder import parse, extract_node
+from astroid.util import Uninferable, YES
 
-# make a manager instance (borg) as well as Project and Package classes
-# accessible from astroid package
+# make a manager instance (borg) accessible from astroid package
 from astroid.manager import AstroidManager
 MANAGER = AstroidManager()
 del AstroidManager
@@ -73,7 +75,7 @@ del AstroidManager
 # transform utilities (filters and decorator)
 
 class AsStringRegexpPredicate(object):
-    """Class to be used as predicate that may be given to `register_transform`
+    """ClassDef to be used as predicate that may be given to `register_transform`
 
     First argument is a regular expression that will be searched against the `as_string`
     representation of the node onto which it's applied.
@@ -92,6 +94,7 @@ class AsStringRegexpPredicate(object):
     def __call__(self, node):
         if self.expression is not None:
             node = attrgetter(self.expression)(node)
+        # pylint: disable=no-member; github.com/pycqa/astroid/126
         return self.regexp.search(node.as_string())
 
 def inference_tip(infer_function):
@@ -114,8 +117,8 @@ def inference_tip(infer_function):
 def register_module_extender(manager, module_name, get_extension_mod):
     def transform(node):
         extension_module = get_extension_mod()
-        for name, objs in extension_module._locals.items():
-            node._locals[name] = objs
+        for name, objs in extension_module.locals.items():
+            node.locals[name] = objs
             for obj in objs:
                 if obj.parent is extension_module:
                     obj.parent = node
@@ -124,13 +127,11 @@ def register_module_extender(manager, module_name, get_extension_mod):
 
 
 # load brain plugins
-from os import listdir
-from os.path import join, dirname
-BRAIN_MODULES_DIR = join(dirname(__file__), 'brain')
+BRAIN_MODULES_DIR = os.path.join(os.path.dirname(__file__), 'brain')
 if BRAIN_MODULES_DIR not in sys.path:
     # add it to the end of the list so user path take precedence
     sys.path.append(BRAIN_MODULES_DIR)
 # load modules in this directory
-for module in listdir(BRAIN_MODULES_DIR):
+for module in os.listdir(BRAIN_MODULES_DIR):
     if module.endswith('.py'):
         __import__(module[:-3])
