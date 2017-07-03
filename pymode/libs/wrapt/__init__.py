@@ -1,4 +1,4 @@
-__version_info__ = ('1', '10', '8')
+__version_info__ = ('1', '10', '10')
 __version__ = '.'.join(__version_info__)
 
 from .wrappers import (ObjectProxy, CallableObjectProxy, FunctionWrapper,

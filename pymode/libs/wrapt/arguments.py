@@ -4,6 +4,7 @@
 # of the PSF license used for Python 2.7.
 
 from inspect import getargspec, ismethod
+import sys
 
 def getcallargs(func, *positional, **named):
     """Get the mapping of arguments to values.
@@ -29,7 +30,7 @@ def getcallargs(func, *positional, **named):
                 except StopIteration:
                     raise ValueError('need more than %d %s to unpack' %
                                      (i, 'values' if i > 1 else 'value'))
-                assign(subarg,subvalue)
+                assign(subarg, subvalue)
             try:
                 next(value)
             except StopIteration:
@@ -37,7 +38,7 @@ def getcallargs(func, *positional, **named):
             else:
                 raise ValueError('too many values to unpack')
     def is_assigned(arg):
-        if isinstance(arg,str):
+        if isinstance(arg, str):
             return arg in arg2value
         return arg in assigned_tuple_params
     if ismethod(func) and func.im_self is not None:

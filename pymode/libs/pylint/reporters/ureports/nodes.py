@@ -1,5 +1,5 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -126,6 +126,19 @@ class Section(BaseLayout):
             self.insert(0, Paragraph([Text(description)]))
         if title:
             self.insert(0, Title(children=(title,)))
+
+
+class EvaluationSection(Section):
+
+    def __init__(self, message, **kwargs):
+        super(EvaluationSection, self).__init__(**kwargs)
+        title = Paragraph()
+        title.append(Text("-" * len(message)))
+        self.append(title)
+
+        message_body = Paragraph()
+        message_body.append(Text(message))
+        self.append(message_body)
 
 
 class Title(BaseLayout):

@@ -1,4 +1,6 @@
-# Copyright (c) 2014-2016 Google, Inc.
+# Copyright (c) 2014-2015 Brett Cannon <brett@python.org>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2015 Pavel Roskin <proski@gnu.org>
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -6,12 +8,18 @@
 from __future__ import absolute_import, print_function
 
 import re
+import sys
 import tokenize
+
+from collections import namedtuple
+
+import six
 
 import astroid
 from astroid import bases
 
 from pylint import checkers, interfaces
+from pylint.interfaces import INFERENCE_FAILURE, INFERENCE
 from pylint.utils import WarningScope
 from pylint.checkers import utils
 
@@ -21,7 +29,7 @@ _ZERO = re.compile("^0+$")
 def _is_old_octal(literal):
     if _ZERO.match(literal):
         return False
-    if re.match('0\d+', literal):
+    if re.match(r'0\d+', literal):
         try:
             int(literal, 8)
         except ValueError:
@@ -34,7 +42,7 @@ def _check_dict_node(node):
         inferred = node.infer()
         for inferred_node in inferred:
             inferred_types.add(inferred_node)
-    except (astroid.InferenceError, astroid.UnresolvableName):
+    except astroid.InferenceError:
         pass
     return (not inferred_types
             or any(isinstance(x, astroid.Dict) for x in inferred_types))
@@ -79,6 +87,15 @@ def _in_iterating_context(node):
             return True
     return False
 
+
+def _is_conditional_import(node):
+    """Checks if a import node is in the context of a conditional.
+    """
+    parent = node.parent
+    return isinstance(parent, (astroid.TryExcept, astroid.ExceptHandler,
+                               astroid.If, astroid.IfExp))
+
+Branch = namedtuple('Branch', ['node', 'is_py2_only'])
 
 class Python3Checker(checkers.BaseChecker):
 
@@ -331,6 +348,57 @@ class Python3Checker(checkers.BaseChecker):
                   'Python 3. Using either `key` or `functools.cmp_to_key` '
                   'should be preferred.',
                   {'maxversion': (3, 0)}),
+        'W1641': ('Implementing __eq__ without also implementing __hash__',
+                  'eq-without-hash',
+                  'Used when a class implements __eq__ but not __hash__.  In Python 2, objects '
+                  'get object.__hash__ as the default implementation, in Python 3 objects get '
+                  'None as their default __hash__ implementation if they also implement __eq__.',
+                  {'maxversion': (3, 0)}),
+        'W1642': ('__div__ method defined',
+                  'div-method',
+                  'Used when a __div__ method is defined.  Using `__truediv__` and setting'
+                  '__div__ = __truediv__ should be preferred.'
+                  '(method is not used by Python 3)',
+                  {'maxversion': (3, 0)}),
+        'W1643': ('__idiv__ method defined',
+                  'idiv-method',
+                  'Used when a __idiv__ method is defined.  Using `__itruediv__` and setting'
+                  '__idiv__ = __itruediv__ should be preferred.'
+                  '(method is not used by Python 3)',
+                  {'maxversion': (3, 0)}),
+        'W1644': ('__rdiv__ method defined',
+                  'rdiv-method',
+                  'Used when a __rdiv__ method is defined.  Using `__rtruediv__` and setting'
+                  '__rdiv__ = __rtruediv__ should be preferred.'
+                  '(method is not used by Python 3)',
+                  {'maxversion': (3, 0)}),
+        'W1645': ('Exception.message removed in Python 3',
+                  'exception-message-attribute',
+                  'Used when the message attribute is accessed on an Exception.  Use '
+                  'str(exception) instead.',
+                  {'maxversion': (3, 0)}),
+        'W1646': ('non-text encoding used in str.decode',
+                  'invalid-str-codec',
+                  'Used when using str.encode or str.decode with a non-text encoding.  Use '
+                  'codecs module to handle arbitrary codecs.',
+                  {'maxversion': (3, 0)}),
+        'W1647': ('sys.maxint removed in Python 3',
+                  'sys-max-int',
+                  'Used when accessing sys.maxint.  Use sys.maxsize instead.',
+                  {'maxversion': (3, 0)}),
+        'W1648': ('Module moved in Python 3',
+                  'bad-python3-import',
+                  'Used when importing a module that no longer exists in Python 3.',
+                  {'maxversion': (3, 0)}),
+        'W1649': ('Accessing a function method on the string module',
+                  'deprecated-string-function',
+                  'Used when accessing a string function that has been deprecated in Python 3.',
+                  {'maxversion': (3, 0)}),
+        'W1650': ('Using str.translate with deprecated deletechars parameters',
+                  'deprecated-str-translate-call',
+                  'Used when using the deprecated deletechars parameters from str.translate.  Use'
+                  're.sub to remove the desired characters ',
+                  {'maxversion': (3, 0)}),
     }
 
     _bad_builtins = frozenset([
@@ -363,14 +431,110 @@ class Python3Checker(checkers.BaseChecker):
         '__hex__',
         '__nonzero__',
         '__cmp__',
+        '__div__',
+        '__idiv__',
+        '__rdiv__',
     ])
+
+    _invalid_encodings = frozenset([
+        'base64_codec',
+        'base64',
+        'base_64',
+        'bz2_codec',
+        'bz2',
+        'hex_codec',
+        'hex',
+        'quopri_codec',
+        'quopri',
+        'quotedprintable',
+        'quoted_printable',
+        'uu_codec',
+        'uu',
+        'zlib_codec',
+        'zlib',
+        'zip',
+        'rot13',
+        'rot_13',
+    ])
+
+    _bad_python3_module_map = {
+        'sys-max-int': {
+            'sys': frozenset(['maxint'])
+        },
+        'bad-python3-import': frozenset([
+            'anydbm', 'BaseHTTPServer', '__builtin__', 'CGIHTTPServer', 'ConfigParser', 'copy_reg',
+            'cPickle', 'cProfile', 'cStringIO', 'Cookie', 'cookielib', 'dbhash', 'dbm', 'dumbdbm',
+            'dumbdb', 'Dialog', 'DocXMLRPCServer', 'FileDialog', 'FixTk', 'gdbm', 'htmlentitydefs',
+            'HTMLParser', 'httplib', 'markupbase', 'Queue', 'repr', 'robotparser', 'ScrolledText',
+            'SimpleDialog', 'SimpleHTTPServer', 'SimpleXMLRPCServer', 'StringIO', 'dummy_thread',
+            'SocketServer', 'test.test_support', 'Tkinter', 'Tix', 'Tkconstants', 'tkColorChooser',
+            'tkCommonDialog', 'Tkdnd', 'tkFileDialog', 'tkFont', 'tkMessageBox', 'tkSimpleDialog',
+            'turtle', 'UserList', 'UserString', 'whichdb', '_winreg', 'xmlrpclib', 'audiodev',
+            'Bastion', 'bsddb185', 'bsddb3', 'Canvas', 'cfmfile', 'cl', 'commands', 'compiler',
+            'dircache', 'dl', 'exception', 'fpformat', 'htmllib', 'ihooks', 'imageop', 'imputil',
+            'linuxaudiodev', 'md5', 'mhlib', 'mimetools', 'MimeWriter', 'mimify', 'multifile',
+            'mutex', 'new', 'popen2', 'posixfile', 'pure', 'rexec', 'rfc822', 'sha', 'sgmllib',
+            'sre', 'stat', 'stringold', 'sunaudio', 'sv', 'test.testall', 'thread', 'timing',
+            'toaiff', 'user', 'urllib2', 'urlparse'
+        ]),
+        'deprecated-string-function': {
+            'string': frozenset([
+                'maketrans', 'atof', 'atoi', 'atol', 'capitalize', 'expandtabs', 'find', 'rfind',
+                'index', 'rindex', 'count', 'lower', 'split', 'rsplit', 'splitfields', 'join',
+                'joinfields', 'lstrip', 'rstrip', 'strip', 'swapcase', 'translate', 'upper',
+                'ljust', 'rjust', 'center', 'zfill', 'replace'
+            ])
+        }
+    }
+
+    if (3, 4) <= sys.version_info < (3, 4, 4):
+        # Python 3.4.0 -> 3.4.3 has a bug which breaks `repr_tree()`:
+        # https://bugs.python.org/issue23572
+        _python_2_tests = frozenset()
+    else:
+        _python_2_tests = frozenset(
+            [astroid.extract_node(x).repr_tree() for x in [
+                'sys.version_info[0] == 2',
+                'sys.version_info[0] < 3',
+                'sys.version_info == (2, 7)',
+                'sys.version_info <= (2, 7)',
+                'sys.version_info < (3, 0)',
+            ]])
 
     def __init__(self, *args, **kwargs):
         self._future_division = False
         self._future_absolute_import = False
+        self._modules_warned_about = set()
+        self._branch_stack = []
         super(Python3Checker, self).__init__(*args, **kwargs)
 
-    def visit_module(self, node): # pylint: disable=unused-argument
+    def add_message(self, msg_id, always_warn=False,  # pylint: disable=arguments-differ
+                    *args, **kwargs):
+        if always_warn or not (self._branch_stack and self._branch_stack[-1].is_py2_only):
+            super(Python3Checker, self).add_message(msg_id, *args, **kwargs)
+
+    def _is_py2_test(self, node):
+        if isinstance(node.test, astroid.Attribute) and isinstance(node.test.expr, astroid.Name):
+            if node.test.expr.name == 'six' and node.test.attrname == 'PY2':
+                return True
+        elif (isinstance(node.test, astroid.Compare) and
+              node.test.repr_tree() in self._python_2_tests):
+            return True
+        return False
+
+    def visit_if(self, node):
+        self._branch_stack.append(Branch(node, self._is_py2_test(node)))
+
+    def leave_if(self, node):
+        assert self._branch_stack.pop().node == node
+
+    def visit_ifexp(self, node):
+        self._branch_stack.append(Branch(node, self._is_py2_test(node)))
+
+    def leave_ifexp(self, node):
+        assert self._branch_stack.pop().node == node
+
+    def visit_module(self, node):  # pylint: disable=unused-argument
         """Clear checker state after previous module."""
         self._future_division = False
         self._future_absolute_import = False
@@ -398,7 +562,17 @@ class Python3Checker(checkers.BaseChecker):
 
     @utils.check_messages('print-statement')
     def visit_print(self, node):
-        self.add_message('print-statement', node=node)
+        self.add_message('print-statement', node=node, always_warn=True)
+
+    def _warn_if_deprecated(self, node, module, attributes, report_on_modules=True):
+        for message, module_map in six.iteritems(self._bad_python3_module_map):
+            if module in module_map and module not in self._modules_warned_about:
+                if isinstance(module_map, frozenset):
+                    if report_on_modules:
+                        self._modules_warned_about.add(module)
+                        self.add_message(message, node=node)
+                elif attributes and module_map[module].intersection(attributes):
+                    self.add_message(message, node=node)
 
     def visit_importfrom(self, node):
         if node.modname == '__future__':
@@ -407,23 +581,32 @@ class Python3Checker(checkers.BaseChecker):
                     self._future_division = True
                 elif name == 'absolute_import':
                     self._future_absolute_import = True
-        elif not self._future_absolute_import:
-            if self.linter.is_message_enabled('no-absolute-import'):
-                self.add_message('no-absolute-import', node=node)
+        else:
+            if not self._future_absolute_import:
+                if self.linter.is_message_enabled('no-absolute-import'):
+                    self.add_message('no-absolute-import', node=node)
+            if not _is_conditional_import(node):
+                self._warn_if_deprecated(node, node.modname, {x[0] for x in node.names})
+
         if node.names[0][0] == '*':
             if self.linter.is_message_enabled('import-star-module-level'):
                 if not isinstance(node.scope(), astroid.Module):
                     self.add_message('import-star-module-level', node=node)
 
-    @utils.check_messages('no-absolute-import')
     def visit_import(self, node):
         if not self._future_absolute_import:
             self.add_message('no-absolute-import', node=node)
+        if not _is_conditional_import(node):
+            for name, _ in node.names:
+                self._warn_if_deprecated(node, name, None)
 
     @utils.check_messages('metaclass-assignment')
     def visit_classdef(self, node):
         if '__metaclass__' in node.locals:
             self.add_message('metaclass-assignment', node=node)
+        locals_and_methods = set(node.locals).union(x.name for x in node.mymethods())
+        if '__eq__' in locals_and_methods and '__hash__' not in locals_and_methods:
+            self.add_message('eq-without-hash', node=node)
 
     @utils.check_messages('old-division')
     def visit_binop(self, node):
@@ -463,11 +646,73 @@ class Python3Checker(checkers.BaseChecker):
                 self.add_message('using-cmp-argument', node=node)
                 return
 
+    @staticmethod
+    def _is_constant_string_or_name(node):
+        if isinstance(node, astroid.Const):
+            return isinstance(node.value, six.string_types)
+        return isinstance(node, astroid.Name)
+
+    @staticmethod
+    def _is_none(node):
+        return isinstance(node, astroid.Const) and node.value is None
+
+    @staticmethod
+    def _has_only_n_positional_args(node, number_of_args):
+        return len(node.args) == number_of_args and all(node.args) and not node.keywords
+
+    @staticmethod
+    def _could_be_string(inferred_types):
+        confidence = INFERENCE if inferred_types else INFERENCE_FAILURE
+        for inferred_type in inferred_types:
+            if inferred_type is astroid.Uninferable:
+                confidence = INFERENCE_FAILURE
+            elif not (isinstance(inferred_type, astroid.Const) and
+                      isinstance(inferred_type.value, six.string_types)):
+                return None
+        return confidence
+
     def visit_call(self, node):
         self._check_cmp_argument(node)
 
         if isinstance(node.func, astroid.Attribute):
-            if any([node.args, node.keywords]):
+            inferred_types = set()
+            try:
+                for inferred_receiver in node.func.expr.infer():
+                    inferred_types.add(inferred_receiver)
+                    if isinstance(inferred_receiver, astroid.Module):
+                        self._warn_if_deprecated(node, inferred_receiver.name,
+                                                 {node.func.attrname},
+                                                 report_on_modules=False)
+            except astroid.InferenceError:
+                pass
+            if node.args:
+                is_str_confidence = self._could_be_string(inferred_types)
+                if is_str_confidence:
+                    if (node.func.attrname in ('encode', 'decode') and
+                            len(node.args) >= 1 and node.args[0]):
+                        first_arg = node.args[0]
+                        self._validate_encoding(first_arg, node)
+                    if (node.func.attrname == 'translate' and
+                            self._has_only_n_positional_args(node, 2) and
+                            self._is_none(node.args[0]) and
+                            self._is_constant_string_or_name(node.args[1])):
+                        # The above statement looking for calls of the form:
+                        #
+                        # foo.translate(None, 'abc123')
+                        #
+                        # or
+                        #
+                        # foo.translate(None, some_variable)
+                        #
+                        # This check is somewhat broad and _may_ have some false positives, but
+                        # after checking several large codebases it did not have any false
+                        # positives while finding several real issues.  This call pattern seems
+                        # rare enough that the trade off is worth it.
+                        self.add_message('deprecated-str-translate-call',
+                                         node=node,
+                                         confidence=is_str_confidence)
+                return
+            if node.keywords:
                 return
             if node.func.attrname == 'next':
                 self.add_message('next-method-called', node=node)
@@ -484,17 +729,51 @@ class Python3Checker(checkers.BaseChecker):
                     if not _in_iterating_context(node):
                         checker = '{}-builtin-not-iterating'.format(node.func.name)
                         self.add_message(checker, node=node)
+                if node.func.name == 'open' and node.keywords:
+                    kwargs = node.keywords
+                    for kwarg in kwargs or []:
+                        if kwarg.arg == 'encoding':
+                            self._validate_encoding(kwarg.value, node)
+                            break
 
+    def _validate_encoding(self, encoding, node):
+        if isinstance(encoding, astroid.Const):
+            value = encoding.value
+            if value in self._invalid_encodings:
+                self.add_message('invalid-str-codec',
+                                 node=node)
 
     @utils.check_messages('indexing-exception')
     def visit_subscript(self, node):
         """ Look for indexing exceptions. """
         try:
-            for infered in node.value.infer():
-                if not isinstance(infered, astroid.Instance):
+            for inferred in node.value.infer():
+                if not isinstance(inferred, astroid.Instance):
                     continue
-                if utils.inherit_from_std_ex(infered):
+                if utils.inherit_from_std_ex(inferred):
                     self.add_message('indexing-exception', node=node)
+        except astroid.InferenceError:
+            return
+
+    def visit_assignattr(self, node):
+        if isinstance(node.assign_type(), astroid.AugAssign):
+            self.visit_attribute(node)
+
+    def visit_delattr(self, node):
+        self.visit_attribute(node)
+
+    @utils.check_messages('exception-message-attribute')
+    def visit_attribute(self, node):
+        """ Look for accessing message on exceptions. """
+        try:
+            for inferred in node.expr.infer():
+                if (isinstance(inferred, astroid.Instance) and
+                        utils.inherit_from_std_ex(inferred)):
+                    if node.attrname == 'message':
+                        self.add_message('exception-message-attribute', node=node)
+                if isinstance(inferred, astroid.Module):
+                    self._warn_if_deprecated(node, inferred.name, {node.attrname},
+                                             report_on_modules=False)
         except astroid.InferenceError:
             return
 
@@ -559,7 +838,7 @@ class Python3TokenChecker(checkers.BaseTokenChecker):
                    'old_names': [('W0331', 'old-ne-operator')]}),
         'E1608': ('Use of old octal literal',
                   'old-octal-literal',
-                  'Usen when encountering the old octal syntax, '
+                  'Used when encountering the old octal syntax, '
                   'removed in Python 3. To use the new syntax, '
                   'prepend 0o on the number.',
                   {'maxversion': (3, 0)}),

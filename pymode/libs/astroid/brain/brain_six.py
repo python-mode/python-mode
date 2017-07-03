@@ -1,29 +1,17 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of astroid.
-#
-# astroid is free software: you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by the Free
-# Software Foundation, either version 2.1 of the License, or (at your option) any
-# later version.
-#
-# astroid is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
-# details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with astroid.  If not, see <http://www.gnu.org/licenses/>.
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
 
-"""Astroid hooks for six.moves."""
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
+
+"""Astroid hooks for six module."""
 
 import sys
 from textwrap import dedent
 
 from astroid import MANAGER, register_module_extender
 from astroid.builder import AstroidBuilder
-from astroid.exceptions import AstroidBuildingException, InferenceError
+from astroid.exceptions import AstroidBuildingError, InferenceError
 from astroid import nodes
 
 
@@ -113,7 +101,7 @@ if sys.version_info[0] == 2:
         splitquery = _urllib.splitquery
         splittag = _urllib.splittag
         splituser = _urllib.splituser
-        uses_fragment = _urlparse.uses_fragment       
+        uses_fragment = _urlparse.uses_fragment
         uses_netloc = _urlparse.uses_netloc
         uses_params = _urlparse.uses_params
         uses_query = _urlparse.uses_query
@@ -254,7 +242,7 @@ def six_moves_transform():
 
 def _six_fail_hook(modname):
     if modname != 'six.moves':
-        raise AstroidBuildingException
+        raise AstroidBuildingError(modname=modname)
     module = AstroidBuilder(MANAGER).string_build(_IMPORTS)
     module.name = 'six.moves'
     return module

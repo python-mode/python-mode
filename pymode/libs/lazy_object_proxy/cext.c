@@ -9,7 +9,7 @@
 #endif
 
 #define Proxy__WRAPPED_REPLACE_OR_RETURN_NULL(object) \
-    if (PyObject_IsInstance(object, (PyObject *)&Proxy_Type)) { \
+    if (PyObject_TypeCheck(object, &Proxy_Type)) { \
         object = Proxy__ensure_wrapped((ProxyObject *)object); \
         if (!object) return NULL; \
     }

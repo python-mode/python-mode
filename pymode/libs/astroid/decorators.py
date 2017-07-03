@@ -1,27 +1,19 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of astroid.
-#
-# astroid is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by the
-# Free Software Foundation, either version 2.1 of the License, or (at your
-# option) any later version.
-#
-# astroid is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-# for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with astroid. If not, see <http://www.gnu.org/licenses/>.
-#
-# The code in this file was originally part of logilab-common, licensed under
-# the same license.
+# Copyright (c) 2015-2016 Cara Vinson <ceridwenv@gmail.com>
+# Copyright (c) 2015 Florian Bruhin <me@the-compiler.org>
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
 
 """ A few useful function/method decorators."""
 
+import functools
+
 import wrapt
+
+from astroid import context as contextmod
+from astroid import exceptions
+from astroid import util
 
 
 @wrapt.decorator
@@ -57,8 +49,8 @@ class cachedproperty(object):
         try:
             wrapped.__name__
         except AttributeError:
-            raise TypeError('%s must have a __name__ attribute' %
-                            wrapped)
+            util.reraise(TypeError('%s must have a __name__ attribute'
+                                   % wrapped))
         self.wrapped = wrapped
 
     @property
@@ -73,3 +65,83 @@ class cachedproperty(object):
         val = self.wrapped(inst)
         setattr(inst, self.wrapped.__name__, val)
         return val
+
+
+def path_wrapper(func):
+    """return the given infer function wrapped to handle the path"""
+    # TODO: switch this to wrapt after the monkey-patching is fixed (ceridwen)
+    @functools.wraps(func)
+    def wrapped(node, context=None, _func=func, **kwargs):
+        """wrapper function handling context"""
+        if context is None:
+            context = contextmod.InferenceContext()
+        if context.push(node):
+            return
+
+        yielded = set()
+        generator = _func(node, context, **kwargs)
+        try:
+            while True:
+                res = next(generator)
+                # unproxy only true instance, not const, tuple, dict...
+                if res.__class__.__name__ == 'Instance':
+                    ares = res._proxied
+                else:
+                    ares = res
+                if ares not in yielded:
+                    yield res
+                    yielded.add(ares)
+        except StopIteration as error:
+            # Explicit StopIteration to return error information, see
+            # comment in raise_if_nothing_inferred.
+            if error.args:
+                raise StopIteration(error.args[0])
+            else:
+                raise StopIteration
+
+    return wrapped
+
+
+@wrapt.decorator
+def yes_if_nothing_inferred(func, instance, args, kwargs):
+    inferred = False
+    for node in func(*args, **kwargs):
+        inferred = True
+        yield node
+    if not inferred:
+        yield util.Uninferable
+
+
+@wrapt.decorator
+def raise_if_nothing_inferred(func, instance, args, kwargs):
+    '''All generators wrapped with raise_if_nothing_inferred *must*
+    explicitly raise StopIteration with information to create an
+    appropriate structured InferenceError.
+
+    '''
+    # TODO: Explicitly raising StopIteration in a generator will cause
+    # a RuntimeError in Python >=3.7, as per
+    # http://legacy.python.org/dev/peps/pep-0479/ .  Before 3.7 is
+    # released, this code will need to use one of four possible
+    # solutions: a decorator that restores the current behavior as
+    # described in
+    # http://legacy.python.org/dev/peps/pep-0479/#sub-proposal-decorator-to-explicitly-request-current-behaviour
+    # , dynamic imports or exec to generate different code for
+    # different versions, drop support for all Python versions <3.3,
+    # or refactoring to change how these decorators work.  In any
+    # event, after dropping support for Python <3.3 this code should
+    # be refactored to use `yield from`.
+    inferred = False
+    try:
+        generator = func(*args, **kwargs)
+        while True:
+            yield next(generator)
+            inferred = True
+    except StopIteration as error:
+        if not inferred:
+            if error.args:
+                # pylint: disable=not-a-mapping
+                raise exceptions.InferenceError(**error.args[0])
+            else:
+                raise exceptions.InferenceError(
+                    'StopIteration raised without any error information.')

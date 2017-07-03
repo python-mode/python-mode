@@ -1,5 +1,6 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2008-2010, 2012-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -70,12 +71,11 @@ this disables -f values")),
     ("output", dict(short="o", dest="output_format", action="store",
                     default="dot", metavar="<format>",
                     help="create a *.<format> output file if format available.")),
-    ("ignore", {'type' : "csv", 'metavar' : "<file>",
+    ("ignore", {'type' : "csv", 'metavar' : "<file[,file...]>",
                 'dest' : "black_list", "default" : ('CVS',),
-                'help' : "add <file> (may be a directory) to the black list. "
-                         "It should be a base name, not a path. You may set "
-                         "this option multiple times."}),
-    ("project", {'default': "No Name", 'type' : 'string', 'short': 'p',
+                'help' : "Add files or directories to the blacklist. They "
+                         "should be base names, not paths."}),
+    ("project", {'default': "", 'type' : 'string', 'short': 'p',
                  'metavar': '<project name>', 'help': 'set the project name.'}),
 )
 # FIXME : quiet mode

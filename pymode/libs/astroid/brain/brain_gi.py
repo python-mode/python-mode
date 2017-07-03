@@ -1,3 +1,8 @@
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """Astroid hooks for the Python 2 GObject introspection bindings.
 
 Helps with understanding everything imported from 'gi.repository'
@@ -9,7 +14,7 @@ import sys
 import re
 import warnings
 
-from astroid import MANAGER, AstroidBuildingException, nodes
+from astroid import MANAGER, AstroidBuildingError, nodes
 from astroid.builder import AstroidBuilder
 
 
@@ -64,7 +69,7 @@ def _gi_build_stub(parent):
     ret = ""
 
     if constants:
-        ret += "# %s contants\n\n" % parent.__name__
+        ret += "# %s constants\n\n" % parent.__name__
     for name in sorted(constants):
         if name[0].isdigit():
             # GDK has some busted constant names like
@@ -114,7 +119,7 @@ def _gi_build_stub(parent):
 def _import_gi_module(modname):
     # we only consider gi.repository submodules
     if not modname.startswith('gi.repository.'):
-        raise AstroidBuildingException()
+        raise AstroidBuildingError(modname=modname)
     # build astroid representation unless we already tried so
     if modname not in _inspected_modules:
         modnames = [modname]
@@ -133,16 +138,17 @@ def _import_gi_module(modname):
             modcode = ''
             for m in itertools.chain(modnames, optional_modnames):
                 try:
-                    __import__(m)
                     with warnings.catch_warnings():
                         # Just inspecting the code can raise gi deprecation
                         # warnings, so ignore them.
                         try:
-                            from gi import PyGIDeprecationWarning
+                            from gi import PyGIDeprecationWarning, PyGIWarning
                             warnings.simplefilter("ignore", PyGIDeprecationWarning)
+                            warnings.simplefilter("ignore", PyGIWarning)
                         except Exception:
                             pass
 
+                        __import__(m)
                         modcode += _gi_build_stub(sys.modules[m])
                 except ImportError:
                     if m not in optional_modnames:
@@ -155,7 +161,7 @@ def _import_gi_module(modname):
     else:
         astng = _inspected_modules[modname]
     if astng is None:
-        raise AstroidBuildingException('Failed to import module %r' % modname)
+        raise AstroidBuildingError(modname=modname)
     return astng
 
 def _looks_like_require_version(node):
