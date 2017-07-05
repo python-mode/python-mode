@@ -3,6 +3,7 @@
 
 
 def main():
-    unused = 1
+    rc=1
+    return rc
 
 unknown()
