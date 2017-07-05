@@ -99,17 +99,19 @@ fun! pymode#folding#expr(lnum) "{{{
         return "="
     endif
 
-    if line =~ s:doc_begin_regex
-            " echom 'just entering'
-        if s:Is_opening_folding(a:lnum)
-            " echom 'entering at line ' . a:lnum
-            return ">".(indent / &shiftwidth + 1)
+    if g:pymode_fold_docstrings
+        if line =~ s:doc_begin_regex
+                " echom 'just entering'
+            if s:Is_opening_folding(a:lnum)
+                " echom 'entering at line ' . a:lnum
+                return ">".(indent / &shiftwidth + 1)
+            endif
         endif
-    endif
-    if line =~ s:doc_end_regex
-        if !s:Is_opening_folding(a:lnum)
-            " echom 'leaving at line ' . a:lnum
-            return "<".(indent / &shiftwidth + 1)
+        if line =~ s:doc_end_regex
+            if !s:Is_opening_folding(a:lnum)
+                " echom 'leaving at line ' . a:lnum
+                return "<".(indent / &shiftwidth + 1)
+            endif
         endif
     endif "}}}
 
