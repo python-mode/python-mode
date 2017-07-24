@@ -10,15 +10,12 @@ fun! pymode#rope#completions(findstart, base)
 endfunction
 
 fun! pymode#rope#complete(dot)
-    if pumvisible()
-        return "\<C-n>"
-    end
     if a:dot
         PymodePython rope.complete(True)
     else
         PymodePython rope.complete()
     end
-    return pumvisible() ? "\<C-p>\<Down>" : ""
+    return ""
 endfunction
 
 fun! pymode#rope#complete_on_dot() "{{{
@@ -28,7 +25,7 @@ fun! pymode#rope#complete_on_dot() "{{{
     for group in map(synstack(line('.'), col('.') - 1), 'synIDattr(v:val, "name")')
         for name in ['pythonString', 'pythonComment', 'pythonNumber', 'pythonDocstring']
             if group == name
-                return "" 
+                return ""
             endif
         endfor
     endfor
