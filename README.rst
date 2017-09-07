@@ -14,7 +14,7 @@
 
 |
 | Src:  https://github.com/python-mode/python-mode
-| Homepage: https://klen.github.io/python-mode/
+| Homepage: https://python-mode.github.io/python-mode/
 | Docs: https://github.com/python-mode/python-mode/blob/develop/doc/pymode.txt
 |
 
@@ -109,13 +109,13 @@ Then rebuild **helptags** in vim::
 
 Debian packages
 ---------------
-|Repository URL: https://klen.github.io/python-mode/deb/
+|Repository URL: https://python-mode.github.io/python-mode/deb/
 
 Install with commands:
 
 ::
 
-     add-apt-repository https://klen.github.io/python-mode/deb main
+     add-apt-repository https://python-mode.github.io/python-mode/deb main
      apt-get update
      apt-get install vim-python-mode
 
