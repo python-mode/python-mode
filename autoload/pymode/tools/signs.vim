@@ -46,7 +46,7 @@ endfunction "}}}
 
 fun! g:PymodeSigns.place(loclist) "{{{
     let seen = {}
-    for issue in a:loclist._loclist
+    for issue in a:loclist.loclist()
         if !has_key(seen, issue.lnum)
             let seen[issue.lnum] = 1
             call add(self._sign_ids, self._next_id)

@@ -184,7 +184,7 @@ def find_it():
             text=env.lines[oc.lineno - 1] if oc.resource.real_path == env.curbuf.name else "", # noqa
             lnum=oc.lineno,
         ))
-    env.let('loclist._loclist', lst)
+    env.run('g:PymodeLocList.current().extend', lst)
 
 
 def update_python_path(paths):

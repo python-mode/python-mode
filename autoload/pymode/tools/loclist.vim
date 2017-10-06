@@ -24,19 +24,37 @@ endfunction "}}}
 
 
 fun! g:PymodeLocList.is_empty() "{{{
-    return empty(self._loclist)
+    return empty(self._errlist) && empty(self._warnlist)
+endfunction "}}}
+
+fun! g:PymodeLocList.loclist() "{{{
+    let loclist = copy(self._errlist)
+    call extend(loclist, self._warnlist)
+    return loclist
+endfunction "}}}
+
+fun! g:PymodeLocList.num_errors() "{{{
+    return len(self._errlist)
+endfunction "}}}
+
+fun! g:PymodeLocList.num_warnings() "{{{
+    return len(self._warnlist)
 endfunction "}}}
 
 
 fun! g:PymodeLocList.clear() "{{{
-    let self._loclist = []
+    let self._errlist = []
+    let self._warnlist = []
     let self._messages = {}
     let self._name = expand('%:t')
 endfunction "}}}
 
 
 fun! g:PymodeLocList.extend(raw_list) "{{{
-    call extend(self._loclist, a:raw_list)
+    let err_list = filter(copy(a:raw_list), 'v:val["type"] == "E"')
+    let warn_list = filter(copy(a:raw_list), 'v:val["type"] != "E"')
+    call extend(self._errlist, err_list)
+    call extend(self._warnlist, warn_list)
     for issue in a:raw_list
         let self._messages[issue.lnum] = issue.text
     endfor
@@ -46,7 +64,7 @@ endfunction "}}}
 
 fun! g:PymodeLocList.filter(filters) "{{{
     let loclist = []
-    for error in self._loclist
+    for error in self.loclist()
         let passes_filters = 1
         for key in keys(a:filters)
             if get(error, key, '') !=? a:filters[key]
@@ -65,8 +83,9 @@ endfunction "}}}
 
 
 fun! g:PymodeLocList.show() "{{{
-    call setloclist(0, self._loclist)
-    if self.is_empty()
+    call setloclist(0, self.loclist())
+    "if self.is_empty()
+    if self.num_errors() == 0 
         lclose
     elseif g:pymode_lint_cwindow
         let num = winnr()
@@ -77,5 +96,6 @@ fun! g:PymodeLocList.show() "{{{
             call setwinvar(winnr(), 'quickfix_title', self._title . ' <' . self._name . '>')
             exe num . "wincmd w"
         endif
-    endif
+        lfirst
+    end
 endfunction "}}}
