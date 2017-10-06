@@ -68,7 +68,7 @@ fun! pymode#lint#check() "{{{
     call loclist.show()
 
     call pymode#lint#show_errormessage()
-    call pymode#wide_message('Found errors and warnings: ' . len(loclist._loclist))
+    call pymode#wide_message('Found ' . loclist.num_errors() . ' error(s) and ' . loclist.num_warnings() . ' warning(s)')
 
 endfunction " }}}
 
