@@ -6,7 +6,7 @@
     (__)   (__)  (__) (_) (_)(_____)(_)\_)   (_/\/\_)(_____)(____/(____)     ~
 
 
-                          Version: 0.9.2
+                          Version: 0.9.4
 
 ==============================================================================
 CONTENTS                                                       *pymode-contents*
@@ -86,7 +86,7 @@ Turn off plugin's warnings                                 *'g:pymode_warnings'*
     let g:pymode_warnings = 1
 
 Add paths to `sys.path`                                         *'g:pymode_paths'*
-Value is list of path's strings. 
+Value is list of path's strings.
 >
     let g:pymode_paths = []
 
@@ -130,10 +130,10 @@ Setup pymode |quickfix| window
 2.1. Python version ~
                                                          *pymode-python-version*
 
-By default pymode looks for current python version supported in your Vim. 
+By default pymode looks for current python version supported in your Vim.
 You could choose prefer version, but value will be tested on loading.
 
-                                                             *'g:pymode_python'* 
+                                                             *'g:pymode_python'*
 >
     let g:pymode_python = 'python'
 
@@ -196,7 +196,7 @@ Enable pymode-motion                                         *'g:pymode_motion'*
 Pymode could show documentation for current word by `pydoc`.
 
 Commands:
-*:PymodeDoc* <args> — show documentation 
+*:PymodeDoc* <args> — show documentation
 
 Turns on the documentation script                               *'g:pymode_doc'*
 >
@@ -498,7 +498,7 @@ Offer to unresolved import object after completion.
                                                             *pymode-rope-findit*
 
 By default when you press *<C-C>g* on any object in your code you will be moved
-to definition. 
+to definition.
 Leave empty for disable key binding.      *'g:pymode_rope_goto_definition_bind'*
 >
     let g:pymode_rope_goto_definition_bind = '<C-c>g'
@@ -597,7 +597,7 @@ Change function signature ~
 
 ------------------------------------------------------------------------------
 4.4 Undo/Redo changes ~
-                                                              *pymode-rope-undo* 
+                                                              *pymode-rope-undo*
                                                               *pymode-rope-redo*
 
 Commands:
@@ -670,7 +670,7 @@ Highlight builtin types (str, list, ...)       *'g:pymode_syntax_builtin_types'*
 >
     let g:pymode_syntax_builtin_types = g:pymode_syntax_all
 
-Highlight exceptions (TypeError, ValueError, ...) 
+Highlight exceptions (TypeError, ValueError, ...)
                                         *'g:pymode_syntax_highlight_exceptions'*
 >
     let g:pymode_syntax_highlight_exceptions = g:pymode_syntax_all

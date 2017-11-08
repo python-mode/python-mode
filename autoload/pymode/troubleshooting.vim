@@ -18,7 +18,7 @@ fun! pymode#troubleshooting#test() "{{{
 
     call append('0', ['Pymode diagnostic',
                   \ '===================',
-                  \ 'VIM:' . v:version . ', OS: ' . os .', multi_byte:' .  has('multi_byte') . ', pymode: ' . g:pymode_version . ', pymode-python: ' . g:pymode_python, 
+                  \ 'VIM:' . v:version . ', OS: ' . os .', multi_byte:' .  has('multi_byte') . ', pymode: ' . g:pymode_version . ', pymode-python: ' . g:pymode_python,
                   \ ''])
 
     if !exists('#filetypeplugin')
@@ -85,5 +85,5 @@ EOF
     call append('$', 'let pymode_virtualenv = ' . string(g:pymode_virtualenv))
     call append('$', 'let pymode_virtualenv_enabled = ' . string(g:pymode_virtualenv_enabled))
     call append('$', 'let pymode_virtualenv_path = ' . string(g:pymode_virtualenv_path))
-    
+
 endfunction "}}}

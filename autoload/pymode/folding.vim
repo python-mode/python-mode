@@ -1,5 +1,4 @@
 " Python-mode folding functions
-
 " Notice that folding is based on single line so complex regular expressions
 " that take previous line into consideration are not fit for the job.
 
@@ -8,13 +7,13 @@ let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 " Spyder, a very popular IDE for python has a template which includes
 " '@author:' ; thus the regex below.
-let s:decorator_regex = '^\s*@\(author:\)\@!' 
-let s:doc_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\)'
-let s:doc_end_regex = '\%("""\|''''''\)\s*$'
+let s:decorator_regex = '^\s*@\(author:\)\@!'
+let s:docstring_line_regex = '^\s*[uUrR]\=\("""\|''''''\).\+\1\s*$'
+let s:docstring_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\).*\S'
+let s:docstring_end_regex = '\%("""\|''''''\)\s*$'
 " This one is needed for the while loop to count for opening and closing
 " docstrings.
-let s:doc_general_regex = '\%("""\|''''''\)'
-let s:doc_line_regex = '^\s*[uUrR]\=\("""\|''''''\).\+\1\s*$'
+let s:docstring_general_regex = '\%("""\|''''''\)'
 let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
 if s:symbol == ''
     let s:symbol = ' '
@@ -24,10 +23,10 @@ endif
 
 fun! pymode#folding#text() " {{{
     let fs = v:foldstart
-    while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
+    while getline(fs) !~ s:def_regex && getline(fs) !~ s:docstring_begin_regex
         let fs = nextnonblank(fs + 1)
     endwhile
-    if getline(fs) =~ s:doc_end_regex && getline(fs) =~ s:doc_begin_regex
+    if getline(fs) =~ s:docstring_end_regex && getline(fs) =~ s:docstring_begin_regex
         let fs = nextnonblank(fs + 1)
     endif
     let line = getline(fs)
@@ -83,7 +82,11 @@ fun! pymode#folding#expr(lnum) "{{{
         if decorated
             return '='
         else
+            " The line below may improve folding.
             return ">".(indent / &shiftwidth + 1)
+            " This was the previous rule. It grouped classes definitions
+            " together (undesired).
+            " return indent / &shiftwidth + 1
         endif
     endif "}}}
 
@@ -95,80 +98,43 @@ fun! pymode#folding#expr(lnum) "{{{
 
     " Notice that an effect of this is that other docstring matches will not
     " be one liners.
-    if line =~ s:doc_line_regex
+    if line =~ s:docstring_line_regex
         return "="
     endif
 
-    if line =~ s:doc_begin_regex
-            " echom 'just entering'
+    if line =~ s:docstring_begin_regex
         if s:Is_opening_folding(a:lnum)
-            " echom 'entering at line ' . a:lnum
             return ">".(indent / &shiftwidth + 1)
         endif
     endif
-    if line =~ s:doc_end_regex
+    if line =~ s:docstring_end_regex
         if !s:Is_opening_folding(a:lnum)
-            " echom 'leaving at line ' . a:lnum
             return "<".(indent / &shiftwidth + 1)
         endif
     endif "}}}
 
-    " Nested Definitions {{{
-    " Handle nested defs but only for files shorter than
-    " g:pymode_folding_nest_limit lines due to performance concerns
-    if line('$') < g:pymode_folding_nest_limit && indent(prevnonblank(a:lnum))
-        let curpos = getpos('.')
-        try
-            let last_block = s:BlockStart(a:lnum)
-            let last_block_indent = indent(last_block)
-
-            " Check if last class/def is not indented and therefore can't be
-            " nested.
-            if last_block_indent
-                call cursor(a:lnum, 0)
-                let next_def = searchpos(s:def_regex, 'nW')[0]
-                let next_def_indent = next_def ? indent(next_def) : -1
-                let last_block_end = s:BlockEnd(last_block)
-
-                " If the next def has greater indent than the previous def, it
-                " is nested one level deeper and will have its own fold. If
-                " the class/def containing the current line is on the first
-                " line it can't be nested, and if this block ends on the last
-                " line, it contains no trailing code that should not be
-                " folded. Finally, if the next non-blank line after the end of
-                " the previous def is less indented than the previous def, it
-                " is not part of the same fold as that def. Otherwise, we know
-                " the current line is at the end of a nested def.
-                if next_def_indent <= last_block_indent && last_block > 1 && last_block_end < line('$')
-                    \ && indent(nextnonblank(last_block_end)) >= last_block_indent
-
-                    " Include up to one blank line in the fold
-                    if getline(last_block_end) =~ s:blank_regex
-                        let fold_end = min([prevnonblank(last_block_end - 1), last_block_end]) + 1
-                    else
-                        let fold_end = last_block_end
-                    endif
-                    if a:lnum == fold_end
-                        return 's1'
-                    else
-                        return '='
-                    endif
-                endif
-            endif
-        finally
-            call setpos('.', curpos)
-        endtry
-    endif " }}}
+    " Blocks. {{{
+    let save_cursor = getcurpos()
+    if line !~ s:blank_regex
+        let line_block_start = s:BlockStart(a:lnum)
+        let prev_line_block_start = s:BlockStart(a:lnum - 1)
+        call setpos('.', save_cursor)
+        if line_block_start == prev_line_block_start || a:lnum  - line_block_start == 1
+            return '='
+        elseif indent < indent(prevnonblank(a:lnum - 1))
+            return indent(line_block_start) / &shiftwidth + 1
+        else
+        endif
+    endif
+    " endif " }}}
 
     " Blank Line {{{
     if line =~ s:blank_regex
         if prev_line =~ s:blank_regex
-            if indent(a:lnum + 1) == 0 && next_line !~ s:blank_regex && next_line !~ s:doc_general_regex
+            if indent(a:lnum + 1) == 0 && next_line !~ s:blank_regex && next_line !~ s:docstring_general_regex
                 if s:Is_opening_folding(a:lnum)
-                    " echom a:lnum
                     return "="
                 else
-                    " echom "not " . a:lnum
                     return 0
                 endif
             endif
@@ -182,15 +148,25 @@ fun! pymode#folding#expr(lnum) "{{{
 
 endfunction "}}}
 
-fun! s:BlockStart(lnum) "{{{
+fun! s:BlockStart(line_number) "{{{
+    " Returns the definition statement which encloses the current line.
+
     " Note: Make sure to reset cursor position after using this function.
-    call cursor(a:lnum, 0)
+    call cursor(a:line_number, 0)
 
     " In case the end of the block is indented to a higher level than the def
     " statement plus one shiftwidth, we need to find the indent level at the
     " bottom of that if/for/try/while/etc. block.
-    let last_def = searchpos(s:def_regex, 'bcnW')[0]
+    let previous_definition = searchpos(s:def_regex, 'bcnW')
+    if previous_definition != [0, 0]
+        while previous_definition != [0, 0] && indent(previous_definition[0]) >= indent(a:line_number)
+            let previous_definition = searchpos(s:def_regex, 'bncW')
+            call cursor(previous_definition[0] - 1, 0)
+        endwhile
+    endif
+    let last_def = previous_definition[0]
     if last_def
+        call cursor(last_def, 0)
         let last_def_indent = indent(last_def)
         call cursor(last_def, 0)
         let next_stmt_at_def_indent = searchpos('\v^\s{'.last_def_indent.'}[^[:space:]#]', 'nW')[0]
@@ -200,19 +176,33 @@ fun! s:BlockStart(lnum) "{{{
 
     " Now find the class/def one shiftwidth lower than the start of the
     " aforementioned indent block.
-    if next_stmt_at_def_indent && next_stmt_at_def_indent < a:lnum
+    if next_stmt_at_def_indent && next_stmt_at_def_indent < a:line_number
         let max_indent = max([indent(next_stmt_at_def_indent) - &shiftwidth, 0])
     else
-        let max_indent = max([indent(prevnonblank(a:lnum)) - &shiftwidth, 0])
+        let max_indent = max([indent(prevnonblank(a:line_number)) - &shiftwidth, 0])
     endif
+
+    " " Debug:
+
     return searchpos('\v^\s{,'.max_indent.'}(def |class )\w', 'bcnW')[0]
+
 endfunction "}}}
+function! Blockstart(x)
+    let save_cursor = getcurpos()
+    return s:BlockStart(a:x)
+    call setpos('.', save_cursor)
+endfunction
 
 fun! s:BlockEnd(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
     return searchpos('\v^\s{,'.indent('.').'}\S', 'nW')[0] - 1
 endfunction "}}}
+function! Blockend(lnum)
+    let save_cursor = getcurpos()
+    return s:BlockEnd(a:lnum)
+    call setpos('.', save_cursor)
+endfunction
 
 function! s:Is_opening_folding(lnum) "{{{
     " Helper function to see if docstring is opening or closing
@@ -238,13 +228,11 @@ function! s:Is_opening_folding(lnum) "{{{
 
         let i_line = getline(i)
 
-        if i_line =~ s:doc_line_regex 
-            " echom "case 00 on line " . i
+        if i_line =~ s:docstring_line_regex
             continue
         endif
 
-        if i_line =~ s:doc_begin_regex && ! has_open_docstring
-            " echom "case 01 on line " . i
+        if i_line =~ s:docstring_begin_regex && ! has_open_docstring
             " This causes the loop to continue if there is a triple quote which
             " is not a docstring.
             if extra_docstrings > 0
@@ -255,15 +243,13 @@ function! s:Is_opening_folding(lnum) "{{{
                 let number_of_folding = number_of_folding + 1
             endif
         " If it is an end doc and has an open docstring.
-        elseif i_line =~ s:doc_end_regex && has_open_docstring
-            " echom "case 02 on line " . i
+        elseif i_line =~ s:docstring_end_regex && has_open_docstring
             let has_open_docstring = 0
             let number_of_folding = number_of_folding + 1
 
-        elseif i_line =~ s:doc_general_regex
-            " echom "extra docstrings on line " . i
+        elseif i_line =~ s:docstring_general_regex
             let extra_docstrings = extra_docstrings + 1
-        endif 
+        endif
     endfor
 
     call add(b:fold_cache, number_of_folding % 2)

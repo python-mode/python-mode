@@ -118,7 +118,7 @@ endif
     if g:pymode_syntax_highlight_stars_operator
         syn match pythonExtraOperator "\%(\*\|\*\*\)"
     endif
-    
+
     if g:pymode_syntax_highlight_self
         syn keyword pythonSelf self cls
     endif
@@ -271,8 +271,8 @@ endif
         syn keyword pythonBuiltinObj True False Ellipsis None NotImplemented
         syn keyword pythonBuiltinObj __debug__ __doc__ __file__ __name__ __package__
     endif
-    
-    if g:pymode_syntax_builtin_types    
+
+    if g:pymode_syntax_builtin_types
         syn keyword pythonBuiltinType type object
         syn keyword pythonBuiltinType str basestring unicode buffer bytearray bytes chr unichr
         syn keyword pythonBuiltinType dict int long bool float complex set frozenset list tuple

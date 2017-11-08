@@ -110,7 +110,7 @@ if g:pymode_lint
         " let &l:updatetime = g:pymode_lint_async_updatetime
         " au! BufEnter <buffer> call pymode#lint#start()
         " au! BufLeave <buffer> call pymode#lint#stop()
-    end
+    endif
 
 endif
 
@@ -124,7 +124,7 @@ if g:pymode_doc
     exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#find()<CR>"
     exe "vnoremap <silent> <buffer> " g:pymode_doc_bind ":<C-U>call pymode#doc#show(@*)<CR>"
 
-end
+endif
 
 " Rope support
 if g:pymode_rope
@@ -134,69 +134,69 @@ if g:pymode_rope
     endif
     if g:pymode_rope_show_doc_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_show_doc_bind . " :call pymode#rope#show_doc()<CR>"
-    end
+    endif
     if g:pymode_rope_find_it_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_find_it_bind . " :call pymode#rope#find_it()<CR>"
-    end
+    endif
     if g:pymode_rope_organize_imports_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_organize_imports_bind . " :call pymode#rope#organize_imports()<CR>"
-    end
+    endif
 
     if g:pymode_rope_rename_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_rename_bind . " :call pymode#rope#rename()<CR>"
-    end
+    endif
 
     if g:pymode_rope_rename_module_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_rename_module_bind . " :call pymode#rope#rename_module()<CR>"
-    end
+    endif
 
     if g:pymode_rope_extract_method_bind != ""
         exe "vnoremap <silent> <buffer> " . g:pymode_rope_extract_method_bind . " :call pymode#rope#extract_method()<CR>"
-    end
+    endif
 
     if g:pymode_rope_extract_variable_bind != ""
         exe "vnoremap <silent> <buffer> " . g:pymode_rope_extract_variable_bind . " :call pymode#rope#extract_variable()<CR>"
-    end
+    endif
 
     if g:pymode_rope_inline_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_inline_bind . " :call pymode#rope#inline()<CR>"
-    end
+    endif
 
     if g:pymode_rope_move_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_move_bind . " :call pymode#rope#move()<CR>"
-    end
+    endif
 
     if g:pymode_rope_change_signature_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_change_signature_bind . " :call pymode#rope#signature()<CR>"
-    end
+    endif
 
     if g:pymode_rope_use_function_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_use_function_bind . " :call pymode#rope#use_function()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_function_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_function_bind . " :call pymode#rope#generate_function()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_package_bind . " :call pymode#rope#generate_package()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_class_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_class_bind . " :call pymode#rope#generate_class()<CR>"
-    end
+    endif
 
     if g:pymode_rope_module_to_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_module_to_package_bind . " :call pymode#rope#module_to_package()<CR>"
-    end
+    endif
 
     if g:pymode_rope_autoimport_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_autoimport_bind . " :PymodeRopeAutoImport<CR>"
-    end
+    endif
 
     if g:pymode_rope_completion && g:pymode_rope_complete_on_dot
         inoremap <silent> <buffer> . .<C-R>=pymode#rope#complete_on_dot()<CR>
-    end
+    endif
 
     command! -buffer -nargs=? PymodeRopeNewProject call pymode#rope#new(<f-args>)
     command! -buffer PymodeRopeUndo call pymode#rope#undo()
@@ -207,6 +207,6 @@ if g:pymode_rope
 
     if g:pymode_rope_autoimport
         command! -buffer PymodeRopeAutoImport call pymode#rope#autoimport(expand('<cword>'))
-    end
+    endif
 
-end
+endif

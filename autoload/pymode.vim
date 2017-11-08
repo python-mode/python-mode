@@ -71,7 +71,7 @@ endfunction "}}}
 fun! pymode#trim_whitespaces() "{{{
     if g:pymode_trim_whitespaces
         let cursor_pos = getpos('.')
-        silent! %s/\s\+$//
+        silent! %s/\s\+$//e
         call setpos('.', cursor_pos)
     endif
 endfunction "}}}

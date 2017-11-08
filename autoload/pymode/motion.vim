@@ -21,7 +21,7 @@ fun! pymode#motion#vmove(pattern, flags) range "{{{
     call cursor(a:firstline, 0)
     normal! v
     call cursor(end)
-endfunction "}}} 
+endfunction "}}}
 
 
 fun! pymode#motion#pos_le(pos1, pos2) "{{{

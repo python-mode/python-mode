@@ -1,5 +1,9 @@
 " Python-mode Rope support
-"
+
+if ! g:pymode_rope
+    finish
+endif
+
 PymodePython from pymode import rope
 
 call pymode#tools#loclist#init()
@@ -12,23 +16,23 @@ endfunction
 fun! pymode#rope#complete(dot)
     if pumvisible()
         return "\<C-n>"
-    end
+    endif
     if a:dot
         PymodePython rope.complete(True)
     else
         PymodePython rope.complete()
-    end
+    endif
     return pumvisible() ? "\<C-p>\<Down>" : ""
 endfunction
 
 fun! pymode#rope#complete_on_dot() "{{{
     if !exists("*synstack")
         return ""
-    end
+    endif
     for group in map(synstack(line('.'), col('.') - 1), 'synIDattr(v:val, "name")')
         for name in ['pythonString', 'pythonComment', 'pythonNumber', 'pythonDocstring']
             if group == name
-                return "" 
+                return ""
             endif
         endfor
     endfor
@@ -73,7 +77,7 @@ fun! pymode#rope#show_doc()
         setlocal nomodified
         setlocal filetype=rst
         wincmd p
-    end
+    endif
 endfunction
 
 
