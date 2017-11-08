@@ -15,7 +15,7 @@ except Exception:  # noqa
     pass
 
 
-def code_check():  # noqa
+def code_check():
     """Run pylama and check current file.
 
     :return bool:
@@ -24,31 +24,37 @@ def code_check():  # noqa
     with silence_stderr():
 
         from pylama.core import run
-        from pylama.main import parse_options
-        from pylama.config import _override_options
+        from pylama.config import parse_options
 
         if not env.curbuf.name:
             return env.stop()
 
+        linters = env.var('g:pymode_lint_checkers')
+        env.debug(linters)
+
+        # Fixed in v0.9.3: these two parameters may be passed as strings.
+        # DEPRECATE: v:0.10.0: need to be set as lists.
+        if isinstance(env.var('g:pymode_lint_ignore'), str):
+            ignore = env.var('g:pymode_lint_ignore').split(',')
+        else:
+            ignore = env.var('g:pymode_lint_ignore')
+        if isinstance(env.var('g:pymode_lint_select'), str):
+            select = env.var('g:pymode_lint_select').split(',')
+        else:
+            select = env.var('g:pymode_lint_select')
         options = parse_options(
-            force=1,
-            ignore=env.var('g:pymode_lint_ignore'),
-            select=env.var('g:pymode_lint_select'),
+            linters=linters, force=1,
+            ignore=ignore,
+            select=select,
         )
-
-        linters = env.var('g:pymode_lint_checkers', default=[])
-        if linters:
-            _override_options(options, linters=",".join(linters))
-
-            for linter in dict(options.linters):
-                opts = env.var('g:pymode_lint_options_%s' % linter, silence=True)
-                if opts:
-                    options.linters_params[linter] = options.linters_params.get(linter, {})
-                    options.linters_params[linter].update(opts)
-
-        if 'pylint' in options.linters_params:
-            options.linters_params['pylint']['clear_cache'] = True
         env.debug(options)
+
+        for linter in linters:
+            opts = env.var('g:pymode_lint_options_%s' % linter, silence=True)
+            if opts:
+                options.linters_params[linter] = options.linters_params.get(
+                    linter, {})
+                options.linters_params[linter].update(opts)
 
         path = os.path.relpath(env.curbuf.name, env.curdir)
         env.debug("Start code check: ", path)
