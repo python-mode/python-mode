@@ -8,7 +8,7 @@
 
 *The project needs contributors*
 
-** Python-mode Slack Channel is here: https://python-mode.herokuapp.com/ **
+** Please use Python-mode tag on Stackoverflow to ask questions: https://stackoverflow.com/questions/tagged/python-mode **
 
 -----
 
