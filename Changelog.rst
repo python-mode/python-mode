@@ -303,7 +303,7 @@ do not get loaded.
 
   ::
 
-2082d0b8fed7fff10b3f335cefc6a51dd25ee0b2    let g:pymode_syntax_builtin_objs = 2
+    let g:pymode_syntax_builtin_objs = 0
     let g:pymode_syntax_builtin_funcs = 0
 
 * Change namespace of syntax variables
