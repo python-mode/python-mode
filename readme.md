@@ -107,17 +107,13 @@ Then rebuild **helptags** in vim:
 
 If your python-mode doesn't work:
 
-1. Load Vim with only python-mode enabled (use debug.vim from pymode):
-
-        vim -u <path_to_pymode>/debug.vim
-
-   And try to repeat your case. If no error occurs, seems like problem isn't in
-   the plugin.
-
-2. Type `:PymodeTroubleshooting` and fix any warnings or copy the output and
-   send it to me. (For example, by creating a [new github issue](
-   https://github.com/python-mode/python-mode/issues/new) if one does
-   not already exist for the problem).
+1. **(From the FAQ)** Start python mode with:  
+    `vim -u <path_to_pymode>/debugvimrc.vim`  
+   Reproduce the error and submit your python mode debug file. You check its
+   location with `:messages` for something like:  
+   `pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.  
+   Please submit the entire content of the file along with a reasoning of why
+   the plugin seems broken.
 
 # Frequent problems
 

@@ -2,7 +2,6 @@
 let g:pymode_version = "0.9.4"
 
 com! PymodeVersion echomsg "Current python-mode version: " . g:pymode_version
-com! PymodeTroubleshooting call pymode#troubleshooting#test()
 
 " Enable pymode by default :)
 call pymode#default('g:pymode', 1)

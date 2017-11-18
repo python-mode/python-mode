@@ -20,7 +20,6 @@ if s:symbol == ''
 endif
 " ''''''''
 
-
 fun! pymode#folding#text() " {{{
     let fs = v:foldstart
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:docstring_begin_regex
@@ -181,8 +180,6 @@ fun! s:BlockStart(line_number) "{{{
     else
         let max_indent = max([indent(prevnonblank(a:line_number)) - &shiftwidth, 0])
     endif
-
-    " " Debug:
 
     return searchpos('\v^\s{,'.max_indent.'}(def |class )\w', 'bcnW')[0]
 

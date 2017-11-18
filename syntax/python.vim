@@ -62,7 +62,6 @@ call pymode#default('g:pymode_syntax_slow_sync', 1)
 
 " }}}
 
-
 " For version 5.x: Clear all syntax items
 if version < 600
     syntax clear
@@ -125,7 +124,6 @@ endif
 
 " }}}
 
-
 " Decorators {{{
 " ==============
 
@@ -134,7 +132,6 @@ endif
     syn match   pythonDot        "\." display containedin=pythonDottedName
 
 " }}}
-
 
 " Comments {{{
 " ============
@@ -145,7 +142,6 @@ endif
     syn keyword pythonTodo      TODO FIXME XXX contained
 
 " }}}
-
 
 " Errors {{{
 " ==========
@@ -166,7 +162,6 @@ endif
     endif
 
 " }}}
-
 
 " Strings {{{
 " ===========
@@ -320,7 +315,6 @@ endif
     endif
 
 " }}}
-
 
 if g:pymode_syntax_slow_sync
     syn sync minlines=2000

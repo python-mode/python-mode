@@ -210,3 +210,40 @@ if g:pymode_rope
     endif
 
 endif
+
+
+if g:pymode_debug
+    " Redefine functions to be debugged here functions here.
+
+    " NOTE: The redraw seems to be necessary to force messages to get echoed to
+    " the screen. See:
+    " https://groups.google.com/forum/#!topic/vim_use/EfcXOjq_rKE
+    " for details.
+    " silent! redraw!
+    " TODO: when loading with 'vim -u ./debug.vim' the messages shown in vim
+    " are unduly cleared. Need a fix.
+
+    " Start debbuging environment. {{{
+    if ! &verbosefile
+        " Get a system independent temporary filename. The 'marker' variable is
+        " used to get rid of a null character getting inserted at position.
+        " substitute() was not able to remove it.
+        let g:pymode_debug_tempfile=matchstr(
+            \ execute(
+            \ g:pymode_python
+            \ . " import os;import tempfile; marker='|';"
+            \ . " print(marker, tempfile.gettempdir(), os.sep, "
+            \ .        "'pymode_debug_file.txt', marker, sep='', end='')"),
+            \ '|\zs.*\ze|')
+        execute "set verbosefile="  . g:pymode_debug_tempfile
+    endif
+    call pymode#debug('Starting debug on: '
+                      \ . strftime("\%Y-\%m-\%d \%H:\%M:\%S")
+                      \ . ' with file ' . &verbosefile)
+    " }}}
+    if g:pymode_folding
+        setlocal foldexpr=pymode#debug#foldingexpr(v:lnum)
+    endif
+    call pymode#debug#sysinfo()
+
+endif
