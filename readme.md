@@ -103,17 +103,18 @@ Then rebuild **helptags** in vim:
 **filetype-plugin** (`:help filetype-plugin-on`) and **filetype-indent**
 (`:help filetype-indent-on`) must be enabled to use python-mode.
 
-# Troubleshooting
+# Troubleshooting/Debugging
 
 If your python-mode doesn't work:
 
-1. **(From the FAQ)** Start python mode with:  
-    `vim -u <path_to_pymode>/debugvimrc.vim`  
-   Reproduce the error and submit your python mode debug file. You check its
-   location with `:messages` for something like:  
-   `pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.  
-   Please submit the entire content of the file along with a reasoning of why
-   the plugin seems broken.
+**(From the FAQ)** Start python mode with:  
+`vim -i NONE -u <path_to_pymode>/debugvimrc.vim`  
+Reproduce the error and submit your python mode debug file. You can check its
+location with `:messages` for something like:  
+`pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.  
+Please submit the entire content of the file along with a reasoning of why the
+plugin seems broken.
+***Do check for sensitive information in the file before submitting.***
 
 # Frequent problems
 

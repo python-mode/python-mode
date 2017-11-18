@@ -241,9 +241,17 @@ if g:pymode_debug
                       \ . strftime("\%Y-\%m-\%d \%H:\%M:\%S")
                       \ . ' with file ' . &verbosefile)
     " }}}
+    " Redefine folding expression. {{{
     if g:pymode_folding
         setlocal foldexpr=pymode#debug#foldingexpr(v:lnum)
     endif
     call pymode#debug#sysinfo()
+    " }}}
+    " Define auto commands for vim. {{{
+    augroup augroup_save_issue_commands
+        autocmd!
+        autocmd VimLeave *.py | call pymode#debug('Session history:') | silent! history
+    augroup END
+    " }}}
 
-endif
+    endif

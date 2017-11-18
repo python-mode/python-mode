@@ -6,6 +6,14 @@
 "
 " Only python-mode will be loaded.
 
+" Disable all persistence between sessions.
+let skip_defaults_vim=1
+" TODO XXX: this nevertheless keeps viminfo enabled. As a workaround the flag
+" '-i NONE' should be added to vim's loading.
+set viminfo=
+set nobackup
+set noswapfile
+
 " Modify vimrc configuration.
 execute('set rtp+='. expand('<sfile>:p:h'))
 set rtp -=$HOME/.vim
@@ -19,3 +27,6 @@ let g:pymode_debug = 1
 if ! (has('win16') || has('win32') || has('win64'))
     set shell=/bin/bash
 endif
+
+" IMPORTANT: Do note that the history of this session is saved on the log file.
+" See the augroup in ./ftplugin/python/pymode.vim file.
