@@ -309,10 +309,9 @@ Default code checkers (you could set several)          *'g:pymode_lint_checkers'
 Values may be chosen from: `pylint`, `pep8`, `mccabe`, `pep257`, `pyflakes`.
 
 Skip errors and warnings                                 *'g:pymode_lint_ignore'*
-E.g. "E501,W002", "E2,W" (Skip all Warnings and Errors that starts with E2) and
-etc
+E.g. ["W", "E2"] (Skip all Warnings and the Errors starting with E2) etc.
 >
-    let g:pymode_lint_ignore = "E501,W"
+    let g:pymode_lint_ignore = ["E501", "W",]
 
 Select some error or warnings.                           *'g:pymode_lint_select'*
 By example you disable all warnings starting from 'W', but want to see warning

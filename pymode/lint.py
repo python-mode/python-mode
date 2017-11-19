@@ -35,10 +35,12 @@ def code_check():
         # Fixed in v0.9.3: these two parameters may be passed as strings.
         # DEPRECATE: v:0.10.0: need to be set as lists.
         if isinstance(env.var('g:pymode_lint_ignore'), str):
+            raise ValueError ('g:pymode_lint_ignore should have a list type')
             ignore = env.var('g:pymode_lint_ignore').split(',')
         else:
             ignore = env.var('g:pymode_lint_ignore')
         if isinstance(env.var('g:pymode_lint_select'), str):
+            raise ValueError ('g:pymode_lint_ignore should have a list type')
             select = env.var('g:pymode_lint_select').split(',')
         else:
             select = env.var('g:pymode_lint_select')
