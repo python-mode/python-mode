@@ -114,6 +114,7 @@ location with `:messages` for something like:
 `pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.  
 Please submit the entire content of the file along with a reasoning of why the
 plugin seems broken.
+
 ***Do check for sensitive information in the file before submitting.***
 
 # Frequent problems
@@ -141,8 +142,11 @@ the issue tracker at:
 
 # Contributing
 
-* Kirill Klenov (<https://github.com/klen>)
-* Felipe Vieira (<https://github.com/fmv1992>)
+The contributing guidelines for this plugin are outlined at
+`:help pymode-development`.
+
+* Author: Kirill Klenov (<https://github.com/klen>)
+* Maintainer: Felipe Vieira (<https://github.com/fmv1992>)
 
 Also see the AUTHORS file.
 
