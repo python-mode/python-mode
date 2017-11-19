@@ -1,4 +1,4 @@
-" Python-mode folding functions
+k" Python-mode folding function2
 " Notice that folding is based on single line so complex regular expressions
 " that take previous line into consideration are not fit for the job.
 
@@ -156,10 +156,14 @@ fun! s:BlockStart(line_number) "{{{
     " In case the end of the block is indented to a higher level than the def
     " statement plus one shiftwidth, we need to find the indent level at the
     " bottom of that if/for/try/while/etc. block.
-    let previous_definition = searchpos(s:def_regex, 'bcnW')
+    " Flags from searchpos() (same as search()):
+    " b: search Backward instead of forward
+    " n: do Not move the cursor
+    " W: don't Wrap around the end of the file
+    let previous_definition = searchpos(s:def_regex, 'bnW')
     if previous_definition != [0, 0]
         while previous_definition != [0, 0] && indent(previous_definition[0]) >= indent(a:line_number)
-            let previous_definition = searchpos(s:def_regex, 'bncW')
+            let previous_definition = searchpos(s:def_regex, 'bnW')
             call cursor(previous_definition[0] - 1, 0)
         endwhile
     endif
