@@ -317,7 +317,7 @@ Select some error or warnings.                           *'g:pymode_lint_select'
 By example you disable all warnings starting from 'W', but want to see warning
 'W0011' and warning 'W430'
 >
-    let g:pymode_lint_select = "E501,W0011,W430"
+    let g:pymode_lint_select = ["E501", "W0011", "W430"]
 
 Sort errors by relevance                                   *'g:pymode_lint_sort'*
 If not empty, errors will be sort by defined relevance

@@ -36,12 +36,10 @@ def code_check():
         # DEPRECATE: v:0.10.0: need to be set as lists.
         if isinstance(env.var('g:pymode_lint_ignore'), str):
             raise ValueError ('g:pymode_lint_ignore should have a list type')
-            ignore = env.var('g:pymode_lint_ignore').split(',')
         else:
             ignore = env.var('g:pymode_lint_ignore')
         if isinstance(env.var('g:pymode_lint_select'), str):
-            raise ValueError ('g:pymode_lint_ignore should have a list type')
-            select = env.var('g:pymode_lint_select').split(',')
+            raise ValueError ('g:pymode_lint_select should have a list type')
         else:
             select = env.var('g:pymode_lint_select')
         options = parse_options(

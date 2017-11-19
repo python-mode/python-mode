@@ -18,7 +18,7 @@ def auto():
         aggressive = 1
         diff = False
         experimental = True
-        ignore = vim.eval('g:pymode_lint_ignore').split(',')
+        ignore = vim.eval('g:pymode_lint_ignore')
         in_place = True
         indent_size = int(vim.eval('&tabstop'))
         line_range = None

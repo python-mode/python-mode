@@ -111,10 +111,10 @@ call pymode#default("g:pymode_lint_message", 1)
 call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pep8', 'mccabe'])
 
 " Skip errors and warnings (e.g. E4,W)
-call pymode#default("g:pymode_lint_ignore", "")
+call pymode#default("g:pymode_lint_ignore", [])
 
 " Select errors and warnings (e.g. E4,W)
-call pymode#default("g:pymode_lint_select", "")
+call pymode#default("g:pymode_lint_select", [])
 
 " Auto open cwindow if any errors has been finded
 call pymode#default("g:pymode_lint_cwindow", 1)
