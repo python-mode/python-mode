@@ -10,6 +10,20 @@
 
 -------------------------------------------------------------------------------
 
+<p align="center">
+  <img width="150" height="150" src="https://vignette.wikia.nocookie.net/sqmegapolis/images/4/42/Warning-2-256.png/revision/latest?cb=20130403220740">
+</p>
+
+***Important***: From 2017-11-19 onwards python-mode uses submodules instead of
+hard coding 3rd party libraries into its codebase. Please issue the command:  
+`git submodule update --init --recursive`  
+inside your python-mode folder.
+
+If you are a new user please clone the repos using the recursive flag:  
+`git clone --recursive https://github.com/python-mode/python-mode`
+
+-------------------------------------------------------------------------------
+
 Python-mode is a Vim plugin that magically converts Vim into a Python IDE.
 
 Why Python-mode?
@@ -75,9 +89,9 @@ help packages` in vim for details.
 
 ## Using pathogen
 
-    % cd ~/.vim
-    % mkdir -p bundle && cd bundle
-    % git clone https://github.com/python-mode/python-mode.git
+    cd ~/.vim
+    mkdir -p bundle && cd bundle
+    git clone https://github.com/python-mode/python-mode.git
 
 Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
 
