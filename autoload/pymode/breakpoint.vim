@@ -1,17 +1,11 @@
 fun! pymode#breakpoint#init() "{{{
 
-    if !g:pymode_breakpoint
+    " If breakpoints are either disabled or already defined do nothing.
+    if ! g:pymode_breakpoint || g:pymode_breakpoint_cmd != ''
         return
-    endif
 
-    if g:pymode_breakpoint_cmd == ''
-        let g:pymode_breakpoint_cmd = 'import pdb; pdb.set_trace()  # XXX BREAKPOINT'
-
-        if g:pymode_python == 'disable'
-            return
-        endif
-
-    endif
+    " Else go for a 'smart scan' of the defaults.
+    else
 
         PymodePython << EOF
 
@@ -26,6 +20,7 @@ for module in ('wdb', 'pudb', 'ipdb'):
         continue
 
 EOF
+    endif
 
 endfunction "}}}
 
