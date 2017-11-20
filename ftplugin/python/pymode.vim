@@ -54,10 +54,29 @@ endif
 
 " Python folding
 if g:pymode_folding
+    " On the folding problem.
+    " =======================
+    " What happens when your enter insert mode with fdm=expr:
+    " TODO:
+    "
+    " What happens when your leave insert mode and trigger fdm=expr:
+    " TODO:
 
     setlocal foldmethod=expr
     setlocal foldexpr=pymode#folding#expr(v:lnum)
     setlocal foldtext=pymode#folding#text()
+
+
+    au! pymode InsertEnter *.py setlocal foldmethod=manual
+    au! pymode InsertLeave *.py let s:save_winview = winsaveview()
+
+    au pymode InsertLeave *.py let s:save_cursor = getcurpos()
+    au pymode InsertLeave *.py set nofoldenable
+    au pymode InsertLeave *.py setlocal foldmethod=expr
+    au pymode InsertLeave *.py set foldenable
+    au pymode InsertLeave *.py call winrestview(s:save_winview)
+    au pymode InsertLeave *.py call setpos('.', s:save_cursor)
+    au pymode InsertLeave *.py call winrestview(s:save_winview)
 
 endif
 

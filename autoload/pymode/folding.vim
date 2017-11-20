@@ -46,7 +46,9 @@ endfunction "}}}
 
 fun! pymode#folding#expr(lnum) "{{{
 
-    return pymode#folding#foldcase(a:lnum)['foldlevel']
+    let l:return_value = pymode#folding#foldcase(a:lnum)['foldlevel']
+
+    return l:return_value
 
 endfunction "}}}
 
@@ -138,9 +140,7 @@ fun! pymode#folding#foldcase(lnum) "{{{
     let line_block_start = s:BlockStart(a:lnum)
     let line_block_end = s:BlockEnd(a:lnum)
     let prev_line_block_start = s:BlockStart(a:lnum - 1)
-    let save_cursor = getcurpos()
     if line !~ s:blank_regex
-        call setpos('.', save_cursor)
         if line_block_start == prev_line_block_start
                 \ || a:lnum  - line_block_start == 1
             let l:foldcase = 'non blank line; first line of block or part of it'

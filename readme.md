@@ -1,4 +1,4 @@
-![](https://travis-ci.org/klen/python-mode.png?branch=develop)
+![](https://travis-ci.org/python-mode/python-mode.svg?branch=develop)
 
 ![](https://raw.github.com/python-mode/python-mode/develop/logo.png)
 # Python-mode, a Python IDE for Vim
