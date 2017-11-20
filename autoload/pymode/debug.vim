@@ -49,9 +49,12 @@ endfunction "}}}
 
 " DESC: Define debug folding function.
 function! pymode#debug#foldingexpr(lnum) "{{{
-    let l:get_folding_result = pymode#folding#expr(a:lnum)
+    let l:get_folding_result = pymode#folding#foldcase(a:lnum)
     " NOTE: the 'has folding:' expression is special in the pymode#debug.
-    call pymode#debug('line ' . a:lnum . ' has folding:' . l:get_folding_result)
-    return pymode#folding#expr(a:lnum)
+    call pymode#debug(
+        \ 'line ' . a:lnum
+        \ . ' has folding: ' . l:get_folding_result['foldlevel']
+        \ . ' with foldcase ' . l:get_folding_result['foldcase'])
+    return l:get_folding_result['foldlevel']
 endfunction
 " }}}

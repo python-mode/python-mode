@@ -1,2 +1,8 @@
 # Deactivated.
 # This plugin needs a robust test suite.
+branches:
+  only:
+    # - develop
+    - dev_imp_test
+install: git clone --recursive https://github.com/python-mode/python-mode
+script: cd ./tests && bash -x ./test.sh
