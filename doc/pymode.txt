@@ -1,4 +1,4 @@
-*pymode.txt* For Vim Version 8.0 Last change: 2017 November 11
+*pymode.txt*     For Vim Version 8.0      Last change: 2017 November 20
 
      ____  _  _  ____  _   _  _____  _  _     __  __  _____  ____  ____      ~
     (  _ \( \/ )(_  _)( )_( )(  _  )( \( )___(  \/  )(  _  )(  _ \( ___)     ~
@@ -688,8 +688,8 @@ Highlight docstrings as pythonDocstring (otherwise as pythonString)
 6. FAQ ~
                                                                      *pymode-faq*
 
-Python-mode doesn't work
-------------------------
+1. Python-mode doesn't work
+---------------------------
 
 Start python mode with:
 `vim -i NONE -u <path_to_pymode>/debugvimrc.vim`
@@ -703,8 +703,8 @@ plugin seems broken.
 	*Underlined	submitting!
 
 
-Rope completion is very slow                                   *pymode-rope-slow*
-----------------------------
+2. Rope completion is very slow                                *pymode-rope-slow*
+-------------------------------
 
 Rope creates a project-level service directory in |.ropeproject|
 
@@ -726,8 +726,8 @@ You may also set |'g:pymode_rope_project_root'| to manually specify the project
 root path.
 
 
-Pylint check is very slow
--------------------------
+3. Pylint check is very slow
+----------------------------
 
 In some projects pylint may check slowly, because it also scans imported
 modules if possible. Try using another code checker: see
@@ -736,8 +736,8 @@ modules if possible. Try using another code checker: see
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings
 from `.vimrc` from your projects directories.
 
-OSX cannot import urandom
--------------------------
+4. OSX cannot import urandom
+----------------------------
 
 See: https://groups.google.com/forum/?fromgroups=#!topic/vim_dev/2NXKF6kDONo
 
@@ -749,7 +749,25 @@ The sequence of commands that fixed this:
     brew install -v --force macvim
     brew link macvim
     brew link python
-<
+
+5. Folding is slow
+------------------
+
+Python mode adds folding for definitions and multi line docstrings. These may
+be costly to compute on large files. To disable them one simple has to to add:
+
+    let g:pymode_folding = 1
+
+to their vimrc file.
+
+Beware that when editing python files in multiple windows vim computes the
+folding for every typed character. Thus it may be useful to define:
+
+    augroup unset_folding_in_insert_mode
+        autocmd!
+        autocmd InsertEnter *.py setlocal foldmethod=marker
+        autocmd InsertLeave *.py setlocal foldmethod=expr
+    augroup END
 
 ===============================================================================
 7. Development~
@@ -764,6 +782,16 @@ documentation (except as a first word in a sentence in which case is
 3. All defined functions should use vim's conventions and start with 'Pymode'.
 4. Special marks for project development are `XXX` and `TODO`. They provide a
 easy way for developers to check pending issues.
+5. If submitting a pull request then a test should be added which smartly
+covers the found bug/new feature. Check out the `tests/test.sh` (1) file and
+other executed files.
+A suggested structure is the following: add your test to
+`tests/test_bash` (2) and a vim script to be sourced at
+`tests/test_procedures_vimscript` (3). Try to make use of the already existing
+files at `tests/test_python_sample_code` (4). File (1) should be trigger the
+newly added file (2). This latter file should invoke vim which in turn sources
+file (3). File (3) may then read (4) as a first part of its assertion
+structure and then execute the remaning of the instructions/assertions.
 
 ===============================================================================
 8. Credits ~
