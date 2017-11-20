@@ -1,3 +1,5 @@
+![](https://travis-ci.org/klen/python-mode.png?branch=develop)
+
 ![](https://raw.github.com/python-mode/python-mode/develop/logo.png)
 # Python-mode, a Python IDE for Vim
 
@@ -119,7 +121,13 @@ Then rebuild **helptags** in vim:
 
 # Troubleshooting/Debugging
 
-If your python-mode doesn't work:
+First read our short
+[FAQ](https://github.com/python-mode/python-mode/blob/develop/doc/pymode.txt)
+or using `:help pymode-faq`.
+If your question is not described there then you already know what to do
+(because you read the first item of our FAQ :) ).
+
+Nevertheless just a refresher on how to submit bugs:
 
 **(From the FAQ)** Start python mode with:  
 `vim -i NONE -u <path_to_pymode>/debugvimrc.vim`  
