@@ -137,6 +137,7 @@ fun! pymode#folding#foldcase(lnum) "{{{
     endif "}}}
 
     " Blocks. {{{
+    let s:save_cursor = getcurpos()
     let line_block_start = s:BlockStart(a:lnum)
     let line_block_end = s:BlockEnd(a:lnum)
     let prev_line_block_start = s:BlockStart(a:lnum - 1)
@@ -154,7 +155,10 @@ fun! pymode#folding#foldcase(lnum) "{{{
                 let l:foldlevel = indent(line_block_start) / &shiftwidth + 1
             endif
         endif
+        call setpos('.', s:save_cursor)
         return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+    else
+        call setpos('.', s:save_cursor)
     endif
     " endif " }}}
 
