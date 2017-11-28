@@ -7,6 +7,10 @@
 
 *This project needs contributors.*
 
+**Documentation:**
+- ``:help pymode``
+- <https://github.com/python-mode/python-mode/wiki>
+
 **Please use python-mode tag on Stackoverflow to ask questions:**  
 <https://stackoverflow.com/questions/tagged/python-mode>
 
