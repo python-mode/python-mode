@@ -8,7 +8,7 @@
     ignore = dirty
 [submodule "submodules/pydocstyle"]
 	path = submodules/pydocstyle
-	url = https://github.com/PyCQA/pydocstyle/
+	url = https://github.com/PyCQA/pydocstyle
     ignore = dirty
 [submodule "submodules/mccabe"]
 	path = submodules/mccabe
