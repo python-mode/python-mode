@@ -106,7 +106,7 @@ call pymode#default("g:pymode_lint_on_fly", 0)
 " Show message about error in command line
 call pymode#default("g:pymode_lint_message", 1)
 
-" Choices are: pylint, pyflakes, pep8, mccabe
+" Choices are: pylint, pyflakes, pep8, mccabe and pep257
 call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pep8', 'mccabe'])
 
 " Skip errors and warnings (e.g. E4,W)
