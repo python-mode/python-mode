@@ -659,11 +659,13 @@ Highlight string formatting                 *'g:pymode_syntax_string_formatting'
                                                 *'g:pymode_syntax_string_format'*
                                              *'g:pymode_syntax_string_templates'*
                                                      *'g:pymode_syntax_doctests'*
+                                              *'g:pymode_syntax_regex_rawstring'*
 >
     let g:pymode_syntax_string_formatting = g:pymode_syntax_all
     let g:pymode_syntax_string_format = g:pymode_syntax_all
     let g:pymode_syntax_string_templates = g:pymode_syntax_all
     let g:pymode_syntax_doctests = g:pymode_syntax_all
+    let g:pymode_syntax_regex_rawstring = g:pymode_syntax_all
 
 Highlight builtin objects (True, False, ...)     *'g:pymode_syntax_builtin_objs'*
 >

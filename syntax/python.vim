@@ -40,6 +40,7 @@ call pymode#default('g:pymode_syntax_string_formatting', g:pymode_syntax_all)
 call pymode#default('g:pymode_syntax_string_format', g:pymode_syntax_all)
 call pymode#default('g:pymode_syntax_string_templates', g:pymode_syntax_all)
 call pymode#default('g:pymode_syntax_doctests', g:pymode_syntax_all)
+call pymode#default('g:pymode_syntax_regex_rawstring', g:pymode_syntax_all)
 
 " Support docstrings in syntax highlighting
 call pymode#default('g:pymode_syntax_docstrings', 1)
@@ -227,6 +228,29 @@ endif
         syn match pythonStrTemplate "\$[a-zA-Z_][a-zA-Z0-9_]*" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
     endif
 
+    " Regex in raw string
+    if g:pymode_syntax_regex_rawstring
+        " Regular expression syntax
+        syn match   pythonRegex         "[\.\^\$\*+|]" display contained containedin=pythonRawString,pythonUniRawString
+        syn match   pythonRegex         "\\[1-9]" display contained containedin=pythonRawString,pythonUniRawString
+        syn match   pythonRegex         "\\[AbBdDsSwWZ]" display contained containedin=pythonRawString,pythonUniRawString
+        syn match   pythonRegexEscape   "\\[afnrtv.^$*+?\\\[\]|()]" display contained containedin=pythonRawString,pythonUniRawString
+
+        " Character sets
+        syn region  pythonRegexBracketed    start=+\[\^\=\]\=+ end=+\]+ contains=pythonRegexSet,pythonRegexSetEscape display contained containedin=pythonRawString,pythonUniRawString
+        syn match   pythonRegexSet          "\\[AbBdDsSwWZ]" display contained containedin=pythonRawString,pythonUniRawString
+        syn match   pythonRegexSetEscape    +\\[afnrtv'"\-\\\]]+ display contained containedin=pythonRawString,pythonUniRawString
+
+        " Match groups
+        syn region  pythonRegexBracketed    start=+(+ end=+)+ contains=pythonRegex,pythonRegexEscape,pythonRegexBracketed,pythonRegexComment display contained containedin=pythonRawString,pythonUniRawString
+        syn region  pythonRegexBracketed    start="(?[iLmsux]\+" end=+)+ contains=pythonRegex,pythonRegexEscape,pythonRegexBracketed,pythonRegexComment display contained containedin=pythonRawString,pythonUniRawString
+        syn region  pythonRegexBracketed    start=+(?\%([:=!]\|<=\)+ end=+)+ contains=pythonRegex,pythonRegexEscape,pythonRegexBracketed,pythonRegexComment display contained containedin=pythonRawString,pythonUniRawString
+        syn region  pythonRegexBracketed    start=+(?P<\%(\.\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*\)*>+ end=+)+ contains=pythonRegex,pythonRegexEscape,pythonRegexBracketed,pythonRegexComment display contained containedin=pythonRawString,pythonUniRawString
+        syn region  pythonRegexBracketed    start=+(?P=\%(\.\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*\)*+ end=+)+ contains=pythonRegex,pythonRegexEscape,pythonRegexBracketed,pythonRegexComment display contained containedin=pythonRawString,pythonUniRawString
+
+        syn region  pythonRegexComment       start=+(?#+ end=+)+ display contained containedin=pythonRawString,pythonUniRawString
+    endif
+
     " DocTests
     if g:pymode_syntax_doctests
         syn region pythonDocTest    start="^\s*>>>" end=+'''+he=s-1 end="^\s*$" contained
@@ -395,4 +419,10 @@ endif
 
     hi def link  pythonExClass      Structure
 
+    hi def link pythonRegexComment      Comment
+    hi def link pythonRegexBracketed    Special
+    hi def link pythonRegexEscape       SpecialChar
+    hi def link pythonRegexSetEscape    SpecialChar
+    hi def link pythonRegex             Special
+    hi def link pythonRegexSet          Special
 " }}}
