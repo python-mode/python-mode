@@ -98,6 +98,8 @@ help packages` in vim for details.
     cd ~/.vim
     mkdir -p bundle && cd bundle
     git clone https://github.com/python-mode/python-mode.git
+    cd python-mode
+    git submodule update --init --recursive
 
 Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
 
@@ -114,6 +116,7 @@ Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
 
     % git clone https://github.com/python-mode/python-mode.git
     % cd python-mode
+    % git submodule update --init --recursive
     % cp -R * ~/.vim
 
 Then rebuild **helptags** in vim:
