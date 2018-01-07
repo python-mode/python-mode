@@ -4,6 +4,8 @@
 set -e
 which vim 1>/dev/null 2>/dev/null
 
+cd $(dirname $0)
+
 # Source common variables.
 source ./test_helpers_bash/test_variables.sh
 

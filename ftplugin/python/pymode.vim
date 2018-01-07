@@ -228,6 +228,7 @@ if g:pymode_debug
         " Get a system independent temporary filename. The 'marker' variable is
         " used to get rid of a null character getting inserted at position.
         " substitute() was not able to remove it.
+        " TODO: see https://superuser.com/questions/935574/get-rid-of-null-character-in-vim-variable
         let g:pymode_debug_tempfile=matchstr(
             \ execute(
             \ g:pymode_python

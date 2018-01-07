@@ -2,7 +2,8 @@
 
 # Prepare tests.
 set +e
-rm $VIM_DISPOSABLE_PYFILE 2&>/dev/null
+rm $VIM_DISPOSABLE_PYFILE
+export VIM_DISPOSABLE_PYFILE=`mktemp /tmp/pymode.tmpfile.XXXXXXXXXX.py`
 set -e
 touch $VIM_DISPOSABLE_PYFILE
 
