@@ -11,6 +11,9 @@ R2=$?
 source ./test_helpers_bash/test_prepare_between_tests.sh
 vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding3.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
 R3=$?
+source ./test_helpers_bash/test_prepare_between_tests.sh
+vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding4.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
+R4=$?
 set -e
 
 if [[ "$R1" -ne 0 ]]
@@ -22,6 +25,9 @@ then
 elif [[ "$R3" -ne 0 ]]
 then
     exit 3
+elif [[ "$R4" -ne 0 ]]
+then
+    exit 4
 fi
 
 # vim: set fileformat=unix filetype=sh wrap tw=0 :
