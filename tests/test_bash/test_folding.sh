@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# Note: a solution with unix 'timeout' program was tried but it was unsuccessful. The problem with folding 4 is that in the case of a crash one expects the folding to just stay in an infinite loop, thus never existing with error. An improvement is suggested to this case.
+
 # Source file.
 set +e
 source ./test_helpers_bash/test_prepare_between_tests.sh
