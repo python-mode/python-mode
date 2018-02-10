@@ -24,7 +24,7 @@ def code_check():
     with silence_stderr():
 
         from pylama.core import run
-        from pylama.main import parse_options
+        from pylama.config import parse_options
 
         if not env.curbuf.name:
             return env.stop()
@@ -32,20 +32,29 @@ def code_check():
         linters = env.var('g:pymode_lint_checkers')
         env.debug(linters)
 
+        # Fixed in v0.9.3: these two parameters may be passed as strings.
+        # DEPRECATE: v:0.10.0: need to be set as lists.
+        if isinstance(env.var('g:pymode_lint_ignore'), str):
+            raise ValueError ('g:pymode_lint_ignore should have a list type')
+        else:
+            ignore = env.var('g:pymode_lint_ignore')
+        if isinstance(env.var('g:pymode_lint_select'), str):
+            raise ValueError ('g:pymode_lint_select should have a list type')
+        else:
+            select = env.var('g:pymode_lint_select')
         options = parse_options(
             linters=linters, force=1,
-            ignore=env.var('g:pymode_lint_ignore'),
-            select=env.var('g:pymode_lint_select'),
+            ignore=ignore,
+            select=select,
         )
+        env.debug(options)
 
         for linter in linters:
             opts = env.var('g:pymode_lint_options_%s' % linter, silence=True)
             if opts:
-                options.linters_params[linter] = options.linters_params.get(linter, {})
+                options.linters_params[linter] = options.linters_params.get(
+                    linter, {})
                 options.linters_params[linter].update(opts)
-        options.linters_params['pylint']['clear_cache'] = True
-
-        env.debug(options)
 
         path = os.path.relpath(env.curbuf.name, env.curdir)
         env.debug("Start code check: ", path)

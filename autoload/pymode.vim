@@ -71,11 +71,10 @@ endfunction "}}}
 fun! pymode#trim_whitespaces() "{{{
     if g:pymode_trim_whitespaces
         let cursor_pos = getpos('.')
-        silent! %s/\s\+$//
+        silent! %s/\s\+$//e
         call setpos('.', cursor_pos)
     endif
 endfunction "}}}
-
 
 fun! pymode#save() "{{{
     if &modifiable && &modified
@@ -120,9 +119,25 @@ fun! pymode#buffer_post_write() "{{{
 endfunction "}}}
 
 fun! pymode#debug(msg) "{{{
+    " Pymode's debug function.
+    " Should be called by other pymode's functions to report outputs. See
+    " the function PymodeDebugFolding for example.
+    " TODO: why echom here creates a problem?
+    " echom '' . a:msg + '|||||||||||'
+
+    let l:info_separator = repeat('-', 79)
+
     if g:pymode_debug
-        let g:pymode_debug += 1
-        echom string(g:pymode_debug) . ': ' . string(a:msg)
+        if ! exists('g:pymode_debug_counter')
+            let g:pymode_debug_counter = 0
+        endif
+        let g:pymode_debug_counter += 1
+        " NOTE: Print a separator for every message except folding ones (since
+        " they could be many).
+        if a:msg !~ 'has folding:'
+            echom l:info_separator
+        endif
+        echom '' . 'pymode debug msg ' . g:pymode_debug_counter . ': ' . a:msg
     endif
 endfunction "}}}
 

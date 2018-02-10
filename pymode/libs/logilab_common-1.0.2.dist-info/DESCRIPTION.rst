@@ -1,0 +1,153 @@
+Logilab's common library
+========================
+
+What's this ?
+-------------
+
+This package contains some modules used by different Logilab projects.
+
+It is released under the GNU Lesser General Public License.
+
+There is no documentation available yet but the source code should be clean and
+well documented.
+
+Designed to ease:
+
+* handling command line options and configuration files
+* writing interactive command line tools
+* manipulation of files and character strings
+* manipulation of common structures such as graph, tree, and pattern such as visitor
+* generating text and HTML reports
+* more...
+
+
+Installation
+------------
+
+Extract the tarball, jump into the created directory and run ::
+
+	python setup.py install
+
+For installation options, see ::
+
+	python setup.py install --help
+
+
+Provided modules
+----------------
+
+Here is a brief description of the available modules.
+
+Modules providing high-level features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `cache`, a cache implementation with a least recently used algorithm.
+
+* `changelog`, a tiny library to manipulate our simplified ChangeLog file format.
+
+* `clcommands`, high-level classes to define command line programs handling
+  different subcommands. It is based on `configuration` to get easy command line
+  / configuration file handling.
+
+* `configuration`, some classes to handle unified configuration from both
+  command line (using optparse) and configuration file (using ConfigParser).
+
+* `proc`, interface to Linux /proc.
+
+* `umessage`, unicode email support.
+
+* `ureports`, micro-reports, a way to create simple reports using python objects
+  without care of the final formatting. ReST and html formatters are provided.
+
+
+Modules providing low-level functions and structures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `compat`, provides a transparent compatibility layer between different python
+  versions.
+
+* `date`, a set of date manipulation functions.
+
+* `daemon`, a daemon function and mix-in class to properly start an Unix daemon
+  process.
+
+* `decorators`, function decorators such as cached, timed...
+
+* `deprecation`, decorator, metaclass & all to mark functions / classes as
+  deprecated or moved
+
+* `fileutils`, some file / file path manipulation utilities.
+
+* `graph`, graph manipulations functions such as cycle detection, bases for dot
+  file generation.
+
+* `modutils`, python module manipulation functions.
+
+* `shellutils`, some powerful shell like functions to replace shell scripts with
+  python scripts.
+
+* `tasksqueue`, a prioritized tasks queue implementation.
+
+* `textutils`, some text manipulation functions (ansi colorization, line wrapping,
+  rest support...).
+
+* `tree`, base class to represent tree structure, and some others to make it
+  works with the visitor implementation (see below).
+
+* `visitor`, a generic visitor pattern implementation.
+
+
+Modules extending some standard modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `debugger`,  `pdb` customization.
+
+* `logging_ext`, extensions to `logging` module such as a colorized formatter
+  and an easier initialization function.
+
+* `optik_ext`, defines some new option types (regexp, csv, color, date, etc.)
+  for `optik` / `optparse`
+
+
+Modules extending some external modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `sphinx_ext`, Sphinx_ plugin defining a `autodocstring` directive.
+
+* `vcgutils` , utilities functions to generate file readable with Georg Sander's
+  vcg tool (Visualization of Compiler Graphs).
+
+
+To be deprecated modules
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Those `logilab.common` modules will much probably be deprecated in future
+versions:
+
+* `testlib`: use `unittest2`_ instead
+* `pytest`: use `discover`_ instead
+* `interface`: use `zope.interface`_ if you really want this
+* `table`, `xmlutils`: is that used?
+* `sphinxutils`: we won't go that way imo (i == syt)
+
+
+Comments, support, bug reports
+------------------------------
+
+Project page https://www.logilab.org/project/logilab-common
+
+Use the python-projects@lists.logilab.org mailing list.
+
+You can subscribe to this mailing list at
+https://lists.logilab.org/mailman/listinfo/python-projects
+
+Archives are available at
+https://lists.logilab.org/pipermail/python-projects/
+
+
+.. _Sphinx: http://sphinx.pocoo.org/
+.. _`unittest2`: http://pypi.python.org/pypi/unittest2
+.. _`discover`: http://pypi.python.org/pypi/discover
+.. _`zope.interface`: http://pypi.python.org/pypi/zope.interface
+
+

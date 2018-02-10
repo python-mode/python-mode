@@ -1,4 +1,4 @@
-""" Support virtualenv in pymode. """
+"""Support virtualenv in pymode."""
 
 import os
 import sys
@@ -9,7 +9,7 @@ from .environment import env
 
 @env.catch_exceptions
 def enable_virtualenv():
-    """ Enable virtualenv for vim.
+    """Enable virtualenv for vim.
 
     :return bool:
 
@@ -25,32 +25,14 @@ def enable_virtualenv():
         env.message('Virtualenv %s already enabled.' % path)
         return env.stop()
 
-    activate_this = os.path.join(os.path.join(path, 'bin'), 'activate_this.py')
-
-    # Fix for windows
-    if not os.path.exists(activate_this):
-        activate_this = os.path.join(
-            os.path.join(path, 'Scripts'), 'activate_this.py')
-
-    try:
-        with open(activate_this) as f:
-            source = f.read()
-            exec(compile(  # noqa
-                source, activate_this, 'exec'), dict(__file__=activate_this))
-    except IOError:
-        _activate_env_from_path(path)
-
+    activate_env_from_path(path)
     env.message('Activate virtualenv: ' + path)
     env.let('g:pymode_virtualenv_enabled', path)
     return True
 
 
-def _activate_env_from_path(env_path):
-    """ Fix when `activate_this.py` does not exist.
-
-        For Python 3.3 and newer, a new command-line tool `pyvenv` create venv
-        will not provide 'activate_this.py'.
-    """
+def activate_env_from_path(env_path):
+    """Activate given virtualenv."""
     prev_sys_path = list(sys.path)
 
     if sys.platform == 'win32':

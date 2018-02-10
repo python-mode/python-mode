@@ -53,6 +53,6 @@ if g:pymode_rope && g:pymode_rope_completion
         if tolower(g:pymode_rope_completion_bind) == '<c-space>'
             exe "inoremap <silent> <buffer> <Nul> <C-R>=pymode#rope#complete(0)<CR>"
         endif
-    end
+    endif
 
-end
+endif

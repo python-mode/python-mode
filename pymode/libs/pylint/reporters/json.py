@@ -1,5 +1,5 @@
-# Copyright (c) 2003-2016 LOGILAB S.A. (Paris, FRANCE).
-# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
@@ -25,18 +25,18 @@ class JSONReporter(BaseReporter):
         BaseReporter.__init__(self, output)
         self.messages = []
 
-    def handle_message(self, message):
+    def handle_message(self, msg):
         """Manage message of different type and in the context of path."""
         self.messages.append({
-            'type': message.category,
-            'module': message.module,
-            'obj': message.obj,
-            'line': message.line,
-            'column': message.column,
-            'path': message.path,
-            'symbol': message.symbol,
+            'type': msg.category,
+            'module': msg.module,
+            'obj': msg.obj,
+            'line': msg.line,
+            'column': msg.column,
+            'path': msg.path,
+            'symbol': msg.symbol,
             # pylint: disable=deprecated-method; deprecated since 3.2.
-            'message': cgi.escape(message.msg or ''),
+            'message': cgi.escape(msg.msg or ''),
         })
 
     def display_messages(self, layout):
@@ -44,7 +44,7 @@ class JSONReporter(BaseReporter):
         if self.messages:
             print(json.dumps(self.messages, indent=4), file=self.out)
 
-    def display_reports(self, _):
+    def display_reports(self, layout): # pylint: disable=arguments-differ
         """Don't do nothing in this reporter."""
 
     def _display(self, layout):

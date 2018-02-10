@@ -1,6 +1,48 @@
 Changelog
 =========
 
+
+## TODO
+-------
+* Move changelog rst syntax to markdown
+* pymode_rope: check disables
+* When loading a file without a history, substituting a word (eg 'cw') moves
+  the cursor to position 0 (equivalent to 'cw' then '0l')
+    * Fixed on `917e484`
+* Inspect why files starting with:
+~~~~~~
+def main():
+    pass
+
+
+if __name__ == '__main__':
+    main()
+~~~~~~
+do not get loaded.
+
+
+## 2017-07-xxx 0.9.5
+--------------------
+* pylama: migrated to submodule
+
+
+## 2017-07-11 0.9.4
+--------------------
+* pylama: fixed erratic behavior of `skip` option causing unintended skipping
+  of lint checkers
+* PEP257 requires `snowbalstemmer`: added as submodule
+* Fixed handling of `g:pymode_lint_ignore` and `g:pymode_lint_select`: from
+  strings to list
+* Migrated modules from `pymode/libs` to `submodules/ <https://github.com/fmv1992/python-mode/tree/develop/submodules>`__
+    * Rationale: no need to single handedly update each module; removes burden
+      from developers
+* Improved folding accuracy
+    * Improved nested definitions folding
+    * Improved block delimiting
+
+
+## (changelog poorly maintained) 0.8.2
+--------------------------------------
 * Pylama updated to version 5.0.5
 * Rope libs updated
 * Add wdb to debugger list in breakpoint cmd
@@ -140,7 +182,7 @@ Changelog
 --------------------
 * Dont raise an exception when Logger has no message handler (c) nixon
 * Improve performance of white space removal (c) Dave Smith
-* Improve ropemode support (c) s0undt3ch 
+* Improve ropemode support (c) s0undt3ch
 * Add `g:pymode_updatetime` option
 * Update autopep8 to version 0.8.1
 
@@ -151,7 +193,7 @@ Changelog
 
 ## 2012-09-06 0.6.8
 -------------------
-* Add PEP8 indentation ":help 'pymode_indent'" 
+* Add PEP8 indentation ":help 'pymode_indent'"
 
 ## 2012-08-15 0.6.7
 -------------------
@@ -165,7 +207,7 @@ Changelog
 * Fixed virtualenv support for windows users
 * Added pymode modeline ':help PythonModeModeline'
 * Added diagnostic tool ':call pymode#troubleshooting#Test()'
-* Added `PyLintAuto` command ':help PyLintAuto' 
+* Added `PyLintAuto` command ':help PyLintAuto'
 * Code checking is async operation now
 * More, more fast the pymode folding
 * Repaired execution of python code
@@ -191,12 +233,12 @@ Changelog
 
 ## 2012-03-13 0.6.0
 -------------------
-* Add 'pymode_lint_hold' option 
+* Add 'pymode_lint_hold' option
 * Improve pymode loading speed
 * Add pep8, mccabe lint checkers
 * Now g:pymode_lint_checker can have many values
   Ex. "pep8,pyflakes,mccabe"
-* Add 'pymode_lint_ignore' and 'pymode_lint_select' options 
+* Add 'pymode_lint_ignore' and 'pymode_lint_select' options
 * Fix rope keys
 * Fix python motion in visual mode
 * Add folding 'pymode_folding'
@@ -258,6 +300,9 @@ Changelog
 -------------------
 * Enable all syntax highlighting
   For old settings set in your vimrc:
+
+  ::
+
     let g:pymode_syntax_builtin_objs = 0
     let g:pymode_syntax_builtin_funcs = 0
 

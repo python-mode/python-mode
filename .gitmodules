@@ -1,0 +1,28 @@
+[submodule "submodules/autopep8"]
+	path = submodules/autopep8
+	url = https://github.com/hhatto/autopep8
+    ignore = dirty
+[submodule "submodules/pycodestyle"]
+	path = submodules/pycodestyle
+	url = https://github.com/PyCQA/pycodestyle
+    ignore = dirty
+[submodule "submodules/pydocstyle"]
+	path = submodules/pydocstyle
+	url = https://github.com/PyCQA/pydocstyle
+    ignore = dirty
+[submodule "submodules/mccabe"]
+	path = submodules/mccabe
+	url = https://github.com/PyCQA/mccabe
+    ignore = dirty
+[submodule "submodules/pyflakes"]
+	path = submodules/pyflakes
+	url = https://github.com/PyCQA/pyflakes
+    ignore = dirty
+[submodule "submodules/snowball_py"]
+	path = submodules/snowball_py
+	url = https://github.com/shibukawa/snowball_py
+    ignore = dirty
+[submodule "submodules/pylama"]
+	path = submodules/pylama
+	url = https://github.com/fmv1992/pylama
+    ignore = dirty

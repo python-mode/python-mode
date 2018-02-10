@@ -1,3 +1,0 @@
-E: 20: Assigning to function call which doesn't return
-E: 28: Assigning to function call which only returns None
-E: 35: Assigning to function call which only returns None

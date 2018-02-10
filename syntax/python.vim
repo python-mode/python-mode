@@ -62,7 +62,6 @@ call pymode#default('g:pymode_syntax_slow_sync', 1)
 
 " }}}
 
-
 " For version 5.x: Clear all syntax items
 if version < 600
     syntax clear
@@ -118,13 +117,12 @@ endif
     if g:pymode_syntax_highlight_stars_operator
         syn match pythonExtraOperator "\%(\*\|\*\*\)"
     endif
-    
+
     if g:pymode_syntax_highlight_self
         syn keyword pythonSelf self cls
     endif
 
 " }}}
-
 
 " Decorators {{{
 " ==============
@@ -135,7 +133,6 @@ endif
 
 " }}}
 
-
 " Comments {{{
 " ============
 
@@ -145,7 +142,6 @@ endif
     syn keyword pythonTodo      TODO FIXME XXX contained
 
 " }}}
-
 
 " Errors {{{
 " ==========
@@ -166,7 +162,6 @@ endif
     endif
 
 " }}}
-
 
 " Strings {{{
 " ===========
@@ -271,8 +266,8 @@ endif
         syn keyword pythonBuiltinObj True False Ellipsis None NotImplemented
         syn keyword pythonBuiltinObj __debug__ __doc__ __file__ __name__ __package__
     endif
-    
-    if g:pymode_syntax_builtin_types    
+
+    if g:pymode_syntax_builtin_types
         syn keyword pythonBuiltinType type object
         syn keyword pythonBuiltinType str basestring unicode buffer bytearray bytes chr unichr
         syn keyword pythonBuiltinType dict int long bool float complex set frozenset list tuple
@@ -320,7 +315,6 @@ endif
     endif
 
 " }}}
-
 
 if g:pymode_syntax_slow_sync
     syn sync minlines=2000

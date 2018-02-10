@@ -74,8 +74,8 @@ fun! pymode#run#code_run(line1, line2) "{{{
 
         cgetexpr(l:traceback)
 
-        " If a range is run (starting other than at line 1), fix the reported error line numbers for
-        " the current buffer
+        " If a range is run (starting other than at line 1), fix the reported
+        " error line numbers for the current buffer
         if a:line1 > 1
             let qflist = getqflist()
             for i in qflist

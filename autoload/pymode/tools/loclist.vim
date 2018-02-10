@@ -77,5 +77,5 @@ fun! g:PymodeLocList.show() "{{{
             call setwinvar(winnr(), 'quickfix_title', self._title . ' <' . self._name . '>')
             exe num . "wincmd w"
         endif
-    end
+    endif
 endfunction "}}}

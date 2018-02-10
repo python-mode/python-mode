@@ -110,7 +110,7 @@ if g:pymode_lint
         " let &l:updatetime = g:pymode_lint_async_updatetime
         " au! BufEnter <buffer> call pymode#lint#start()
         " au! BufLeave <buffer> call pymode#lint#stop()
-    end
+    endif
 
 endif
 
@@ -124,7 +124,7 @@ if g:pymode_doc
     exe "nnoremap <silent> <buffer> " g:pymode_doc_bind ":call pymode#doc#find()<CR>"
     exe "vnoremap <silent> <buffer> " g:pymode_doc_bind ":<C-U>call pymode#doc#show(@*)<CR>"
 
-end
+endif
 
 " Rope support
 if g:pymode_rope
@@ -134,69 +134,69 @@ if g:pymode_rope
     endif
     if g:pymode_rope_show_doc_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_show_doc_bind . " :call pymode#rope#show_doc()<CR>"
-    end
+    endif
     if g:pymode_rope_find_it_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_find_it_bind . " :call pymode#rope#find_it()<CR>"
-    end
+    endif
     if g:pymode_rope_organize_imports_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_organize_imports_bind . " :call pymode#rope#organize_imports()<CR>"
-    end
+    endif
 
     if g:pymode_rope_rename_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_rename_bind . " :call pymode#rope#rename()<CR>"
-    end
+    endif
 
     if g:pymode_rope_rename_module_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_rename_module_bind . " :call pymode#rope#rename_module()<CR>"
-    end
+    endif
 
     if g:pymode_rope_extract_method_bind != ""
         exe "vnoremap <silent> <buffer> " . g:pymode_rope_extract_method_bind . " :call pymode#rope#extract_method()<CR>"
-    end
+    endif
 
     if g:pymode_rope_extract_variable_bind != ""
         exe "vnoremap <silent> <buffer> " . g:pymode_rope_extract_variable_bind . " :call pymode#rope#extract_variable()<CR>"
-    end
+    endif
 
     if g:pymode_rope_inline_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_inline_bind . " :call pymode#rope#inline()<CR>"
-    end
+    endif
 
     if g:pymode_rope_move_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_move_bind . " :call pymode#rope#move()<CR>"
-    end
+    endif
 
     if g:pymode_rope_change_signature_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_change_signature_bind . " :call pymode#rope#signature()<CR>"
-    end
+    endif
 
     if g:pymode_rope_use_function_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_use_function_bind . " :call pymode#rope#use_function()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_function_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_function_bind . " :call pymode#rope#generate_function()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_package_bind . " :call pymode#rope#generate_package()<CR>"
-    end
+    endif
 
     if g:pymode_rope_generate_class_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_generate_class_bind . " :call pymode#rope#generate_class()<CR>"
-    end
+    endif
 
     if g:pymode_rope_module_to_package_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_module_to_package_bind . " :call pymode#rope#module_to_package()<CR>"
-    end
+    endif
 
     if g:pymode_rope_autoimport_bind != ""
         exe "noremap <silent> <buffer> " . g:pymode_rope_autoimport_bind . " :PymodeRopeAutoImport<CR>"
-    end
+    endif
 
     if g:pymode_rope_completion && g:pymode_rope_complete_on_dot
         inoremap <silent> <buffer> . .<C-R>=pymode#rope#complete_on_dot()<CR>
-    end
+    endif
 
     command! -buffer -nargs=? PymodeRopeNewProject call pymode#rope#new(<f-args>)
     command! -buffer PymodeRopeUndo call pymode#rope#undo()
@@ -207,6 +207,52 @@ if g:pymode_rope
 
     if g:pymode_rope_autoimport
         command! -buffer PymodeRopeAutoImport call pymode#rope#autoimport(expand('<cword>'))
-    end
+    endif
 
-end
+endif
+
+
+if g:pymode_debug
+    " Redefine functions to be debugged here functions here.
+
+    " NOTE: The redraw seems to be necessary to force messages to get echoed to
+    " the screen. See:
+    " https://groups.google.com/forum/#!topic/vim_use/EfcXOjq_rKE
+    " for details.
+    " silent! redraw!
+    " TODO: when loading with 'vim -u ./debug.vim' the messages shown in vim
+    " are unduly cleared. Need a fix.
+
+    " Start debbuging environment. {{{
+    if ! &verbosefile
+        " Get a system independent temporary filename. The 'marker' variable is
+        " used to get rid of a null character getting inserted at position.
+        " substitute() was not able to remove it.
+        " TODO: see https://superuser.com/questions/935574/get-rid-of-null-character-in-vim-variable
+        let g:pymode_debug_tempfile=matchstr(
+            \ execute(
+            \ g:pymode_python
+            \ . " import os;import tempfile; marker='|';"
+            \ . " print(marker, tempfile.gettempdir(), os.sep, "
+            \ .        "'pymode_debug_file.txt', marker, sep='', end='')"),
+            \ '|\zs.*\ze|')
+        execute "set verbosefile="  . g:pymode_debug_tempfile
+    endif
+    call pymode#debug('Starting debug on: '
+                      \ . strftime("\%Y-\%m-\%d \%H:\%M:\%S")
+                      \ . ' with file ' . &verbosefile)
+    " }}}
+    " Redefine folding expression. {{{
+    if g:pymode_folding
+        setlocal foldexpr=pymode#debug#foldingexpr(v:lnum)
+    endif
+    call pymode#debug#sysinfo()
+    " }}}
+    " Define auto commands for vim. {{{
+    augroup augroup_save_issue_commands
+        autocmd!
+        autocmd VimLeave *.py | call pymode#debug('Session history:') | silent! history
+    augroup END
+    " }}}
+
+    endif

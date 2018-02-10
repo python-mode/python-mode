@@ -1,3 +1,8 @@
+# Copyright (c) 2015-2016 Claudiu Popa <pcmanticore@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """Astroid hooks for the PyQT library."""
 
 from astroid import MANAGER, register_module_extender
@@ -7,9 +12,13 @@ from astroid import parse
 
 
 def _looks_like_signal(node, signal_name='pyqtSignal'):
-    if '__class__' in node._instance_attrs:
-        cls = node._instance_attrs['__class__'][0]
-        return cls.name == signal_name
+    if '__class__' in node.instance_attrs:
+        try:
+            cls = node.instance_attrs['__class__'][0]
+            return cls.name == signal_name
+        except AttributeError:
+            # return False if the cls does not have a name attribute
+            pass
     return False
 
 
@@ -24,9 +33,9 @@ def transform_pyqt_signal(node):
             pass
     ''')
     signal_cls = module['pyqtSignal']
-    node._instance_attrs['emit'] = signal_cls['emit']
-    node._instance_attrs['disconnect'] = signal_cls['disconnect']
-    node._instance_attrs['connect'] = signal_cls['connect']
+    node.instance_attrs['emit'] = signal_cls['emit']
+    node.instance_attrs['disconnect'] = signal_cls['disconnect']
+    node.instance_attrs['connect'] = signal_cls['connect']
 
 
 def pyqt4_qtcore_transform():

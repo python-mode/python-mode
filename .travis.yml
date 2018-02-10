@@ -1,6 +1,17 @@
-language: ruby
-python: "2.7"
-rvm:
-  - 1.9.3
-script:
-  - make travis
+# Build vim from source with python3 support and execute tests.
+branches:
+  only:
+    - develop
+    - dev_unstable
+before_install:
+    - export ORIGINAL_FOLDER=$PWD
+    - sudo apt install libncurses5-dev libgnome2-dev libgnomeui-dev libgtk2.0-dev libatk1.0-dev libbonoboui2-dev libcairo2-dev libx11-dev libxpm-dev libxt-dev python-dev python3-dev lua5.1 lua5.1-dev libperl-dev git
+    - sudo apt remove vim vim-runtime gvim
+    - cd /tmp
+    - git clone https://github.com/vim/vim.git
+    - cd vim
+    - ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=/usr/lib/python3.5/config --enable-perlinterp=yes --enable-luainterp=yes --enable-gui=gtk2 --enable-cscope --prefix=/usr/local
+    - sudo make && sudo make install
+    - cd $ORIGINAL_FOLDER
+install: git clone --recursive https://github.com/python-mode/python-mode
+script: vim --version && cd ./tests && bash -x ./test.sh

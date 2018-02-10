@@ -1,30 +1,49 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
-# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
-#
-# This file is part of astroid.
-#
-# astroid is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by the
-# Free Software Foundation, either version 2.1 of the License, or (at your
-# option) any later version.
-#
-# astroid is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-# for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License along
-# with astroid. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (c) 2006-2014 LOGILAB S.A. (Paris, FRANCE) <contact@logilab.fr>
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2014 Google, Inc.
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """astroid packaging information"""
+
+from sys import version_info as py_version
+
+from pkg_resources import parse_version
+from setuptools import __version__ as setuptools_version
+
 distname = 'astroid'
 
 modname = 'astroid'
 
-numversion = (1, 4, 9)
-version = '.'.join([str(num) for num in numversion])
+version = '1.5.3'
+numversion = tuple(map(int, version.split('.')))
 
-install_requires = ['six', 'lazy_object_proxy', 'wrapt']
+extras_require = {}
+install_requires = ['lazy_object_proxy', 'six', 'wrapt']
 
+
+def has_environment_marker_range_operators_support():
+    """Code extracted from 'pytest/setup.py'
+    https://github.com/pytest-dev/pytest/blob/7538680c/setup.py#L31
+
+    The first known release to support environment marker with range operators
+    it is 17.1, see: https://setuptools.readthedocs.io/en/latest/history.html#id113
+    """
+    return parse_version(setuptools_version) >= parse_version('17.1')
+
+
+if has_environment_marker_range_operators_support():
+    extras_require[':python_version<"3.4"'] = ['enum34>=1.1.3', 'singledispatch']
+    extras_require[':python_version<"3.3"'] = ['backports.functools_lru_cache']
+else:
+    if py_version < (3, 4):
+        install_requires.extend(['enum34', 'singledispatch'])
+    if py_version < (3, 3):
+        install_requires.append('backports.functools_lru_cache')
+
+
+# pylint: disable=redefined-builtin; why license is a builtin anyway?
 license = 'LGPL'
 
 author = 'Python Code Quality Authority'

@@ -1,16 +1,24 @@
+# Copyright (c) 2014-2016 Claudiu Popa <pcmanticore@gmail.com>
+# Copyright (c) 2015-2016 Cara Vinson <ceridwenv@gmail.com>
+
+# Licensed under the LGPL: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+# For details: https://github.com/PyCQA/astroid/blob/master/COPYING.LESSER
+
 """Astroid hooks for various builtins."""
 
-import sys
 from functools import partial
+import sys
 from textwrap import dedent
 
 import six
-from astroid import (MANAGER, UseInferenceDefault,
-                     inference_tip, YES, InferenceError, UnresolvableName)
+from astroid import (MANAGER, UseInferenceDefault, AttributeInferenceError,
+                     inference_tip, InferenceError, NameInferenceError)
 from astroid import arguments
+from astroid.builder import AstroidBuilder
+from astroid import helpers
 from astroid import nodes
 from astroid import objects
-from astroid.builder import AstroidBuilder
+from astroid import scoped_nodes
 from astroid import util
 
 def _extend_str(class_node, rvalue):
@@ -62,7 +70,7 @@ def _extend_str(class_node, rvalue):
     code = code.format(rvalue=rvalue)
     fake = AstroidBuilder(MANAGER).string_build(code)['whatever']
     for method in fake.mymethods():
-        class_node._locals[method.name] = [method]
+        class_node.locals[method.name] = [method]
         method.parent = class_node
 
 def extend_builtins(class_transforms):
@@ -118,10 +126,10 @@ def _generic_inference(node, context, node_type, transform):
             inferred = next(arg.infer(context=context))
         except (InferenceError, StopIteration):
             raise UseInferenceDefault()
-        if inferred is util.YES:
+        if inferred is util.Uninferable:
             raise UseInferenceDefault()
         transformed = transform(inferred)
-    if not transformed or transformed is util.YES:
+    if not transformed or transformed is util.Uninferable:
         raise UseInferenceDefault()
     return transformed
 
@@ -146,7 +154,7 @@ def _generic_transform(arg, klass, iterables, build_elts):
         elts = arg.value
     else:
         return
-    return klass(elts=build_elts(elts))
+    return klass.from_constants(elts=build_elts(elts))
 
 
 def _infer_builtin(node, context,
@@ -164,25 +172,31 @@ def _infer_builtin(node, context,
 infer_tuple = partial(
     _infer_builtin,
     klass=nodes.Tuple,
-    iterables=(nodes.List, nodes.Set),
+    iterables=(nodes.List, nodes.Set, objects.FrozenSet,
+               objects.DictItems, objects.DictKeys,
+               objects.DictValues),
     build_elts=tuple)
 
 infer_list = partial(
     _infer_builtin,
     klass=nodes.List,
-    iterables=(nodes.Tuple, nodes.Set),
+    iterables=(nodes.Tuple, nodes.Set, objects.FrozenSet,
+               objects.DictItems, objects.DictKeys,
+               objects.DictValues),
     build_elts=list)
 
 infer_set = partial(
     _infer_builtin,
     klass=nodes.Set,
-    iterables=(nodes.List, nodes.Tuple),
+    iterables=(nodes.List, nodes.Tuple, objects.FrozenSet,
+               objects.DictKeys),
     build_elts=set)
 
 infer_frozenset = partial(
     _infer_builtin,
     klass=objects.FrozenSet,
-    iterables=(nodes.List, nodes.Tuple, nodes.Set),
+    iterables=(nodes.List, nodes.Tuple, nodes.Set, objects.FrozenSet,
+               objects.DictKeys),
     build_elts=frozenset)
 
 
@@ -191,7 +205,7 @@ def _get_elts(arg, context):
                                        (nodes.List, nodes.Tuple, nodes.Set))
     try:
         inferred = next(arg.infer(context))
-    except (InferenceError, UnresolvableName):
+    except (InferenceError, NameInferenceError):
         raise UseInferenceDefault()
     if isinstance(inferred, nodes.Dict):
         items = inferred.items
@@ -251,19 +265,11 @@ def infer_dict(node, context=None):
     else:
         raise UseInferenceDefault()
 
-    empty = nodes.Dict()
-    empty.items = items
-    return empty
-
-
-def _node_class(node):
-    klass = node.frame()
-    while klass is not None and not isinstance(klass, nodes.ClassDef):
-        if klass.parent is None:
-            klass = None
-        else:
-            klass = klass.parent.frame()
-    return klass
+    value = nodes.Dict(col_offset=node.col_offset,
+                       lineno=node.lineno,
+                       parent=node.parent)
+    value.postinit(items)
+    return value
 
 
 def infer_super(node, context=None):
@@ -276,7 +282,7 @@ def infer_super(node, context=None):
         * if the super call is not inside a function (classmethod or method),
           then the default inference will be used.
 
-        * if the super arguments can't be infered, the default inference
+        * if the super arguments can't be inferred, the default inference
           will be used.
     """
     if len(node.args) == 1:
@@ -291,7 +297,7 @@ def infer_super(node, context=None):
         # Not interested in staticmethods.
         raise UseInferenceDefault
 
-    cls = _node_class(scope)
+    cls = scoped_nodes.get_wrapping_class(scope)
     if not len(node.args):
         mro_pointer = cls
         # In we are in a classmethod, the interpreter will fill
@@ -311,7 +317,7 @@ def infer_super(node, context=None):
         except InferenceError:
             raise UseInferenceDefault
 
-    if mro_pointer is YES or mro_type is YES:
+    if mro_pointer is util.Uninferable or mro_type is util.Uninferable:
         # No way we could understand this.
         raise UseInferenceDefault
 
@@ -320,17 +326,171 @@ def infer_super(node, context=None):
                               self_class=cls,
                               scope=scope)
     super_obj.parent = node
-    return iter([super_obj])
+    return super_obj
+
+
+def _infer_getattr_args(node, context):
+    if len(node.args) not in (2, 3):
+        # Not a valid getattr call.
+        raise UseInferenceDefault
+
+    try:
+        # TODO(cpopa): follow all the values of the first argument?
+        obj = next(node.args[0].infer(context=context))
+        attr = next(node.args[1].infer(context=context))
+    except InferenceError:
+        raise UseInferenceDefault
+
+    if obj is util.Uninferable or attr is util.Uninferable:
+        # If one of the arguments is something we can't infer,
+        # then also make the result of the getattr call something
+        # which is unknown.
+        return util.Uninferable, util.Uninferable
+
+    is_string = (isinstance(attr, nodes.Const) and
+                 isinstance(attr.value, six.string_types))
+    if not is_string:
+        raise UseInferenceDefault
+
+    return obj, attr.value
+
+
+def infer_getattr(node, context=None):
+    """Understand getattr calls
+
+    If one of the arguments is an Uninferable object, then the
+    result will be an Uninferable object. Otherwise, the normal attribute
+    lookup will be done.
+    """
+    obj, attr = _infer_getattr_args(node, context)
+    if obj is util.Uninferable or attr is util.Uninferable or not hasattr(obj, 'igetattr'):
+        return util.Uninferable
+
+    try:
+        return next(obj.igetattr(attr, context=context))
+    except (StopIteration, InferenceError, AttributeInferenceError):
+        if len(node.args) == 3:
+            # Try to infer the default and return it instead.
+            try:
+                return next(node.args[2].infer(context=context))
+            except InferenceError:
+                raise UseInferenceDefault
+
+    raise UseInferenceDefault
+
+
+def infer_hasattr(node, context=None):
+    """Understand hasattr calls
+
+    This always guarantees three possible outcomes for calling
+    hasattr: Const(False) when we are sure that the object
+    doesn't have the intended attribute, Const(True) when
+    we know that the object has the attribute and Uninferable
+    when we are unsure of the outcome of the function call.
+    """
+    try:
+        obj, attr = _infer_getattr_args(node, context)
+        if obj is util.Uninferable or attr is util.Uninferable or not hasattr(obj, 'getattr'):
+            return util.Uninferable
+        obj.getattr(attr, context=context)
+    except UseInferenceDefault:
+        # Can't infer something from this function call.
+        return util.Uninferable
+    except AttributeInferenceError:
+        # Doesn't have it.
+        return nodes.Const(False)
+    return nodes.Const(True)
+
+
+def infer_callable(node, context=None):
+    """Understand callable calls
+
+    This follows Python's semantics, where an object
+    is callable if it provides an attribute __call__,
+    even though that attribute is something which can't be
+    called.
+    """
+    if len(node.args) != 1:
+        # Invalid callable call.
+        raise UseInferenceDefault
+
+    argument = node.args[0]
+    try:
+        inferred = next(argument.infer(context=context))
+    except InferenceError:
+        return util.Uninferable
+    if inferred is util.Uninferable:
+        return util.Uninferable
+    return nodes.Const(inferred.callable())
+
+
+def infer_bool(node, context=None):
+    """Understand bool calls."""
+    if len(node.args) > 1:
+        # Invalid bool call.
+        raise UseInferenceDefault
+
+    if not node.args:
+        return nodes.Const(False)
+
+    argument = node.args[0]
+    try:
+        inferred = next(argument.infer(context=context))
+    except InferenceError:
+        return util.Uninferable
+    if inferred is util.Uninferable:
+        return util.Uninferable
+
+    bool_value = inferred.bool_value()
+    if bool_value is util.Uninferable:
+        return util.Uninferable
+    return nodes.Const(bool_value)
+
+
+def infer_type(node, context=None):
+    """Understand the one-argument form of *type*."""
+    if len(node.args) != 1:
+        raise UseInferenceDefault
+
+    return helpers.object_type(node.args[0], context)
+
+
+def infer_slice(node, context=None):
+    """Understand `slice` calls."""
+    args = node.args
+    if not 0 < len(args) <= 3:
+        raise UseInferenceDefault
+
+    args = list(map(helpers.safe_infer, args))
+    for arg in args:
+        if not arg or arg is util.Uninferable:
+            raise UseInferenceDefault
+        if not isinstance(arg, nodes.Const):
+            raise UseInferenceDefault
+        if not isinstance(arg.value, (type(None), int)):
+            raise UseInferenceDefault
+
+    if len(args) < 3:
+        # Make sure we have 3 arguments.
+        args.extend([None] * (3 - len(args)))
+
+    slice_node = nodes.Slice(lineno=node.lineno,
+                             col_offset=node.col_offset,
+                             parent=node.parent)
+    slice_node.postinit(*args)
+    return slice_node
 
 
 # Builtins inference
-MANAGER.register_transform(nodes.Call,
-                           inference_tip(infer_super),
-                           lambda n: (isinstance(n.func, nodes.Name) and
-                                      n.func.name == 'super'))
-
+register_builtin_transform(infer_bool, 'bool')
+register_builtin_transform(infer_super, 'super')
+register_builtin_transform(infer_callable, 'callable')
+register_builtin_transform(infer_getattr, 'getattr')
+register_builtin_transform(infer_hasattr, 'hasattr')
 register_builtin_transform(infer_tuple, 'tuple')
 register_builtin_transform(infer_set, 'set')
 register_builtin_transform(infer_list, 'list')
 register_builtin_transform(infer_dict, 'dict')
 register_builtin_transform(infer_frozenset, 'frozenset')
+register_builtin_transform(infer_type, 'type')
+register_builtin_transform(infer_slice, 'slice')

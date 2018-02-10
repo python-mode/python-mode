@@ -5,7 +5,7 @@ call pymode#tools#loclist#init()
 
 
 fun! pymode#lint#auto() "{{{
-    if !pymode#save()
+    if ! pymode#save()
         return 0
     endif
     PymodePython from pymode import auto
@@ -42,7 +42,7 @@ fun! pymode#lint#toggle() "{{{
         call pymode#wide_message("Code checking is enabled.")
     else
         call pymode#wide_message("Code checking is disabled.")
-    end
+    endif
 endfunction "}}}
 
 
