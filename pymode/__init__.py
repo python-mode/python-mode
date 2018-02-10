@@ -22,6 +22,7 @@ def auto():
         in_place = True
         indent_size = int(vim.eval('&tabstop'))
         line_range = None
+        hang_closing = False
         max_line_length = int(vim.eval('g:pymode_options_max_line_length'))
         pep8_passes = 100
         recursive = False
