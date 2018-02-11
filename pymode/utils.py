@@ -36,4 +36,13 @@ def patch_paths():
 
     Load required modules from the plugin's sources.
     """
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
+    dir_script = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(dir_script, 'libs'))
+    if sys.platform == 'win32':
+        dir_submodule = os.path.abspath(os.path.join(dir_script,
+                                                     '..', 'submodules'))
+        sub_modules = ['pylama', 'mccabe', 'autopep8', 'pycodestyle',
+                       'pydocstyle', 'pyflakes', 'snowball_py']
+        for module in sub_modules:
+            if module not in sys.path:
+                sys.path.insert(0, os.path.join(dir_submodule, module))
