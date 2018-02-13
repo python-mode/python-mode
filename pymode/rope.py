@@ -893,7 +893,7 @@ def _insert_import(name, module, ctx):
         return True
 
     pyobject = ctx.project.pycore.resource_to_pyobject(ctx.resource)
-    import_tools = importutils.ImportTools(ctx.project.pycore)
+    import_tools = importutils.ImportTools(ctx.project)
     module_imports = import_tools.module_imports(pyobject)
     new_import = importutils.FromImport(module, 0, [[name, None]])
     module_imports.add_import(new_import)

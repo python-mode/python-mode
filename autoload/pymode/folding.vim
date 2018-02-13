@@ -207,7 +207,7 @@ fun! pymode#folding#foldcase(lnum) "{{{
 endfunction "}}}
 
 fun! s:BlockStart(lnum) "{{{
-    " Returns the definition statement which encloses the current line.
+    " Returns the definition statement line which encloses the current line.
 
     let line = getline(a:lnum)
     if line !~ s:blank_regex
@@ -227,7 +227,11 @@ fun! s:BlockStart(lnum) "{{{
     " n: do Not move the cursor
     " W: don't Wrap around the end of the file
     let previous_definition = searchpos(s:def_regex, 'bnW')
-    if previous_definition != [0, 0]
+
+    " Corner case of function being defined on the first line.
+    if previous_definition[0] == 1
+        " Just skip the while loop.
+    elseif previous_definition != [0, 0]
         " Lines that are blank have zero indent.
         while previous_definition != [0, 0]
                 \ && indent(previous_definition[0]) >= l:inferred_indent
