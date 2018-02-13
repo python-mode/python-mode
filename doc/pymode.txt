@@ -809,8 +809,9 @@ structure and then execute the remaning of the instructions/assertions.
         http://www.logilab.fr/
 
     Pyflakes:
-        Copyright (c) 2005 Divmod, Inc.
-        http://www.divmod.com/
+        Copyright (c) 2005-2011 Divmod, Inc.
+        Copyright (c) 2013-2014 Florent Xicluna
+        https://github.com/PyCQA/pyflakes
 
     PEP8:
         Copyright (c) 2006 Johann C. Rocholl <johann@rocholl.net>
