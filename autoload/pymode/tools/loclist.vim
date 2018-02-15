@@ -84,8 +84,7 @@ endfunction "}}}
 
 fun! g:PymodeLocList.show() "{{{
     call setloclist(0, self.loclist())
-    "if self.is_empty()
-    if self.num_errors() == 0 
+    if self.is_empty()
         lclose
     elseif g:pymode_lint_cwindow
         let num = winnr()
