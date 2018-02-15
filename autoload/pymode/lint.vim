@@ -61,6 +61,8 @@ fun! pymode#lint#check() "{{{
 
     if loclist.is_empty()
         call pymode#wide_message('Code checking is completed. No errors found.')
+        call g:PymodeSigns.refresh(loclist)
+        call loclist.show()
         return
     endif
 
