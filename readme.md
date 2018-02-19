@@ -92,7 +92,6 @@ help packages` in vim for details.
     cd python-mode
     git submodule update --init --recursive
 
-
 ## Using pathogen
 
     cd ~/.vim
