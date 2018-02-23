@@ -699,6 +699,19 @@ class MoveRefactoring(Refactoring):
             offset = None
         return move.create_move(ctx.project, ctx.resource, offset)
 
+    @staticmethod
+    def get_changes(refactor, input_str, in_hierarchy=False):
+        """ Get changes.
+
+        :return Changes:
+
+        """
+        if isinstance(refactor, move.MoveGlobal):
+            changes_dest = refactor.project.get_resource(input_str)
+        else:
+            changes_dest = input_str
+        return refactor.get_changes(changes_dest)
+
 
 class ChangeSignatureRefactoring(Refactoring):
 
