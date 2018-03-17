@@ -92,12 +92,12 @@ help packages` in vim for details.
     cd python-mode
     git submodule update --init --recursive
 
-
 ## Using pathogen
 
     cd ~/.vim
     mkdir -p bundle && cd bundle
-    git clone https://github.com/python-mode/python-mode.git
+    git clone --recursive https://github.com/python-mode/python-mode.git
+
 
 Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
 
