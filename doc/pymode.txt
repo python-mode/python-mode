@@ -9,6 +9,16 @@
                           Version: 0.9.2
 
 ==============================================================================
+DISCLAIMER:
+    python-mode is under heavy development. You are using our latest stable
+    release, which has some known bugs. We recommend you to use the latest
+    development version that can be found on the `develop` branch of our git
+    repository.
+
+    For clean and straightforward install instructions, please visit:
+    https://github.com/python-mode/python-mode#how-to-install
+
+==============================================================================
 CONTENTS                                                       *pymode-contents*
 
     1.Intro.......................................................|pymode-intro|
