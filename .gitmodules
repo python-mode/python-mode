@@ -20,7 +20,7 @@
     ignore = dirty
 [submodule "submodules/snowball_py"]
 	path = submodules/snowball_py
-	url = https://github.com/shibukawa/snowball_py
+	url = https://github.com/diraol/snowball_py
     ignore = dirty
 [submodule "submodules/pylama"]
 	path = submodules/pylama
