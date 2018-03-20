@@ -91,23 +91,30 @@ class VimPymodeEnviroment(object):
 
         return vim.command('call pymode#wide_message("%s")' % str(msg))
 
-    def user_input(self, msg, default=''):
+    def user_input(self, msg='', default=''):
         """Return user input or default.
 
         :return str:
 
         """
-        msg = '%s %s ' % (self.prefix, msg)
+        prompt = []
+        prompt.append(str(self.prefix.strip()))
+        prompt.append(str(msg).strip())
 
         if default != '':
-            msg += '[%s] ' % default
+            prompt.append('[%s]' % default)
+
+        prompt.append('> ')
+        prompt = ' '.join([s for s in prompt if s])
+
+        vim.command('echohl Debug')
 
         try:
-            vim.command('echohl Debug')
-            input_str = vim.eval('input("%s> ")' % msg)
-            vim.command('echohl none')
+            input_str = vim.eval('input(%r)' % (prompt,))
         except KeyboardInterrupt:
             input_str = ''
+
+        vim.command('echohl none')
 
         return input_str or default
 
