@@ -228,17 +228,11 @@ fun! s:BlockStart(lnum) "{{{
     " W: don't Wrap around the end of the file
     let previous_definition = searchpos(s:def_regex, 'bnW')
 
-    " Corner case of function being defined on the first line.
-    if previous_definition[0] == 1
-        " Just skip the while loop.
-    elseif previous_definition != [0, 0]
-        " Lines that are blank have zero indent.
-        while previous_definition != [0, 0]
-                \ && indent(previous_definition[0]) >= l:inferred_indent
-            let previous_definition = searchpos(s:def_regex, 'bnW')
-            call cursor(previous_definition[0] - 1, 0)
-        endwhile
-    endif
+    while previous_definition[0] != 1 && previous_definition != [0, 0]
+            \ && indent(previous_definition[0]) >= l:inferred_indent
+        let previous_definition = searchpos(s:def_regex, 'bnW')
+        call cursor(previous_definition[0] - 1, 0)
+    endwhile
     let last_def = previous_definition[0]
     if last_def
         call cursor(last_def, 0)
