@@ -110,6 +110,13 @@ Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
     filetype plugin indent on
     syntax on
 
+## Using vim-plug
+
+Include the following in the [vim-plug](https://github.com/junegunn/vim-plug)
+section of your `~/.vimrc`:
+
+    Plug 'python-mode/python-mode', { 'branch': 'develop' }
+
 ## Manually
 
     % git clone https://github.com/python-mode/python-mode.git
