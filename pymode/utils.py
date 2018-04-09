@@ -38,7 +38,7 @@ def patch_paths():
     """
     dir_script = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, os.path.join(dir_script, 'libs'))
-    if sys.platform == 'win32':
+    if sys.platform == 'win32' or sys.platform == 'msys':
         dir_submodule = os.path.abspath(os.path.join(dir_script,
                                                      '..', 'submodules'))
         sub_modules = os.listdir(dir_submodule)
