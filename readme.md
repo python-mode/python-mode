@@ -179,7 +179,9 @@ The contributing guidelines for this plugin are outlined at
 `:help pymode-development`.
 
 * Author: Kirill Klenov (<https://github.com/klen>)
-* Maintainer: Felipe Vieira (<https://github.com/fmv1992>)
+* Maintainers:
+    * Felipe Vieira (<https://github.com/fmv1992>)
+    * Diego Rabatone Oliveira (<https://github.com/diraol>)
 
 Also see the AUTHORS file.
 
