@@ -11,7 +11,7 @@
 - ``:help pymode``
 - <https://github.com/python-mode/python-mode/wiki>
 
-**Please use python-mode tag on Stackoverflow to ask questions:**  
+**Please use python-mode tag on Stackoverflow to ask questions:**
 <https://stackoverflow.com/questions/tagged/python-mode>
 
 -------------------------------------------------------------------------------
@@ -21,11 +21,11 @@
 </p>
 
 ***Important***: From 2017-11-19 onwards python-mode uses submodules instead of
-hard coding 3rd party libraries into its codebase. Please issue the command:  
-`git submodule update --init --recursive`  
+hard coding 3rd party libraries into its codebase. Please issue the command:
+`git submodule update --init --recursive`
 inside your python-mode folder.
 
-If you are a new user please clone the repos using the recursive flag:  
+If you are a new user please clone the repos using the recursive flag:
 `git clone --recursive https://github.com/python-mode/python-mode`
 
 -------------------------------------------------------------------------------
@@ -34,21 +34,21 @@ Python-mode is a Vim plugin that magically converts Vim into a Python IDE.
 
 Why Python-mode?
 
-1.  **Be more productive**: Pymode saves time by bring all tools necessary for
-    professional developers so that you can focus on bigger things. It has been
-    finely tuned based on decades of experience working with Vim and is
-    constantly kept uptodate.
+1.  **Be more productive**: Pymode saves time by bringing all the tools
+    necessary for professional developers so that you can focus on bigger
+    things. It has been finely tuned based on decades of experience working
+    with Vim and is constantly kept up to date.
 2.  **Get smart assistance**: Pymode knows all about your code. We use the
     best-in-class intellisense code completion, on-the-fly error checking and
     quick-fixes; easy project navigation and much more.
 3.  **Use the full power and capabilities of Vim**: Unlike traditional IDEs
     which can only provide a small subset of Vim functionalities, you can do
     everything and anything that you can in Vim.
-4.  **Modular structure**: We attempt to be create Python-mode in the same
+4.  **Modular structure**: We attempt to create Python-mode with the same
     principles of python: i.e. have a modular structure, so that as and when
     better libraries evolve, we can provide you the best experience, while
     abstracting the details so that you can get back to what you do best.
-5.  **Written mostly in Python**: 96.1% written in Python. Well we love Python
+5.  **Written mostly in Python**: 96.1% written in Python. Well, we love Python
     :)
 
 The plugin contains all you need to develop python applications in Vim.
@@ -70,7 +70,7 @@ The plugin contains all you need to develop python applications in Vim.
 * Go to definition (`<C-c>g`)
 * And more, more ...
 
-See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>  
+See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>
 Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>
 
 **To read python-mode documentation in Vim, use** `:help pymode`.
@@ -140,11 +140,11 @@ If your question is not described there then you already know what to do
 
 Nevertheless just a refresher on how to submit bugs:
 
-**(From the FAQ)** Start python mode with:  
-`vim -i NONE -u <path_to_pymode>/debugvimrc.vim`  
+**(From the FAQ)** Start python mode with:
+`vim -i NONE -u <path_to_pymode>/debugvimrc.vim`
 Reproduce the error and submit your python mode debug file. You can check its
-location with `:messages` for something like:  
-`pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.  
+location with `:messages` for something like:
+`pymode debug msg 1: Starting debug on: 2017-11-18 16:44:13 with file /tmp/pymode_debug_file.txt`.
 Please submit the entire content of the file along with a reasoning of why the
 plugin seems broken.
 
@@ -170,7 +170,7 @@ Documentation is available in your vim `:help pymode`.
 # Bugtracker
 
 If you have any suggestions, bug reports or annoyances please report them to
-the issue tracker at:  
+the issue tracker at:
 <https://github.com/python-mode/python-mode/issues>
 
 # Contributing
@@ -183,7 +183,7 @@ The contributing guidelines for this plugin are outlined at
 
 Also see the AUTHORS file.
 
-Development of python-mode happens at github:  
+Development of python-mode happens at github:
 <https://github.com/python-mode/python-mode>
 
 Please make a pull request to development branch and add yourself to AUTHORS.

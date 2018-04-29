@@ -353,7 +353,7 @@ Pymode has the ability to set code checkers options from pymode variables:
 Set PEP8 options                                   *'g:pymode_lint_options_pep8'*
 >
     let g:pymode_lint_options_pep8 =
-        \ {'max_line_length': g:pymode_options_max_line_length})
+        \ {'max_line_length': g:pymode_options_max_line_length}
 
 See https://pep8.readthedocs.org/en/1.4.6/intro.html#configuration for more
 info.
@@ -373,7 +373,7 @@ Set pep257 options                               *'g:pymode_lint_options_pep257'
 Set pylint options                               *'g:pymode_lint_options_pylint'*
 >
     let g:pymode_lint_options_pylint =
-        \ {'max-line-length': g:pymode_options_max_line_length})
+        \ {'max-line-length': g:pymode_options_max_line_length}
 
 See http://docs.pylint.org/features.html#options for more info.
 
