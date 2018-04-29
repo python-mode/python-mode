@@ -34,8 +34,10 @@ call pymode#default('g:pymode_doc_bind', 'K')
 " Enable/Disable pymode PEP8 indentation
 call pymode#default("g:pymode_indent", 1)
 
+" TODO: currently folding suffers from a bad performance and incorrect
+" implementation. This feature should be considered experimental.
 " Enable/disable pymode folding for pyfiles.
-call pymode#default("g:pymode_folding", 1)
+call pymode#default("g:pymode_folding", 0)
 " Maximum file length to check for nested class/def statements
 call pymode#default("g:pymode_folding_nest_limit", 1000)
 " Change for folding customization (by example enable fold for 'if', 'for')

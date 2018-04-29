@@ -161,10 +161,12 @@ Enable pymode indentation                                     *'g:pymode_indent'
 2.3 Python folding ~
                                                                  *pymode-folding*
 
-Fast and usual python folding in Vim.
 Enable pymode folding                                        *'g:pymode_folding'*
 >
-    let g:pymode_folding = 1
+    let g:pymode_folding = 0
+
+Currently folding is considered experimental. There are several issues with
+its implementation.
 
 -------------------------------------------------------------------------------
 2.4 Vim motion ~
