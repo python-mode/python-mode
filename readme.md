@@ -119,7 +119,7 @@ section of your `~/.vimrc`:
 
 ## Manually
 
-    % git clone https://github.com/python-mode/python-mode.git
+    % git clone --recursive https://github.com/python-mode/python-mode.git
     % cd python-mode
     % cp -R * ~/.vim
 
