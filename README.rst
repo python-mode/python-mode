@@ -4,11 +4,27 @@
 .. image:: https://travis-ci.org/python-mode/python-mode.png?branch=develop
     :target: https://travis-ci.org/python-mode/python-mode
 
------
+
+-------------------------------------------------------------------------------
+
+<p align="center">
+  <img width="150" height="150" src="https://vignette.wikia.nocookie.net/sqmegapolis/images/4/42/Warning-2-256.png/revision/latest?cb=20130403220740">
+</p>
+
+***Important***: From 2017-11-19 onwards python-mode uses submodules instead of
+hard coding 3rd party libraries into its codebase. Please issue the command:
+`git submodule update --init --recursive`
+inside your python-mode folder.
+
+If you are a new user please clone the repos using the recursive flag:
+`git clone --recursive https://github.com/python-mode/python-mode`
+
+For clean and straightforward install instructions, please visit:
+https://github.com/python-mode/python-mode#how-to-install
+
+-------------------------------------------------------------------------------
 
 *The project needs contributors*
-
-** Python-mode Slack Channel is here: https://python-mode.herokuapp.com/ **
 
 -----
 
