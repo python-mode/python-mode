@@ -232,6 +232,7 @@ if g:pymode_debug
         let g:pymode_debug_tempfile=matchstr(
             \ execute(
             \ g:pymode_python
+            \ . " from __future__ import print_function;"
             \ . " import os;import tempfile; marker='|';"
             \ . " print(marker, tempfile.gettempdir(), os.sep, "
             \ .        "'pymode_debug_file.txt', marker, sep='', end='')"),
