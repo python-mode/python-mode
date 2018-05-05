@@ -19,7 +19,7 @@ filetype plugin on
 " OPTIONS: {{{
 
 " Vim Python interpreter. Set to 'disable' for remove python features.
-call pymode#default('g:pymode_python', '')
+call pymode#default('g:pymode_python', 'python3')
 
 " Disable pymode warnings
 call pymode#default('g:pymode_warning', 1)
@@ -273,10 +273,6 @@ if &compatible
     set nocompatible
 endif
 filetype plugin on
-
-" Disable python-related functionality
-" let g:pymode_python = 'disable'
-" let g:pymode_python = 'python3'
 
 " UltiSnips Fixes
 if !len(g:pymode_python)
