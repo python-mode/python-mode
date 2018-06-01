@@ -19,7 +19,11 @@ filetype plugin on
 " OPTIONS: {{{
 
 " Vim Python interpreter. Set to 'disable' for remove python features.
-call pymode#default('g:pymode_python', 'python3')
+if executable('python3')
+    call pymode#default('g:pymode_python', 'python3')
+else
+    call pymode#default('g:pymode_python', 'python')
+endif
 
 " Disable pymode warnings
 call pymode#default('g:pymode_warning', 1)
