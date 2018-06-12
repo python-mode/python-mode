@@ -26,3 +26,12 @@
 	path = submodules/pylama
 	url = https://github.com/fmv1992/pylama
     ignore = dirty
+[submodule "submodules/pylint"]
+	path = submodules/pylint
+	url = https://github.com/PyCQA/pylint
+[submodule "submodules/rope"]
+	path = submodules/rope
+	url = https://github.com/python-rope/rope
+[submodule "pymode/submodules/astroid"]
+	path = pymode/submodules/astroid
+	url = https://github.com/PyCQA/astroid

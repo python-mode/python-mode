@@ -1,0 +1,14 @@
+include ChangeLog
+include README*
+include COPYING
+include COPYING.LESSER
+include bin/logilab-pytest
+include bin/logilab-pytest.bat
+include test/data/ChangeLog
+recursive-include test *.py *.txt *.msg *.ini *.zip *.egg
+recursive-include test/data/*_dir *
+recursive-include test/input *.py
+recursive-include doc/html *
+include doc/logilab-pytest.1
+include doc/makefile
+include __pkginfo__.py

@@ -1,0 +1,9 @@
+[paths]
+source =
+   astroid
+
+[report]
+include =
+    astroid/*
+omit =
+    */tests/*

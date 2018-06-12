@@ -1,0 +1,1778 @@
+===================
+astroid's ChangeLog
+===================
+
+What's New in astroid 2.0?
+==========================
+
+Release Date: Unknown
+
+   * Inference support for `dict.fromkeys`
+
+     Close #110
+
+   * `int()` builtin is inferred as returning integers.
+
+     Close #150
+
+   * `str()` builtin is inferred as returning strings.
+
+     Close #148
+
+   * DescriptorBoundMethod has the correct number of arguments defined.
+
+   * Improvement of the numpy numeric types definition.
+
+     Close PyCQA/pylint#1971
+
+   * Subclasses of *property* are now interpreted as properties
+
+     Close PyCQA/pylint#1601
+
+   * AsStringRegexpPredicate has been removed.
+
+     Use transform predicates instead of it.
+
+   * Switched to using typed_ast for getting access to type comments
+
+     As a side effect of this change, some nodes gained a new `type_annotation` attribute,
+     which, if the type comments were correctly parsed, should contain a node object
+     with the corresponding objects from the type comment.
+
+   * typing.X[...] and typing.NewType are inferred as classes instead of instances.
+
+   * Module.__path__ is now a list
+
+     It used to be a string containing the path, but it doesn't reflect the situation
+     on Python, where it is actually a list.
+
+   * Fix a bug with namespace package's __path__ attribute.
+
+     Close #528
+
+   * Added brain tips for random.sample
+
+     Part of PyCQA/pylint#811
+
+   * Add brain tip for `issubclass` builtin
+
+     Close #101.
+
+   * Fix submodule imports from six
+
+     Close PyCQA/pylint#1640
+
+   * Fix missing __module__ and __qualname__ from class definition locals
+
+     Close PYCQA/pylint#1753
+
+   * Fix a crash when __annotations__ access a parent's __init__ that does not have arguments
+
+     Close #473
+
+   * Fix multiple objects sharing the same InferenceContext.path causing uninferable results
+
+     Close #483
+
+   * Fix improper modification of col_offset, lineno upon inference of builtin functions
+
+     Close PyCQA/pylint#1839
+
+   * Subprocess.Popen brain now knows of the args member
+
+     Close PyCQA/pylint#1860
+
+   * add move_to_end method to collections.OrderedDict brain
+
+     Close PyCQA/pylint#1872
+
+   * Include new hashlib classes added in python 3.6
+
+   * Fix RecursionError for augmented assign
+
+     Close #437, #447, #313, PyCQA/pylint#1642, PyCQA/pylint#1805, PyCQA/pylint#1854, PyCQA/pylint#1452
+
+   * Add missing attrs special attribute
+
+     Close PyCQA/pylint#1884
+
+   * Inference now understands the 'isinstance' builtin
+
+     Close #98
+
+   * Stop duplicate nodes with the same key values
+     from appearing in dictionaries from dictionary unpacking.
+
+     Close PyCQA/pylint#1843
+
+   * Fix ``contextlib.contextmanager`` inference for nested context managers
+
+     Close #1699
+
+   * Implement inference for len builtin
+
+     Close #112
+
+   * Add qname method to Super object preventing potential errors in upstream
+     pylint
+
+     Close #533
+
+
+
+What's New in astroid 1.6.0?
+============================
+
+Release Date: 2017-12-15
+
+
+   * When verifying duplicates classes in MRO, ignore on-the-fly generated classes
+
+     Close PyCQA/pylint#1706
+
+   * Add brain tip for attrs library to prevent unsupported-assignment-operation false positives
+
+	 Close PYCQA/pylint#1698
+
+   * file_stream was removed, since it was deprecated for three releases
+
+     Instead one should use the .stream() method.
+
+   * Vast improvements to numpy support
+
+   * Add brain tips for curses
+
+     Close PyCQA/pylint#1703
+
+   * Add brain tips for UUID.int
+
+     Close PyCQA/pylint#961
+
+   * The result of using object.__new__ as class decorator is correctly inferred as instance
+
+     Close #172
+
+   * Enums created with functional syntax are now iterable
+
+   * Enums created with functional syntax are now subscriptable
+
+   * Don't crash when getting the string representation of BadUnaryOperationMessage
+
+     In some cases, when the operand does not have a .name attribute,
+     getting the string representation of a BadUnaryOperationMessage leads
+     to a crash.
+
+     Close PyCQA/pylint#1563
+
+   * Don't raise DuplicateBaseError when classes at different locations are used
+
+     For instance, one can implement a namedtuple base class, which gets reused
+     on a class with the same name later on in the file. Until now, we considered
+     these two classes as being the same, because they shared the name, but in fact
+     they are different, being created at different locations and through different
+     means.
+
+     Close PyCQA/pylint#1458
+
+    * The func form of namedtuples with keywords is now understood
+
+      Close PyCQA/pylint#1530
+
+    * Dunder class at method level is now inferred as the class of the method
+
+      Close PyCQA/pylint#1328
+
+    * Stop most inference tip overwrites from happening by using
+		predicates on existing inference_tip transforms.
+
+      Close #472
+
+    * Fix object.__new__(cls) calls in classmethods by using
+        a context which has the proper boundnode for the given
+        argument
+
+        Close #404
+
+    * Fix Pathlib type inference
+
+        Close PyCQA/pylint#224
+        Close PyCQA/pylint#1660
+
+
+
+What's New in astroid 1.5.3?
+============================
+
+Release Date: 2017-06-03
+
+
+    * enum34 dependency is forced to be at least version 1.1.3. Fixes spurious
+    bug related to enum classes being falsy in boolean context, which caused
+    _Inconsistent Hierarchy_ `RuntimeError` in `singledispatch` module.
+
+    See links below for details:
+    - http://bugs.python.org/issue26748
+    - https://bitbucket.org/ambv/singledispatch/issues/8/inconsistent-hierarchy-with-enum
+    - https://bitbucket.org/stoneleaf/enum34/commits/da50803651ab644e6fce66ebc85562f1117c344b
+
+    * Do not raise an exception when uninferable value is unpacked in ``with`` statement.
+
+    * Lock objects from ``threading`` module are now correctly recognised
+      as context managers.
+
+
+What's New in astroid 1.5.2?
+============================
+
+Release Date: 2017-04-17
+
+
+   * Basic support for the class form of typing.NamedTuple
+
+   * mro() can be computed for classes with old style classes in the hierarchy
+
+
+
+What's New in astroid 1.5.0?
+============================
+
+Release Date: 2017-04-13
+
+
+    * Arguments node gained a new attribute, ``kwonlyargs_annotations``
+
+      This new attribute holds the annotations for the keyword-only
+      arguments.
+      
+    * `namedtuple` inference now understands `rename` keyword argument
+
+    * Classes can now know their definition-time arguments.
+
+      Classes can support keyword arguments, which are passed when
+      a class is constructed using ``__new__``.
+
+    * Add support for inferring typing.NamedTuple.
+
+    * ClassDef now supports __getitem__ inference through the metaclass.
+
+    * getitem() method accepts nodes now, instead of Python objects.
+
+    * Add support for explicit namespace packages, created with pkg_resources.
+
+    * Add brain tips for _io.TextIOWrapper's buffer and raw attributes.
+
+    * Add `returns` into the proper order in FunctionDef._astroid_fields
+
+      The order is important, since it determines the last child,
+      which in turn determines the last line number of a scoped node.
+
+    * Add brain tips for functools.lru_cache.
+
+    * New function, astroid.extract_node, exported out from astroid.test_utils.
+
+    * Stop saving assignment locals in ExceptHandlers, when the context is a store.
+
+      This fixes a tripping case, where the RHS of a ExceptHandler can be redefined
+      by the LHS, leading to a local save. For instance, ``except KeyError, exceptions.IndexError``
+      could result in a local save for IndexError as KeyError, resulting in potential unexpected
+      inferences. Since we don't lose a lot, this syntax gets prohibited.
+
+    * Fix a crash which occurred when the class of a namedtuple could not be inferred.
+
+    * Add support for implicit namespace packages (PEP 420)
+
+      This change involves a couple of modifications. First, we're relying on a
+      spec finder protocol, inspired by importlib's ModuleSpec, for finding where
+      a file or package is, using importlib's PathFinder as well, which enable
+      us to discover namespace packages as well.
+      This discovery is the center piece of the namespace package support,
+      the other part being the construction of a dummy Module node whenever
+      a namespace package root directory is requested during astroid's import
+      references.
+
+    * Introduce a special attributes model
+
+      Through this model, astroid starts knowing special attributes of certain Python objects,
+      such as functions, classes, super objects and so on. This was previously possible before,
+      but now the lookup and the attributes themselves are separated into a new module,
+      objectmodel.py, which describes, in a more comprehensive way, the data model of each
+      object.
+
+    * Exceptions have their own object model
+
+      Some of exceptions's attributes, such as .args and .message,
+      can't be inferred correctly since they are descriptors that get
+      transformed into the proper objects at runtime. This can cause issues
+      with the static analysis, since they are inferred as different than
+      what's expected. Now when we're creating instances of exceptions,
+      we're inferring a special object that knows how to transform those
+      runtime attributes into the proper objects via a custom object model.
+      Closes issue #81
+
+    * dict.values, dict.keys and dict.items are properly
+      inferred to their corresponding type, which also
+      includes the proper containers for Python 3.
+
+    * Fix a crash which occurred when a method had a same name as a builtin object,
+      decorated at the same time by that builtin object ( a property for instance)
+
+    * The inference can handle the case where the attribute is accessed through a subclass
+      of a base class and the attribute is defined at the base class's level,
+      by taking in consideration a redefinition in the subclass.
+
+      This should fix https://github.com/PyCQA/pylint/issues/432
+
+    * Calling lambda methods (defined at class level) can be understood.
+
+    * Don't take in consideration invalid assignments, especially when __slots__
+      declaration forbids them.
+      
+      Close issue #332
+
+    * Functional form of enums support accessing values through __call__.
+
+    * Brain tips for the ssl library.
+
+    * decoratornames() does not leak InferenceError anymore.
+
+    * wildcard_imported_names() got replaced by _public_names()
+
+      Our understanding of wildcard imports through __all__ was
+      half baked to say at least, since we couldn't account for
+      modifications of the list, which results in tons of false positives.
+      Instead, we replaced it with _public_names(), a method which returns
+      all the names that are publicly available in a module, that is that
+      don't start with an underscore, even though this means that there
+      is a possibility for other names to be leaked out even though
+      they are not present in the __all__ variable.
+
+      The method is private in 1.4.X.
+
+    * unpack_infer raises InferenceError if it can't operate
+      with the given sequences of nodes.
+
+    * Support accessing properties with super().
+
+    * Enforce strong updates per frames.
+
+      When looking up a name in a scope, Scope.lookup will return
+      only the values which will be reachable after execution, as seen
+      in the following code:
+      
+           a = 1
+           a = 2
+
+      In this case it doesn't make sense to return two values, but
+      only the last one.
+
+    * Add support for inference on threading.Lock
+
+      As a matter of fact, astroid can infer on threading.RLock,
+      threading.Semaphore, but can't do it on threading.Lock (because it comes
+      from an extension module).
+
+    * pkg_resources brain tips are a bit more specific,
+      by specifying proper returns.
+
+    * The slots() method conflates all the slots from the ancestors
+      into a list of current and parent slots.
+
+      We're doing this because this is the right semantics of slots,
+      they get inherited, as long as each parent defines a __slots__
+      entry.
+
+    * Some nodes got a new attribute, 'ctx', which tells in which context
+      the said node was used.
+
+      The possible values for the contexts are `Load` ('a'), `Del`
+      ('del a'), `Store` ('a = 4') and the nodes that got the new
+      attribute are Starred, Subscript, List and Tuple. Closes issue #267.
+
+    * relative_to_absolute_name or methods calling it will now raise
+      TooManyLevelsError when a relative import was trying to
+      access something beyond the top-level package.     
+
+    * AstroidBuildingException is now AstroidBuildingError. The first
+      name will exist until astroid 2.0.
+
+    * Add two new exceptions, AstroidImportError and AstroidSyntaxError.
+      They are subclasses of AstroidBuildingException and are raised when
+      a module can't be imported from various reasons.
+      Also do_import_module lets the errors to bubble up without converting
+      them to InferenceError. This particular conversion happens only
+      during the inference.
+
+    * Revert to using printf-style formatting in as_string, in order
+      to avoid a potential problem with encodings when using .format.
+      Closes issue #273. Patch by notsqrt.
+
+    * assigned_stmts methods have the same signature from now on.
+      
+      They used to have different signatures and each one made
+      assumptions about what could be passed to other implementations,
+      leading to various possible crashes when one or more arguments
+      weren't given. Closes issue #277.
+
+    * Fix metaclass detection, when multiple keyword arguments
+      are used in class definition.
+
+    * Add support for annotated variable assignments (PEP 526)
+
+    * Starred expressions are now inferred correctly for tuple,
+      list, set, and dictionary literals.
+
+    * Support for asynchronous comprehensions introduced in Python 3.6.
+
+      Fixes #399. See PEP530 for details.
+
+
+What's New in astroid 1.4.1?
+============================
+
+Release Date: 2015-11-29
+
+
+    * Add support for handling Uninferable nodes when calling as_string
+
+      Some object, for instance List or Tuple can have, after inference,
+      Uninferable as their elements, happening when their components
+      weren't couldn't be inferred properly. This means that as_string
+      needs to cope with expecting Uninferable nodes part of the other
+      nodes coming for a string transformation. The patch adds a visit
+      method in AsString and ``accept`` on Yes / Uninferable nodes.
+      Closes issue #270.
+
+
+
+What's New in astroid 1.4.0?
+============================
+
+Release Date: 2015-11-29
+ 
+
+    * Class.getattr('__mro__') returns the actual MRO. Closes issue #128.
+
+    * The logilab-common dependency is not needed anymore as the needed code
+      was integrated into astroid.
+
+    * Generated enum member stubs now support IntEnum and multiple
+      base classes.
+
+    * astroid.builder.AstroidBuilder.string_build and
+      astroid.builder.AstroidBuilder.file_build are now raising
+      AstroidBuildingException when the parsing of the string raises
+      a SyntaxError.
+
+    * Add brain tips for multiprocessing.Manager and
+      multiprocessing.managers.SyncManager.
+
+    * Add some fixes which enhances the Jython support.
+      The fix mostly includes updates to modutils, which is
+      modified in order to properly lookup paths from live objects,
+      which ends in $py.class, not pyc as for Python 2,       
+      Closes issue #83.
+
+    * The Generator objects inferred with `infer_call_result`
+      from functions have as parent the function from which they
+      are returned.
+
+    * Add brain tips for multiprocessing post Python 3.4+,
+      where the module level functions are retrieved with getattr
+      from a context object, leading to many no-member errors
+      in Pylint.
+
+    * Understand partially the 3-argument form of `type`.
+      The only change is that astroid understands members
+      passed in as dictionaries as the third argument.
+
+    * .slots() will return an empty list for classes with empty slots.
+      Previously it returned None, which is the same value for
+      classes without slots at all. This was changed in order
+      to better reflect what's actually happening.
+
+    * Improve the inference of Getattr nodes when dealing with
+      abstract properties from the abc module.
+
+      In astroid.bases.Instance._wrap_attr we had a detection
+      code for properties, which basically inferred whatever
+      a property returned, passing the results up the stack,
+      to the igetattr() method. It handled only the builtin property
+      but the new patch also handles a couple of other properties,
+      such as abc.abstractproperty.
+
+    * UnboundMethod.getattr calls the getattr of its _proxied object
+      and doesn't call super(...) anymore.
+
+      It previously crashed, since the first ancestor in its mro was
+      bases.Proxy and bases.Proxy doesn't implement the .getattr method.
+      Closes issue #91.
+
+    * Don't hard fail when calling .mro() on a class which has 
+      combined both newstyle and old style classes. The class
+      in question is actually newstyle (and the __mro__ can be
+      retrieved using Python).
+
+      .mro() fallbacks to using .ancestors() in that case.
+
+    * Class.local_attr and Class.local_attr_ancestors uses internally
+      a mro lookup, using .mro() method, if they can.
+
+      That means for newstyle classes, when trying to lookup a member
+      using one of these functions, the first one according to the
+      mro will be returned. This reflects nicely the reality,
+      but it can have as a drawback the fact that it is a behaviour
+      change (the previous behaviour was incorrect though). Also,
+      having bases which can return multiple values when inferred
+      will not work with the new approach, because .mro() only
+      retrieves the first value inferred from a base.
+
+    * Expose a implicit_metaclass() method in Class. This will return
+      a builtins.type instance for newstyle classes. 
+
+    * Add two new exceptions for handling MRO error cases. DuplicateBasesError
+      is emitted when duplicate bases are found in a class,
+      InconsistentMroError is raised when the method resolution is determined
+      to be inconsistent. They share a common class, MroError, which
+      is a subclass of ResolveError, meaning that this change is backwards
+      compatible.
+
+    * Classes aren't marked as interfaces anymore, in the `type` attribute.
+
+    * Class.has_dynamic_getattr doesn't return True for special methods
+      which aren't implemented in pure Python, as it is the case for extension modules.
+
+      Since most likely the methods were coming from a live object, this implies
+      that all of them will have __getattr__ and __getattribute__ present and it
+      is wrong to consider that those methods were actually implemented.
+
+    * Add basic support for understanding context managers.
+
+      Currently, there's no way to understand whatever __enter__ returns in a
+      context manager and what it is binded using the ``as`` keyword. With these changes,
+      we can understand ``bar`` in ``with foo() as bar``, which will be the result of __enter__.
+
+    * Add a new type of node, called *inference objects*. Inference objects are similar with
+      AST nodes, but they can be obtained only after inference, so they can't be found
+      inside the original AST tree. Their purpose is to handle at astroid level
+      some operations which can't be handled when using brain transforms.
+      For instance, the first object added is FrozenSet, which can be manipulated
+      at astroid's level (inferred, itered etc). Code such as this 'frozenset((1,2))'
+      will not return an Instance of frozenset, without having access to its
+      content, but a new objects.FrozenSet, which can be used just as a nodes.Set.
+
+    * Add a new *inference object* called Super, which also adds support for understanding
+      super calls. astroid understands the zero-argument form of super, specific to
+      Python 3, where the interpreter fills itself the arguments of the call. Also, we
+      are understanding the 2-argument form of super, both for bounded lookups
+      (super(X, instance)) as well as for unbounded lookups (super(X, Y)),
+      having as well support for validating that the object-or-type is a subtype
+      of the first argument. The unbounded form of super (one argument) is not
+      understood, since it's useless in practice and should be removed from
+      Python's specification. Closes issue #89.
+
+    * Add inference support for getattr builtin. Now getattr builtins are
+      properly understood. Closes issue #103.
+
+    * Add inference support for hasattr builtin. Closes issue #102.
+
+    * Add 'assert_equals' method in nose.tools's brain plugin.
+
+    * Don't leak StopIteration when inferring invalid UnaryOps (+[], +None etc.).
+
+    * Improve the inference of UnaryOperands.
+
+      When inferring unary operands, astroid looks up the return value
+      of __pos__, __neg__ and __invert__ to determine the inferred value
+      of ``~node``, ``+node`` or ``-node``.
+
+    * Improve the inference of six.moves, especially when using `from ... import ...`
+      syntax. Also, we added a new fail import hook for six.moves, which fixes the
+      import-error false positive from pylint. Closes issue #107.
+
+    * Make the first steps towards detecting type errors for unary and binary
+      operations.
+
+      In exceptions, one object was added for holding information about a possible
+      UnaryOp TypeError, object called `UnaryOperationError`. Even though the name
+      suggests it's an exception, it's actually not one. When inferring UnaryOps,
+      we use this special object to mark a possible TypeError,
+      object which can be interpreted by pylint in order to emit a new warning.
+      We are also exposing a new method for UnaryOps, called `type_errors`,
+      which returns a list of UnaryOperationsError.
+
+    * A new method was added to the AST nodes, 'bool_value'. It is used to deduce
+      the value of a node when used in a boolean context, which is useful
+      for both inference, as well as for data flow analysis, where we are interested
+      in what branches will be followed when the program will be executed.
+      `bool_value` returns True, False or YES, if the node's boolean value can't
+      be deduced. The method is used when inferring the unary operand `not`.
+      Thus, `not something` will result in calling `something.bool_value` and
+      negating the result, if it is a boolean.
+
+    * Add inference support for boolean operations (`and` and `not`).
+
+    * Add inference support for the builtin `callable`.
+
+    * astroid.inspector was moved to pylint.pyreverse, since
+      it is the only known client of this module. No other change
+      was made to the exported API.
+
+    * astroid.utils.ASTWalker and astroid.utils.LocalsVisitor
+      were moved to pylint.pyreverse.utils.
+
+    * Add inference support for the builtin `bool`.
+
+    * Add `igetattr` method to scoped_nodes.Function.
+
+    * Add support for Python 3.5's MatMul operation: see PEP 465 for more
+      details.
+
+    * NotImplemented is detected properly now as being part of the
+      builtins module. Previously trying to infer the Name(NotImplemented)
+      returned an YES object.
+
+    * Add astroid.helpers, a module of various useful utilities which don't
+      belong yet into other components. Added *object_type*, a function
+      which can be used to obtain the type of almost any astroid object,
+      similar to how the builtin *type* works.
+
+    * Understand the one-argument form of the builtin *type*.
+
+      This uses the recently added *astroid.helpers.object_type* in order to
+      retrieve the Python type of the first argument of the call.
+
+    * Add helpers.is_supertype and helpers.is_subtype, two functions for
+      checking if an object is a super/sub type of another.
+
+    * Improve the inference of binary arithmetic operations (normal
+      and augmented).
+
+    * Add support for retrieving TypeErrors for binary arithmetic operations.
+
+      The change is similar to what was added for UnaryOps: a new method
+      called *type_errors* for both AugAssign and BinOp, which can be used
+      to retrieve type errors occurred during inference. Also, a new
+      exception object was added, BinaryOperationError.
+
+    * Lambdas found at class level, which have a `self` argument, are considered
+      BoundMethods when accessing them from instances of their class.
+
+    * Add support for multiplication of tuples and lists with instances
+      which provides an __index__ returning-int method.
+
+    * Add support for indexing containers with instances which provides
+      an __index__ returning-int method.
+
+    * Star unpacking in assignments returns properly a list,
+      not the individual components. Closes issue #138.
+
+    * Add annotation support for function.as_string(). Closes issue #37.
+
+    * Add support for indexing bytes on Python 3.
+
+    * Add support for inferring subscript on instances, which will 
+      use __getitem__. Closes issue #124.
+
+    * Add support for pkg_resources.declare_namespaces.
+
+    * Move pyreverse specific modules and functionality back into pyreverse
+      (astroid.manager.Project, astroid.manager.Manager.project_from_files).
+
+    * Understand metaclasses added with six.add_metaclass decorator. Closes issue #129.
+
+    * Add a new convenience API, `astroid.parse`, which can be used to retrieve
+      an astroid AST from a source code string, similar to how ast.parse can be
+      used to obtain a Python AST from a source string. This is the test_utils.build_module
+      promoted to a public API.
+
+    * do_import_module passes the proper relative_only flag if the level is higher
+      than 1. This has the side effect that using `from .something import something`
+      in a non-package will finally result in an import-error on Pylint's side.
+      Until now relative_only was ignored, leading to the import of `something`,
+      if it was globally available.
+
+    * Add get_wrapping_class API to scoped_nodes, which can be used to
+      retrieve the class that wraps a node.
+
+    * Class.getattr looks by default in the implicit and the explicit metaclasses,
+      which is `type` on Python 3.
+
+      Closes issue #114.
+
+    * There's a new separate step for transforms.
+
+      Until now, the transforms were applied at the same time the tree was
+      being built. This was problematic if the transform functions were
+      using inference, since the inference was executed on a partially
+      constructed tree, which led to failures when post-building
+      information was needed (such as setting the _from_names
+      for the From imports).
+      Now there's a separate step for transforms, which are applied
+      using transform.TransformVisitor.
+      There's a couple of other related changes:
+
+          * astroid.parse and AstroidBuilder gained a new parameter
+            `apply_transforms`, which is a boolean flag, which will
+            control if the transforms are applied. We do this because
+            there are uses when the vanilla tree is wanted, without
+            any implicit modification.
+
+          * the transforms are also applied for builtin modules,
+            as a side effect of the fact that transform visiting
+            was moved in AstroidBuilder._post_build from
+            AstroidBuilder._data_build.
+
+      Closes issue #116.
+    
+    * Class._explicit_metaclass is now a public API, in the form of
+      Class.declared_metaclass.
+
+      Class.mro remains the de facto method for retrieving the metaclass
+      of a class, which will also do an evaluation of what declared_metaclass
+      returns.
+
+    * Understand slices of tuples, lists, strings and instances with support
+      for slices.
+
+      Closes issue #137.
+
+    * Add proper grammatical names for `infered` and `ass_type` methods,
+      namely `inferred` and `assign_type`.
+
+      The old methods will raise PendingDeprecationWarning, being slated
+      for removal in astroid 2.0.
+
+    * Add new AST names in order to be similar to the ones
+      from the builtin ast module.
+
+      With this change, Getattr becomes Attributes, Backquote becomes
+      Repr, Class is ClassDef, Function is FunctionDef,  Discard is Expr,
+      CallFunc is Call, From is ImportFrom, AssName is AssignName
+      and AssAttr is AssignAttr. The old names are maintained for backwards
+      compatibility and they are interchangeable, in the sense that using
+      Discard will use Expr under the hood and the implemented visit_discard
+      in checkers will be called with Expr nodes instead. The AST does not
+      contain the old nodes, only the interoperability between them hides this
+      fact. Recommendations to move to the new nodes are emitted accordingly,
+      the old names will be removed in astroid 2.0.
+
+    * Add support for understanding class creation using `type.__new__(mcs, name, bases, attrs)``
+
+      Until now, inferring this kind of calls resulted in Instances, not in classes,
+      since astroid didn't understand that the presence of the metaclass in the call
+      leads to a class creating, not to an instance creation.
+
+    * Understand the `slice` builtin. Closes issue #184.
+
+    * Add brain tips for numpy.core, which should fix Pylint's #453.
+
+    * Add a new node, DictUnpack, which is used to represent the unpacking
+      of a dictionary into another dictionary, using PEP 448 specific syntax
+      ({1:2, **{2:3})
+
+      This is a different approach than what the builtin ast module does,
+      since it just uses None to represent this kind of operation,
+      which seems conceptually wrong, due to the fact the AST contains
+      non-AST nodes. Closes issue #206.
+     
+
+
+
+What's New in astroid 1.3.6?
+============================
+
+Release Date: 2015-03-14
+
+
+    * Class.slots raises NotImplementedError for old style classes.
+      Closes issue #67.
+
+    * Add a new option to AstroidManager, `optimize_ast`, which
+      controls if peephole optimizer should be enabled or not.
+      This prevents a regression, where the visit_binop method
+      wasn't called anymore with astroid 1.3.5, due to the differences
+      in the resulting AST. Closes issue #82.
+
+
+
+What's New in astroid 1.3.5?
+============================
+
+Release Date: 2015-03-11
+
+
+    * Add the ability to optimize small ast subtrees,
+      with the first use in the optimization of multiple
+      BinOp nodes. This removes recursivity in the rebuilder
+      when dealing with a lot of small strings joined by the
+      addition operator. Closes issue #59.
+
+    * Obtain the methods for the nose brain tip through an
+      unittest.TestCase instance. Closes Pylint issue #457.
+
+    * Fix a crash which occurred when a class was the ancestor
+      of itself. Closes issue #78.
+
+    * Improve the scope_lookup method for Classes regarding qualified
+      objects, with an attribute name exactly as one provided in the
+      class itself.
+
+      For example, a class containing an attribute 'first',
+      which was also an import and which had, as a base, a qualified name
+      or a Gettattr node, in the form 'module.first', then Pylint would
+      have inferred the `first` name as the function from the Class,
+      not the import. Closes Pylint issue #466.
+
+    * Implement the assigned_stmts operation for Starred nodes,
+      which was omitted when support for Python 3 was added in astroid.
+      Closes issue #36.
+           
+
+
+What's New in astroid 1.3.4?
+============================
+
+Release Date: 2015-01-17
+
+
+    * Get the first element from the method list when obtaining
+      the functions from nose.tools.trivial. Closes Pylint issue #448.
+
+
+What's New in astroid 1.3.3?
+============================
+
+Release Date: 2015-01-16
+
+
+    * Restore file_stream to a property, but deprecate it in favour of
+      the newly added method Module.stream. By using a method instead of a
+      property, it will be easier to properly close the file right
+      after it is used, which will ensure that no file descriptors are
+      leaked. Until now, due to the fact that a module was cached,
+      it was not possible to close the file_stream anywhere.
+      file_stream will start emitting PendingDeprecationWarnings in
+      astroid 1.4, DeprecationWarnings in astroid 1.5 and it will
+      be finally removed in astroid 1.6.
+
+    * Add inference tips for 'tuple', 'list', 'dict' and 'set' builtins.
+
+    * Add brain definition for most string and unicode methods
+
+    * Changed the API for Class.slots. It returns None when the class
+      doesn't define any slots. Previously, for both the cases where
+      the class didn't have slots defined and when it had an empty list
+      of slots, Class.slots returned an empty list.
+
+    * Add a new method to Class nodes, 'mro', for obtaining the
+      the method resolution order of the class.
+
+    * Add brain tips for six.moves. Closes issue #63.
+
+    * Improve the detection for functions decorated with decorators
+      which returns static or class methods.
+
+    * .slots() can contain unicode strings on Python 2.
+
+    * Add inference tips for nose.tools.
+
+
+
+What's New in astroid 1.3.2?
+============================
+
+Release Date: 2014-11-22
+
+
+    * Fixed a crash with invalid subscript index.
+ 
+    * Implement proper base class semantics for Python 3, where
+      every class derives from object.
+
+    * Allow more fine-grained control over C extension loading
+      in the manager.
+
+
+What's New in astroid 1.3.1?
+============================
+
+Release Date: 2014-11-21
+
+   
+    * Fixed a crash issue with the pytest brain module.
+
+
+What's New in astroid 1.3.0?
+============================
+
+Release Date: 2014-11-20
+
+
+    * Fix a maximum recursion error occurred during the inference,
+      where statements with the same name weren't filtered properly.
+      Closes pylint issue #295.
+
+    * Check that EmptyNode has an underlying object in
+      EmptyNode.has_underlying_object.
+
+    * Simplify the understanding of enum members.
+
+    * Fix an infinite loop with decorator call chain inference,
+      where the decorator returns itself. Closes issue #50.
+
+    * Various speed improvements. Patch by Alex Munroe.
+
+    * Add pytest brain plugin. Patch by Robbie Coomber.
+
+    * Support for Python versions < 2.7 has been dropped, and the
+      source has been made compatible with Python 2 and 3. Running
+      2to3 on installation for Python 3 is not needed anymore.
+
+    * astroid now depends on six.
+
+    * modutils._module_file opens __init__.py in binary mode.
+      Closes issues #51 and #13.
+
+    * Only C extensions from trusted sources (the standard library)
+      are loaded into the examining Python process to build an AST
+      from the live module.
+
+    * Path names on case-insensitive filesystems are now properly
+      handled. This fixes the stdlib detection code on Windows.
+
+    * Metaclass-generating functions like six.with_metaclass
+      are now supported via some explicit detection code.
+
+    * astroid.register_module_extender has been added to generalize
+      the support for module extenders as used by many brain plugins.
+
+    * brain plugins can now register hooks to handle failed imports, 
+      as done by the gobject-introspection plugin.
+
+    * The modules have been moved to a separate package directory,
+      `setup.py develop` now works correctly.
+
+
+
+What's New in astroid 1.2.1?
+============================
+
+Release Date: 2014-08-24
+
+
+    * Fix a crash occurred when inferring decorator call chain.
+      Closes issue #42.
+
+    * Set the parent of vararg and kwarg nodes when inferring them.
+      Closes issue #43.
+
+    * namedtuple inference knows about '_fields' attribute.
+
+    * enum members knows about the methods from the enum class.
+
+    * Name inference will lookup in the parent function
+      of the current scope, in case searching in the current scope
+      fails.
+
+    * Inference of the functional form of the enums takes into
+      consideration the various inputs that enums accepts.
+
+    * The inference engine handles binary operations (add, mul etc.)
+      between instances.
+
+    * Fix an infinite loop in the inference, by returning a copy
+      of instance attributes, when calling 'instance_attr'.
+      Closes issue #34 (patch by Emile Anclin).
+
+    * Don't crash when trying to infer unbound object.__new__ call.
+      Closes issue #11.
+
+
+What's New in astroid 1.2.0?
+============================
+
+Release Date: 2014-07-25
+
+
+    * Function nodes can detect decorator call chain and see if they are
+      decorated with builtin descriptors (`classmethod` and `staticmethod`).
+
+    * infer_call_result called on a subtype of the builtin type will now
+      return a new `Class` rather than an `Instance`.
+
+    * `Class.metaclass()` now handles module-level __metaclass__ declaration
+      on python 2, and no longer looks at the __metaclass__ class attribute on
+      python 3.
+
+    * Function nodes can detect if they are decorated with subclasses
+      of builtin descriptors when determining their type
+      (`classmethod` and `staticmethod`).
+
+    * Add `slots` method to `Class` nodes, for retrieving
+      the list of valid slots it defines.
+
+    * Expose function annotation to astroid: `Arguments` node
+      exposes 'varargannotation', 'kwargannotation' and 'annotations'
+      attributes, while `Function` node has the 'returns' attribute.
+
+    * Backported most of the logilab.common.modutils module there, as
+      most things there are for pylint/astroid only and we want to be
+      able to fix them without requiring a new logilab.common release
+
+    * Fix names grabbed using wildcard import in "absolute import mode"
+      (ie with absolute_import activated from the __future__ or with
+      python 3). Fix pylint issue #58.
+
+    * Add support in pylint-brain for understanding enum classes.
+
+
+What's New in astroid 1.1.1?
+============================
+
+Release Date: 2014-04-30
+
+    * `Class.metaclass()` looks in ancestors when the current class
+      does not define explicitly a metaclass.
+
+    * Do not cache modules if a module with the same qname is already
+      known, and only return cached modules if both name and filepath
+      match. Fixes pylint Bitbucket issue #136.
+
+
+What's New in astroid 1.1.0?
+============================
+
+Release Date: 2014-04-18
+
+    * All class nodes are marked as new style classes for Py3k.
+
+    * Add a `metaclass` function to `Class` nodes to
+      retrieve their metaclass.
+
+    * Add a new YieldFrom node.
+
+    * Add support for inferring arguments to namedtuple invocations.
+
+    * Make sure that objects returned for namedtuple
+      inference have parents.
+
+    * Don't crash when inferring nodes from `with` clauses
+      with multiple context managers. Closes #18.
+
+    * Don't crash when a class has some __call__ method that is not
+      inferable. Closes #17.
+
+    * Unwrap instances found in `.ancestors()`, by using their _proxied
+      class.
+
+
+
+
+What's New in astroid 1.0.1?
+============================
+
+Release Date: 2013-10-18
+
+    * fix py3k/windows installation issue (issue #4)
+
+    * fix bug with namedtuple inference (issue #3)
+
+    * get back gobject introspection from pylint-brain
+
+    * fix some test failures under pypy and py3.3, though there is one remaining
+      in each of these platform (2.7 tests are all green)
+
+
+
+
+What's New in astroid 1.0.0?
+=============================
+
+Release Date: 2013-07-29
+
+    * Fix some omissions in py2stdlib's version of hashlib and
+      add a small test for it.
+
+    * Properly recognize methods annotated with abc.abstract{property,method}
+      as abstract.
+
+    * Allow transformation functions on any node, providing a
+      `register_transform` function on the manager instead of the
+     `register_transformer` to make it more flexible wrt node selection
+
+    * Use the new transformation API to provide support for namedtuple
+      (actually in pylint-brain, closes #8766)
+
+    * Added the test_utils module for building ASTs and
+      extracting deeply nested nodes for easier testing.
+
+    * Add support for py3k's keyword only arguments (PEP 3102)
+
+    * RENAME THE PROJECT to astroid
+
+
+
+
+What's New in astroid 0.24.3?
+=============================
+
+Release Date: 2013-04-16
+
+    * #124360 [py3.3]: Don't crash on 'yield from' nodes
+
+    * #123062 [pylint-brain]: Use correct names for keywords for urlparse
+
+    * #123056 [pylint-brain]: Add missing methods for hashlib
+
+    * #123068: Fix inference for generator methods to correctly handle yields
+      in lambdas.
+
+    * #123068: Make sure .as_string() returns valid code for yields in
+      expressions.
+
+    * #47957: Set literals are now correctly treated as inference leaves.
+
+    * #123074: Add support for inference of subscript operations on dict
+      literals.
+
+
+
+
+What's New in astroid 0.24.2?
+=============================
+
+Release Date: 2013-02-27
+
+    * pylint-brain: more subprocess.Popen faking (see #46273)
+
+    * #109562 [jython]: java modules have no __doc__, causing crash
+
+    * #120646 [py3]: fix for python3.3 _ast changes which may cause crash
+
+    * #109988 [py3]: test fixes
+
+
+
+
+What's New in astroid 0.24.1?
+=============================
+
+Release Date: 2012-10-05
+
+    * #106191: fix __future__ absolute import w/ From node
+
+    * #50395: fix function fromlineno when some decorator is splited on
+      multiple lines (patch by Mark Gius)
+
+    * #92362: fix pyreverse crash on relative import
+
+    * #104041: fix crash 'module object has no file_encoding attribute'
+
+    * #4294 (pylint-brain): bad inference on mechanize.Browser.open
+
+    * #46273 (pylint-brain): bad inference subprocess.Popen.communicate
+
+
+
+
+What's New in astroid 0.24.0?
+=============================
+
+Release Date: 2012-07-18
+
+    * include pylint brain extension, describing some stuff not properly understood until then.
+      (#100013, #53049, #23986, #72355)
+
+    * #99583: fix raw_building.object_build for pypy implementation
+
+    * use `open` rather than `file` in scoped_nodes as 2to3 miss it
+
+
+
+
+What's New in astroid 0.23.1?
+=============================
+
+Release Date: 2011-12-08
+
+    * #62295: avoid "OSError: Too many open files" by moving
+      .file_stream as a Module property opening the file only when needed
+
+    * Lambda nodes should have a `name` attribute
+
+    * only call transformers if modname specified
+
+
+
+
+What's New in astroid 0.23.0?
+=============================
+
+Release Date: 2011-10-07
+
+    * #77187: ancestor() only returns the first class when inheriting
+      from two classes coming from the same module
+
+    * #76159: putting module's parent directory on the path causes problems
+      linting when file names clash
+
+    * #74746: should return empty module when __main__ is imported (patch by
+      google)
+
+    * #74748: getitem protocol return constant value instead of a Const node
+      (patch by google)
+
+    * #77188: support lgc.decorators.classproperty
+
+    * #77253: provide a way for user code to register astng "transformers"
+      using manager.register_transformer(callable) where callable will be
+      called after an astng has been built and given the related module node
+      as argument
+
+
+
+
+What's New in astroid 0.22.0?
+=============================
+
+Release Date: 2011-07-18
+
+    * added column offset information on nodes (patch by fawce)
+
+    * #70497: Crash on AttributeError: 'NoneType' object has no attribute '_infer_name'
+
+    * #70381: IndentationError in import causes crash
+
+    * #70565: absolute imports treated as relative (patch by Jacek Konieczny)
+
+    * #70494: fix file encoding detection with python2.x
+
+    * py3k: __builtin__ module renamed to builtins, we should consider this to properly
+      build ast for builtin objects
+
+
+
+
+What's New in astroid 0.21.1?
+=============================
+
+Release Date: 2011-01-11
+
+    * python3: handle file encoding; fix a lot of tests
+
+    * fix #52006: "True" and "False" can be assigned as variable in Python2x
+
+    * fix #8847: pylint doesn't understand function attributes at all
+
+    * fix #8774: iterator / generator / next method
+
+    * fix bad building of ast from living object w/ container classes
+      (eg dict, set, list, tuple): contained elements should be turned to
+      ast as well (not doing it will much probably cause crash later)
+
+    * somewhat fix #57299 and other similar issue: Exception when
+      trying to validate file using PyQt's PyQt4.QtCore module: we can't
+      do much about it but at least catch such exception to avoid crash
+
+
+
+
+What's New in astroid 0.21.0?
+=============================
+
+Release Date: 2010-11-15
+
+    * python3.x: first python3.x release
+
+    * fix #37105: Crash on AttributeError: 'NoneType' object has no attribute '_infer_name'
+
+    * python2.4: drop python < 2.5 support
+
+
+
+
+What's New in astroid 0.20.4?
+=============================
+
+Release Date: 2010-10-27
+
+    * fix #37868 #37665 #33638 #37909: import problems with absolute_import_activated
+
+    * fix #8969: false positive when importing from zip-safe eggs
+
+    * fix #46131: minimal class decorator support
+
+    * minimal python2.7 support (dict and set comprehension)
+
+    * important progress on Py3k compatibility
+
+
+
+
+What's New in astroid 0.20.3?
+=============================
+
+Release Date: 2010-09-28
+
+    * restored python 2.3 compatibility
+
+    * fix #45959: AttributeError: 'NoneType' object has no attribute 'frame', due
+       to handling of __class__ when importing from living object (because of missing
+       source code or C-compiled object)
+
+
+
+
+What's New in astroid 0.20.2?
+=============================
+
+Release Date: 2010-09-10
+
+    * fix astng building bug: we've to set module.package flag at the node
+      creation time otherwise we'll miss this information when inferring relative
+      import during the build process (this should fix for instance some problems
+      with numpy)
+
+    * added __subclasses__ to special class attribute
+
+    * fix Class.interfaces so that no InferenceError raised on empty __implements__
+
+    * yield YES on multiplication of tuple/list with non valid operand
+
+
+
+
+What's New in astroid 0.20.1?
+=============================
+
+Release Date: 2010-05-11
+
+    * fix licensing to LGPL
+
+    * add ALL_NODES_CLASSES constant to nodes module
+
+    * nodes redirection cleanup (possible since refactoring)
+
+    * bug fix for python < 2.5: add Delete node on Subscript nodes if we are in a
+   del context
+
+
+
+
+What's New in astroid 0.20.0?
+=============================
+
+Release Date: 2010-03-22
+
+    * fix #20464: raises ?TypeError: '_Yes' object is not iterable? on list inference
+
+    * fix #19882: pylint hangs
+
+    * fix #20759: crash on pyreverse UNARY_OP_METHOD KeyError '~'
+
+    * fix #20760: crash on pyreverse : AttributeError: 'Subscript'
+      object has no attribute 'infer_lhs'
+
+    * fix #21980: [Python-modules-team] Bug#573229 : Pylint hangs;
+      improving the cache yields a speed improvement on big projects
+
+    * major refactoring: rebuild the tree instead of modify / monkey patching
+
+    * fix #19641: "maximum recursion depth exceeded" messages w/ python 2.6
+      this was introduced by a refactoring
+
+    * Ned Batchelder patch to properly import eggs with Windows line
+      endings.  This fixes a problem with pylint not being able to
+      import setuptools.
+
+    * Winfried Plapper patches fixing .op attribute value for AugAssign nodes,
+      visit_ifexp in nodes_as_string
+
+    * Edward K. Ream / Tom Fleck patch closes #19641 (maximum recursion depth
+      exceeded" messages w/ python 2.6), see https://bugs.launchpad.net/pylint/+bug/456870
+
+
+
+
+What's New in astroid 0.19.3?
+=============================
+
+Release Date: 2009-12-18
+
+    * fix name error making 0.19.2 almost useless
+
+
+
+
+What's New in astroid 0.19.2?
+=============================
+
+Release Date: 2009-12-18
+
+    * fix #18773: inference bug on class member (due to bad handling of instance
+      / class nodes "bounded" to method calls)
+
+    * fix #9515: strange message for non-class "Class baz has no egg member" (due to
+      bad inference of function call)
+
+    * fix #18953: inference fails with augmented assignment (special case for augmented
+      assignement in infer_ass method)
+
+    * fix #13944: false positive for class/instance attributes (Instance.getattr
+      should return assign nodes on instance classes as well as instance.
+
+    * include spelling fixes provided by Dotan Barak
+
+
+
+
+What's New in astroid 0.19.1?
+=============================
+
+Release Date: 2009-08-27
+
+    * fix #8771: crash on yield expression
+
+    * fix #10024: line numbering bug with try/except/finally
+
+    * fix #10020: when building from living object, __name__ may be None
+
+    * fix #9891: help(logilab.astng) throws TypeError
+
+    * fix #9588: false positive E1101 for augmented assignment
+
+
+
+
+What's New in astroid 0.19.0?
+=============================
+
+Release Date: 2009-03-25
+
+    * fixed python 2.6 issue (tests ok w/ 2.4, 2.5, 2.6. Anyone using 2.2 / 2.3
+      to tell us if it works?)
+
+    * some understanding of the __builtin__.property decorator
+
+    * inference: introduce UnboundMethod / rename InstanceMethod to BoundMethod
+
+
+
+
+What's New in astroid 0.18.0?
+=============================
+
+Release Date: 2009-03-19
+
+    * major api / tree structure changes to make it works with compiler *and*
+      python >= 2.5 _ast module
+
+    * cleanup and refactoring on the way
+
+
+
+
+What's New in astroid 0.17.4?
+=============================
+
+Release Date: 2008-11-19
+
+    * fix #6015: filter statements bug triggering W0631 false positive in pylint
+
+    * fix #5571: Function.is_method() should return False on module level
+      functions decorated by staticmethod/classmethod (avoid some crash in pylint)
+
+    * fix #5010: understand python 2.5 explicit relative imports
+
+
+
+
+What's New in astroid 0.17.3?
+=============================
+
+Release Date: 2008-09-10
+
+    * fix #5889: astng crash on certain pyreverse projects
+
+    * fix bug w/ loop assignment in .lookup
+
+    * apply Maarten patch fixing a crash on TryFinalaly.block_range and fixing
+      'else'/'final' block line detection
+
+
+
+
+What's New in astroid 0.17.2?
+=============================
+
+Release Date: 2008-01-14
+
+    * "with" statement support, patch provided by Brian Hawthorne
+
+    * fixed recursion arguments in nodes_of_class method as notified by
+      Dave Borowitz
+
+    * new InstanceMethod node introduced to wrap bound method (e.g. Function
+      node), patch provided by Dave Borowitz
+
+
+
+
+What's New in astroid 0.17.1?
+=============================
+
+Release Date: 2007-06-07
+
+    * fix #3651: crash when callable as default arg
+
+    * fix #3670: subscription inference crash in some cases
+
+    * fix #3673: Lambda instance has no attribute 'pytype'
+
+    * fix crash with chained "import as"
+
+    * fix crash on numpy
+
+    * fix potential InfiniteRecursion error with builtin objects
+
+    * include patch from Marien Zwart fixing some test / py 2.5
+
+    * be more error resilient when accessing living objects from external
+      code in the manager
+
+
+
+
+What's New in astroid 0.17.0?
+=============================
+
+Release Date: 2007-02-22
+
+    * api change to be able to infer using a context (used to infer function call
+      result only for now)
+
+    * slightly better inference on astng built from living object by trying to infer
+      dummy nodes (able to infer 'help' builtin for instance)
+
+    * external attribute definition support
+
+    * basic math operation inference
+
+    * new pytype method on possibly inferred node (e.g. module, classes, const...)
+
+    * fix a living object astng building bug, which was making "open" uninferable
+
+    * fix lookup of name in method bug (#3289)
+
+    * fix decorator lookup bug (#3261)
+
+
+
+
+What's New in astroid 0.16.3?
+=============================
+
+Release Date: 2006-11-23
+
+    * enhance inference for the subscription notation (motivated by a patch from Amaury)
+      and for unary sub/add
+
+
+
+
+What's New in astroid 0.16.2?
+=============================
+
+Release Date: 2006-11-15
+
+    * grrr, fixed python 2.3 incompatibility introduced by generator expression
+      scope handling
+
+    * upgrade to avoid warnings with logilab-common 0.21.0 (on which now
+      depends so)
+
+    * backported astutils module from logilab-common
+
+
+
+
+What's New in astroid 0.16.1?
+=============================
+
+Release Date: 2006-09-25
+
+    * python 2.5 support, patch provided by Marien Zwart
+
+    * fix [Class|Module].block_range method (this fixes pylint's inline
+      disabling of messages on classes/modules)
+
+    * handle class.__bases__ and class.__mro__ (proper metaclass handling
+      still needed though)
+
+    * drop python2.2 support: remove code that was working around python2.2
+
+    * fixed generator expression scope bug
+
+    * patch transformer to extract correct line information
+
+
+
+
+What's New in astroid 0.16.0?
+=============================
+
+Release Date: 2006-04-19
+
+    * fix living object building to consider classes such as property as
+      a class instead of a data descriptor
+
+    * fix multiple assignment inference which was discarding some solutions
+
+    * added some line manipulation methods to handle pylint's block messages
+      control feature (Node.last_source_line(), None.block_range(lineno)
+
+
+
+
+What's New in astroid 0.15.1?
+=============================
+
+Release Date: 2006-03-10
+
+    * fix avoiding to load everything from living objects... Thanks Amaury!
+
+    * fix a possible NameError in Instance.infer_call_result
+
+
+
+
+What's New in astroid 0.15.0?
+=============================
+
+Release Date: 2006-03-06
+
+    * fix possible infinite recursion on global statements (close #10342)
+      and in various other cases...
+
+    * fix locals/globals interactions when the global statement is used
+      (close #10434)
+
+    * multiple inference related bug fixes
+
+    * associate List, Tuple and Dict and Const nodes to their respective
+      classes
+
+    * new .ass_type method on assignment related node, returning the
+      assignment type node (Assign, For, ListCompFor, GenExprFor,
+      TryExcept)
+
+    * more API refactoring... .resolve method has disappeared, now you
+      have .ilookup on every nodes and .getattr/.igetattr on node
+      supporting the attribute protocol
+
+    * introduced a YES object that may be returned when there is ambiguity
+      on an inference path (typically function call when we don't know
+      arguments value)
+
+    * builder try to instantiate builtin exceptions subclasses to get their
+      instance attribute
+
+
+
+
+What's New in astroid 0.14.0?
+=============================
+
+Release Date: 2006-01-10
+
+    * some major inference improvements and refactoring ! The drawback is
+      the introduction of some non backward compatible change in the API
+      but it's imho much cleaner and powerful now :)
+
+    * new boolean property .newstyle on Class nodes (implements #10073)
+
+    * new .import_module method on Module node to help in .resolve
+      refactoring
+
+    * .instance_attrs has list of assignments to instance attribute
+      dictionary as value instead of one
+
+    * added missing GenExprIf and GenExprInner nodes, and implements
+      as_string for each generator expression related nodes
+
+    * specifically catch KeyboardInterrupt to reraise it in some places
+
+    * fix so that module names are always absolute
+
+    * fix .resolve on package where a subpackage is imported in the
+      __init__ file
+
+    * fix a bug regarding construction of Function node from living object
+      with earlier version of python 2.4
+
+    * fix a NameError on Import and From self_resolve method
+
+    * fix a bug occurring when building an astng from a living object with
+      a property
+
+    * lint fixes
+
+
+
+
+What's New in astroid 0.13.1?
+=============================
+
+Release Date: 2005-11-07
+
+    * fix bug on building from living module the same object in
+      encountered more than once time (e.g. builtins.object) (close #10069)
+
+    * fix bug in Class.ancestors() regarding inner classes (close #10072)
+
+    * fix .self_resolve() on From and Module nodes to handle package
+      precedence over module (close #10066)
+
+    * locals dict for package contains __path__ definition (close #10065)
+
+    * astng provide GenExpr and GenExprFor nodes with python >= 2.4
+      (close #10063)
+
+    * fix python2.2 compatibility (close #9922)
+
+    * link .__contains__ to .has_key on scoped node to speed up execution
+
+    * remove no more necessary .module_object() method on From and Module
+      nodes
+
+    * normalize parser.ParserError to SyntaxError with python 2.2
+
+
+
+
+What's New in astroid 0.13.0?
+=============================
+
+Release Date: 2005-10-21
+
+    * .locals  and .globals on scoped node handle now a list of references
+       to each assignment statements instead of a single reference to the
+       first assignment statement.
+
+    * fix bug with manager.astng_from_module_name when a context file is
+      given (notably fix ZODB 3.4 crash with pylint/pyreverse)
+
+    * fix Compare.as_string method
+
+    * fix bug with lambda object missing the "type" attribute
+
+    * some minor refactoring
+
+    * This package has been extracted from the logilab-common package, which
+      will be kept for some time for backward compatibility but will no
+      longer be maintained (this explains that this package is starting with
+      the 0.13 version number, since the fork occurs with the version
+      released in logilab-common 0.12).
+
+
+
