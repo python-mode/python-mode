@@ -1,5 +1,0 @@
-General API
-------------
-
-.. automodule:: astroid
-
