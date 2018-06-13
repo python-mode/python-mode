@@ -22,6 +22,7 @@
 	path = submodules/snowball_py
 	url = https://github.com/diraol/snowball_py
     ignore = dirty
+	branch = develop
 [submodule "submodules/pylama"]
 	path = submodules/pylama
 	url = https://github.com/fmv1992/pylama
@@ -32,6 +33,6 @@
 [submodule "submodules/rope"]
 	path = submodules/rope
 	url = https://github.com/python-rope/rope
-[submodule "pymode/submodules/astroid"]
-	path = pymode/submodules/astroid
+[submodule "submodules/astroid"]
+	path = submodules/astroid
 	url = https://github.com/PyCQA/astroid
