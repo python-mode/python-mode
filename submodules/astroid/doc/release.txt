@@ -1,0 +1,30 @@
+Release Process
+===============
+
+1. Preparation
+   1. Check if the dependencies of the package are correct
+   2. Update the version number in __pkginfo__
+   3. Put the version number and the release date into the changelog
+   4. Submit your changes.
+
+2. If releasing a major or minor version, generate the new copyright notices for this release:
+
+ $ copyrite --contribution-threshold 1 --change-threshold 3 --backend-type git --aliases=.copyrite_aliases . --jobs=8
+
+3. Make sure the tests are passing on Travis:
+   https://travis-ci.org/PyCQA/astroid/
+
+4. Add a new tag 'astroid-$VERSION'
+
+5. Publish all remaining changes to the Github repository:
+   https://github.com/PyCQA/astroid
+
+6. Run
+   
+   $ git clean -fd && find . -name '*.pyc' -delete
+   $ python setup.py sdist --formats=gztar bdist_wheel
+   $ twine upload dist/*
+
+
+   to release a new version to PyPI.
+  

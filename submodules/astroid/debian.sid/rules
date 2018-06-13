@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+#
+# adapted by Logilab for automatic generation by debianize
+# (part of the devtools project, http://www.logilab.org/projects/devtools)
+#
+# Copyright (c) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
+# http://www.logilab.fr/ -- mailto:contact@logilab.fr
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include /usr/share/python/python.mk
+
+PACKAGE:=$(call py_pkgname,python-astroid,python)
+PACKAGE3:=$(call py_pkgname,python-astroid,python3.)
+
+%:
+	dh $@ --with python2,python3
+
+override_dh_install:
+	NO_SETUPTOOLS=1 python setup.py -q install --no-compile \
+	                --root=$(CURDIR)/debian/$(PACKAGE)/ \
+	                ${py_setup_install_args}
+	NO_SETUPTOOLS=1 python3 setup.py -q install --no-compile \
+	                --root=$(CURDIR)/debian/$(PACKAGE3)/ \
+	                ${py_setup_install_args}
+	rm -rf debian/*/usr/lib/python*/*-packages/astroid/test
+
+override_dh_installdocs:
+	dh_installdocs -i README*
+	dh_installchangelogs -i ChangeLog
+
+override_dh_compress:
+	dh_compress -i -X.py -X.ini -X.xml -Xtest/
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	# PYTHON 2.X + PYTHON 3.2
+endif
