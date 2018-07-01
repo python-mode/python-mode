@@ -183,6 +183,7 @@ def find_it():
             filename=oc.resource.path,
             text=env.lines[oc.lineno - 1] if oc.resource.real_path == env.curbuf.name else "", # noqa
             lnum=oc.lineno,
+            type=''
         ))
     env.run('g:PymodeLocList.current().extend', lst)
 
