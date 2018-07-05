@@ -34,7 +34,7 @@ import sys
 import os
 from os.path import (splitext, join, abspath, isdir, dirname, exists,
                      basename, expanduser, normcase, realpath)
-from imp import find_module, load_module, C_BUILTIN, PY_COMPILED, PKG_DIRECTORY
+from importlib import find_module, load_module, C_BUILTIN, PY_COMPILED, PKG_DIRECTORY
 from distutils.sysconfig import get_config_var, get_python_lib, get_python_version
 from distutils.errors import DistutilsPlatformError
 
@@ -681,11 +681,11 @@ def _module_file(modpath, path=None):
         # take care to changes in find_module implementation wrt builtin modules
         #
         # Python 2.6.6 (r266:84292, Sep 11 2012, 08:34:23)
-        # >>> imp.find_module('posix')
+        # >>> importlib.find_module('posix')
         # (None, 'posix', ('', '', 6))
         #
         # Python 3.3.1 (default, Apr 26 2013, 12:08:46)
-        # >>> imp.find_module('posix')
+        # >>> importlib.find_module('posix')
         # (None, None, ('', '', 6))
         try:
             _, mp_filename, mp_desc = find_module(modname, path)

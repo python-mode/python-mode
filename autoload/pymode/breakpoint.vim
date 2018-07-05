@@ -9,7 +9,7 @@ fun! pymode#breakpoint#init() "{{{
 
         PymodePython << EOF
 
-from imp import find_module
+from importlib import find_module
 
 for module in ('wdb', 'pudb', 'ipdb', 'pdb'):
     try:

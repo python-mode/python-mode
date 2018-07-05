@@ -275,7 +275,7 @@ def remove_local_modules_from_sys(testdir):
         if mod is None:
             continue
         if not hasattr(mod, '__file__'):
-            # this is the case of some built-in modules like sys, imp, marshal
+            # this is the case of some built-in modules like sys, importlib, marshal
             continue
         modfile = mod.__file__
         # if modfile is not an absolute path, it was probably loaded locally
