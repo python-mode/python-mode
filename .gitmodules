@@ -36,3 +36,6 @@
 [submodule "submodules/astroid"]
 	path = submodules/astroid
 	url = https://github.com/PyCQA/astroid
+[submodule "submodules/six"]
+	path = submodules/six
+	url = https://github.com/benjaminp/six.git
