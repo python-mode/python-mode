@@ -307,6 +307,12 @@ endif
         syn keyword pythonExClass   UnboundLocalError UnicodeError
         syn keyword pythonExClass   UnicodeEncodeError UnicodeDecodeError
         syn keyword pythonExClass   UnicodeTranslateError ValueError VMSError
+        syn keyword pythonExClass   BlockingIOError ChildProcessError ConnectionError
+        syn keyword pythonExClass   BrokenPipeError ConnectionAbortedError
+        syn keyword pythonExClass   ConnectionRefusedError ConnectionResetError
+        syn keyword pythonExClass   FileExistsError FileNotFoundError InterruptedError
+        syn keyword pythonExClass   IsADirectoryError NotADirectoryError PermissionError
+        syn keyword pythonExClass   ProcessLookupError TimeoutError
         syn keyword pythonExClass   WindowsError ZeroDivisionError
         syn keyword pythonExClass   Warning UserWarning BytesWarning DeprecationWarning
         syn keyword pythonExClass   PendingDepricationWarning SyntaxWarning
