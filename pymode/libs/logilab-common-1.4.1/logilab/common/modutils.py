@@ -34,10 +34,13 @@ import sys
 import os
 from os.path import (splitext, join, abspath, isdir, dirname, exists,
                      basename, expanduser, normcase, realpath)
-from importlib import find_module, load_module, C_BUILTIN, PY_COMPILED, PKG_DIRECTORY
 from distutils.sysconfig import get_config_var, get_python_lib, get_python_version
 from distutils.errors import DistutilsPlatformError
 
+try:
+    from imp import find_module, load_module, C_BUILTIN, PY_COMPILED, PKG_DIRECTORY
+except:
+    from importlib import import_module, C_BUILTIN, PY_COMPILED, PKG_DIRECTORY
 from six import PY3
 from six.moves import map, range
 
@@ -167,9 +170,11 @@ def load_module_from_modpath(parts, path=None, use_sys=True):
             # because it may have been indirectly loaded through a parent
             module = sys.modules.get(curname)
         if module is None:
-            mp_file, mp_filename, mp_desc = find_module(part, path)
+            mp_file, mp_filename, mp_desc = find_spec(part, path)
             try:
                 module = load_module(curname, mp_file, mp_filename, mp_desc)
+            except NameError:
+                module = import_module(curname, mp_file, mp_filename, mp_desc)
             finally:
                 if mp_file is not None:
                     mp_file.close()
@@ -579,7 +584,7 @@ def is_relative(modname, from_file):
     if from_file in sys.path:
         return False
     try:
-        find_module(modname.split('.')[0], [from_file])
+        find_spec(modname.split('.')[0], [from_file])
         return True
     except ImportError:
         return False
@@ -671,14 +676,14 @@ def _module_file(modpath, path=None):
         # __path__, get back information from there
         module = sys.modules[modpath.pop(0)]
         # use list() to protect against _NamespacePath instance we get with python 3, which
-        # find_module later doesn't like
+        # find_spec later doesn't like
         path = list(module.__path__)
         if not modpath:
             return C_BUILTIN, None
     imported = []
     while modpath:
         modname = modpath[0]
-        # take care to changes in find_module implementation wrt builtin modules
+        # take care to changes in find_module/find_spec implementation wrt builtin modules
         #
         # Python 2.6.6 (r266:84292, Sep 11 2012, 08:34:23)
         # >>> importlib.find_module('posix')
@@ -687,8 +692,11 @@ def _module_file(modpath, path=None):
         # Python 3.3.1 (default, Apr 26 2013, 12:08:46)
         # >>> importlib.find_module('posix')
         # (None, None, ('', '', 6))
+        # Python 3.40 (default, Apr 26 2013, 12:08:46)
+        # >>> importlib.find_spec('posix')
+        # (None, None, ('', '', 6))
         try:
-            _, mp_filename, mp_desc = find_module(modname, path)
+            _, mp_filename, mp_desc = find_spec(modname, path)
         except ImportError:
             if checkeggs:
                 return _search_zip(modpath, pic)[:2]
@@ -751,3 +759,17 @@ def _has_init(directory):
         if exists(mod_or_pack + '.' + ext):
             return mod_or_pack + '.' + ext
     return None
+
+
+def find_spec(name):
+    try:
+        from importlib.util import find_spec
+        if find_spec(name) is not None:
+            return name
+    except ImportError:
+        try:
+            from imp import find_module
+            find_module(name)
+            return name
+        except ImportError:
+            return None

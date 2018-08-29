@@ -43,7 +43,7 @@ try:
     import _imp
 except ImportError:
     # Python 3.2 compatibility
-    import importlib as _imp
+    import imp as _imp
 
 PY3 = sys.version_info > (3,)
 PY2 = not PY3
