@@ -73,7 +73,8 @@ The plugin contains all you need to develop python applications in Vim.
 See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>
 Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>
 
-**To read python-mode documentation in Vim, use** `:help pymode`.
+**To read python-mode documentation in Vim, use** `:help pymode`
+Vim is a very important text editor in the servers.
 
 # Requirements
 
