@@ -32,6 +32,10 @@ fun! pymode#doc#show(word) "{{{
     if g:pymode_doc_vertical
         wincmd L
     endif
+
+    normal gg
+    execute 'resize ' . &previewheight
+
     wincmd p
 
 endfunction "}}}
