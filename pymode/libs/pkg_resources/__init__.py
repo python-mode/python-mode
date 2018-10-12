@@ -2168,9 +2168,17 @@ def _handle_ns(packageName, path_item):
     importer = get_importer(path_item)
     if importer is None:
         return None
-    loader = importer.find_module(packageName)
+
+    if PY3:
+        loader = importer.find_spec(packageName)
+    else:
+        try:
+            loader = importer.find_module(packageName)
+        except ImportError:
+            loader = None
     if loader is None:
         return None
+
     module = sys.modules.get(packageName)
     if module is None:
         module = sys.modules[packageName] = types.ModuleType(packageName)
