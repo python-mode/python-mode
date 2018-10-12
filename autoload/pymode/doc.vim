@@ -34,7 +34,6 @@ fun! pymode#doc#show(word) "{{{
     endif
 
     normal gg
-    execute 'resize ' . &previewheight
 
     wincmd p
 

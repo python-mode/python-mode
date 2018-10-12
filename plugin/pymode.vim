@@ -68,6 +68,9 @@ call pymode#default('g:pymode_quickfix_maxheight', 6)
 " Maximal height of pymode quickfix window
 call pymode#default('g:pymode_quickfix_minheight', 3)
 
+" Height of preview window
+call pymode#default('g:pymode_preview_height', &previewheight)
+
 " LOAD VIRTUALENV {{{
 "
 " Enable virtualenv support

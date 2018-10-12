@@ -78,7 +78,6 @@ fun! pymode#rope#show_doc()
         setlocal filetype=rst
 
         normal gg
-        execute 'resize ' . &previewheight
 
         wincmd p
     endif

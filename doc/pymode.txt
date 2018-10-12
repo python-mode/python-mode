@@ -131,6 +131,11 @@ Setup pymode |quickfix| window.
     let g:pymode_quickfix_minheight = 3
     let g:pymode_quickfix_maxheight = 6
 
+Set pymode |preview| window height.                     *'g:pymode_preview_height'*
+Preview window is used to show documentation and ouput from |pymode-run|.
+>
+    let g:pymode_preview_height = &previewheight
+
 -------------------------------------------------------------------------------
 2.1. Python version ~
                                                           *pymode-python-version*
