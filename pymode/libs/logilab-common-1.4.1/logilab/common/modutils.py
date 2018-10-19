@@ -586,7 +586,7 @@ def is_relative(modname, from_file):
     try:
         find_spec(modname.split('.')[0], [from_file])
         return True
-    except ImportError:
+    except:
         return False
 
 
@@ -761,15 +761,19 @@ def _has_init(directory):
     return None
 
 
-def find_spec(name):
-    try:
-        from importlib.util import find_spec
-        if find_spec(name) is not None:
-            return name
-    except ImportError:
+def find_spec(name, path=None):
+    if path is None:
         try:
-            from imp import find_module
-            find_module(name)
-            return name
+            from importlib.util import find_spec
+            if find_spec(name) is not None:
+                return name
         except ImportError:
-            return None
+            try:
+                from imp import find_module
+                find_module(name)
+                return name
+            except ImportError:
+                return None
+    else:
+        from imp import find_module
+        return find_module(name, path)
