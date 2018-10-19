@@ -2168,7 +2168,7 @@ def _handle_ns(packageName, path_item):
     importer = get_importer(path_item)
     if importer is None:
         return None
-    loader = importer.find_module(packageName)
+    loader = importer.find_spec(packageName)
     if loader is None:
         return None
     module = sys.modules.get(packageName)
