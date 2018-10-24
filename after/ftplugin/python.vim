@@ -11,22 +11,22 @@ if g:pymode_motion
         finish
     endif
 
-    nnoremap <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', '')<CR>
-    nnoremap <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', 'b')<CR>
-    nnoremap <buffer> ]C  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', '')<CR>
-    nnoremap <buffer> [C  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', 'b')<CR>
+    nnoremap <buffer> ]]  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', '')<CR>
+    nnoremap <buffer> [[  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', 'b')<CR>
+    nnoremap <buffer> ]C  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', '')<CR>
+    nnoremap <buffer> [C  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', 'b')<CR>
     nnoremap <buffer> ]M  :<C-U>call pymode#motion#move('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', '')<CR>
     nnoremap <buffer> [M  :<C-U>call pymode#motion#move('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', 'b')<CR>
 
-    onoremap <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', '')<CR>
-    onoremap <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', 'b')<CR>
-    onoremap <buffer> ]C  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', '')<CR>
-    onoremap <buffer> [C  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', 'b')<CR>
+    onoremap <buffer> ]]  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', '')<CR>
+    onoremap <buffer> [[  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', 'b')<CR>
+    onoremap <buffer> ]C  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', '')<CR>
+    onoremap <buffer> [C  :<C-U>call pymode#motion#move('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', 'b')<CR>
     onoremap <buffer> ]M  :<C-U>call pymode#motion#move('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', '')<CR>
     onoremap <buffer> [M  :<C-U>call pymode#motion#move('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', 'b')<CR>
 
-    vnoremap <buffer> ]]  :call pymode#motion#vmove('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', '')<CR>
-    vnoremap <buffer> [[  :call pymode#motion#vmove('<Bslash>v^(class<bar>(async<Bslash>s+)<Bslash>=def)<Bslash>s', 'b')<CR>
+    vnoremap <buffer> ]]  :call pymode#motion#vmove('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', '')<CR>
+    vnoremap <buffer> [[  :call pymode#motion#vmove('^<Bslash>(class<Bslash><bar><Bslash>%(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>)<Bslash>s', 'b')<CR>
     vnoremap <buffer> ]M  :call pymode#motion#vmove('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', '')<CR>
     vnoremap <buffer> [M  :call pymode#motion#vmove('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', 'b')<CR>
 
