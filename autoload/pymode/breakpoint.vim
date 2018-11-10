@@ -9,7 +9,7 @@ fun! pymode#breakpoint#init() "{{{
 
         PymodePython << EOF
 
-from six import PY3
+from pymode.libs.six import PY3
 
 if PY3:
     from importlib.util import find_spec
