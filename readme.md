@@ -140,7 +140,12 @@ If your question is not described there then you already know what to do
 
 Nevertheless just a refresher on how to submit bugs:
 
-**(From the FAQ)** Start python mode with:
+**(From the FAQ)**
+Clear all python cache/compiled files (`*.pyc` files and `__pycache__`
+directory and everything under it). In Linux/Unix/MacOS you can run:
+`find . -type f -name '*.pyc' -delete && find . -type d -name '__pycache__' -delete`
+
+Then start python mode with:
 `vim -i NONE -u <path_to_pymode>/debugvimrc.vim`
 Reproduce the error and submit your python mode debug file. You can check its
 location with `:messages` for something like:
