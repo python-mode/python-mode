@@ -35,3 +35,6 @@
 [submodule "submodules/six"]
 	path = submodules/six
 	url = https://github.com/benjaminp/six.git
+[submodule "submodules/pylama"]
+	path = submodules/pylama
+	url = https://github.com/klen/pylama
