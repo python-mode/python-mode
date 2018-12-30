@@ -23,10 +23,6 @@
 	url = https://github.com/diraol/snowball_py
     ignore = dirty
 	branch = develop
-[submodule "submodules/pylama"]
-	path = submodules/pylama
-	url = https://github.com/fmv1992/pylama
-    ignore = dirty
 [submodule "submodules/pylint"]
 	path = submodules/pylint
 	url = https://github.com/PyCQA/pylint
@@ -39,3 +35,6 @@
 [submodule "submodules/six"]
 	path = submodules/six
 	url = https://github.com/benjaminp/six.git
+[submodule "submodules/pylama"]
+	path = submodules/pylama
+	url = https://github.com/klen/pylama

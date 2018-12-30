@@ -40,7 +40,8 @@ CONTENTS                                                        *pymode-contents
 
 XXX IMPORTANT: As of 2017-11-18 python-mode is going through a major redesign.
 Thus some of its functionality may not work as expected. Please be patient and
-do report bugs or inconsistencies in its documentation.
+do report bugs or inconsistencies in its documentation. But remember to look
+for already openned bug reports for the same issue before creating a new one.
 
 Python-mode is a vim plugin that allows you to use the pylint, rope, and pydoc
 libraries in vim to provide features like python code bug checking,
@@ -693,7 +694,14 @@ Highlight docstrings as pythonDocstring (otherwise as pythonString)
 1. Python-mode doesn't work
 ---------------------------
 
-Start python mode with:
+Remember to get the latest and updated version of the project source code and
+also update the project submodules.
+
+Clear all python cache/compiled files (`*.pyc` files and `__pycache__`
+directory and everything under it). In Linux/Unix/MacOS you can run:
+`find . -type f -name '*.pyc' -delete && find . -type d -name '__pycache__' -delete`
+
+Then start python mode with:
 `vim -i NONE -u <path_to_pymode>/debugvimrc.vim`
 Reproduce the error and submit your python mode debug file. You can check its
 location with `:messages` for something like:
