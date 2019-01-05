@@ -576,7 +576,7 @@ class ExtractMethodRefactoring(Refactoring):
         _, offset1 = env.get_offset_params(cursor1)
         _, offset2 = env.get_offset_params(cursor2)
         return extract.ExtractMethod(
-            ctx.project, ctx.resource, offset1, offset2)
+            ctx.project, ctx.resource, offset1, offset2 + 1)
 
 
 class ExtractVariableRefactoring(Refactoring):
@@ -600,7 +600,7 @@ class ExtractVariableRefactoring(Refactoring):
         _, offset1 = env.get_offset_params(cursor1)
         _, offset2 = env.get_offset_params(cursor2)
         return extract.ExtractVariable(
-            ctx.project, ctx.resource, offset1, offset2)
+            ctx.project, ctx.resource, offset1, offset2 + 1)
 
 
 class InlineRefactoring(Refactoring):
