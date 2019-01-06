@@ -76,6 +76,9 @@ fun! pymode#rope#show_doc()
         setlocal nomodifiable
         setlocal nomodified
         setlocal filetype=rst
+
+        normal gg
+
         wincmd p
     endif
 endfunction

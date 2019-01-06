@@ -32,6 +32,9 @@ fun! pymode#doc#show(word) "{{{
     if g:pymode_doc_vertical
         wincmd L
     endif
+
+    normal gg
+
     wincmd p
 
 endfunction "}}}
