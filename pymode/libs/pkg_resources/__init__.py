@@ -2170,7 +2170,16 @@ def _handle_ns(packageName, path_item):
         return None
 
     if PY3:
-        loader = importer.find_module(packageName)
+        # * since python 3.3, the `imp.find_module()` is deprecated
+        # * `importlib.util.find_spec()` is new in python 3.4
+        # * in vim source, if compiled vim with python 3.7 or new, the vim
+        # python 3 interface will use `find_spec` instead of `find_module`
+        # and `load_module`. (note: this depends on the python which compiled
+        # with vim, not the python loaded by vim at runtime.)
+        try:
+            loader = importer.find_spec(packageName)
+        except AttributeError:
+            loader = importer.find_module(packageName)
     else:
         try:
             loader = importer.find_module(packageName)
