@@ -15,14 +15,18 @@ endfunction
 
 fun! pymode#rope#complete(dot)
     if pumvisible()
-        return "\<C-n>"
+        if stridx('noselect', &completeopt) != -1
+            return "\<C-n>"
+        else
+            return ""
+        endif
     endif
     if a:dot
         PymodePython rope.complete(True)
     else
         PymodePython rope.complete()
     endif
-    return pumvisible() ? "\<C-p>\<Down>" : ""
+    return pumvisible() && stridx('noselect', &completeopt) != -1 ? "\<C-p>\<Down>" : ""
 endfunction
 
 fun! pymode#rope#complete_on_dot() "{{{

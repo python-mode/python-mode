@@ -94,7 +94,8 @@ def complete(dot=False):
     line = env.lines[row - 1]
     cline = line[:col] + p_prefix + line[col:]
     if cline != line:
-        env.curbuf[row - 1] = env.prepare_value(cline, dumps=False)
+        if 'noinsert' not in env.var('&completeopt'):
+            env.curbuf[row - 1] = env.prepare_value(cline, dumps=False)
     env.current.window.cursor = (row, col + len(p_prefix))
     env.run('complete', col - len(prefix) + len(p_prefix) + 1, proposals)
     return True
