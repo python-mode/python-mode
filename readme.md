@@ -87,10 +87,9 @@ Vim >= 7.3 (most features needed +python or +python3 support) (also
 As of vim8 there is an officially supported way of adding plugins. See `:tab
 help packages` in vim for details.
 
-    cd ~/.vim/pack/foo/start
-    git clone https://github.com/python-mode/python-mode.git
+    cd ~/.vim/pack/python-mode/start
+    git clone --recursive https://github.com/python-mode/python-mode.git
     cd python-mode
-    git submodule update --init --recursive
 
 ## Using pathogen
 
