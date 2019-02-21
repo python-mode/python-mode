@@ -2188,14 +2188,19 @@ def _handle_ns(packageName, path_item):
         # As `find_module` is deprecated for newer python, we try `find_spec`
         # first.
         try:
-            loader = importer.find_spec(packageName)
+            spec = importer.find_spec(packageName)
+            if spec:
+                loader = spec.loader
+            else:
+                return None
         except AttributeError:
             loader = importer.find_module(packageName)
     else:
         try:
             loader = importer.find_module(packageName)
         except ImportError:
-            loader = None
+            return None
+
     if loader is None:
         return None
 
