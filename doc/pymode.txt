@@ -1,4 +1,4 @@
-*pymode.txt*     For Vim Version 8.0      Last change: 2017 November 20
+*pymode.txt*     For Vim Version 8.0      Last change: 2019 March 08
 
      ____  _  _  ____  _   _  _____  _  _     __  __  _____  ____  ____      ~
     (  _ \( \/ )(_  _)( )_( )(  _  )( \( )___(  \/  )(  _  )(  _ \( ___)     ~
@@ -483,6 +483,12 @@ your code. <C-X><C-O> and <C-P>/<C-N> works too.
 
 Autocompletion is also called by typing a period in |Insert| mode by default.
 
+If there's only one complete item, vim may be inserting it automatically
+instead of using a popup menu. If the complete item which inserted is not
+your wanted, you can roll it back use '<c-w>' in |Insert| mode or setup
+'completeopt' with `menuone` and `noinsert` in your vimrc. .e.g.
+>
+    set completeopt=menuone,noinsert
 
 Turn on code completion support in the plugin        *'g:pymode_rope_completion'*
 >
