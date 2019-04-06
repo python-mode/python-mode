@@ -91,6 +91,8 @@ help packages` in vim for details.
     git clone --recursive https://github.com/python-mode/python-mode.git
     cd python-mode
 
+Note. Windows OS users need to add `-c core.symlinks=true`. See below.
+
 ## Using pathogen
 
     cd ~/.vim
@@ -171,6 +173,11 @@ checking (e.g. for async) add:
     let g:pymode_python = 'python3'
 
 To your vimrc or exrc file.
+
+## Symlinks on Windows 
+
+Users on Windows OS might need to add `-c core.symlinks=true` switch to correctly clone / pull 
+repository. Example: `git clone --recursive https://github.com/python-mode/python-mode -c core.symlinks=true`
 
 # Documentation
 
