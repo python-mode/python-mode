@@ -235,6 +235,8 @@ def new():
         default = env.var('g:pymode_rope_project_root')
         if not default:
             default = env.var('getcwd()')
+        if sys.platform.startswith('win32'):
+            default = default.replace('\\', '/')
         root = env.var('input("Enter project root: ", "%s")' % default)
     ropefolder = env.var('g:pymode_rope_ropefolder')
     prj = project.Project(projectroot=root, ropefolder=ropefolder)
