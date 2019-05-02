@@ -26,7 +26,7 @@ hard coding 3rd party libraries into its codebase. Please issue the command:
 inside your python-mode folder.
 
 If you are a new user please clone the repos using the recursive flag:
-`git clone --recursive https://github.com/python-mode/python-mode`
+`git clone --recurse-submodules https://github.com/python-mode/python-mode`
 
 -------------------------------------------------------------------------------
 
@@ -88,14 +88,14 @@ As of vim8 there is an officially supported way of adding plugins. See `:tab
 help packages` in vim for details.
 
     cd ~/.vim/pack/python-mode/start
-    git clone --recursive https://github.com/python-mode/python-mode.git
+    git clone --recurse-submodules https://github.com/python-mode/python-mode.git
     cd python-mode
 
 ## Using pathogen
 
     cd ~/.vim
     mkdir -p bundle && cd bundle
-    git clone --recursive https://github.com/python-mode/python-mode.git
+    git clone --recurse-submodules https://github.com/python-mode/python-mode.git
 
 
 Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
@@ -118,7 +118,7 @@ section of your `~/.vimrc`:
 
 ## Manually
 
-    % git clone --recursive https://github.com/python-mode/python-mode.git
+    % git clone --recurse-submodules https://github.com/python-mode/python-mode.git
     % cd python-mode
     % cp -R * ~/.vim
 
