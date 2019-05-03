@@ -15,6 +15,7 @@ echo "set viewdir=" >> $VIM_TEST_VIMRC
 echo "set directory=" >> $VIM_TEST_VIMRC
 echo -e "set runtimepath=" >> $VIM_TEST_VIMRC
 echo -e "set runtimepath+=$(dirname $PWD)\n" >> $VIM_TEST_VIMRC
+echo -e "set packpath+=/tmp\n" >> $VIM_TEST_VIMRC
 # echo -e "redir! >> $VIM_OUTPUT_FILE\n" >> $VIM_TEST_VIMRC
 echo -e "set verbosefile=$VIM_OUTPUT_FILE\n" >> $VIM_TEST_VIMRC
 echo -e "let g:pymode_debug = 1" >> $VIM_TEST_VIMRC
