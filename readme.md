@@ -140,6 +140,7 @@ If your question is not described there then you already know what to do
 Nevertheless just a refresher on how to submit bugs:
 
 **(From the FAQ)**
+
 Clear all python cache/compiled files (`*.pyc` files and `__pycache__`
 directory and everything under it). In Linux/Unix/MacOS you can run:
 
@@ -159,6 +160,15 @@ plugin seems broken.
 
 ***Do check for sensitive information in the file before submitting.***
 
+Please, also provide more contextual information such as:
+
+* your Operational System (Linux, WIndows, Mac) and which version
+* the `vim --version` output
+* which is your default python (`python --version`)
+* the python version that vim has loaded in your tests:
+    * `:PymodePython import sys; print(sys.version_info)` output.
+* and if you are using virtualenvs and/or conda, also state that, please.
+
 # Frequent problems
 
 Read this section before opening an issue on the tracker.
@@ -172,10 +182,24 @@ checking (e.g. for async) add:
 
 To your vimrc or exrc file.
 
-## Symlinks on Windows 
+## Symlinks on Windows
 
-Users on Windows OS might need to add `-c core.symlinks=true` switch to correctly clone / pull 
-repository. Example: `git clone --recurse-submodules https://github.com/python-mode/python-mode -c core.symlinks=true`
+Users on Windows OS might need to add `-c core.symlinks=true` switch to
+correctly clone / pull repository. Example: `git clone --recurse-submodules
+https://github.com/python-mode/python-mode -c core.symlinks=true`
+
+## Error updating the plugin
+
+If you are trying to update the plugin (using a plugin manager or manually) and
+you are seeing an error such as:
+
+> Server does not allow request for unadvertised object
+
+Then we probably changed some repo reference or some of our dependencies had a
+`git push --force` in its git history. So the best way for you to handle it is
+to run, inside the `python-mode` directory:
+
+`git submodule sync --recursive`
 
 # Documentation
 
