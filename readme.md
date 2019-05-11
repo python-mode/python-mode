@@ -11,9 +11,6 @@
 - ``:help pymode``
 - <https://github.com/python-mode/python-mode/wiki>
 
-**Please use python-mode tag on Stackoverflow to ask questions:**
-<https://stackoverflow.com/questions/tagged/python-mode>
-
 -------------------------------------------------------------------------------
 
 <p align="center">
@@ -70,8 +67,9 @@ The plugin contains all you need to develop python applications in Vim.
 * Go to definition (`<C-c>g`)
 * And more, more ...
 
-See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>
-Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>
+See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>.
+
+Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>.
 
 **To read python-mode documentation in Vim, use** `:help pymode`.
 
