@@ -4,7 +4,12 @@ from __future__ import absolute_import
 
 import sys
 import vim  # noqa
-
+try:
+    from importlib.machinery import PathFinder as _PathFinder
+    if not hasattr(vim, 'find_module'):
+        vim.find_module = _PathFinder.find_module
+except ImportError:
+    pass
 
 def auto():
     """Fix PEP8 erorrs in current buffer.
