@@ -1,14 +1,10 @@
 Changelog
 =========
 
-
 ## TODO
 -------
 * Move changelog rst syntax to markdown
 * pymode_rope: check disables
-* When loading a file without a history, substituting a word (eg 'cw') moves
-  the cursor to position 0 (equivalent to 'cw' then '0l')
-    * Fixed on `917e484`
 * Inspect why files starting with:
 ~~~~~~
 def main():
@@ -20,6 +16,15 @@ if __name__ == '__main__':
 ~~~~~~
 do not get loaded.
 
+* From 0.11.0 on we will focus on supporting python 3+ (probably 3.5+).
+
+## 2019-05-11 0.10.0
+--------------------
+After many changes, including moving most of our dependencies from copied
+source code to submodules, and lot's of problems maintaining Python 2 and
+Python 3 support, this (0.10.x) is the last version of python-mode that will
+support Python 2. Some patches may be done in order to fix issues related to
+Python 2 or some backward compatible changes that can be applied.
 
 ## 2017-07-xxx 0.9.5
 --------------------
