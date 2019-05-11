@@ -177,7 +177,7 @@ To your vimrc or exrc file.
 ## Symlinks on Windows 
 
 Users on Windows OS might need to add `-c core.symlinks=true` switch to correctly clone / pull 
-repository. Example: `git clone --recursive https://github.com/python-mode/python-mode -c core.symlinks=true`
+repository. Example: `git clone --recurse-submodules https://github.com/python-mode/python-mode -c core.symlinks=true`
 
 # Documentation
 
