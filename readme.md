@@ -199,6 +199,7 @@ Then we probably changed some repo reference or some of our dependencies had a
 `git push --force` in its git history. So the best way for you to handle it is
 to run, inside the `python-mode` directory:
 
+`git submodule update --recursive --init --force`
 `git submodule sync --recursive`
 
 # Documentation
