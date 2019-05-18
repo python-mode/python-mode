@@ -114,7 +114,7 @@ Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
 Include the following in the [vim-plug](https://github.com/junegunn/vim-plug)
 section of your `~/.vimrc`:
 
-    Plug 'python-mode/python-mode', { 'branch': 'develop' }
+    Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
 
 ## Manually
 
