@@ -4,6 +4,9 @@ import os.path
 import re
 import site
 import sys
+import threading
+from contextlib import contextmanager
+from queue import Queue
 
 from rope.base import project, libutils, exceptions, change, worder, pycore
 from rope.base.fscommands import FileSystemCommands # noqa
@@ -218,10 +221,15 @@ def organize_imports():
 @env.catch_exceptions
 def regenerate():
     """ Clear cache. """
-    with RopeContext() as ctx:
-        ctx.project.pycore._invalidate_resource_cache(ctx.resource) # noqa
-        ctx.importer.generate_cache()
-        ctx.project.sync()
+    def _regenerate():
+        with progress.context(ctx):
+            ctx.project.pycore._invalidate_resource_cache(ctx.resource) # noqa
+            ctx.importer.generate_cache(task_handle=progress.handle)
+            ctx.project.sync()
+
+    ctx = RopeContext()
+    progress = BackgroundProgressHandler('Regenerate caches')
+    progress.run_in_background(_regenerate)
 
 
 def new():
@@ -407,12 +415,12 @@ class RopeContext(object):
         modules = self.options.get('autoimport_modules', [])
 
         def _update_cache(importer, modules=None):
-            importer.generate_cache()
+            importer.generate_cache(task_handle=progress.handle)
             if modules:
                 importer.generate_modules_cache(modules)
             importer.project.sync()
-
-        _update_cache(self.importer, modules)
+        progress = BackgroundProgressHandler('Regenerate autoimport cache')
+        progress.run_in_background(lambda: _update_cache(self.importer, modules))
 
 
 class ProgressHandler(object):
@@ -429,6 +437,62 @@ class ProgressHandler(object):
         """ Show current progress. """
         percent_done = self.handle.current_jobset().get_percent_done()
         env.message('%s - done %s%%' % (self.message, percent_done))
+
+
+if env.var("has('nvim')", to_bool=True):
+    class WorkerThread(threading.Thread):
+        def __init__(self):
+            self.queue = Queue()
+            super().__init__(daemon=True)
+
+        def run(self):
+            while True:
+                func = self.queue.get()
+                func()
+
+
+    class NvimBackgroundProgressHandler(ProgressHandler):
+        worker = WorkerThread()
+        worker.start()
+
+        def __call__(self):
+            self.run_in_foreground(super().__call__)
+
+        def run_in_background(self, func):
+            self.worker.queue.put(func)
+
+        def run_in_foreground(self, func):
+            env.async_call(func)
+
+        @contextmanager
+        def context(self, ctx):
+            try:
+                self.run_in_foreground(ctx.__enter__)
+                yield ctx
+            except Exception as e:
+                ctx.__exit__(e, None, None)
+            finally:
+                ctx.__exit__(None, None, None)
+
+
+    BackgroundProgressHandler = NvimBackgroundProgressHandler
+
+else:
+    class FakeBackgroundProgressHandler(ProgressHandler):
+        def __call__(self):
+            self.run_in_foreground(super().__call__)
+
+        def run_in_background(self, func):
+            func()
+
+        def run_in_foreground(self, func):
+            func()
+
+        def context(self, ctx):
+            return ctx
+
+
+    BackgroundProgressHandler = FakeBackgroundProgressHandler
 
 
 _scope_weight = {

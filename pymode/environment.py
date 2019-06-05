@@ -223,6 +223,9 @@ class VimPymodeEnviroment(object):
         env.debug('Get offset', base or None, row, col, offset)
         return source, offset
 
+    def async_call(self, func, *args, **kwargs):
+        vim.async_call(func, *args, **kwargs)
+
     @staticmethod
     def goto_line(line):
         """Go to line."""
