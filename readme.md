@@ -53,7 +53,7 @@ The plugin contains all you need to develop python applications in Vim.
 * Support Python version 2.6+ and 3.2+
 * Syntax highlighting
 * Virtualenv support
-* Run python code (`<leader>r`)
+* Execute python code (`<leader>e`)
 * Add/remove breakpoints (`<leader>b`)
 * Improved Python indentation
 * Python motions and operators (`]]`, `3[[`, `]]M`, `vaC`, `viM`,
@@ -64,7 +64,7 @@ The plugin contains all you need to develop python applications in Vim.
 * Search in python documentation (`<leader>K`)
 * Code refactoring
 * Intellisense code-completion
-* Go to definition (`<C-c>g`)
+* Go to definition (`<leader>rg`)
 * And more, more ...
 
 See a screencast here: <http://www.youtube.com/watch?v=67OZNp9Z0CQ>.
