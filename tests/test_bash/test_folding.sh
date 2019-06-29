@@ -5,17 +5,17 @@
 # Source file.
 set +e
 source ./test_helpers_bash/test_prepare_between_tests.sh
-vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding1.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
+vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding1.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
 R1=$?
 source ./test_helpers_bash/test_prepare_between_tests.sh
-vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding2.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
+vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding2.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
 R2=$?
 source ./test_helpers_bash/test_prepare_between_tests.sh
 # TODO: enable folding3.vim script back.
-# vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding3.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
+# vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding3.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
 # R3=$?
 source ./test_helpers_bash/test_prepare_between_tests.sh
-vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding4.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
+vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/folding4.vim" $VIM_DISPOSABLE_PYFILE > /dev/null
 R4=$?
 set -e
 
