@@ -91,7 +91,7 @@ help packages` in vim for details.
 
 Note. Windows OS users need to add `-c core.symlinks=true`. See below.
 
-## Using pathogen
+## pathogen
 
     cd ~/.vim
     mkdir -p bundle && cd bundle
@@ -109,12 +109,20 @@ Enable [pathogen](https://github.com/tpope/vim-pathogen) in your `~/.vimrc`:
     filetype plugin indent on
     syntax on
 
-## Using vim-plug
+## vim-plug
 
 Include the following in the [vim-plug](https://github.com/junegunn/vim-plug)
 section of your `~/.vimrc`:
 
     Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
+
+## NeoBundle
+
+Add the following:
+
+    " python-mode: PyLint, Rope, Pydoc, breakpoints from box.
+    " https://github.com/python-mode/python-mode
+    NeoBundleLazy 'python-mode/python-mode', { 'on_ft': 'python' }
 
 ## Manually
 
