@@ -9,7 +9,10 @@ fun! pymode#breakpoint#init() "{{{
 
         PymodePython << EOF
 
-from pymode.libs.six import PY3
+try:
+    from pymode.libs.six import PY3
+except ImportError:
+    PY3 = False
 
 if PY3:
     from importlib.util import find_spec
