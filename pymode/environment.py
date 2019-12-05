@@ -1,13 +1,9 @@
 """Define interfaces."""
 
-from __future__ import print_function
-
 import json
 import os.path
 import time
 import vim # noqa
-
-from ._compat import PY2
 
 
 class VimPymodeEnviroment(object):
@@ -53,10 +49,7 @@ class VimPymodeEnviroment(object):
         :return list:
 
         """
-        if not PY2:
-            return self.curbuf
-
-        return [l.decode(self.options.get('encoding')) for l in self.curbuf]
+        return self.curbuf
 
     @staticmethod
     def var(name, to_bool=False, silence=False, default=None):
@@ -200,9 +193,6 @@ class VimPymodeEnviroment(object):
         """
         if dumps:
             value = json.dumps(value)
-
-        if PY2:
-            value = value.decode('utf-8').encode(self.options.get('encoding'))
 
         return value
 
