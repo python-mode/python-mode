@@ -148,14 +148,14 @@ will appear, eg. `:botright`.
 2.1. Python version ~
                                                           *pymode-python-version*
 
-By default pymode looks for current python version supported in your Vim.
-You could choose prefer version, but value will be tested on loading.
+By default pymode will attempt to use Python 3, if available. However, you can
+also disable all Python features of pymode.
 
                                                               *'g:pymode_python'*
 >
-    let g:pymode_python = 'python'
+    let g:pymode_python = 'python3'
 
-Values are `python`, `python3`, `disable`. If value set to `disable` most
+Values are `python3`, `disable`. If value set to `disable` most
 python-features of **pymode** will be disabled.
 
 Set value to `python3` if you are working with python3 projects. You could use

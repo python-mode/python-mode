@@ -22,7 +22,7 @@ filetype plugin on
 if has("python3") && executable('python3')
     call pymode#default('g:pymode_python', 'python3')
 else
-    call pymode#default('g:pymode_python', 'python')
+    call pymode#default('g:pymode_python', 'disable')
 endif
 
 " Disable pymode warnings
@@ -286,25 +286,14 @@ filetype plugin on
 
 " UltiSnips Fixes
 if !len(g:pymode_python)
-    if exists('g:_uspy') && g:_uspy == ':py'
-        let g:pymode_python = 'python'
-    elseif exists('g:_uspy') && g:_uspy == ':py3'
-        let g:pymode_python = 'python3'
-    elseif has("python")
-        let g:pymode_python = 'python'
-    elseif has("python3")
+    if (exists('g:_uspy') && g:_uspy == ':py3') || has("python3")
         let g:pymode_python = 'python3'
     else
         let g:pymode_python = 'disable'
     endif
 endif
 
-if g:pymode_python == 'python'
-
-    command! -nargs=1 PymodePython python <args>
-    let g:UltiSnipsUsePythonVersion = 2
-
-elseif g:pymode_python == 'python3'
+if g:pymode_python == 'python3'
 
     command! -nargs=1 PymodePython python3 <args>
     let g:UltiSnipsUsePythonVersion = 3
