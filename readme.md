@@ -14,16 +14,22 @@
 -------------------------------------------------------------------------------
 
 <p align="center">
-  <img width="150" height="150" src="https://vignette.wikia.nocookie.net/sqmegapolis/images/4/42/Warning-2-256.png/revision/latest?cb=20130403220740">
+  <img width="100" height="100" src="https://vignette.wikia.nocookie.net/sqmegapolis/images/4/42/Warning-2-256.png/revision/latest?cb=20130403220740">
 </p>
 
-***Important***: From 2017-11-19 onwards python-mode uses submodules instead of
-hard coding 3rd party libraries into its codebase. Please issue the command:
-`git submodule update --init --recursive`
-inside your python-mode folder.
+***Important notes***:
+
+  * From 2017-11-19 onwards python-mode uses submodules instead of
+  hard coding 3rd party libraries into its codebase. Please issue the command:
+  `git submodule update --init --recursive` inside your python-mode folder.
+
+  * From 2019-12-14 onwards `python-mode` **dropped python2 suuport**. If you
+  still need to use it with python2 you should look for the `last-py2-support`
+  branch and/or tag.
 
 If you are a new user please clone the repos using the recursive flag:
-`git clone --recurse-submodules https://github.com/python-mode/python-mode`
+
+> git clone --recurse-submodules https://github.com/python-mode/python-mode
 
 -------------------------------------------------------------------------------
 
@@ -50,7 +56,7 @@ Why Python-mode?
 
 The plugin contains all you need to develop python applications in Vim.
 
-* Support Python version 2.6+ and 3.2+
+* Support Python and 3.6+
 * Syntax highlighting
 * Virtualenv support
 * Run python code (`<leader>r`)
@@ -75,7 +81,7 @@ Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>.
 
 # Requirements
 
-Vim >= 7.3 (most features needed +python or +python3 support) (also
+Vim >= 7.3 (most features needed +python3 support) (also
 `--with-features=big` if you want `g:pymode_lint_signs`).
 
 # How to install
@@ -152,7 +158,7 @@ Nevertheless just a refresher on how to submit bugs:
 Clear all python cache/compiled files (`*.pyc` files and `__pycache__`
 directory and everything under it). In Linux/Unix/MacOS you can run:
 
-`find . -type f -name '*.pyc' -delete && find . -type d -name '__pycache__' -delete`
+`find . -type f -iname '*.pyc' -o -iname '*.pyo' -delete && find . -type d -name '__pycache__' -delete`
 
 Then start python mode with:
 
