@@ -1,8 +1,8 @@
 """ Code runnning support. """
 import sys
+from io import StringIO
 from re import compile as re
 
-from ._compat import StringIO
 from .environment import env
 
 

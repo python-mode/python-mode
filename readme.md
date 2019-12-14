@@ -183,12 +183,7 @@ Read this section before opening an issue on the tracker.
 
 ## Python 3 syntax
 
-By default python-mode uses python 2 syntax checking. To enable python 3 syntax
-checking (e.g. for async) add:
-
-    let g:pymode_python = 'python3'
-
-To your vimrc or exrc file.
+By default python-mode uses python 3 syntax checking.
 
 ## Symlinks on Windows
 

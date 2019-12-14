@@ -1,15 +1,13 @@
 """Pymode support functions."""
 
-from __future__ import absolute_import
-
 import sys
+from importlib.machinery import PathFinder as _PathFinder
+
 import vim  # noqa
-try:
-    from importlib.machinery import PathFinder as _PathFinder
-    if not hasattr(vim, 'find_module'):
-        vim.find_module = _PathFinder.find_module
-except ImportError:
-    pass
+
+if not hasattr(vim, 'find_module'):
+    vim.find_module = _PathFinder.find_module
+
 
 def auto():
     """Fix PEP8 erorrs in current buffer.
@@ -39,7 +37,7 @@ def auto():
 
 def get_documentation():
     """Search documentation and append to current buffer."""
-    from ._compat import StringIO
+    from io import StringIO
 
     sys.stdout, _ = StringIO(), sys.stdout
     help(vim.eval('a:word'))

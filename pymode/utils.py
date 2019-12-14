@@ -4,9 +4,9 @@ import sys
 import threading
 import warnings
 from contextlib import contextmanager
+from io import StringIO
 
 import vim  # noqa
-from ._compat import StringIO
 
 
 DEBUG = int(vim.eval('g:pymode_debug'))
