@@ -1,0 +1,36 @@
+name: Testing python-mode
+
+on: [push]
+
+jobs:
+  test-python-3_6:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -yqq libncurses5-dev libatk1.0-dev python-dev python3-dev lua5.1 lua5.1-dev libperl-dev git
+        sudo apt remove --purge vim vim-runtime gvim
+    - name: build and install vim from source
+      working-directory: /tmp
+      run: |
+        git clone https://github.com/vim/vim.git
+        cd vim
+        ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=/usr/lib/python3.6/config-3.6m-x86_64-linux-gnu --enable-perlinterp=yes --enable-luainterp=yes --enable-cscope --prefix=/usr/local
+        sudo make && sudo make install
+    - name: Install python-mode
+      run: |
+        export PYMODE_DIR="${HOME}/work/python-mode/python-mode"
+        mkdir -p ${HOME}/.vim/pack/foo/start/
+        ln -s ${PYMODE_DIR} ${HOME}/.vim/pack/foo/start/python-mode
+        cp ${PYMODE_DIR}/tests/utils/pymoderc ${HOME}/.pymoderc
+        cp ${PYMODE_DIR}/tests/utils/vimrc ${HOME}/.vimrc
+        touch ${HOME}/.vimrc.before ${HOME}/.vimrc.after
+    - name: Run python-mode test script
+      run: |
+        alias python=python3
+        cd ${HOME}/work/python-mode/python-mode
+        git submodule update --init --recursive
+        git submodule sync
+        bash tests/test.sh
