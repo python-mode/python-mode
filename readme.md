@@ -156,9 +156,11 @@ Nevertheless just a refresher on how to submit bugs:
 **(From the FAQ)**
 
 Clear all python cache/compiled files (`*.pyc` files and `__pycache__`
-directory and everything under it). In Linux/Unix/MacOS you can run:
+directory and everything under it) from your _python-mode_ install directory.
 
-`find . -type f -iname '*.pyc' -o -iname '*.pyo' -delete && find . -type d -name '__pycache__' -delete`
+In Linux/Unix/MacOS you can run:
+
+`find <path_to_pymode> -type f -iname '*.pyc' -o -iname '*.pyo' -delete && find . -type d -name '__pycache__' -delete`
 
 Then start python mode with:
 
@@ -182,14 +184,28 @@ Please, also provide more contextual information such as:
 * the python version that vim has loaded in your tests:
     * `:PymodePython import sys; print(sys.version_info)` output.
 * and if you are using virtualenvs and/or conda, also state that, please.
+* It would be good also to provide the output of the two following commands:
+* `git status` (under your _python-mode_ directory)
+* `tree <python-mode-directory>` or something similar (such as `ls -lR`)
 
 # Frequent problems
 
 Read this section before opening an issue on the tracker.
 
+## Python 2/3 vim support
+
+Vim [has issues](https://github.com/vim/vim/issues/3585) to work with both
+python2 and python3 at the same time, so if your VIM is compiled with support
+to both version you may find problems. The best way to handle it is to build
+your vim again with only python3 support.
+[Here](https://github.com/ycm-core/YouCompleteMe/wiki/Building-Vim-from-source)
+is a good reference on how to build vim from source.
+
 ## Python 3 syntax
 
-By default python-mode uses python 3 syntax checking.
+`python-mode` supports only python3, so, if you are using python2  we cannot
+help you that much. Look for our branch with python2-support (old version,
+not maintained anymore) (`last-py2-support`).
 
 ## Symlinks on Windows
 
@@ -208,8 +224,8 @@ Then we probably changed some repo reference or some of our dependencies had a
 `git push --force` in its git history. So the best way for you to handle it is
 to run, inside the `python-mode` directory:
 
-`git submodule update --recursive --init --force`
-`git submodule sync --recursive`
+* `git submodule update --recursive --init --force`
+* `git submodule sync --recursive`
 
 # Documentation
 
