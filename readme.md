@@ -23,7 +23,7 @@
   hard coding 3rd party libraries into its codebase. Please issue the command:
   `git submodule update --init --recursive` inside your python-mode folder.
 
-  * From 2019-12-14 onwards `python-mode` **dropped python2 suuport**. If you
+  * From 2019-12-14 onwards `python-mode` **dropped python2 support**. If you
   still need to use it with python2 you should look for the `last-py2-support`
   branch and/or tag.
 
