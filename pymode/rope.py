@@ -415,10 +415,11 @@ class RopeContext(object):
         modules = self.options.get('autoimport_modules', [])
 
         def _update_cache(importer, modules=None):
-            importer.generate_cache(task_handle=progress.handle)
-            if modules:
-                importer.generate_modules_cache(modules)
-            importer.project.sync()
+            with progress.context(self):
+                importer.generate_cache(task_handle=progress.handle)
+                if modules:
+                    importer.generate_modules_cache(modules)
+                importer.project.sync()
         progress = BackgroundProgressHandler('Regenerate autoimport cache')
         progress.run_in_background(lambda: _update_cache(self.importer, modules))
 
