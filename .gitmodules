@@ -2,36 +2,46 @@
 	path = submodules/autopep8
 	url = https://github.com/hhatto/autopep8
     ignore = dirty
+    shallow = true
 [submodule "submodules/pycodestyle"]
 	path = submodules/pycodestyle
 	url = https://github.com/PyCQA/pycodestyle
     ignore = dirty
+    shallow = true
 [submodule "submodules/pydocstyle"]
 	path = submodules/pydocstyle
 	url = https://github.com/PyCQA/pydocstyle
     ignore = dirty
+    shallow = true
 [submodule "submodules/mccabe"]
 	path = submodules/mccabe
 	url = https://github.com/PyCQA/mccabe
     ignore = dirty
+    shallow = true
 [submodule "submodules/pyflakes"]
 	path = submodules/pyflakes
 	url = https://github.com/PyCQA/pyflakes
     ignore = dirty
+    shallow = true
 [submodule "submodules/snowball_py"]
 	path = submodules/snowball_py
 	url = https://github.com/diraol/snowball_py
     ignore = dirty
 	branch = develop
+    shallow = true
 [submodule "submodules/pylint"]
 	path = submodules/pylint
 	url = https://github.com/PyCQA/pylint
+    shallow = true
 [submodule "submodules/rope"]
 	path = submodules/rope
 	url = https://github.com/python-rope/rope
+    shallow = true
 [submodule "submodules/astroid"]
 	path = submodules/astroid
 	url = https://github.com/PyCQA/astroid
+    shallow = true
 [submodule "submodules/pylama"]
 	path = submodules/pylama
 	url = https://github.com/klen/pylama
+    shallow = true
