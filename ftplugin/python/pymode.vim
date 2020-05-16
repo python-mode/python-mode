@@ -5,7 +5,7 @@ endif
 if g:pymode_python == 'disable'
 
     if g:pymode_warning
-        call pymode#error("Pymode requires vim compiled with +python. Most of features will be disabled.")
+        call pymode#error("Pymode requires vim compiled with +python3 (exclusively). Most of features will be disabled.")
     endif
 
     finish
