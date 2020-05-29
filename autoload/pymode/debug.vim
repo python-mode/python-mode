@@ -30,7 +30,7 @@ fun! pymode#debug#sysinfo() "{{{
         echom pymodevar
     endfor
     " }}}
-    " Github commit info. {{{
+    " Git commit info. {{{
     " Find in the scriptnames the first occurence of 'python-mode'. Then parse
     " the result outputting its path. This is in turn fed into the git command.
     call pymode#debug("Git commit: ")
@@ -43,6 +43,13 @@ fun! pymode#debug#sysinfo() "{{{
         \ '')
     let l:git_head_sha1 = system('git -C ' . expand(l:pymode_folder). ' rev-parse HEAD ' )
     echom join(filter(split(l:git_head_sha1, '\zs'), 'v:val =~? "[0-9A-Fa-f]"'), '')
+    " }}}
+    " Git submodules status. {{{
+    call pymode#debug("Git submodule status:")
+    let l:git_submodule_status = system('git -C ' . expand(l:pymode_folder). ' submodule status')
+    for submodule in split(l:git_submodule_status, '\n')
+        echom submodule
+    endfor
     " }}}
     call pymode#debug("End of pymode#debug#sysinfo")
 endfunction "}}}
