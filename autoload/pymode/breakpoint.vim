@@ -11,10 +11,14 @@ fun! pymode#breakpoint#init() "{{{
 
 from importlib.util import find_spec
 
-for module in ('wdb', 'pudb', 'ipdb', 'pdb'):
-    if find_spec(module):
-        vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
-        break
+if sys.version_info >= (3, 7):
+    vim.command('let g:pymode_breakpoint_cmd = "breakpoint()"')
+
+else:
+    for module in ('wdb', 'pudb', 'ipdb', 'pdb'):
+        if find_spec(module):
+            vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
+            break
 EOF
     endif
 
