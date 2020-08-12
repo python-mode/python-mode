@@ -53,8 +53,9 @@ class VimPymodeEnviroment(object):
         :return list:
 
         """
-        if not PY2:
-            return self.curbuf
+        curbuf = self.curbuf
+        if not PY2 or (curbuf and isinstance(curbuf[0], unicode)):
+            return curbuf
 
         return [l.decode(self.options.get('encoding')) for l in self.curbuf]
 
