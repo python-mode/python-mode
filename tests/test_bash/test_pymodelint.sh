@@ -5,8 +5,8 @@
 
 # Source file.
 set +e
-vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/pymodelint.vim" $VIM_DISPOSABLE_PYFILE
-# RETURN_CODE=$(vim -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/pymodeversion.vim" $VIM_DISPOSABLE_PYFILE > /dev/null 2>&1)
+vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/pymodelint.vim" $VIM_DISPOSABLE_PYFILE
+# RETURN_CODE=$(vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source ./test_procedures_vimscript/pymodeversion.vim" $VIM_DISPOSABLE_PYFILE > /dev/null 2>&1)
 # RETURN_CODE=$?
 set -e
 # exit $RETURN_CODE

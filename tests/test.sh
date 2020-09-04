@@ -20,6 +20,7 @@ declare -a TEST_ARRAY=(
     "./test_bash/test_autopep8.sh"
     "./test_bash/test_autocommands.sh"
     "./test_bash/test_folding.sh"
+    "./test_bash/test_textobject.sh"
     )
 ## now loop through the above array
 set +e

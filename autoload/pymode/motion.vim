@@ -51,7 +51,7 @@ fun! pymode#motion#select(first_pattern, second_pattern, inner) "{{{
         endif
 
         call cursor(snum, 1)
-        normal! v
+        normal! V
         call cursor(enum, len(getline(enum)))
     endif
 endfunction "}}}
