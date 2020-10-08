@@ -45,3 +45,6 @@
 	path = submodules/pylama
 	url = https://github.com/klen/pylama
     shallow = true
+[submodule "submodules/toml"]
+	path = submodules/toml
+	url = https://github.com/uiri/toml.git
