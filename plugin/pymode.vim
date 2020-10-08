@@ -1,5 +1,5 @@
 " vi: fdl=1
-let g:pymode_version = "0.12.0"
+let g:pymode_version = "0.13.0"
 
 " Enable pymode by default :)
 call pymode#default('g:pymode', 1)
