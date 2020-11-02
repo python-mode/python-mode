@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/python-mode/python-mode.svg?branch=develop)](https://travis-ci.org/python-mode/python-mode)
+[![Testing python-mode](https://github.com/python-mode/python-mode/workflows/Testing%20python-mode/badge.svg?branch=develop)](https://github.com/python-mode/python-mode/actions?query=workflow%3A%22Testing+python-mode%22+branch%3Adevelop)
 
 ![](https://raw.github.com/python-mode/python-mode/develop/logo.png)
 # Python-mode, a Python IDE for Vim
