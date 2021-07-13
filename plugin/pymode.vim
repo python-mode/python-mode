@@ -221,7 +221,6 @@ if g:pymode_rope
     call pymode#default('g:pymode_rope_completion_bind', '<C-Space>')
 
     " Bind keys for goto definition (leave empty for disable)
-    " call pymode#default('g:pymode_rope_goto_definition_bind', g:pymode_rope_prefix . 'g')
     call pymode#default('g:pymode_rope_goto_definition_bind', g:pymode_rope_prefix . 'g')
 
     " set command for open definition (e, new, vnew)
