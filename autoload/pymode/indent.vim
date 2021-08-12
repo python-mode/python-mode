@@ -24,7 +24,9 @@ function! pymode#indent#get_indent(lnum)
             if closing_paren
                 return indent(parlnum)
             else
-                return indent(parlnum) + &shiftwidth
+                let l:indent_width = (g:pymode_indent_hanging_width > 0 ?
+                            \ g:pymode_indent_hanging_width : &shiftwidth)
+                return indent(parlnum) + l:indent_width
             endif
         else
             return parcol

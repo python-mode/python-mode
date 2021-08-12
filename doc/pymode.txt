@@ -170,6 +170,16 @@ Enable pymode indentation                                     *'g:pymode_indent'
 >
     let g:pymode_indent = 1
 
+
+Customization:
+
+Hanging indent size after an open parenthesis or bracket (but nothing after the
+parenthesis), when vertical alignment is not used. Defaults to `&shiftwidth`.
+                                                *'g:pymode_indent_hanging_width'*
+>
+    let g:pymode_indent_hanging_width = &shiftwidth
+    let g:pymode_indent_hanging_width = 4
+
 -------------------------------------------------------------------------------
 2.3 Python folding ~
                                                                  *pymode-folding*
