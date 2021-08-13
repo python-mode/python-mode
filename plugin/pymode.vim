@@ -38,6 +38,9 @@ call pymode#default('g:pymode_doc_bind', 'K')
 " Enable/Disable pymode PEP8 indentation
 call pymode#default("g:pymode_indent", 1)
 
+" Customize hanging indent size different than &shiftwidth
+call pymode#default("g:pymode_indent_hanging_width", -1)
+
 " TODO: currently folding suffers from a bad performance and incorrect
 " implementation. This feature should be considered experimental.
 " Enable/disable pymode folding for pyfiles.
