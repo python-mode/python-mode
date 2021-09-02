@@ -701,6 +701,15 @@ class MoveRefactoring(Refactoring):
             offset = None
         return move.create_move(ctx.project, ctx.resource, offset)
 
+    @staticmethod
+    def get_changes(refactor, input_str, in_hierarchy=False):
+        with RopeContext() as ctx:
+            if isinstance(refactor, (move.MoveGlobal, move.MoveModule)):
+                dest = ctx.project.pycore.find_module(input_str)
+            else:
+                dest = input_str
+            return super(MoveRefactoring, MoveRefactoring).get_changes(refactor, dest, in_hierarchy=in_hierarchy)
+
 
 class ChangeSignatureRefactoring(Refactoring):
 
