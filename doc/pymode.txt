@@ -631,6 +631,13 @@ In this refactoring, the object being refactored will be moved to a destination
 module. All references to the object being moved will be updated to point to
 the new location.
 
+Moving module variable/class/function into a package
+
+It happens when you perform move refactoring on a name referencing a module.
+In this refactoring, the module being refactored will be moved to a destination
+package. All references to the object being moved will be updated to point to
+the new location.
+
 >
     let g:pymode_rope_move_bind = '<C-c>rv'
 
