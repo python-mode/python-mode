@@ -613,14 +613,24 @@ code to call it instead.
     let g:pymode_rope_use_function_bind = '<C-c>ru'
 
 
-Move method/fields ~
+Move refactoring ~
                                                                *pymode-rope-move*
+
+Moving method/fields
 
 It happens when you perform move refactoring on a method of a class. In this
 refactoring, a method of a class is moved to the class of one of its
 attributes. The old method will call the new method. If you want to change all
 of the occurrences of the old method to use the new method you can inline it
 afterwards.
+
+Moving global variable/class/function into another module
+
+It happens when you perform move refactoring on global variable/class/function.
+In this refactoring, the object being refactored will be moved to a destination
+module. All references to the object being moved will be updated to point to
+the new location.
+
 >
     let g:pymode_rope_move_bind = '<C-c>rv'
 
