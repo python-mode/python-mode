@@ -497,8 +497,6 @@ class Refactoring(object): # noqa
         return [
             'perform',
             'preview',
-            'perform in class hierarchy',
-            'preview in class hierarchy',
         ]
 
     @staticmethod
@@ -554,6 +552,14 @@ class RenameRefactoring(Refactoring):
             return False
 
         return newname
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
 
     @staticmethod
     def get_changes(refactor, input_str, in_hierarchy=False):
@@ -710,6 +716,14 @@ class MoveRefactoring(Refactoring):
             offset = None
         return move.create_move(ctx.project, ctx.resource, offset)
 
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
+
 
 class ChangeSignatureRefactoring(Refactoring):
 
@@ -736,6 +750,14 @@ class ChangeSignatureRefactoring(Refactoring):
         _, offset = env.get_offset_params()
         return change_signature.ChangeSignature(
             ctx.project, ctx.resource, offset)
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
 
     def get_changes(self, refactor, input_string, in_hierarchy=False):
         """ Function description.
