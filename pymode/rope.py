@@ -463,10 +463,11 @@ class Refactoring(object): # noqa
                 if not input_str:
                     return False
 
+                code_actions = self.get_code_actions()
                 action = env.user_input_choices(
-                    'Choose what to do:', 'perform', 'preview',
-                    'perform in class hierarchy',
-                    'preview in class hierarchy')
+                    'Choose what to do:',
+                    *code_actions,
+                )
 
                 in_hierarchy = action.endswith("in class hierarchy")
 
@@ -491,6 +492,14 @@ class Refactoring(object): # noqa
 
             except Exception as e: # noqa
                 env.error('Unhandled exception in Pymode: %s' % e)
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
 
     @staticmethod
     def get_refactor(ctx):
