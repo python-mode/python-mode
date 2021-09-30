@@ -5,7 +5,7 @@ import re
 import site
 import sys
 
-from rope.base import project, libutils, exceptions, change, worder, pycore
+from rope.base import project, libutils, exceptions, change, worder, pycore, codeanalyze
 from rope.base.fscommands import FileSystemCommands # noqa
 from rope.base.taskhandle import TaskHandle # noqa
 from rope.contrib import autoimport as rope_autoimport, codeassist, findit, generate # noqa
@@ -919,6 +919,18 @@ def _insert_import(name, module, ctx):
     progress = ProgressHandler('Apply changes ...')
     ctx.project.do(changes, task_handle=progress.handle)
     reload_changes(changes)
+
+
+@env.catch_exceptions
+def select_logical_line():
+    source, offset = env.get_offset_params()
+
+    lines = codeanalyze.SourceLinesAdapter(source)
+    lineno = lines.get_line_number(offset)
+    line_finder = codeanalyze.LogicalLineFinder(lines)
+    start, end = line_finder.logical_line_in(lineno)
+
+    env.select_line(start, end)
 
 
 # Monkey patch Rope
