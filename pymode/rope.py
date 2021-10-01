@@ -924,13 +924,17 @@ def _insert_import(name, module, ctx):
 @env.catch_exceptions
 def select_logical_line():
     source, offset = env.get_offset_params()
+    count = int(env.var('v:count1'))
 
     lines = codeanalyze.SourceLinesAdapter(source)
-    lineno = lines.get_line_number(offset)
+    start_line = lines.get_line_number(offset)
     line_finder = codeanalyze.LogicalLineFinder(lines)
-    start, end = line_finder.logical_line_in(lineno)
 
-    env.select_line(start, end)
+    start_lineno, _ = line_finder.logical_line_in(start_line)
+    for _, (_, end_lineno) in zip(range(count), line_finder.generate_regions(start_line)):
+        pass
+
+    env.select_line(start_lineno, end_lineno)
 
 
 # Monkey patch Rope
