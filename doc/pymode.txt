@@ -213,6 +213,7 @@ aC    Select a class. Ex: vaC, daC, yaC, caC (operator modes)
 iC    Select inner class. Ex: viC, diC, yiC, ciC (operator modes)
 aM    Select a function or method. Ex: vaM, daM, yaM, caM (operator modes)
 iM    Select inner function or method. Ex: viM, diM, yiM, ciM (operator modes)
+V     Select logical line. Ex: dV, yV, cV (operator modes), also works with count
 ====  ============================
 
 Enable pymode-motion                                          *'g:pymode_motion'*
