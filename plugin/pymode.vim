@@ -1,6 +1,7 @@
 " vi: fdl=1
 let g:pymode_version = "0.13.0"
 
+
 " Enable pymode by default :)
 call pymode#default('g:pymode', 1)
 call pymode#default('g:pymode_debug', 0)
@@ -185,6 +186,7 @@ call pymode#default('g:pymode_breakpoint_cmd', '')
 "
 " Rope support
 call pymode#default('g:pymode_rope', 0)
+call pymode#default('g:pymode_rope_prefix', '<C-c>')
 
 " System plugin variable
 if g:pymode_rope
@@ -213,7 +215,7 @@ if g:pymode_rope
     call pymode#default('g:pymode_rope_autoimport_modules', ['os', 'shutil', 'datetime'])
 
     " Bind keys to autoimport module for object under cursor
-    call pymode#default('g:pymode_rope_autoimport_bind', '<C-c>ra')
+    call pymode#default('g:pymode_rope_autoimport_bind', g:pymode_rope_prefix . 'ra')
 
     " Automatic completion on dot
     call pymode#default('g:pymode_rope_complete_on_dot', 1)
@@ -222,56 +224,56 @@ if g:pymode_rope
     call pymode#default('g:pymode_rope_completion_bind', '<C-Space>')
 
     " Bind keys for goto definition (leave empty for disable)
-    call pymode#default('g:pymode_rope_goto_definition_bind', '<C-c>g')
+    call pymode#default('g:pymode_rope_goto_definition_bind', g:pymode_rope_prefix . 'g')
 
     " set command for open definition (e, new, vnew)
     call pymode#default('g:pymode_rope_goto_definition_cmd', 'new')
 
     " Bind keys for show documentation (leave empty for disable)
-    call pymode#default('g:pymode_rope_show_doc_bind', '<C-c>d')
+    call pymode#default('g:pymode_rope_show_doc_bind', g:pymode_rope_prefix . 'd')
 
     " Bind keys for find occurencies (leave empty for disable)
-    call pymode#default('g:pymode_rope_find_it_bind', '<C-c>f')
+    call pymode#default('g:pymode_rope_find_it_bind', g:pymode_rope_prefix . 'f')
 
     " Bind keys for organize imports (leave empty for disable)
-    call pymode#default('g:pymode_rope_organize_imports_bind', '<C-c>ro')
+    call pymode#default('g:pymode_rope_organize_imports_bind', g:pymode_rope_prefix . 'ro')
 
     " Bind keys for rename variable/method/class in the project (leave empty for disable)
-    call pymode#default('g:pymode_rope_rename_bind', '<C-c>rr')
+    call pymode#default('g:pymode_rope_rename_bind', g:pymode_rope_prefix . 'rr')
 
     " Bind keys for rename module
-    call pymode#default('g:pymode_rope_rename_module_bind', '<C-c>r1r')
+    call pymode#default('g:pymode_rope_rename_module_bind', g:pymode_rope_prefix . 'r1r')
 
     " Bind keys for convert module to package
-    call pymode#default('g:pymode_rope_module_to_package_bind', '<C-c>r1p')
+    call pymode#default('g:pymode_rope_module_to_package_bind', g:pymode_rope_prefix . 'r1p')
 
     " Creates a new function or method (depending on the context) from the selected lines
-    call pymode#default('g:pymode_rope_extract_method_bind', '<C-c>rm')
+    call pymode#default('g:pymode_rope_extract_method_bind', g:pymode_rope_prefix . 'rm')
 
     " Creates a variable from the selected lines
-    call pymode#default('g:pymode_rope_extract_variable_bind', '<C-c>rl')
+    call pymode#default('g:pymode_rope_extract_variable_bind', g:pymode_rope_prefix . 'rl')
 
     " Inline refactoring
-    call pymode#default('g:pymode_rope_inline_bind', '<C-c>ri')
+    call pymode#default('g:pymode_rope_inline_bind', g:pymode_rope_prefix . 'ri')
 
     " Move refactoring
-    call pymode#default('g:pymode_rope_move_bind', '<C-c>rv')
+    call pymode#default('g:pymode_rope_move_bind', g:pymode_rope_prefix . 'rv')
 
     " Generate function
-    call pymode#default('g:pymode_rope_generate_function_bind', '<C-c>rnf')
+    call pymode#default('g:pymode_rope_generate_function_bind', g:pymode_rope_prefix . 'rnf')
 
     " Generate class
-    call pymode#default('g:pymode_rope_generate_class_bind', '<C-c>rnc')
+    call pymode#default('g:pymode_rope_generate_class_bind', g:pymode_rope_prefix . 'rnc')
 
     " Generate package
-    call pymode#default('g:pymode_rope_generate_package_bind', '<C-c>rnp')
+    call pymode#default('g:pymode_rope_generate_package_bind', g:pymode_rope_prefix . 'rnp')
 
     " Change signature
-    call pymode#default('g:pymode_rope_change_signature_bind', '<C-c>rs')
+    call pymode#default('g:pymode_rope_change_signature_bind', g:pymode_rope_prefix . 'rs')
 
     " Tries to find the places in which a function can be used and changes the
     " code to call it instead
-    call pymode#default('g:pymode_rope_use_function_bind', '<C-c>ru')
+    call pymode#default('g:pymode_rope_use_function_bind', g:pymode_rope_prefix . 'ru')
 
     " Regenerate project cache on every save
     call pymode#default('g:pymode_rope_regenerate_on_write', 1)

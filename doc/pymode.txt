@@ -423,6 +423,10 @@ Turn on the rope script                                         *'g:pymode_rope'
 >
     let g:pymode_rope = 1
 
+Set the prefix for rope commands                                *'g:pymode_rope_prefix'*
+>
+    let g:pymode_rope_refix = '<C-c>'
+
 .ropeproject Folder ~
                                                                    *.ropeproject*
 
