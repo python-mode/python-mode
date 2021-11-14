@@ -674,6 +674,10 @@ Highlight '=' operator               *'g:pymode_syntax_highlight_equal_operator'
 >
     let g:pymode_syntax_highlight_equal_operator = g:pymode_syntax_all
 
+Highlight ':=' operator             *'g:pymode_syntax_highlight_walrus_operator'*
+>
+    let g:pymode_syntax_highlight_walrus_operator = g:pymode_syntax_all
+
 Highlight '*' operator               *'g:pymode_syntax_highlight_stars_operator'*
 >
     let g:pymode_syntax_highlight_stars_operator = g:pymode_syntax_all
