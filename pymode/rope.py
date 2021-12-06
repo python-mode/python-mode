@@ -931,7 +931,7 @@ def select_logical_line():
     line_finder = codeanalyze.LogicalLineFinder(lines)
 
     start_lineno, end_lineno = line_finder.logical_line_in(start_line)
-    for _, (_, end_lineno) in zip(range(count - 1), line_finder.generate_regions(start_line)):
+    for _, (_, end_lineno) in zip(range(count), line_finder.generate_regions(start_lineno)):
         pass
 
     env.select_line(start_lineno, end_lineno)
