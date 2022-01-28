@@ -42,6 +42,8 @@ if g:pymode_motion
     vnoremap <buffer> aM  :<C-U>call pymode#motion#select('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=@', '^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', 0)<CR>
     vnoremap <buffer> iM  :<C-U>call pymode#motion#select('^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=@', '^<Bslash>s*<Bslash>(async<Bslash>s<Bslash>+<Bslash>)<Bslash>=def<Bslash>s', 1)<CR>
 
+    onoremap <buffer> V  :<C-U>call pymode#rope#select_logical_line()<CR>
+
 endif
 
 if g:pymode_rope && g:pymode_rope_completion

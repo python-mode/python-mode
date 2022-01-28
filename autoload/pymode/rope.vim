@@ -194,3 +194,7 @@ fun! pymode#rope#generate_package() "{{{
     endif
     PymodePython rope.GenerateElementRefactoring('package').run()
 endfunction "}}}
+
+fun! pymode#rope#select_logical_line() "{{{
+    PymodePython rope.select_logical_line()
+endfunction "}}}
