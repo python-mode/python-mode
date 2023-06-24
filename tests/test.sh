@@ -4,7 +4,7 @@
 set -e
 which vim 1>/dev/null 2>/dev/null
 
-cd $(dirname $0)
+cd "$(dirname "$0")"
 
 # Source common variables.
 source ./test_helpers_bash/test_variables.sh
@@ -49,7 +49,7 @@ RETURN_CODES=$(cat $VIM_OUTPUT_FILE | grep -i "Return code")
 echo -e "${RETURN_CODES}"
 
 # Exit the script with error if there are any return codes different from 0.
-if echo $RETURN_CODES | grep -E "Return code: [1-9]" 1>/dev/null 2>/dev/null
+if echo "${RETURN_CODES}" | grep -E "Return code: [1-9]" 1>/dev/null 2>/dev/null
 then
     exit 1
 else
