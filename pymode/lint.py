@@ -84,11 +84,16 @@ def code_check():
         env.debug("Find sorting: ", sort_rules)
         errors = sorted(errors, key=__sort)
 
+    errors_list = []
     for e in errors:
-        e._info['bufnr'] = env.curbuf.number
-        if e._info['col'] is None:
-            e._info['col'] = 1
+        if e.col is None:
+            e.col = 1
+        err_dict = e.to_dict()
+        err_dict['bufnr'] = env.curbuf.number
+        err_dict['type'] = e.etype
+        err_dict['text'] = e.message
+        errors_list.append(err_dict)
 
-    env.run('g:PymodeLocList.current().extend', [e._info for e in errors])
+    env.run('g:PymodeLocList.current().extend', errors_list)
 
 # pylama:ignore=W0212,E1103
