@@ -26,9 +26,9 @@ declare -a TEST_ARRAY=(
 set +e
 for ONE_TEST in "${TEST_ARRAY[@]}"
 do
-   echo "Starting test: $ONE_TEST" >> $VIM_OUTPUT_FILE
-   bash -x "$ONE_TEST"
-   echo -e "\n$ONE_TEST: Return code: $?" >> $VIM_OUTPUT_FILE
+   echo "Starting test: $ONE_TEST" | tee $VIM_OUTPUT_FILE
+   bash "$ONE_TEST"
+   echo -e "\n$ONE_TEST: Return code: $?" | tee $VIM_OUTPUT_FILE
    bash ./test_helpers_bash/test_prepare_between_tests.sh
 done
 

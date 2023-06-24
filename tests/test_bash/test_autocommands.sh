@@ -19,7 +19,7 @@ declare -a TEST_PYMODE_COMMANDS_ARRAY=(
 set +e
 for ONE_PYMODE_COMMANDS_TEST in "${TEST_PYMODE_COMMANDS_ARRAY[@]}"
 do
-    echo "Starting test: $0:$ONE_PYMODE_COMMANDS_TEST" >> $VIM_OUTPUT_FILE
+    echo "Starting test: $0:$ONE_PYMODE_COMMANDS_TEST" | tee $VIM_OUTPUT_FILE
     RETURN_CODE=$(vim --clean -i NONE -u $VIM_TEST_VIMRC -c "source $ONE_PYMODE_COMMANDS_TEST" $VIM_DISPOSABLE_PYFILE > /dev/null 2>&1)
 
     ### Enable the following to execute one test at a time.
@@ -27,7 +27,7 @@ do
     ### FOR PINPOINT TESTING ### exit 1
 
     RETURN_CODE=$?
-    echo -e "\n$0:$ONE_PYMODE_COMMANDS_TEST: Return code: $RETURN_CODE" >> $VIM_OUTPUT_FILE
+    echo -e "\n$0:$ONE_PYMODE_COMMANDS_TEST: Return code: $RETURN_CODE" | tee $VIM_OUTPUT_FILE
     bash ./test_helpers_bash/test_prepare_between_tests.sh
 done
 
