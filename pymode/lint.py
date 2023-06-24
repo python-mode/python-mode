@@ -6,7 +6,7 @@ from .utils import silence_stderr
 import os.path
 
 
-from pylama.lint.extensions import LINTERS
+from pylama.lint import LINTERS
 
 try:
     from pylama.lint.pylama_pylint import Linter
@@ -35,11 +35,11 @@ def code_check():
         # Fixed in v0.9.3: these two parameters may be passed as strings.
         # DEPRECATE: v:0.10.0: need to be set as lists.
         if isinstance(env.var('g:pymode_lint_ignore'), str):
-            raise ValueError ('g:pymode_lint_ignore should have a list type')
+            raise ValueError('g:pymode_lint_ignore should have a list type')
         else:
             ignore = env.var('g:pymode_lint_ignore')
         if isinstance(env.var('g:pymode_lint_select'), str):
-            raise ValueError ('g:pymode_lint_select should have a list type')
+            raise ValueError('g:pymode_lint_select should have a list type')
         else:
             select = env.var('g:pymode_lint_select')
         options = parse_options(
