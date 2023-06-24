@@ -65,7 +65,8 @@ def code_check():
             return env.stop()
 
         if env.options.get('debug'):
-            from pylama.core import LOGGER, logging
+            import logging
+            from pylama.core import LOGGER
             LOGGER.setLevel(logging.DEBUG)
 
         errors = run(path, code='\n'.join(env.curbuf) + '\n', options=options)
