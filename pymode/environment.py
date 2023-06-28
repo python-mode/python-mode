@@ -242,5 +242,8 @@ class VimPymodeEnviroment(object):
         if str(bufnr) != '-1':
             vim.command('buffer %s' % bufnr)
 
+    def select_line(self, start, end):
+        vim.command('normal %sggV%sgg' % (start, end))
+
 
 env = VimPymodeEnviroment()

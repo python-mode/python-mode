@@ -48,3 +48,12 @@
 [submodule "submodules/toml"]
 	path = submodules/toml
 	url = https://github.com/uiri/toml.git
+[submodule "submodules/pytoolconfig"]
+	path = submodules/pytoolconfig
+	url = https://github.com/bagel897/pytoolconfig.git
+[submodule "submodules/tomli"]
+	path = submodules/tomli
+	url = https://github.com/hukkin/tomli.git
+[submodule "submodules/appdirs"]
+	path = submodules/appdirs
+	url = https://github.com/ActiveState/appdirs.git

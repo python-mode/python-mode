@@ -23,6 +23,9 @@ call pymode#default("g:pymode_syntax_highlight_async_await", g:pymode_syntax_all
 " Highlight '=' operator
 call pymode#default('g:pymode_syntax_highlight_equal_operator', g:pymode_syntax_all)
 
+" Highlight ':=' operator
+call pymode#default('g:pymode_syntax_highlight_walrus_operator', g:pymode_syntax_all)
+
 " Highlight '*' operator
 call pymode#default('g:pymode_syntax_highlight_stars_operator', g:pymode_syntax_all)
 
@@ -91,7 +94,7 @@ endif
     syn match pythonClassParameters "[^,\*]*" contained contains=pythonBuiltin,pythonBuiltinObj,pythonBuiltinType,pythonExtraOperatorpythonStatement,pythonBrackets,pythonString,pythonComment skipwhite
 
     syn keyword pythonRepeat        for while
-    syn keyword pythonConditional   if elif else
+    syn keyword pythonConditional   if elif else match case
     syn keyword pythonInclude       import from
     syn keyword pythonException     try except finally
     syn keyword pythonOperator      and in is not or
@@ -112,6 +115,10 @@ endif
 
     if g:pymode_syntax_highlight_equal_operator
         syn match pythonExtraOperator "\%(=\)"
+    endif
+
+    if g:pymode_syntax_highlight_walrus_operator
+        syn match pythonExtraOperator "\%(:=\)"
     endif
 
     if g:pymode_syntax_highlight_stars_operator
@@ -262,26 +269,29 @@ endif
 
     " Builtin objects and types
     if g:pymode_syntax_builtin_objs
-        syn keyword pythonBuiltinObj True False Ellipsis None NotImplemented
-        syn keyword pythonBuiltinObj __debug__ __doc__ __file__ __name__ __package__
+        " True, False, Ellipsis, and None are in fact keywords.
+        syn keyword pythonBuiltinObj True False Ellipsis None
+        syn keyword pythonBuiltinObj NotImplemented
+        syn keyword pythonBuiltinObj __debug__ __doc__ __file__ __name__ __package__ __loader__
+        syn keyword pythonBuiltinObj __spec__ __cached__ __annotations__
     endif
 
     if g:pymode_syntax_builtin_types
         syn keyword pythonBuiltinType type object
-        syn keyword pythonBuiltinType str basestring unicode buffer bytearray bytes chr unichr
-        syn keyword pythonBuiltinType dict int long bool float complex set frozenset list tuple
-        syn keyword pythonBuiltinType file super
+        syn keyword pythonBuiltinType str bytearray bytes chr
+        syn keyword pythonBuiltinType dict int bool float complex set frozenset list tuple
+        syn keyword pythonBuiltinType super
     endif
 
     " Builtin functions
     if g:pymode_syntax_builtin_funcs
-        syn keyword pythonBuiltinFunc   __import__ abs all any apply
-        syn keyword pythonBuiltinFunc   bin callable classmethod cmp coerce compile
+        syn keyword pythonBuiltinFunc   __import__ abs all any
+        syn keyword pythonBuiltinFunc   bin callable classmethod compile
         syn keyword pythonBuiltinFunc   delattr dir divmod enumerate eval execfile filter
         syn keyword pythonBuiltinFunc   format getattr globals locals hasattr hash help hex id
-        syn keyword pythonBuiltinFunc   input intern isinstance issubclass iter len map max min
-        syn keyword pythonBuiltinFunc   next oct open ord pow property range xrange
-        syn keyword pythonBuiltinFunc   raw_input reduce reload repr reversed round setattr
+        syn keyword pythonBuiltinFunc   input isinstance issubclass iter len map max min
+        syn keyword pythonBuiltinFunc   next oct open ord pow property range
+        syn keyword pythonBuiltinFunc   repr reversed round setattr
         syn keyword pythonBuiltinFunc   slice sorted staticmethod sum vars zip
 
         if g:pymode_syntax_print_as_function
@@ -292,31 +302,31 @@ endif
 
     " Builtin exceptions and warnings
     if g:pymode_syntax_highlight_exceptions
-        syn keyword pythonExClass   BaseException
-        syn keyword pythonExClass   Exception StandardError ArithmeticError
-        syn keyword pythonExClass   LookupError EnvironmentError
-        syn keyword pythonExClass   AssertionError AttributeError BufferError EOFError
-        syn keyword pythonExClass   FloatingPointError GeneratorExit IOError
-        syn keyword pythonExClass   ImportError IndexError KeyError
-        syn keyword pythonExClass   KeyboardInterrupt MemoryError NameError
+        syn keyword pythonExClass   BaseException Exception ArithmeticError
+        syn keyword pythonExClass   BufferError LookupError
+        syn keyword pythonExClass   AssertionError AttributeError EOFError
+        syn keyword pythonExClass   FloatingPointError GeneratorExit
+        syn keyword pythonExClass   ImportError ModuleNotFoundError IndexError
+        syn keyword pythonExClass   KeyError KeyboardInterrupt MemoryError NameError
         syn keyword pythonExClass   NotImplementedError OSError OverflowError
-        syn keyword pythonExClass   ReferenceError RuntimeError StopIteration
-        syn keyword pythonExClass   SyntaxError IndentationError TabError
+        syn keyword pythonExClass   RecursionError ReferenceError RuntimeError StopIteration
+        syn keyword pythonExClass   StopAsyncIteration SyntaxError IndentationError TabError
         syn keyword pythonExClass   SystemError SystemExit TypeError
         syn keyword pythonExClass   UnboundLocalError UnicodeError
         syn keyword pythonExClass   UnicodeEncodeError UnicodeDecodeError
-        syn keyword pythonExClass   UnicodeTranslateError ValueError VMSError
+        syn keyword pythonExClass   UnicodeTranslateError ValueError
+        syn keyword pythonExClass   ZeroDivisionError EnvironmentError IOError
+        syn keyword pythonExClass   WindowsError
         syn keyword pythonExClass   BlockingIOError ChildProcessError ConnectionError
         syn keyword pythonExClass   BrokenPipeError ConnectionAbortedError
         syn keyword pythonExClass   ConnectionRefusedError ConnectionResetError
         syn keyword pythonExClass   FileExistsError FileNotFoundError InterruptedError
         syn keyword pythonExClass   IsADirectoryError NotADirectoryError PermissionError
         syn keyword pythonExClass   ProcessLookupError TimeoutError
-        syn keyword pythonExClass   WindowsError ZeroDivisionError
-        syn keyword pythonExClass   Warning UserWarning BytesWarning DeprecationWarning
-        syn keyword pythonExClass   PendingDepricationWarning SyntaxWarning
-        syn keyword pythonExClass   RuntimeWarning FutureWarning
-        syn keyword pythonExClass   ImportWarning UnicodeWarning
+        syn keyword pythonExClass   Warning UserWarning DeprecationWarning PendingDeprecationWarning
+        syn keyword pythonExClass   SyntaxWarning RuntimeWarning FutureWarning
+        syn keyword pythonExClass   ImportWarning UnicodeWarning EncodingWarning
+        syn keyword pythonExClass   BytesWarning ResourceWarning
     endif
 
 " }}}
