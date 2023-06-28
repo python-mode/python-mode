@@ -463,10 +463,11 @@ class Refactoring(object): # noqa
                 if not input_str:
                     return False
 
+                code_actions = self.get_code_actions()
                 action = env.user_input_choices(
-                    'Choose what to do:', 'perform', 'preview',
-                    'perform in class hierarchy',
-                    'preview in class hierarchy')
+                    'Choose what to do:',
+                    *code_actions,
+                )
 
                 in_hierarchy = action.endswith("in class hierarchy")
 
@@ -491,6 +492,12 @@ class Refactoring(object): # noqa
 
             except Exception as e: # noqa
                 env.error('Unhandled exception in Pymode: %s' % e)
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+        ]
 
     @staticmethod
     def get_refactor(ctx):
@@ -545,6 +552,14 @@ class RenameRefactoring(Refactoring):
             return False
 
         return newname
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
 
     @staticmethod
     def get_changes(refactor, input_str, in_hierarchy=False):
@@ -708,7 +723,7 @@ class MoveRefactoring(Refactoring):
                 dest = ctx.project.pycore.find_module(input_str)
             else:
                 dest = input_str
-            return super(MoveRefactoring, MoveRefactoring).get_changes(refactor, dest, in_hierarchy=in_hierarchy)
+            return super(MoveRefactoring, MoveRefactoring).get_changes(refactor, dest)
 
 
 class ChangeSignatureRefactoring(Refactoring):
@@ -736,6 +751,14 @@ class ChangeSignatureRefactoring(Refactoring):
         _, offset = env.get_offset_params()
         return change_signature.ChangeSignature(
             ctx.project, ctx.resource, offset)
+
+    def get_code_actions(self):
+        return [
+            'perform',
+            'preview',
+            'perform in class hierarchy',
+            'preview in class hierarchy',
+        ]
 
     def get_changes(self, refactor, input_string, in_hierarchy=False):
         """ Function description.
