@@ -2,10 +2,38 @@
 
 ## TODO
 
+## 2023-07-02 0.14.0
+
+- Update submodules
+    - Fix Errors related to these updates
+- Improve tests outputs
+- Fix Global and Module MoveRefactoring (#1141) Thanks to @lieryan
+- Text object/operator/motion mapping to select logical line (#1145). Thanks to
+    @lieryan
+- Remove dead keywords and builtins; add match, case (#1149). Thanks to
+    @NeilGirdhar
+- Add syntax highlight for walrus (#1147) Thanks to @fpob
+- Add configurable prefix for rope commands (#1137) TThanks to @NathanTP
+- Add option g:pymode_indent_hanging_width for different hanging indentation
+    width (#1138). Thanks to @wookayin
+
+## 2020-10-08 0.13.0
+
+- Add toml submodule
+
+## 2020-10-08 0.12.0
+
+- Improve breakpoint feature
+- Improve debugging script
+- Update submodules
+- Improve tests
+
+## 2020-05-28 0.11.0
+
 - Move changelog rst syntax to markdown
 - `pymode_rope`: check disables
-- Remove supoort for python 2. From 0.11.0 on we will focus on supporting
-  python 3+ (probably 3.5+).
+- BREAKING CHANGE: Remove supoort for python 2. From 0.11.0 on we will focus on
+  supporting python 3+ (probably 3.5+).
 - Inspect why files starting with the following code do not get loaded:
 
     ```python
@@ -15,6 +43,12 @@
     if __name__ == '__main__':
         main()
     ```
+
+- added github actions test suit and remove travis
+- improved submodules cloning (shallow)
+- Removes `six` submodule
+- Fix motion mapping
+- Fix breakpoint feature
 
 ## 2019-05-11 0.10.0
 

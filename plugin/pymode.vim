@@ -1,5 +1,5 @@
 " vi: fdl=1
-let g:pymode_version = "0.13.0"
+let g:pymode_version = "0.14.0"
 
 
 " Enable pymode by default :)
@@ -122,8 +122,8 @@ call pymode#default("g:pymode_lint_on_fly", 0)
 " Show message about error in command line
 call pymode#default("g:pymode_lint_message", 1)
 
-" Choices are: pylint, pyflakes, pep8, mccabe and pep257
-call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pep8', 'mccabe'])
+" Choices are: pylint, pyflakes, pycodestyle, mccabe and pep257
+call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pycodestyle', 'mccabe'])
 
 " Skip errors and warnings (e.g. E4,W)
 call pymode#default("g:pymode_lint_ignore", [])
@@ -152,8 +152,8 @@ call pymode#default("g:pymode_lint_info_symbol", "II")
 call pymode#default("g:pymode_lint_pyflakes_symbol", "FF")
 
 " Code checkers options
-" TODO: check if most adequate name name is pep8 or pycodestyle.
-call pymode#default("g:pymode_lint_options_pep8",
+" TODO: check if most adequate name name is pycodestyle.
+call pymode#default("g:pymode_lint_options_pycodestyle",
     \ {'max_line_length': g:pymode_options_max_line_length})
 
 call pymode#default("g:pymode_lint_options_pylint",

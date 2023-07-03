@@ -4,7 +4,7 @@
 set -e
 which vim 1>/dev/null 2>/dev/null
 
-cd $(dirname $0)
+cd "$(dirname "$0")"
 
 # Source common variables.
 source ./test_helpers_bash/test_variables.sh
@@ -22,38 +22,37 @@ declare -a TEST_ARRAY=(
     "./test_bash/test_folding.sh"
     "./test_bash/test_textobject.sh"
     )
+MAIN_RETURN=0
 ## now loop through the above array
 set +e
-for ONE_TEST in "${TEST_ARRAY[@]}"
+for TEST in "${TEST_ARRAY[@]}"
 do
-   echo "Starting test: $ONE_TEST" >> $VIM_OUTPUT_FILE
-   bash -x "$ONE_TEST"
-   echo -e "\n$ONE_TEST: Return code: $?" >> $VIM_OUTPUT_FILE
+   echo "Starting test: ${TEST}" | tee -a "${VIM_OUTPUT_FILE}"
+   bash "${TEST}"
+   R=$?
+   MAIN_RETURN=$(( MAIN_RETURN + R ))
+   echo -e "${TEST}: Return code: ${R}\n" | tee -a "${VIM_OUTPUT_FILE}"
    bash ./test_helpers_bash/test_prepare_between_tests.sh
 done
 
+echo "========================================================================="
+echo "                                  RESULTS"
+echo "========================================================================="
+
+# Show return codes.
+RETURN_CODES=$(grep -i "Return code" < "${VIM_OUTPUT_FILE}" | grep -v "Return code: 0")
+echo -e "${RETURN_CODES}"
+
 # Show errors:
-E1=$(grep -E "^E[0-9]+:" $VIM_OUTPUT_FILE)
-E2=$(grep -E "^Error" $VIM_OUTPUT_FILE)
-E3="$E1\n$E2"
-if [ "$E3" = "\n" ]
-then
+E1=$(grep -E "^E[0-9]+:" "${VIM_OUTPUT_FILE}")
+E2=$(grep -Ei "^Error" "${VIM_OUTPUT_FILE}")
+if [[ "${MAIN_RETURN}" == "0" ]]; then
     echo "No errors."
 else
     echo "Errors:"
-    echo -e "$E3\n"
+    echo -e "${E1}\n${E2}"
 fi
-
-# Show return codes.
-RETURN_CODES=$(cat $VIM_OUTPUT_FILE | grep -i "Return code")
-echo -e "${RETURN_CODES}"
 
 # Exit the script with error if there are any return codes different from 0.
-if echo $RETURN_CODES | grep -E "Return code: [1-9]" 1>/dev/null 2>/dev/null
-then
-    exit 1
-else
-    exit 0
-fi
-
+exit ${MAIN_RETURN}
 # vim: set fileformat=unix filetype=sh wrap tw=0 :
