@@ -42,6 +42,12 @@ def code_check():
             raise ValueError('g:pymode_lint_select should have a list type')
         else:
             select = env.var('g:pymode_lint_select')
+        if 'pep8' in linters:
+            # TODO: Add a user visible deprecation warning here
+            env.message('pep8 linter is deprecated, please use pycodestyle.')
+            linters.remove('pep8')
+            linters.append('pycodestyle')
+
         options = parse_options(
             linters=linters, force=1,
             ignore=ignore,

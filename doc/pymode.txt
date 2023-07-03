@@ -293,7 +293,7 @@ Manually set breakpoint command (leave empty for automatic detection)
 3. Code checking ~
                                                                     *pymode-lint*
 
-Pymode supports `pylint`, `pep257`, `pep8`, `pyflakes`, `mccabe` code
+Pymode supports `pylint`, `pep257`, `pycodestyle`, `pyflakes`, `mccabe` code
 checkers. You could run several similar checkers.
 
         Pymode uses Pylama library for code checking. Many options like skip
@@ -330,9 +330,9 @@ Show error message if cursor placed at the error line   *'g:pymode_lint_message'
 
 Default code checkers (you could set several)          *'g:pymode_lint_checkers'*
 >
-    let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
+    let g:pymode_lint_checkers = ['pyflakes', 'pycodestyle', 'mccabe']
 
-Values may be chosen from: `pylint`, `pep8`, `mccabe`, `pep257`, `pyflakes`.
+Values may be chosen from: `pylint`, `pycodestyle`, `mccabe`, `pep257`, `pyflakes`.
 
 Skip errors and warnings                                 *'g:pymode_lint_ignore'*
 E.g. ["W", "E2"] (Skip all Warnings and the Errors starting with E2) etc.
@@ -376,9 +376,9 @@ Definitions for |signs|
 
 Pymode has the ability to set code checkers options from pymode variables:
 
-Set PEP8 options                                   *'g:pymode_lint_options_pep8'*
+Set PEP8 options                            *'g:pymode_lint_options_pycodestyle'*
 >
-    let g:pymode_lint_options_pep8 =
+    let g:pymode_lint_options_pycodestyle =
         \ {'max_line_length': g:pymode_options_max_line_length}
 
 See https://pep8.readthedocs.org/en/1.4.6/intro.html#configuration for more
