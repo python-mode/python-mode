@@ -6,7 +6,13 @@ from importlib.machinery import PathFinder as _PathFinder
 import vim  # noqa
 
 if not hasattr(vim, 'find_module'):
-    vim.find_module = _PathFinder.find_module
+    try:
+        vim.find_module = _PathFinder.find_module  # deprecated
+    except AttributeError:
+        def _find_module(package_name):
+            spec = _PathFinder.find_spec(package_name)
+            return spec.loader if spec else None
+        vim.find_module = _find_module
 
 
 def auto():
