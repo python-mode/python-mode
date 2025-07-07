@@ -2,7 +2,7 @@ name: Build and Push Base Docker Image
 
 on:
   push:
-    branches: [main]
+    branches: [main, master, develop]
     paths:
       - 'Dockerfile.base'
       - '.github/workflows/build_base_image.yml'
