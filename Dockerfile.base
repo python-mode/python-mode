@@ -1,0 +1,61 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHON_CONFIGURE_OPTS="--enable-shared"
+ENV PYENV_ROOT="/opt/pyenv"
+ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+
+# Install system dependencies for pyenv and Python builds
+RUN apt-get update && apt-get install -yqq \
+    libncurses5-dev \
+    libgtk2.0-dev \
+    libatk1.0-dev \
+    libcairo2-dev \
+    libx11-dev \
+    libxpm-dev \
+    libxt-dev \
+    lua5.2 \
+    liblua5.2-dev \
+    libperl-dev \
+    git \
+    build-essential \
+    curl \
+    wget \
+    ca-certificates \
+    libssl-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    zlib1g-dev \
+    libffi-dev \
+    liblzma-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Remove existing vim packages
+RUN apt-get remove --purge -yqq vim vim-runtime gvim || true
+
+# Install pyenv
+RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT && \
+    cd $PYENV_ROOT && \
+    git checkout $(git describe --tags --abbrev=0)
+
+# Install Python versions with pyenv
+RUN pyenv install 3.10.13 && \
+    pyenv install 3.11.9 && \
+    pyenv install 3.12.4 && \
+    pyenv install 3.13.0
+
+ARG PYTHON_VERSION=3.10.13
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+RUN pyenv global ${PYTHON_VERSION}
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/opt/venv"
+
+# Upgrade pip in the virtual environment
+RUN pip install --upgrade pip setuptools wheel
+
+# Dependency to load some modules within pyton-mode
+RUN pip install pytoolconfig 
