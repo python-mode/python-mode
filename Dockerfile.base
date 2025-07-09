@@ -4,8 +4,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHON_CONFIGURE_OPTS="--enable-shared"
 ENV PYENV_ROOT="/opt/pyenv"
 ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+ARG PYTHON_VERSION=3.13.0
+ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 # Install system dependencies for pyenv and Python builds
+# TODO: Remove GUI dependencies
 RUN apt-get update && apt-get install -yqq \
     libncurses5-dev \
     libgtk2.0-dev \
@@ -32,30 +35,42 @@ RUN apt-get update && apt-get install -yqq \
     && rm -rf /var/lib/apt/lists/*
 
 # Remove existing vim packages
-RUN apt-get remove --purge -yqq vim vim-runtime gvim || true
+RUN apt-get remove --purge -yqq vim vim-runtime gvim 2>&1 > /dev/null || true
 
 # Install pyenv
-RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT && \
+RUN git clone --depth 1 https://github.com/pyenv/pyenv.git $PYENV_ROOT && \
     cd $PYENV_ROOT && \
-    git checkout $(git describe --tags --abbrev=0)
+    git checkout $(git describe --tags --abbrev=0) && \
+    eval "$(pyenv init -)" && \
+    eval "$(pyenv init --path)"
+
+# Set up bash profile for pyenv
+RUN echo 'export PYENV_ROOT="/opt/pyenv"' >> /root/.bashrc && \
+    echo 'export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:$PATH"' >> /root/.bashrc && \
+    echo 'eval "$(pyenv init -)"' >> /root/.bashrc && \
+    echo 'eval "$(pyenv init --path)"' >> /root/.bashrc && \
+    echo 'alias python=python3' >> /root/.bashrc
 
 # Install Python versions with pyenv
-RUN pyenv install 3.10.13 && \
-    pyenv install 3.11.9 && \
-    pyenv install 3.12.4 && \
-    pyenv install 3.13.0
+RUN pyenv install ${PYTHON_VERSION} && \
+    pyenv global ${PYTHON_VERSION} && \
+    rm -rf /tmp/python-build*
 
-ARG PYTHON_VERSION=3.10.13
-ENV PYTHON_VERSION=${PYTHON_VERSION}
-RUN pyenv global ${PYTHON_VERSION}
+# Upgrade pip and add some other dependencies
+RUN eval "$(pyenv init -)" && \
+    echo "Upgrading pip for Python ($(python --version): $(which python))..." && \
+    pip install --upgrade pip setuptools wheel && \
+    ## Python-mode dependency
+    pip install pytoolconfig
 
-# Create virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/opt/venv"
-
-# Upgrade pip in the virtual environment
-RUN pip install --upgrade pip setuptools wheel
-
-# Dependency to load some modules within pyton-mode
-RUN pip install pytoolconfig 
+# Build and install Vim from source with Python support for each Python version
+RUN cd /tmp && \
+    git clone --depth 1 https://github.com/vim/vim.git && \
+    cd vim && \
+    # Build Vim for each Python version
+    echo "Building Vim with python support: Python ($(python --version): $(which python))..." && \
+    make clean || true && \
+    ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=$(python-config --configdir) --enable-perlinterp=yes --enable-luainterp=yes --enable-cscope --prefix=/usr/local --exec-prefix=/usr/local && \
+    make && \
+    make install && \
+    echo "Vim for Python $pyver installed as vim"

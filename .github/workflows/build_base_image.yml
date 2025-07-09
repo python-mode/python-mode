@@ -11,6 +11,9 @@ on:
 jobs:
   build-and-push-base:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pyver: ["3.10.13", "3.11.9", "3.12.4", "3.13.0"]
     permissions:
       contents: read
       packages: write
@@ -33,11 +36,18 @@ jobs:
         run: |
           echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
+      - name: Extract short Python version
+        id: pyver_short
+        run: |
+          echo "PYVER_SHORT=$(echo ${{ matrix.pyver }} | cut -d'.' -f1,2)" >> $GITHUB_OUTPUT
+
       - name: Build and push base image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.base
           push: true
+          build-args: |
+            PYTHON_VERSION=${{ matrix.pyver }}
           tags: |
-            ghcr.io/${{ steps.repo.outputs.REPO }}-base:latest 
+            ghcr.io/${{ steps.repo.outputs.REPO }}-base:${{ steps.pyver_short.outputs.PYVER_SHORT }}-latest 
