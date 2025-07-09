@@ -45,17 +45,39 @@ RUN pyenv install 3.10.13 && \
     pyenv install 3.12.4 && \
     pyenv install 3.13.0
 
-ARG PYTHON_VERSION=3.10.13
-ENV PYTHON_VERSION=${PYTHON_VERSION}
-RUN pyenv global ${PYTHON_VERSION}
+ENV PYTHON_VERSION=3.13.0
 
-# Create virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/opt/venv"
+# Upgrade pip for each Python version
+RUN for pyver in 3.10.13 3.11.9 3.12.4 3.13.0; do \
+        echo "Upgrading pip for Python $pyver..." && \
+        pyenv shell $pyver && \
+        pip install --upgrade pip setuptools wheel && \
+        ## Python-mode dependency
+        pip install pytoolconfig; \
+    done
 
-# Upgrade pip in the virtual environment
-RUN pip install --upgrade pip setuptools wheel
-
-# Dependency to load some modules within pyton-mode
-RUN pip install pytoolconfig 
+# Build and install Vim from source with Python support for each Python version
+RUN export PYENV_ROOT="/opt/pyenv" && \
+    export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}" && \
+    eval "$(pyenv init -)" && \
+    eval "$(pyenv init --path)" && \
+    export PYTHON_CONFIGURE_OPTS="--enable-shared" && \
+    cd /tmp && \
+    git clone https://github.com/vim/vim.git && \
+    cd vim && \
+    # Build Vim for each Python version
+    for pyver in 3.10.13 3.11.9 3.12.4 3.13.0; do \
+        echo "Building Vim for Python $pyver..." && \
+        pyenv global $pyver && \
+        make clean || true && \
+        ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=$(python-config --configdir) --enable-perlinterp=yes --enable-luainterp=yes --enable-cscope --prefix=/usr/local --exec-prefix=/usr/local/vim-$pyver && \
+        make && \
+        make install && \
+        mv /usr/local/bin/vim /usr/local/bin/vim-$pyver && \
+        mv /usr/local/bin/vimtutor /usr/local/bin/vimtutor-$pyver || true && \
+        mv /usr/local/bin/xxd /usr/local/bin/xxd-$pyver || true && \
+        echo "Vim for Python $pyver installed as vim-$pyver"; \
+    done && \
+    # Set default Vim to use the current global Python version
+    pyenv global ${PYTHON_VERSION} && \
+    echo "alias vim='vim-${PYTHON_VERSION}'" >> ~/.bashrc
