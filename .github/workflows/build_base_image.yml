@@ -6,6 +6,11 @@ on:
     paths:
       - 'Dockerfile.base'
       - '.github/workflows/build_base_image.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'Dockerfile.base'
+      - '.github/workflows/build_base_image.yml'
   workflow_dispatch:
 
 jobs:
@@ -25,6 +30,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -41,7 +47,8 @@ jobs:
         run: |
           echo "PYVER_SHORT=$(echo ${{ matrix.pyver }} | cut -d'.' -f1,2)" >> $GITHUB_OUTPUT
 
-      - name: Build and push base image
+      - name: Build and push base image (on push)
+        if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -50,4 +57,16 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ matrix.pyver }}
           tags: |
-            ghcr.io/${{ steps.repo.outputs.REPO }}-base:${{ steps.pyver_short.outputs.PYVER_SHORT }}-latest 
+            ghcr.io/${{ steps.repo.outputs.REPO }}-base:${{ steps.pyver_short.outputs.PYVER_SHORT }}-latest
+
+      - name: Build base image (on PR)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.base
+          push: false
+          build-args: |
+            PYTHON_VERSION=${{ matrix.pyver }}
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.REPO }}-base:${{ steps.pyver_short.outputs.PYVER_SHORT }}-pr-test 
