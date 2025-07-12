@@ -54,7 +54,7 @@ Python-mode contains all you need to develop python applications in Vim.
 
 Features:                                                       *pymode-features*
 
-- Support Python version 2.6+ and 3.2+
+- Support Python version 3.10.13, 3.11.9, 3.12.4, 3.13.0
 - Syntax highlighting
 - Virtualenv support
 - Run python code (``<leader>r``)
@@ -160,6 +160,11 @@ python-features of **pymode** will be disabled.
 
 Set value to `python3` if you are working with python3 projects. You could use
 |exrc|
+
++ Currently supported Python versions: 3.10.13, 3.11.9, 3.12.4, 3.13.0
++ 
++ For testing with different Python versions, see the Docker testing environment
++ described in the Development section.
 
 -------------------------------------------------------------------------------
 2.2 Python indentation ~
@@ -861,6 +866,22 @@ files at `tests/test_python_sample_code` (4). File (1) should be trigger the
 newly added file (2). This latter file should invoke vim which in turn sources
 file (3). File (3) may then read (4) as a first part of its assertion
 structure and then execute the remaning of the instructions/assertions.
+
+6. Testing Environment: The project uses Docker for consistent testing across
+different Python versions. See `README-Docker.md` for detailed information about
+the Docker testing environment.
+
+7. CI/CD: The project uses GitHub Actions for continuous integration, building
+Docker images for each supported Python version and running tests automatically.
+
+8. Supported Python Versions: The project currently supports Python 3.10.13,
+3.11.9, 3.12.4, and 3.13.0. All tests are run against these versions in the
+CI environment.
+
+9. Docker Testing: To run tests locally with Docker:
+    - Use `./scripts/run-tests-docker.sh` to run tests with the default Python version
+    - Use `./scripts/run-tests-docker.sh 3.11` to test with Python 3.11.9
+    - Use `./scripts/test-all-python-versions.sh` to test with all supported versions
 
 ===============================================================================
 8. Credits ~

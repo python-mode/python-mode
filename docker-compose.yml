@@ -1,0 +1,42 @@
+services:
+  python-mode-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PYTHON_VERSION_SHORT
+        - PYTHON_VERSION
+    volumes:
+      # Mount the current directory to allow for development and testing
+      - .:/workspace/python-mode
+    environment:
+      - PYTHON_CONFIGURE_OPTS=--enable-shared
+      - PYMODE_DIR=/workspace/python-mode
+      - PYENV_ROOT=/opt/pyenv
+      - PATH=/usr/local/bin:/opt/pyenv/bin:/opt/pyenv/shims:$PATH
+      # Optional: Set PYTHON_VERSION to test with a specific Python version
+      # - PYTHON_VERSION=3.11.9
+    # Run tests by default
+    command: ["/usr/local/bin/run-tests"]
+
+  # Alternative service for interactive development
+  python-mode-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PYTHON_VERSION_SHORT
+        - PYTHON_VERSION
+    volumes:
+      - .:/workspace/python-mode
+    environment:
+      - PYTHON_CONFIGURE_OPTS=--enable-shared
+      - PYMODE_DIR=/workspace/python-mode
+      - PYENV_ROOT=/opt/pyenv
+      - PATH=/usr/local/bin:/opt/pyenv/bin:/opt/pyenv/shims:$PATH
+      # Optional: Set PYTHON_VERSION to test with a specific Python version
+      # - PYTHON_VERSION=3.11.9
+    # Start an interactive shell for development
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
