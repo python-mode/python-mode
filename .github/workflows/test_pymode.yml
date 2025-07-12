@@ -1,71 +1,46 @@
 name: Testing python-mode
 
-on: [push]
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
 
 jobs:
-  test-python-3_8:
+  test-python-versions:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version:
+          - short: "3.10"
+            full: "3.10.13"
+          - short: "3.11"
+            full: "3.11.9"
+          - short: "3.12"
+            full: "3.12.4"
+          - short: "3.13"
+            full: "3.13.0"
+      fail-fast: false
+    name: Test Python ${{ matrix.python_version.short }} (${{ matrix.python_version.full }})
     steps:
-    - uses: actions/checkout@v1
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        export PYTHON_CONFIGURE_OPTS="--enable-shared"
-        sudo apt install -yqq libncurses5-dev libgtk2.0-dev libatk1.0-dev libcairo2-dev libx11-dev libxpm-dev libxt-dev python3-dev lua5.2 liblua5.2-dev libperl-dev git
-        sudo apt remove --purge -yqq vim vim-runtime gvim
-    - name: build and install vim from source
-      working-directory: /tmp
-      run: |
-        export PYTHON_CONFIGURE_OPTS="--enable-shared"
-        git clone https://github.com/vim/vim.git
-        cd vim
-        ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=/usr/lib/python3.8/config-3.8m-x86_64-linux-gnu --enable-perlinterp=yes --enable-luainterp=yes --enable-cscope --prefix=/usr/local
-        sudo make && sudo make install
-    - name: Install python-mode
-      run: |
-        export PYMODE_DIR="${HOME}/work/python-mode/python-mode"
-        mkdir -p ${HOME}/.vim/pack/foo/start/
-        ln -s ${PYMODE_DIR} ${HOME}/.vim/pack/foo/start/python-mode
-        cp ${PYMODE_DIR}/tests/utils/pymoderc ${HOME}/.pymoderc
-        cp ${PYMODE_DIR}/tests/utils/vimrc ${HOME}/.vimrc
-        touch ${HOME}/.vimrc.before ${HOME}/.vimrc.after
-    - name: Run python-mode test script
-      run: |
-        alias python=python3
-        cd ${HOME}/work/python-mode/python-mode
-        git submodule update --init --recursive
-        git submodule sync
-        bash tests/test.sh
-  test-python-3_9:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        export PYTHON_CONFIGURE_OPTS="--enable-shared"
-        sudo apt install -yqq libncurses5-dev libgtk2.0-dev libatk1.0-dev libcairo2-dev libx11-dev libxpm-dev libxt-dev python3-dev lua5.2 liblua5.2-dev libperl-dev git
-        sudo apt remove --purge -yqq vim vim-runtime gvim
-    - name: build and install vim from source
-      working-directory: /tmp
-      run: |
-        export PYTHON_CONFIGURE_OPTS="--enable-shared"
-        git clone https://github.com/vim/vim.git
-        cd vim
-        ./configure --with-features=huge --enable-multibyte --enable-python3interp=yes --with-python3-config-dir=/usr/lib/python3.9/config-3.9m-x86_64-linux-gnu --enable-perlinterp=yes --enable-luainterp=yes --enable-cscope --prefix=/usr/local
-        sudo make && sudo make install
-    - name: Install python-mode
-      run: |
-        export PYMODE_DIR="${HOME}/work/python-mode/python-mode"
-        mkdir -p ${HOME}/.vim/pack/foo/start/
-        ln -s ${PYMODE_DIR} ${HOME}/.vim/pack/foo/start/python-mode
-        cp ${PYMODE_DIR}/tests/utils/pymoderc ${HOME}/.pymoderc
-        cp ${PYMODE_DIR}/tests/utils/vimrc ${HOME}/.vimrc
-        touch ${HOME}/.vimrc.before ${HOME}/.vimrc.after
-    - name: Run python-mode test script
-      run: |
-        alias python=python3
-        cd ${HOME}/work/python-mode/python-mode
-        git submodule update --init --recursive
-        git submodule sync
-        bash tests/test.sh
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker compose build -q \
+            --build-arg PYTHON_VERSION="${{ matrix.python_version.full }}" \
+            --build-arg PYTHON_VERSION_SHORT="${{ matrix.python_version.short }}" \
+            python-mode-tests
+
+      - name: Run tests with Python ${{ matrix.python_version.short }}
+        run: |
+          docker compose run --rm \
+            -e PYTHON_VERSION="${{ matrix.python_version.full }}" \
+            -e PYTHON_VERSION_SHORT="${{ matrix.python_version.short }}" \
+            python-mode-tests
