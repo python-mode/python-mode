@@ -1,22 +1,37 @@
 source /root/.vimrc.before
 source /root/.pymoderc
 
-syntax on
+" redir! >> "${VIM_OUTPUT_FILE}"
+"set backspace=indent,eol,start
+"set expandtab
+"set mouse=                    " disable mouse
+"set shiftround                " always round indentation to shiftwidth
+"set shiftwidth=4              " default to two spaces
+"set smartindent               " smart indenting
+"set softtabstop=4             " default to two spaces
+"set tabstop=4                 " default to two spaces
+"set term=xterm-256color
+"set wrap                      " visually wrap lines
+call has('python3')
 filetype plugin indent on
-set shortmess=at
+let g:pymode_debug = 1
+set backupdir=
 set cmdheight=10
+set directory=
 set ft=python
-set shell=bash
+set nocompatible
+set nomore
+set noswapfile
+set packpath+=/tmp
+set paste
 set rtp+=/root/.vim/pack/foo/start/python-mode
-set term=xterm-256color
-set wrap                      " visually wrap lines
-set smartindent               " smart indenting
-set shiftwidth=4              " default to two spaces
-set tabstop=4                 " default to two spaces
-set softtabstop=4             " default to two spaces
-set shiftround                " always round indentation to shiftwidth
-set mouse=                    " disable mouse
-set expandtab
-set backspace=indent,eol,start
+set runtimepath+="$(dirname "${PWD}")"
+set runtimepath=
+set shell=bash
+set shortmess=at
+set undodir=
+set verbosefile="${VIM_OUTPUT_FILE}"
+set viewdir=
+syntax on
 
 source /root/.vimrc.after
