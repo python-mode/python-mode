@@ -1,0 +1,172 @@
+" Test code folding functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+  let g:pymode_folding = 1
+
+After:
+  call CleanupPythonBuffer()
+
+# Test basic function folding
+Given python (Simple function):
+  def hello():
+      print("Hello")
+      return True
+
+Execute (Enable folding):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+
+Then (Check fold levels):
+  AssertEqual 0, foldlevel(1)
+  AssertEqual 1, foldlevel(2)
+  AssertEqual 1, foldlevel(3)
+
+# Test class folding
+Given python (Class with methods):
+  class TestClass:
+      def method1(self):
+          return 1
+      
+      def method2(self):
+          if True:
+              return 2
+          return 0
+
+Execute (Enable folding):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+
+Then (Check class and method fold levels):
+  AssertEqual 0, foldlevel(1)
+  AssertEqual 1, foldlevel(2)
+  AssertEqual 1, foldlevel(3)
+  AssertEqual 1, foldlevel(5)
+  AssertEqual 2, foldlevel(6)
+  AssertEqual 2, foldlevel(7)
+  AssertEqual 1, foldlevel(8)
+
+# Test nested function folding
+Given python (Nested functions):
+  def outer():
+      def inner():
+          return "inner"
+      return inner()
+
+Execute (Enable folding):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+
+Then (Check nested fold levels):
+  AssertEqual 0, foldlevel(1)
+  AssertEqual 1, foldlevel(2)
+  AssertEqual 2, foldlevel(3)
+  AssertEqual 1, foldlevel(4)
+
+# Test fold opening and closing
+Given python (Function to fold):
+  def test_function():
+      x = 1
+      y = 2
+      return x + y
+
+Execute (Setup folding and test operations):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+  
+Then (Verify fold is closed):
+  normal! 1G
+  Assert foldclosed(1) != -1, 'Fold should be closed'
+
+Execute (Open fold):
+  normal! 1G
+  normal! zo
+
+Then (Verify fold is open):
+  Assert foldclosed(1) == -1, 'Fold should be open'
+
+# Test complex folding structure
+Given python (Complex Python structure):
+  class Calculator:
+      def __init__(self):
+          self.value = 0
+      
+      def add(self, n):
+          self.value += n
+          return self
+      
+      def multiply(self, n):
+          for i in range(n):
+              self.value *= i
+          return self
+  
+  def create_calculator():
+      return Calculator()
+
+Execute (Enable folding):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+
+Then (Check complex fold structure):
+  " Class should start at level 0
+  AssertEqual 0, foldlevel(1)
+  " __init__ method should be at level 1
+  AssertEqual 1, foldlevel(2)
+  " Method body should be at level 1
+  AssertEqual 1, foldlevel(3)
+  " add method should be at level 1
+  AssertEqual 1, foldlevel(5)
+  " multiply method should be at level 1
+  AssertEqual 1, foldlevel(9)
+  " for loop should be at level 2
+  AssertEqual 2, foldlevel(10)
+  " Function outside class should be at level 0
+  AssertEqual 0, foldlevel(14)
+
+# Test folding with decorators
+Given python (Decorated functions):
+  @property
+  def getter(self):
+      return self._value
+  
+  @staticmethod
+  def static_method():
+      return "static"
+
+Execute (Enable folding):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  normal! zM
+
+Then (Check decorator folding):
+  " Decorator should be included in fold
+  AssertEqual 0, foldlevel(1)
+  AssertEqual 1, foldlevel(3)
+  AssertEqual 0, foldlevel(5)
+  AssertEqual 1, foldlevel(7)
+
+# Test folding text display
+Given python (Function with docstring):
+  def documented_function():
+      """This is a documented function.
+      
+      It does something useful.
+      """
+      return True
+
+Execute (Setup folding and check fold text):
+  setlocal foldmethod=expr
+  setlocal foldexpr=pymode#folding#expr(v:lnum)
+  setlocal foldtext=pymode#folding#text()
+  normal! zM
+
+Then (Check fold text):
+  normal! 1G
+  let fold_text = foldtextresult(1)
+  Assert fold_text =~# 'def documented_function', 'Fold text should show function name'
