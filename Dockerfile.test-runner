@@ -1,23 +1,175 @@
-FROM python-mode-base-test:latest
+ARG PYTHON_VERSION=3.11
+ARG VIM_VERSION=9.0
+FROM python-mode-base-test:${PYTHON_VERSION}-${VIM_VERSION}
 
-# Copy python-mode
+# Build arguments (inherited from base image)
+ARG PYTHON_VERSION
+ARG VIM_VERSION
+
+# Switch to root to install additional packages and copy files
+USER root
+
+# Install additional dependencies for test execution
+RUN apt-get update && apt-get install -y \
+    jq \
+    bc \
+    time \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy python-mode source code
 COPY --chown=testuser:testuser . /opt/python-mode
 
-# Install Vader.vim test framework
-RUN git clone https://github.com/junegunn/vader.vim.git /opt/vader.vim && \
+# Install Vader.vim test framework (specific version for stability)
+RUN git clone --depth 1 --branch v1.1.1 \
+    https://github.com/junegunn/vader.vim.git /opt/vader.vim && \
     chown -R testuser:testuser /opt/vader.vim
 
-# Create test isolation script
-COPY scripts/test-isolation.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/test-isolation.sh
+# Copy test isolation and orchestration scripts
+COPY scripts/test_isolation.sh /usr/local/bin/test_isolation.sh
+COPY scripts/test_orchestrator.py /opt/test_orchestrator.py
+COPY scripts/performance_monitor.py /opt/performance_monitor.py
+COPY scripts/generate_test_report.py /opt/generate_test_report.py
+COPY scripts/check_performance_regression.py /opt/check_performance_regression.py
 
-# Switch to non-root user
+# Make scripts executable
+RUN chmod +x /usr/local/bin/test_isolation.sh && \
+    chmod +x /opt/*.py
+
+# Install additional Python packages for test orchestration
+RUN python3 -m pip install --no-cache-dir \
+    docker \
+    psutil \
+    click \
+    rich \
+    tabulate
+
+# Switch back to test user
 USER testuser
 WORKDIR /home/testuser
 
-# Set up vim plugins
+# Set up vim plugins in the test user's environment
 RUN mkdir -p ~/.vim/pack/test/start && \
-    ln -s /opt/python-mode ~/.vim/pack/test/start/python-mode && \
-    ln -s /opt/vader.vim ~/.vim/pack/test/start/vader
+    ln -sf /opt/python-mode ~/.vim/pack/test/start/python-mode && \
+    ln -sf /opt/vader.vim ~/.vim/pack/test/start/vader
 
-ENTRYPOINT ["/usr/local/bin/test-isolation.sh"]
+# Create test workspace directories
+RUN mkdir -p ~/test-workspace/{results,logs,temp,coverage}
+
+# Set up vim configuration for testing
+RUN cat > ~/.vimrc << 'EOF'
+" Minimal vimrc for testing
+set nocompatible
+filetype off
+
+" Add runtime paths
+set rtp+=~/.vim/pack/test/start/python-mode
+set rtp+=~/.vim/pack/test/start/vader
+
+filetype plugin indent on
+
+" Test-specific settings
+set noswapfile
+set nobackup
+set nowritebackup
+set noundofile
+set viminfo=
+
+" Python-mode settings for testing
+let g:pymode = 1
+let g:pymode_python = 'python3'
+let g:pymode_trim_whitespaces = 1
+let g:pymode_options = 1
+let g:pymode_options_max_line_length = 79
+let g:pymode_folding = 0
+let g:pymode_motion = 1
+let g:pymode_doc = 1
+let g:pymode_virtualenv = 0
+let g:pymode_run = 1
+let g:pymode_breakpoint = 1
+let g:pymode_lint = 1
+let g:pymode_lint_on_write = 0
+let g:pymode_lint_on_fly = 0
+let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
+let g:pymode_lint_ignore = ''
+let g:pymode_rope = 0
+let g:pymode_syntax = 1
+let g:pymode_indent = 1
+
+" Vader settings
+let g:vader_result_file = '/tmp/vader_results.txt'
+EOF
+
+# Create test runner script that wraps the isolation script
+RUN cat > ~/run_test.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+TEST_FILE="${1:-}"
+if [[ -z "$TEST_FILE" ]]; then
+    echo "Usage: $0 <test_file>"
+    exit 1
+fi
+
+# Ensure test file exists
+if [[ ! -f "$TEST_FILE" ]]; then
+    echo "Test file not found: $TEST_FILE"
+    exit 1
+fi
+
+# Run the test with isolation
+exec /usr/local/bin/test_isolation.sh "$TEST_FILE"
+EOF
+
+RUN chmod +x ~/run_test.sh
+
+# Verify the test environment
+RUN echo "=== Environment Verification ===" && \
+    python3 --version && \
+    echo "Python path: $(which python3)" && \
+    vim --version | head -5 && \
+    echo "Vim path: $(which vim)" && \
+    ls -la ~/.vim/pack/test/start/ && \
+    echo "=== Test Environment Ready ==="
+
+# Set working directory for test execution
+WORKDIR /home/testuser/test-workspace
+
+# Environment variables for test execution
+ENV PYTHONPATH=/opt/python-mode:$PYTHONPATH
+ENV VIM_TEST_TIMEOUT=60
+ENV VADER_OUTPUT_FILE=/home/testuser/test-workspace/results/vader_output.txt
+
+# Create entrypoint script for flexible test execution
+USER root
+RUN cat > /usr/local/bin/docker-entrypoint.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+# Switch to test user
+exec gosu testuser "$@"
+EOF
+
+# Install gosu for proper user switching
+RUN apt-get update && \
+    apt-get install -y gosu && \
+    rm -rf /var/lib/apt/lists/* && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+# Default command runs test isolation script
+CMD ["/usr/local/bin/test_isolation.sh"]
+
+# Health check to verify test runner is ready
+HEALTHCHECK --interval=30s --timeout=15s --start-period=10s --retries=3 \
+    CMD gosu testuser python3 -c "import vim; print('Vim module available')" 2>/dev/null || \
+        gosu testuser vim --version | grep -q "VIM.*${VIM_VERSION}" && \
+        test -f /opt/python-mode/plugin/pymode.vim
+
+# Metadata labels
+LABEL org.opencontainers.image.title="Python-mode Test Runner" \
+      org.opencontainers.image.description="Complete test execution environment for python-mode with Python ${PYTHON_VERSION} and Vim ${VIM_VERSION}" \
+      org.opencontainers.image.version="${PYTHON_VERSION}-${VIM_VERSION}" \
+      org.opencontainers.image.vendor="Python-mode Project" \
+      org.opencontainers.image.source="https://github.com/python-mode/python-mode"
