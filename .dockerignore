@@ -1,0 +1,44 @@
+# Ignore cache directories
+**/.ruff_cache/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+*.pyo
+
+# Ignore version control
+.git/
+.gitignore
+
+# Ignore swap files
+*.swp
+*.swo
+*~
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Ignore build artifacts
+.tox/
+build/
+dist/
+*.egg-info/
+
+# Ignore temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore test outputs
+test-results.json
+*.vader.out
+
+# Ignore environment files
+.env
+.env.*
+.python-version
