@@ -120,7 +120,7 @@ RUN git clone https://github.com/junegunn/vader.vim.git /opt/vader.vim && \
     chown -R testuser:testuser /opt/vader.vim
 
 # Create test isolation script
-COPY scripts/test-isolation.sh /usr/local/bin/
+COPY scripts/test_isolation.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/test-isolation.sh
 
 # Switch to non-root user
@@ -132,7 +132,7 @@ RUN mkdir -p ~/.vim/pack/test/start && \
     ln -s /opt/python-mode ~/.vim/pack/test/start/python-mode && \
     ln -s /opt/vader.vim ~/.vim/pack/test/start/vader
 
-ENTRYPOINT ["/usr/local/bin/test-isolation.sh"]
+ENTRYPOINT ["/usr/local/bin/test_isolation.sh"]
 ```
 
 ### Phase 2: Modern Test Framework Integration
@@ -417,7 +417,7 @@ if __name__ == '__main__':
 
 #### 3.1 Test Isolation Script
 
-**scripts/test-isolation.sh**
+**scripts/test_isolation.sh**
 ```bash
 #!/bin/bash
 set -euo pipefail

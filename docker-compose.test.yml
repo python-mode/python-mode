@@ -9,17 +9,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./tests:/tests:ro
       - ./results:/results
-      - ./scripts:/scripts:ro
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - TEST_PARALLEL_JOBS=${TEST_PARALLEL_JOBS:-4}
-      - TEST_TIMEOUT=${TEST_TIMEOUT:-60}
-      - TEST_DIR=${TEST_DIR:-/tests/vader}
-    command: ["--parallel", "${TEST_PARALLEL_JOBS:-4}", "--timeout", "${TEST_TIMEOUT:-60}", "--output", "/results/test-results.json"]
+      - TEST_PARALLEL_JOBS=4
+      - TEST_TIMEOUT=60
+    command: ["python", "/opt/test_orchestrator.py"]
     networks:
       - test-network
-    depends_on:
-      - test-builder
 
   test-builder:
     build:
@@ -29,16 +25,6 @@ services:
         - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
         - VIM_VERSION=${VIM_VERSION:-9.0}
     image: python-mode-base-test:latest
-    command: /bin/true  # No-op, just builds the image
-
-  test-runner:
-    build:
-      context: .
-      dockerfile: Dockerfile.test-runner
-    image: python-mode-test-runner:latest
-    command: /bin/true  # No-op, just builds the image
-    depends_on:
-      - test-builder
 
 networks:
   test-network:

@@ -1,30 +1,31 @@
 FROM python:3.11-slim
 
-# Install system dependencies
+# Install Docker CLI and required dependencies
 RUN apt-get update && apt-get install -y \
     docker.io \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies for the test orchestrator
 RUN pip install --no-cache-dir \
     docker \
+    psutil \
     pytest \
-    pytest-timeout \
-    pytest-xdist
+    pytest-timeout
 
-# Create non-root user
+# Copy test orchestrator script
+COPY scripts/test_orchestrator.py /opt/test_orchestrator.py
+COPY scripts/performance_monitor.py /opt/performance_monitor.py
+
+# Create results directory
+RUN mkdir -p /results
+
+# Set working directory
+WORKDIR /opt
+
+# Set up non-root user for security
 RUN useradd -m -s /bin/bash coordinator
 USER coordinator
-WORKDIR /home/coordinator
 
-# Copy orchestrator script
-COPY --chown=coordinator:coordinator scripts/test_orchestrator.py /opt/test_orchestrator.py
-RUN chmod +x /opt/test_orchestrator.py
-
-# Set up environment
-ENV PYTHONPATH=/opt
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-ENTRYPOINT ["python", "/opt/test_orchestrator.py"]
+# Default command
+CMD ["python", "/opt/test_orchestrator.py", "--output", "/results/test_results.json"]
