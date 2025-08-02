@@ -1,0 +1,182 @@
+" Test linting functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+  let g:pymode_lint = 1
+  let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
+
+After:
+  call CleanupPythonBuffer()
+
+# Test basic linting with no errors
+Given python (Clean Python code):
+  def hello():
+      print("Hello, World!")
+      return True
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check no errors found):
+  let errors = getloclist(0)
+  AssertEqual 0, len(errors), 'Clean code should have no lint errors'
+
+# Test linting with undefined variable
+Given python (Code with undefined variable):
+  def test():
+      return undefined_variable
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check undefined variable error):
+  let errors = getloclist(0)
+  Assert len(errors) > 0, 'Should detect undefined variable'
+  Assert errors[0].text =~# 'undefined', 'Error should mention undefined variable'
+
+# Test linting with import error
+Given python (Code with unused import):
+  import os
+  import sys
+  
+  def test():
+      return True
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check unused import warnings):
+  let errors = getloclist(0)
+  Assert len(errors) >= 2, 'Should detect unused imports'
+  let import_errors = filter(copy(errors), 'v:val.text =~# "imported but unused"')
+  Assert len(import_errors) >= 2, 'Should have unused import warnings'
+
+# Test linting with PEP8 style issues
+Given python (Code with PEP8 violations):
+  def test( ):
+    x=1+2
+    return x
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check PEP8 errors):
+  let errors = getloclist(0)
+  Assert len(errors) > 0, 'Should detect PEP8 violations'
+  let pep8_errors = filter(copy(errors), 'v:val.text =~# "E"')
+  Assert len(pep8_errors) > 0, 'Should have PEP8 errors'
+
+# Test linting with complexity issues
+Given python (Complex function):
+  def complex_function(x):
+      if x > 10:
+          if x > 20:
+              if x > 30:
+                  if x > 40:
+                      if x > 50:
+                          return "very high"
+                      return "high"
+                  return "medium-high"
+              return "medium"
+          return "low-medium"
+      return "low"
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check complexity warnings):
+  let errors = getloclist(0)
+  let complexity_errors = filter(copy(errors), 'v:val.text =~# "too complex"')
+  " Note: May or may not trigger depending on mccabe settings
+
+# Test linting configuration
+Execute (Test lint checker configuration):
+  let original_checkers = g:pymode_lint_checkers
+  let g:pymode_lint_checkers = ['pyflakes']
+  
+Given python (Code with style issues):
+  import os
+  def test( ):
+      return undefined_var
+
+Execute (Run linting with limited checkers):
+  PymodeLint
+
+Then (Check only pyflakes errors):
+  let errors = getloclist(0)
+  Assert len(errors) > 0, 'Should detect pyflakes errors'
+  let style_errors = filter(copy(errors), 'v:val.text =~# "E\d\d\d"')
+  AssertEqual 0, len(style_errors), 'Should not have PEP8 errors with pyflakes only'
+
+Execute (Restore original checkers):
+  let g:pymode_lint_checkers = original_checkers
+
+# Test lint ignore patterns
+Execute (Test lint ignore functionality):
+  let g:pymode_lint_ignore = ["E203", "W503"]
+
+Given python (Code with ignored violations):
+  x = [1, 2, 3]
+  result = (x[0] +
+            x[1])
+
+Execute (Run linting with ignore patterns):
+  PymodeLint
+
+Then (Check ignored errors):
+  let errors = getloclist(0)
+  let ignored_errors = filter(copy(errors), 'v:val.text =~# "E203\|W503"')
+  AssertEqual 0, len(ignored_errors), 'Ignored errors should not appear'
+
+Execute (Clear ignore patterns):
+  let g:pymode_lint_ignore = []
+
+# Test automatic linting on write
+Execute (Test auto-lint configuration):
+  let g:pymode_lint_on_write = 1
+
+Given python (Code with errors):
+  def test():
+      return undefined_var
+
+Execute (Simulate write):
+  doautocmd BufWritePost
+
+Then (Check auto-lint triggered):
+  let errors = getloclist(0)
+  Assert len(errors) > 0, 'Auto-lint should detect errors on write'
+
+Execute (Disable auto-lint):
+  let g:pymode_lint_on_write = 0
+
+# Test lint signs
+Execute (Test lint signs functionality):
+  let g:pymode_lint_signs = 1
+
+Given python (Code with error):
+  def test():
+      return undefined_variable
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check signs are placed):
+  let signs = sign_getplaced('%', {'group': 'pymode'})
+  Assert len(signs[0].signs) > 0, 'Signs should be placed for errors'
+
+# Test lint quickfix integration
+Execute (Test quickfix integration):
+  let g:pymode_lint_cwindow = 1
+
+Given python (Code with multiple errors):
+  import unused_module
+  def test():
+      return undefined_var1 + undefined_var2
+
+Execute (Run linting):
+  PymodeLint
+
+Then (Check quickfix window):
+  let qf_list = getqflist()
+  Assert len(qf_list) > 0, 'Quickfix should contain lint errors'

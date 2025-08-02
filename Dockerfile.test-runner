@@ -1,0 +1,127 @@
+ARG PYTHON_VERSION=3.11
+ARG VIM_VERSION=9.0
+FROM python-mode-base-test:${PYTHON_VERSION}-${VIM_VERSION}
+
+# Switch back to root for installation
+USER root
+
+# Copy python-mode source code
+COPY --chown=testuser:testuser . /opt/python-mode
+
+# Install Vader.vim test framework
+RUN git clone --depth=1 https://github.com/junegunn/vader.vim.git /opt/vader.vim && \
+    chown -R testuser:testuser /opt/vader.vim
+
+# Create test isolation and utility scripts
+COPY --chown=testuser:testuser scripts/test-isolation.sh /usr/local/bin/test-isolation.sh
+COPY --chown=testuser:testuser scripts/vim-test-wrapper.sh /usr/local/bin/vim-test-wrapper.sh
+
+# Make scripts executable
+RUN chmod +x /usr/local/bin/test-isolation.sh && \
+    chmod +x /usr/local/bin/vim-test-wrapper.sh
+
+# Create enhanced test environment setup script
+RUN cat > /usr/local/bin/setup-test-env.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+# Setup test environment with enhanced safety
+export HOME=/home/testuser
+export TERM=dumb
+export VIM_TEST_MODE=1
+export VADER_OUTPUT_FILE=/tmp/vader_output
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONUNBUFFERED=1
+
+# Disable all vim user configuration
+export VIMINIT='set nocp | set rtp=/opt/vader.vim,/opt/python-mode,$VIMRUNTIME'
+export MYVIMRC=/dev/null
+
+# Create temporary directories
+mkdir -p /tmp/vim-test
+mkdir -p /home/testuser/.vim/{tmp,view,swap,backup,undo}
+
+# Set strict permissions
+chmod 700 /tmp/vim-test
+chmod -R 700 /home/testuser/.vim
+
+echo "Test environment setup complete"
+EOF
+
+RUN chmod +x /usr/local/bin/setup-test-env.sh
+
+# Switch back to test user
+USER testuser
+
+# Set up vim plugin structure
+RUN mkdir -p ~/.vim/pack/test/start && \
+    ln -sf /opt/python-mode ~/.vim/pack/test/start/python-mode && \
+    ln -sf /opt/vader.vim ~/.vim/pack/test/start/vader
+
+# Create test configuration
+RUN cat > ~/.vim/vimrc << 'EOF'
+" Enhanced test vimrc for python-mode testing
+set nocompatible
+
+" Safety settings to prevent hanging
+set nomore
+set noconfirm  
+set shortmess=aoOtTIcFW
+set cmdheight=20
+set belloff=all
+set visualbell t_vb=
+set report=999999
+set noshowcmd
+set noshowmode
+
+" Fast timeouts
+set timeoutlen=100
+set ttimeoutlen=10
+set updatetime=100
+
+" Disable file persistence
+set noswapfile
+set nobackup
+set nowritebackup
+set noundofile
+set backupdir=
+set directory=
+set undodir=
+set viewdir=
+
+" Terminal settings
+set t_Co=0
+set notermguicolors
+set mouse=
+set ttyfast
+
+" Enable plugins
+filetype plugin indent on
+packloadall!
+
+" Python-mode basic configuration
+let g:pymode = 1
+let g:pymode_python = 'python3'
+let g:pymode_options_max_line_length = 79
+let g:pymode_lint_on_write = 0
+let g:pymode_rope = 0
+let g:pymode_doc = 1
+let g:pymode_virtualenv = 0
+
+" Vader configuration
+let g:vader_output_file = '/tmp/vader_output'
+EOF
+
+# Verify setup
+RUN vim --version | grep -E "(VIM|python3)" && \
+    ls -la ~/.vim/pack/test/start/ && \
+    python3 -c "import sys; print('Python path:', sys.path[:3])"
+
+# Set working directory
+WORKDIR /opt/python-mode
+
+# Default entrypoint
+ENTRYPOINT ["/usr/local/bin/test-isolation.sh"]
+
+# Default command runs help
+CMD ["--help"]

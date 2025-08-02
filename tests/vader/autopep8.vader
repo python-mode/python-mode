@@ -1,0 +1,127 @@
+" Test autopep8 functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+
+After:
+  call CleanupPythonBuffer()
+
+# Test basic autopep8 formatting
+Execute (Setup unformatted Python code):
+  call SetBufferContent(['def test():    return 1'])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Expect python (Properly formatted code):
+  def test():
+      return 1
+
+# Test autopep8 with multiple formatting issues
+Execute (Setup code with multiple issues):
+  call SetBufferContent([
+    \ 'def test( ):',
+    \ '  x=1+2',
+    \ '  return x'
+  \ ])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Expect python (All issues fixed):
+  def test():
+      x = 1 + 2
+      return x
+
+# Test autopep8 with class formatting
+Execute (Setup unformatted class):
+  call SetBufferContent([
+    \ 'class   TestClass:',
+    \ '  def method(self):',
+    \ '      pass'
+  \ ])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Expect python (Properly formatted class):
+  class TestClass:
+      def method(self):
+          pass
+
+# Test autopep8 with long lines
+Execute (Setup code with long line):
+  call SetBufferContent([
+    \ 'def long_function(param1, param2, param3, param4, param5, param6):',
+    \ '    return param1 + param2 + param3 + param4 + param5 + param6'
+  \ ])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Then (Check that long lines are handled):
+  let lines = getline(1, '$')
+  Assert len(lines) >= 2, 'Long line should be broken'
+  for line in lines
+    Assert len(line) <= 79, 'Line too long: ' . line
+  endfor
+
+# Test autopep8 with imports
+Execute (Setup unformatted imports):
+  call SetBufferContent([
+    \ 'import os,sys',
+    \ 'from collections import defaultdict,OrderedDict',
+    \ '',
+    \ 'def test():',
+    \ '    pass'
+  \ ])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Expect python (Properly formatted imports):
+  import os
+  import sys
+  from collections import defaultdict, OrderedDict
+
+
+  def test():
+      pass
+
+# Test that autopep8 preserves functionality
+Execute (Setup functional code):
+  call SetBufferContent([
+    \ 'def calculate(x,y):',
+    \ '  result=x*2+y',
+    \ '  return result',
+    \ '',
+    \ 'print(calculate(5,3))'
+  \ ])
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Then (Verify code is still functional):
+  " Save to temp file and run
+  let temp_file = tempname() . '.py'
+  call writefile(getline(1, '$'), temp_file)
+  let output = system('python3 ' . temp_file)
+  call delete(temp_file)
+  Assert output =~# '13', 'Code should still work after formatting'
+
+# Test autopep8 with existing good formatting
+Execute (Setup already well-formatted code):
+  call SetBufferContent([
+    \ 'def hello():',
+    \ '    print("Hello, World!")',
+    \ '    return True'
+  \ ])
+  let original_content = getline(1, '$')
+
+Do (Run autopep8 formatting):
+  :PymodeLintAuto\<CR>
+
+Then (Verify no unnecessary changes):
+  let new_content = getline(1, '$')
+  Assert original_content == new_content, 'Well-formatted code should not change'

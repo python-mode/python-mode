@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # Base test image builder
+  base-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.base-test
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
+        - VIM_VERSION=${VIM_VERSION:-9.0}
+    image: python-mode-base-test:${PYTHON_VERSION:-3.11}-${VIM_VERSION:-9.0}
+    profiles:
+      - build
+
+  # Test runner service
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-runner
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
+        - VIM_VERSION=${VIM_VERSION:-9.0}
+    image: python-mode-test-runner:${PYTHON_VERSION:-3.11}-${VIM_VERSION:-9.0}
+    volumes:
+      # Mount source code for development
+      - .:/opt/python-mode:ro
+      # Mount test results
+      - test-results:/tmp/test-results
+    environment:
+      - VIM_TEST_TIMEOUT=${VIM_TEST_TIMEOUT:-60}
+      - VIM_TEST_VERBOSE=${VIM_TEST_VERBOSE:-0}
+      - VIM_TEST_DEBUG=${VIM_TEST_DEBUG:-0}
+      - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /home/testuser/.vim:rw,noexec,nosuid,size=20m
+    ulimits:
+      nproc: 64
+      nofile: 1024
+      memlock: 67108864  # 64MB
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpu_count: 1
+    network_mode: none
+    profiles:
+      - test
+
+  # Development service for interactive testing
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-runner
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
+        - VIM_VERSION=${VIM_VERSION:-9.0}
+    volumes:
+      - .:/opt/python-mode
+      - test-results:/tmp/test-results
+    environment:
+      - VIM_TEST_TIMEOUT=300
+      - VIM_TEST_VERBOSE=1
+      - VIM_TEST_DEBUG=1
+    command: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+  # Test orchestrator service
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.orchestrator
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - .:/workspace:ro
+      - test-results:/results
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TEST_PARALLEL_JOBS=${TEST_PARALLEL_JOBS:-4}
+      - TEST_TIMEOUT=${TEST_TIMEOUT:-60}
+      - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
+      - VIM_VERSION=${VIM_VERSION:-9.0}
+    command: ["python", "/opt/test-orchestrator.py"]
+    depends_on:
+      - test-runner
+    networks:
+      - test-network
+    profiles:
+      - orchestrate
+
+  # Performance monitoring service
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - test-results:/results
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - MONITOR_INTERVAL=${MONITOR_INTERVAL:-1}
+    profiles:
+      - monitor
+
+networks:
+  test-network:
+    driver: bridge
+    internal: true
+
+volumes:
+  test-results:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=500m,uid=1000,gid=1000

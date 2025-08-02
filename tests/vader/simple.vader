@@ -1,0 +1,22 @@
+" Simple Vader test for validation
+" This test doesn't require python-mode functionality
+
+Execute (Basic assertion):
+  Assert 1 == 1, 'Basic assertion should pass'
+
+Execute (Vim is working):
+  Assert exists(':quit'), 'Vim should have quit command'
+
+Execute (Buffer operations):
+  new
+  call setline(1, 'Hello World')
+  Assert getline(1) ==# 'Hello World', 'Buffer content should match'
+  bwipeout!
+
+Execute (Simple python code):
+  new
+  setlocal filetype=python
+  call setline(1, 'print("test")')
+  Assert &filetype ==# 'python', 'Filetype should be python'
+  Assert getline(1) ==# 'print("test")', 'Content should match'
+  bwipeout!
