@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    docker.io \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    docker \
+    pytest \
+    pytest-timeout \
+    pytest-xdist
+
+# Create non-root user
+RUN useradd -m -s /bin/bash coordinator
+USER coordinator
+WORKDIR /home/coordinator
+
+# Copy orchestrator script
+COPY --chown=coordinator:coordinator scripts/test_orchestrator.py /opt/test_orchestrator.py
+RUN chmod +x /opt/test_orchestrator.py
+
+# Set up environment
+ENV PYTHONPATH=/opt
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+ENTRYPOINT ["python", "/opt/test_orchestrator.py"]
