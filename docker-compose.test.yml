@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   test-coordinator:
     build:
       context: .
-      dockerfile: Dockerfile.coordinator
+      dockerfile: Dockerfile.test-runner
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./tests:/tests:ro
@@ -13,7 +11,9 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
       - TEST_PARALLEL_JOBS=4
       - TEST_TIMEOUT=60
-    command: ["python", "/opt/test_orchestrator.py"]
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: ["python", "/opt/test-orchestrator.py"]
     networks:
       - test-network
 
@@ -25,6 +25,41 @@ services:
         - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
         - VIM_VERSION=${VIM_VERSION:-9.0}
     image: python-mode-base-test:latest
+
+  # Service for running legacy bash tests in parallel
+  test-legacy:
+    build:
+      context: .
+      dockerfile: Dockerfile.base-test
+    volumes:
+      - .:/opt/python-mode:ro
+      - ./results:/results
+    working_dir: /opt/python-mode
+    environment:
+      - TEST_MODE=legacy
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: ["bash", "tests/test.sh"]
+    networks:
+      - test-network
+
+  # Service for running new Vader tests
+  test-vader:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-runner
+    volumes:
+      - .:/opt/python-mode:ro
+      - ./results:/results
+    working_dir: /opt/python-mode
+    environment:
+      - TEST_MODE=vader
+      - VIM_TEST_TIMEOUT=60
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: ["python", "scripts/test_orchestrator.py", "--output", "/results/vader-results.json"]
+    networks:
+      - test-network
 
 networks:
   test-network:

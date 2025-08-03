@@ -1,0 +1,211 @@
+" Test python-mode motion and text object functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+  let g:pymode_motion = 1
+
+After:
+  call CleanupPythonBuffer()
+
+# Test Python class motion
+Given python (Python class structure):
+  class TestClass:
+      def __init__(self):
+          self.value = 1
+      
+      def method1(self):
+          return self.value
+      
+      def method2(self):
+          if self.value > 0:
+              return True
+          return False
+      
+      @property 
+      def prop(self):
+          return self.value * 2
+
+  class AnotherClass:
+      pass
+
+Execute (Test ]C and [C class motions):
+  " Go to top of buffer
+  normal! gg
+  
+  " Move to next class
+  normal! ]C
+  
+  " Should be on first class definition
+  Assert getline('.') =~ 'class TestClass:', 'Should be on TestClass definition'
+  
+  " Move to next class
+  normal! ]C
+  
+  " Should be on second class definition  
+  Assert getline('.') =~ 'class AnotherClass:', 'Should be on AnotherClass definition'
+  
+  " Move back to previous class
+  normal! [C
+  
+  " Should be back on first class
+  Assert getline('.') =~ 'class TestClass:', 'Should be back on TestClass definition'
+
+# Test Python method motion
+Execute (Test ]M and [M method motions):
+  " Go to top of buffer
+  normal! gg
+  
+  " Move to next method
+  normal! ]M
+  
+  " Should be on a method definition
+  let line = getline('.')
+  Assert line =~ 'def ' || line =~ '@', 'Should be on method or decorator'
+  
+  " Count total methods by moving through them
+  let method_count = 0
+  normal! gg
+  
+  " Use a loop to count methods
+  let start_line = line('.')
+  while 1
+    normal! ]M
+    if line('.') == start_line || line('.') > line('$')
+      break
+    endif
+    let current_line = getline('.')
+    if current_line =~ 'def '
+      let method_count += 1
+    endif
+    let start_line = line('.')
+    if method_count > 10 " Safety break
+      break
+    endif
+  endwhile
+  
+  Assert method_count >= 3, 'Should find at least 3 method definitions'
+
+# Test Python function text objects
+Given python (Function with complex body):
+  def complex_function(arg1, arg2):
+      """This is a docstring
+      with multiple lines"""
+      
+      if arg1 > arg2:
+          result = arg1 * 2
+          for i in range(result):
+              print(f"Value: {i}")
+      else:
+          result = arg2 * 3
+          
+      return result
+
+Execute (Test aF and iF function text objects):
+  " Go to inside the function
+  normal! 5G
+  
+  " Select around function (aF)
+  normal! vaF
+  
+  " Check that we selected the entire function
+  let start_line = line("'<")
+  let end_line = line("'>")
+  
+  " Should include the def line
+  Assert getline(start_line) =~ 'def complex_function', 'Function selection should include def line'
+  
+  " Should include the return statement
+  Assert getline(end_line) =~ 'return' || search('return', 'n') <= end_line, 'Function selection should include return'
+
+# Test Python class text objects  
+Given python (Class with methods):
+  class MyClass:
+      def __init__(self):
+          self.data = []
+      
+      def add_item(self, item):
+          self.data.append(item)
+      
+      def get_items(self):
+          return self.data
+
+Execute (Test aC and iC class text objects):  
+  " Go inside the class
+  normal! 3G
+  
+  " Select around class (aC)
+  normal! vaC
+  
+  " Check selection bounds
+  let start_line = line("'<")
+  let end_line = line("'>")
+  
+  " Should start with class definition
+  Assert getline(start_line) =~ 'class MyClass:', 'Class selection should start with class definition'
+  
+  " Should include all methods
+  let class_content = join(getline(start_line, end_line), '\n')
+  Assert match(class_content, 'def __init__') >= 0, 'Should include __init__ method'
+  Assert match(class_content, 'def add_item') >= 0, 'Should include add_item method'
+  Assert match(class_content, 'def get_items') >= 0, 'Should include get_items method'
+
+# Test indentation-based text objects
+Given python (Indented code block):
+  if True:
+      x = 1
+      y = 2
+      if x < y:
+          print("x is less than y")
+          z = x + y
+      else:
+          print("x is not less than y")
+      print("Done with comparison")
+
+Execute (Test ai and ii indentation text objects):
+  " Go to line with deeper indentation
+  normal! 4G
+  
+  " Select around indentation (ai)
+  normal! vai
+  
+  " Check that we selected the indented block
+  let start_line = line("'<")
+  let end_line = line("'>")
+  
+  " Should capture the if block
+  let selected_text = join(getline(start_line, end_line), '\n')
+  Assert match(selected_text, 'if x < y') >= 0, 'Should include inner if statement'
+  Assert match(selected_text, 'z = x + y') >= 0, 'Should include indented content'
+
+# Test decorator motion
+Given python (Functions with decorators):
+  @property
+  @staticmethod
+  def decorated_function():
+      return "decorated"
+  
+  def normal_function():
+      return "normal"
+  
+  @classmethod
+  def another_decorated(cls):
+      return cls.__name__
+
+Execute (Test decorator handling in motions):
+  " Go to top
+  normal! gg
+  
+  " Move to next method - should handle decorators
+  normal! ]M
+  
+  " Should be on decorator or function
+  let line = getline('.')
+  Assert line =~ '@' || line =~ 'def ', 'Should be on decorator or function definition'
+  
+  " If on decorator, the function should be nearby
+  if line =~ '@'
+    " Find the actual function definition
+    let func_line = search('def ', 'n')
+    Assert func_line > 0, 'Should find function definition after decorator'
+  endif
