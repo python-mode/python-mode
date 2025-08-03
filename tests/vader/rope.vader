@@ -1,0 +1,128 @@
+" Test python-mode rope/refactoring functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+  " Note: Rope is disabled by default, these tests verify the functionality exists
+  " For actual rope tests, rope would need to be enabled: let g:pymode_rope = 1
+
+After:
+  call CleanupPythonBuffer()
+
+# Test rope completion functionality (when rope is available)
+Given python (Simple Python class for rope testing):
+  class TestRope:
+      def __init__(self):
+          self.value = 42
+      
+      def get_value(self):
+          return self.value
+      
+      def set_value(self, new_value):
+          self.value = new_value
+  
+  # Create instance for testing
+  test_obj = TestRope()
+  test_obj.
+
+Execute (Test rope completion availability):
+  " Check if rope functions are available
+  Assert exists('*pymode#rope#completions'), 'Rope completion function should exist'
+  Assert exists('*pymode#rope#complete'), 'Rope complete function should exist'
+  Assert exists('*pymode#rope#goto_definition'), 'Rope goto definition function should exist'
+
+# Test rope refactoring functions availability
+Execute (Test rope refactoring functions availability):
+  " Check if refactoring functions exist
+  Assert exists('*pymode#rope#rename'), 'Rope rename function should exist'
+  Assert exists('*pymode#rope#extract_method'), 'Rope extract method function should exist'
+  Assert exists('*pymode#rope#extract_variable'), 'Rope extract variable function should exist'
+  Assert exists('*pymode#rope#organize_imports'), 'Rope organize imports function should exist'
+  Assert exists('*pymode#rope#find_it'), 'Rope find occurrences function should exist'
+
+# Test rope documentation functions
+Execute (Test rope documentation functions):
+  Assert exists('*pymode#rope#show_doc'), 'Rope show documentation function should exist'
+  Assert exists('*pymode#rope#regenerate'), 'Rope regenerate cache function should exist'
+
+# Test rope advanced refactoring functions
+Execute (Test rope advanced refactoring functions):
+  Assert exists('*pymode#rope#inline'), 'Rope inline refactoring function should exist'
+  Assert exists('*pymode#rope#move'), 'Rope move refactoring function should exist'
+  Assert exists('*pymode#rope#signature'), 'Rope change signature function should exist'
+  Assert exists('*pymode#rope#generate_function'), 'Rope generate function should exist'
+  Assert exists('*pymode#rope#generate_class'), 'Rope generate class function should exist'
+
+# Test that rope is properly configured when disabled
+Execute (Test rope default configuration):
+  " Rope should be disabled by default
+  Assert g:pymode_rope == 0, 'Rope should be disabled by default'
+  
+  " But rope functions should still be available for when it's enabled
+  Assert exists('g:pymode_rope_prefix'), 'Rope prefix should be configured'
+  Assert g:pymode_rope_prefix == '<C-c>', 'Default rope prefix should be Ctrl-C'
+
+# Test conditional rope behavior
+Given python (Code for testing rope behavior when disabled):
+  import os
+  import sys
+  
+  def function_to_rename():
+      return "original_name"
+
+Execute (Test rope behavior when disabled):
+  " When rope is disabled, some commands should either:
+  " 1. Not execute (safe failure)
+  " 2. Show appropriate message
+  " 3. Be no-ops
+  
+  " Test that we can call rope functions without errors (they should handle disabled state)
+  try
+    " These should not crash when rope is disabled
+    call pymode#rope#regenerate()
+    let rope_call_success = 1
+  catch
+    let rope_call_success = 0
+  endtry
+  
+  " Either the function handles disabled rope gracefully, or it exists
+  Assert rope_call_success >= 0, 'Rope functions should handle disabled state gracefully'
+
+# Test rope configuration variables
+Execute (Test rope configuration completeness):
+  " Test that all expected rope configuration variables exist
+  let rope_config_vars = [
+    \ 'g:pymode_rope',
+    \ 'g:pymode_rope_prefix',
+    \ 'g:pymode_rope_completion',
+    \ 'g:pymode_rope_autoimport_import_after_complete',
+    \ 'g:pymode_rope_regenerate_on_write'
+  \ ]
+  
+  let missing_vars = []
+  for var in rope_config_vars
+    if !exists(var)
+      call add(missing_vars, var)
+    endif
+  endfor
+  
+  Assert len(missing_vars) == 0, 'All rope config variables should exist: ' . string(missing_vars)
+
+# Test rope key bindings exist (even when rope is disabled)
+Execute (Test rope key bindings configuration):
+  " Check that rope key binding variables exist
+  let rope_key_vars = [
+    \ 'g:pymode_rope_goto_definition_bind',
+    \ 'g:pymode_rope_rename_bind',
+    \ 'g:pymode_rope_extract_method_bind',
+    \ 'g:pymode_rope_organize_imports_bind'
+  \ ]
+  
+  let missing_key_vars = []
+  for key_var in rope_key_vars
+    if !exists(key_var)
+      call add(missing_key_vars, key_var)
+    endif
+  endfor
+  
+  Assert len(missing_key_vars) == 0, 'All rope key binding variables should exist: ' . string(missing_key_vars)

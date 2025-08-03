@@ -36,6 +36,7 @@ if [[ -z "$TEST_FILE" ]]; then
 fi
 
 # Execute vim with vader
+echo "Starting Vader test: $TEST_FILE"
 exec timeout --kill-after=5s "${VIM_TEST_TIMEOUT:-60}s" \
     vim -X -N -u NONE -i NONE \
     -c "set noswapfile" \
@@ -45,4 +46,4 @@ exec timeout --kill-after=5s "${VIM_TEST_TIMEOUT:-60}s" \
     -c "set viminfo=" \
     -c "filetype plugin indent on" \
     -c "packloadall" \
-    -c "Vader! $TEST_FILE" 2>&1
+    -c "Vader! $TEST_FILE"

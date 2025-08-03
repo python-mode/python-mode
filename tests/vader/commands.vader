@@ -1,0 +1,148 @@
+" Test python-mode commands functionality
+Include: setup.vim
+
+Before:
+  call SetupPythonBuffer()
+
+After:
+  call CleanupPythonBuffer()
+
+# Test PymodeVersion command
+Execute (Test PymodeVersion command):
+  " Clear any existing messages
+  messages clear
+  
+  " Execute PymodeVersion command
+  PymodeVersion
+  
+  " Capture the messages
+  let messages_output = execute('messages')
+  
+  " Assert that version information is displayed
+  Assert match(tolower(messages_output), 'pymode version') >= 0, 'PymodeVersion should display version information'
+
+# Test PymodeRun command
+Given python (Simple Python script for running):
+  # Output more than 5 lines to stdout
+  a = 10
+  for z in range(a):
+      print(z)
+
+Execute (Test PymodeRun command):
+  " Enable run functionality
+  let g:pymode_run = 1
+  
+  " Save the current buffer to a temporary file
+  write! /tmp/test_run.py
+  
+  " Set buffer switching options
+  set switchbuf+=useopen
+  let curr_buffer = bufname("%")
+  
+  " Execute PymodeRun
+  PymodeRun
+  
+  " Check if run buffer was created
+  let run_buffer = bufname("__run__")
+  if empty(run_buffer)
+    " Try alternative buffer name
+    let run_buffer = bufwinnr("__run__")
+  endif
+  
+  " Switch to run buffer if it exists
+  if !empty(run_buffer) && run_buffer != -1
+    execute "buffer " . run_buffer
+    " Check that run output has multiple lines (should be > 5)
+    Assert line('$') > 5, 'Run output should have more than 5 lines'
+  else
+    " If no run buffer, at least verify the command executed without error
+    Assert v:shell_error == 0, 'PymodeRun should execute without shell errors'
+  endif
+
+# Test PymodeLint command
+Given python (Python code with lint issues):
+  import math, sys;
+  
+  def example1():
+      ####This is a long comment. This should be wrapped to fit within 72 characters.
+      some_tuple=(   1,2, 3,'a'  );
+      some_variable={'long':'Long code lines should be wrapped within 79 characters.',
+      'other':[math.pi, 100,200,300,9876543210,'This is a long string that goes on'],
+      'more':{'inner':'This whole logical line should be wrapped.',some_tuple:[1,
+      20,300,40000,500000000,60000000000000000]}}
+      return (some_tuple, some_variable)
+
+Execute (Test PymodeLint command):
+  " Enable linting
+  let g:pymode_lint = 1
+  let g:pymode_lint_on_write = 0
+  
+  " Save file to trigger linting properly
+  write! /tmp/test_lint.py
+  
+  " Clear any existing location list
+  call setloclist(0, [])
+  Assert len(getloclist(0)) == 0, 'Location list should start empty'
+  
+  " Run linting
+  PymodeLint
+  
+  " Check that location list has lint errors
+  let loclist = getloclist(0)
+  Assert len(loclist) > 0, 'PymodeLint should populate location list with errors'
+  
+  " Verify location list contains actual lint messages
+  let has_meaningful_errors = 0
+  for item in loclist
+    if !empty(item.text) && item.text !~ '^\s*$'
+      let has_meaningful_errors = 1
+      break
+    endif
+  endfor
+  Assert has_meaningful_errors, 'Location list should contain meaningful error messages'
+
+# Test PymodeLintToggle command
+Execute (Test PymodeLintToggle command):
+  " Get initial lint state
+  let initial_lint_state = g:pymode_lint
+  
+  " Toggle linting
+  PymodeLintToggle
+  
+  " Check that state changed
+  Assert g:pymode_lint != initial_lint_state, 'PymodeLintToggle should change lint state'
+  
+  " Toggle back
+  PymodeLintToggle
+  
+  " Check that state returned to original
+  Assert g:pymode_lint == initial_lint_state, 'PymodeLintToggle should restore original state'
+
+# Test PymodeLintAuto command
+Given python (Badly formatted Python code):
+  def test():    return 1
+
+Execute (Test PymodeLintAuto command):
+  " Enable autopep8
+  let g:pymode_lint = 1
+  let g:pymode_lint_auto = 1
+  
+  " Save original content
+  let original_content = getline(1, '$')
+  
+  " Apply auto-formatting
+  PymodeLintAuto
+  
+  " Get formatted content
+  let formatted_content = getline(1, '$')
+  
+  " Content should be different (formatted)
+  Assert original_content != formatted_content, 'PymodeLintAuto should format the code'
+  
+  " Should contain proper indentation
+  Assert match(formatted_content[0], 'def test():') >= 0, 'Function definition should be present'
+  Assert match(join(formatted_content, '\n'), '\s\+return 1') >= 0, 'Return statement should be properly indented'
+
+Expect python (Properly formatted code):
+  def test():
+      return 1
