@@ -49,8 +49,15 @@ jobs:
           --load \
           .
           
-    - name: Run test suite
+    - name: Run Phase 2 dual test suite
       run: |
+        # Build the test images first
+        docker compose -f docker-compose.test.yml build
+        
+        # Run Phase 2 dual testing (both legacy and Vader tests)
+        python scripts/phase2_dual_test_runner.py
+        
+        # Also run the advanced orchestrator for performance metrics
         docker run --rm \
           -v ${{ github.workspace }}:/workspace:ro \
           -v /var/run/docker.sock:/var/run/docker.sock \
@@ -68,6 +75,9 @@ jobs:
         path: |
           test-results.json
           test-logs/
+          results/phase2-*/
+          results/phase2-*/*.md
+          results/phase2-*/*.json
           
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
