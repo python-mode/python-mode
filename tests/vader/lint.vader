@@ -1,13 +1,37 @@
 " Test linting functionality
-Include: setup.vim
 
 Before:
-  call SetupPythonBuffer()
+  " Ensure python-mode is loaded
+  if !exists('g:pymode')
+    runtime plugin/pymode.vim
+  endif
+  
+  " Basic python-mode configuration for testing
+  let g:pymode = 1
+  let g:pymode_python = 'python3'
+  let g:pymode_options_max_line_length = 79
+  let g:pymode_lint_on_write = 0
+  let g:pymode_rope = 0
+  let g:pymode_doc = 1
+  let g:pymode_virtualenv = 0
+  let g:pymode_folding = 1
+  let g:pymode_motion = 1
+  let g:pymode_run = 1
+  
+  " Create a new buffer with Python filetype
+  new
+  setlocal filetype=python
+  setlocal buftype=
+  
+  " Lint-specific settings
   let g:pymode_lint = 1
   let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
 
 After:
-  call CleanupPythonBuffer()
+  " Clean up test buffer
+  if &filetype == 'python'
+    bwipeout!
+  endif
 
 # Test basic linting with no errors
 Given python (Clean Python code):
