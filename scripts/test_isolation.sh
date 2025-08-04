@@ -35,15 +35,20 @@ if [[ -z "$TEST_FILE" ]]; then
     exit 1
 fi
 
-# Execute vim with vader
+# Execute vim with vader using same flags as successful bash tests
 echo "Starting Vader test: $TEST_FILE"
+
+# Ensure we have the absolute path to the test file
+if [[ "$TEST_FILE" != /* ]]; then
+    # If relative path, make it absolute from /opt/python-mode
+    TEST_FILE="/opt/python-mode/$TEST_FILE"
+fi
+
 exec timeout --kill-after=5s "${VIM_TEST_TIMEOUT:-60}s" \
-    vim -X -N -u NONE -i NONE \
-    -c "set noswapfile" \
-    -c "set nobackup" \
-    -c "set nowritebackup" \
-    -c "set noundofile" \
-    -c "set viminfo=" \
+    vim --not-a-term --clean -i NONE \
+    -c "set rtp=/opt/vader.vim,/opt/python-mode,\$VIMRUNTIME" \
     -c "filetype plugin indent on" \
-    -c "packloadall" \
-    -c "Vader! $TEST_FILE"
+    -c "runtime plugin/vader.vim" \
+    -c "runtime plugin/pymode.vim" \
+    -c "if !exists(':Vader') | echoerr 'Vader not loaded' | cquit | endif" \
+    -c "Vader $TEST_FILE"
