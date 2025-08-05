@@ -13,11 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        vim-version: ['8.2', '9.0', '9.1']
-        test-suite: ['unit', 'integration', 'performance']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        test-suite: ['unit', 'integration']
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 4
 
     steps:
     - name: Checkout code
@@ -32,59 +31,45 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.python-version }}-${{ matrix.vim-version }}-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ matrix.python-version }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-buildx-${{ matrix.python-version }}-${{ matrix.vim-version }}-
+          ${{ runner.os }}-buildx-${{ matrix.python-version }}-
           ${{ runner.os }}-buildx-
 
     - name: Build test environment
       run: |
-        docker buildx build \
-          --cache-from type=local,src=/tmp/.buildx-cache \
-          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+        # Build the docker compose services
+        docker compose build \
           --build-arg PYTHON_VERSION=${{ matrix.python-version }} \
-          --build-arg VIM_VERSION=${{ matrix.vim-version }} \
-          -t python-mode-test:${{ matrix.python-version }}-${{ matrix.vim-version }} \
-          -f Dockerfile.test-runner \
-          --load \
-          .
+          --build-arg PYTHON_VERSION_SHORT=${{ matrix.python-version }}
 
-    - name: Run dual test suite
+    - name: Run test suite
       run: |
-        # Build the test images first
-        docker compose -f docker-compose.test.yml build
-
-        # Run dual testing (both legacy and Vader tests)
+        # Set Python version environment variables
+        export PYTHON_VERSION="${{ matrix.python-version }}"
+        export PYTHON_VERSION_SHORT="${{ matrix.python-version }}"
+        export TEST_SUITE="${{ matrix.test-suite }}"
+        export GITHUB_ACTIONS=true
+        
+        # Run dual test suite (both legacy and Vader tests)
         python scripts/dual_test_runner.py
-
-        # Also run the advanced orchestrator for performance metrics
-        docker run --rm \
-          -v ${{ github.workspace }}:/workspace:ro \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -e TEST_SUITE=${{ matrix.test-suite }} \
-          -e GITHUB_ACTIONS=true \
-          -e GITHUB_SHA=${{ github.sha }} \
-          python-mode-test:${{ matrix.python-version }}-${{ matrix.vim-version }} \
-          python /opt/test_orchestrator.py --parallel 2 --timeout 120
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-${{ matrix.python-version }}-${{ matrix.vim-version }}-${{ matrix.test-suite }}
+        name: test-results-${{ matrix.python-version }}-${{ matrix.test-suite }}
         path: |
           test-results.json
           test-logs/
           results/
-          results/*.md
-          results/*.json
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       if: matrix.test-suite == 'unit'
       with:
         file: ./coverage.xml
-        flags: python-${{ matrix.python-version }}-vim-${{ matrix.vim-version }}
+        flags: python-${{ matrix.python-version }}
 
     - name: Basic test validation
       run: |

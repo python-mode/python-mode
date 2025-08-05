@@ -399,9 +399,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        vim-version: ['8.2', '9.0', '9.1']
-        test-suite: ['unit', 'integration', 'performance']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        test-suite: ['unit', 'integration']
       fail-fast: false
       max-parallel: 6
       
@@ -437,8 +436,13 @@ jobs:
           
     - name: Run test suite
       run: |
-        # Run tests using docker compose
-        docker compose -f docker-compose.test.yml run --rm python-mode-tests
+        # Set Python version environment variables
+        export PYTHON_VERSION="${{ matrix.python-version }}"
+        export TEST_SUITE="${{ matrix.test-suite }}"
+        export GITHUB_ACTIONS=true
+        
+        # Run dual test suite (both legacy and Vader tests)
+        python scripts/dual_test_runner.py
           
     - name: Upload test results
       uses: actions/upload-artifact@v4
