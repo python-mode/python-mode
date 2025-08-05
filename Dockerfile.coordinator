@@ -9,13 +9,11 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies for the test orchestrator
 RUN pip install --no-cache-dir \
     docker \
-    psutil \
     pytest \
     pytest-timeout
 
 # Copy test orchestrator script
 COPY scripts/test_orchestrator.py /opt/test_orchestrator.py
-COPY scripts/performance_monitor.py /opt/performance_monitor.py
 
 # Create results directory
 RUN mkdir -p /results
