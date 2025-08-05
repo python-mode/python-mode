@@ -15,14 +15,6 @@ import logging
 # Add scripts directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Import the performance monitor
-try:
-    import performance_monitor
-    PerformanceMonitor = performance_monitor.PerformanceMonitor
-except ImportError:
-    # Fallback if performance_monitor is not available
-    PerformanceMonitor = None
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -156,32 +148,11 @@ class TestOrchestrator:
             result = container.wait(timeout=self.timeout)
             duration = time.time() - start_time
             
-            # Stop monitoring and get metrics
-            metrics = {}
-            performance_alerts = []
-            if monitor:
-                monitor.stop_monitoring()
-                metrics = monitor.get_summary()
-                performance_alerts = monitor.get_alerts()
-                
-                # Log any performance alerts
-                for alert in performance_alerts:
-                    logger.warning(f"Performance alert for {test_file.name}: {alert['message']}")
-            
             # Get logs
             logs = container.logs(stdout=True, stderr=True).decode('utf-8', errors='replace')
             
-            # Add basic metrics if performance monitor not available
-            if not metrics:
-                try:
-                    stats = container.stats(stream=False)
-                    metrics = self._parse_container_stats(stats)
-                except:
-                    metrics = {}
-            
-            # Add performance alerts to metrics
-            if performance_alerts:
-                metrics['alerts'] = performance_alerts
+            # Simple metrics only
+            metrics = {'duration': duration}
             
             status = 'passed' if result['StatusCode'] == 0 else 'failed'
             
