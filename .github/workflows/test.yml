@@ -44,7 +44,6 @@ jobs:
         
         # Export for docker compose
         export PYTHON_VERSION="${PYTHON_VERSION}"
-        export PYTHON_VERSION_SHORT="${{ matrix.python-version }}"
         
         # Build the docker compose services
         docker compose build python-mode-tests
@@ -54,9 +53,8 @@ jobs:
         # Get the appropriate Python version
         PYTHON_VERSION=$(bash scripts/check_python_docker_image.sh "${{ matrix.python-version }}")
         
-        # Set Python version environment variables
+        # Set environment variables
         export PYTHON_VERSION="${PYTHON_VERSION}"
-        export PYTHON_VERSION_SHORT="${{ matrix.python-version }}"
         export TEST_SUITE="${{ matrix.test-suite }}"
         export GITHUB_ACTIONS=true
         

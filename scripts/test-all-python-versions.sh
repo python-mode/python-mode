@@ -36,7 +36,7 @@ for short_version in "${!PYTHON_VERSIONS[@]}"; do
     echo -e "${BLUE}Testing with Python $short_version ($full_version)${NC}"
     echo -e "${BLUE}========================================${NC}"
     
-    if docker compose run --rm -e PYTHON_VERSION="$full_version" -e PYTHON_VERSION_SHORT="$short_version" python-mode-tests; then
+    if docker compose run --rm -e PYTHON_VERSION="$full_version" python-mode-tests; then
         echo -e "${GREEN}✓ Tests passed with Python $short_version${NC}"
     else
         echo -e "${RED}✗ Tests failed with Python $short_version${NC}"

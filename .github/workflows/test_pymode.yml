@@ -46,12 +46,10 @@ jobs:
         run: |
           docker compose build -q \
             --build-arg PYTHON_VERSION="${{ matrix.python_version.full }}" \
-            --build-arg PYTHON_VERSION_SHORT="${{ matrix.python_version.short }}" \
             python-mode-tests
 
       - name: Run tests with Python ${{ matrix.python_version.short }}
         run: |
           docker compose run --rm \
             -e PYTHON_VERSION="${{ matrix.python_version.full }}" \
-            -e PYTHON_VERSION_SHORT="${{ matrix.python_version.short }}" \
             python-mode-tests
