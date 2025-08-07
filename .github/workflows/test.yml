@@ -38,15 +38,24 @@ jobs:
 
     - name: Build test environment
       run: |
+        # Check if Python Docker image exists and get the appropriate version
+        PYTHON_VERSION=$(bash scripts/check_python_docker_image.sh "${{ matrix.python-version }}")
+        echo "Using Python version: ${PYTHON_VERSION}"
+        
+        # Export for docker compose
+        export PYTHON_VERSION="${PYTHON_VERSION}"
+        export PYTHON_VERSION_SHORT="${{ matrix.python-version }}"
+        
         # Build the docker compose services
-        docker compose build \
-          --build-arg PYTHON_VERSION=${{ matrix.python-version }} \
-          --build-arg PYTHON_VERSION_SHORT=${{ matrix.python-version }}
+        docker compose build python-mode-tests
 
     - name: Run test suite
       run: |
+        # Get the appropriate Python version
+        PYTHON_VERSION=$(bash scripts/check_python_docker_image.sh "${{ matrix.python-version }}")
+        
         # Set Python version environment variables
-        export PYTHON_VERSION="${{ matrix.python-version }}"
+        export PYTHON_VERSION="${PYTHON_VERSION}"
         export PYTHON_VERSION_SHORT="${{ matrix.python-version }}"
         export TEST_SUITE="${{ matrix.test-suite }}"
         export GITHUB_ACTIONS=true

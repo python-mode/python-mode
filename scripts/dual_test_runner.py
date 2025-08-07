@@ -8,11 +8,12 @@ import os
 from pathlib import Path
 
 def run_legacy_tests():
-    """Run the legacy bash test suite"""
+    """Run the legacy bash test suite using docker compose"""
     print("🔧 Running Legacy Bash Test Suite...")
     try:
+        # Use the main docker-compose.yml with python-mode-tests service
         result = subprocess.run([
-            "bash", "tests/test.sh"
+            "docker", "compose", "run", "--rm", "python-mode-tests"
         ], 
         cwd=Path(__file__).parent.parent,
         capture_output=True, 
@@ -36,11 +37,12 @@ def run_legacy_tests():
         return False
 
 def run_vader_tests():
-    """Run the Vader test suite using docker compose"""
+    """Run the Vader test suite using the run-vader-tests.sh script"""
     print("⚡ Running Vader Test Suite...")
     try:
+        # Use the existing run-vader-tests.sh script which handles Docker setup
         result = subprocess.run([
-            "docker", "compose", "run", "--rm", "test-vader"
+            "bash", "scripts/run-vader-tests.sh"
         ], 
         cwd=Path(__file__).parent.parent,
         capture_output=True, 

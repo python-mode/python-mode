@@ -1,11 +1,20 @@
 ARG PYTHON_VERSION_SHORT
 ARG PYTHON_VERSION
-ARG REPO_OWNER=python-mode
-FROM ghcr.io/${REPO_OWNER}/python-mode-base:${PYTHON_VERSION_SHORT}-latest
+# Use official Python slim image instead of non-existent base
+# Note: For Python 3.13, use 3.13.0 if just "3.13" doesn't work
+FROM python:${PYTHON_VERSION}-slim
 
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 ENV PYTHONUNBUFFERED=1
 ENV PYMODE_DIR="/workspace/python-mode"
+
+# Install system dependencies required for testing
+RUN apt-get update && apt-get install -y \
+    vim-nox \
+    git \
+    curl \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set up working directory
 WORKDIR /workspace
@@ -23,18 +32,13 @@ RUN mkdir -p /root/.vim/pack/foo/start/ && \
 # Initialize git submodules
 WORKDIR /workspace/python-mode
 
-# Create a script to run tests
+# Create a simplified script to run tests (no pyenv needed with official Python image)
 RUN echo '#!/bin/bash\n\
-# export PYENV_ROOT="/opt/pyenv"\n\
-# export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"\n\
-eval "$(pyenv init -)"\n\
-eval "$(pyenv init --path)"\n\
-# Use specified Python version\n\
-pyenv shell ${PYTHON_VERSION}\n\
 cd /workspace/python-mode\n\
-echo "Using Python: $(python --version)"\n\
+echo "Using Python: $(python3 --version)"\n\
+echo "Using Vim: $(vim --version | head -1)"\n\
 bash ./tests/test.sh\n\
-rm -f tests/.swo tests/.swp 2>&1 >/dev/null \n\
+rm -f tests/.swo tests/.swp 2>&1 >/dev/null\n\
 ' > /usr/local/bin/run-tests && \
     chmod +x /usr/local/bin/run-tests
 
