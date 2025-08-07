@@ -879,9 +879,9 @@ Docker images for each supported Python version and running tests automatically.
 CI environment.
 
 9. Docker Testing: To run tests locally with Docker:
-    - Use `./scripts/run-tests-docker.sh` to run tests with the default Python version
-    - Use `./scripts/run-tests-docker.sh 3.11` to test with Python 3.11.9
-    - Use `./scripts/test-all-python-versions.sh` to test with all supported versions
+    - Use `./scripts/user/run-tests-docker.sh` to run tests with the default Python version
+    - Use `./scripts/user/run-tests-docker.sh 3.11` to test with Python 3.11.9
+    - Use `./scripts/user/test-all-python-versions.sh` to test with all supported versions
 
 ===============================================================================
 8. Credits ~

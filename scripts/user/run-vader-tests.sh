@@ -148,15 +148,9 @@ fi
 if [[ "$BUILD_IMAGES" == "true" ]]; then
     log_info "Building Docker images..."
     
-    log_info "Building base test image..."
-    if ! docker compose -f docker-compose.test.yml build base-test; then
-        log_error "Failed to build base test image"
-        exit 1
-    fi
-    
-    log_info "Building test runner image..."
-    if ! docker compose -f docker-compose.test.yml build test-runner; then
-        log_error "Failed to build test runner image"
+    log_info "Building test image..."
+    if ! docker compose build python-mode-tests; then
+        log_error "Failed to build test image"
         exit 1
     fi
     

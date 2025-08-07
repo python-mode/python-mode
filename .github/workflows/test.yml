@@ -39,7 +39,7 @@ jobs:
     - name: Build test environment
       run: |
         # Check if Python Docker image exists and get the appropriate version
-        PYTHON_VERSION=$(bash scripts/check_python_docker_image.sh "${{ matrix.python-version }}")
+        PYTHON_VERSION=$(bash scripts/cicd/check_python_docker_image.sh "${{ matrix.python-version }}")
         echo "Using Python version: ${PYTHON_VERSION}"
         
         # Export for docker compose
@@ -51,7 +51,7 @@ jobs:
     - name: Run test suite
       run: |
         # Get the appropriate Python version
-        PYTHON_VERSION=$(bash scripts/check_python_docker_image.sh "${{ matrix.python-version }}")
+        PYTHON_VERSION=$(bash scripts/cicd/check_python_docker_image.sh "${{ matrix.python-version }}")
         
         # Set environment variables
         export PYTHON_VERSION="${PYTHON_VERSION}"
@@ -59,7 +59,7 @@ jobs:
         export GITHUB_ACTIONS=true
         
         # Run dual test suite (both legacy and Vader tests)
-        python scripts/dual_test_runner.py
+        python scripts/cicd/dual_test_runner.py
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -98,7 +98,7 @@ jobs:
 
     - name: Generate test report
       run: |
-        python scripts/generate_test_report.py \
+        python scripts/cicd/generate_test_report.py \
           --input-dir . \
           --output-file test-report.html
 
