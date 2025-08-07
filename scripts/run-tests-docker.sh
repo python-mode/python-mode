@@ -63,7 +63,6 @@ echo -e "${YELLOW}Building python-mode test environment...${NC}"
 
 DOCKER_BUILD_ARGS=(
     --build-arg PYTHON_VERSION="${PYTHON_VERSION}"
-    --build-arg PYTHON_VERSION_SHORT="${PYTHON_VERSION_SHORT}"
 )
 
 # Build the Docker image

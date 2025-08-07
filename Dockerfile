@@ -1,4 +1,3 @@
-ARG PYTHON_VERSION_SHORT
 ARG PYTHON_VERSION
 # Use official Python slim image instead of non-existent base
 # Note: For Python 3.13, use 3.13.0 if just "3.13" doesn't work
