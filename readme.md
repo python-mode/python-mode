@@ -153,13 +153,13 @@ and developers who want to test the plugin with different Python versions.
 
 ```bash
 # Run tests with default Python version (3.13.0)
-./scripts/run-tests-docker.sh
+./scripts/user/run-tests-docker.sh
 
 # Run tests with specific Python version
-./scripts/run-tests-docker.sh 3.11
+./scripts/user/run-tests-docker.sh 3.11
 
 # Run tests with all supported Python versions
-./scripts/test-all-python-versions.sh
+./scripts/user/test-all-python-versions.sh
 ```
 
 ## Supported Python Versions
@@ -227,7 +227,7 @@ If you're using the Docker testing environment, also provide:
 * The output of `docker --version` and `docker compose version`
 * The Python version used in Docker (if testing with a specific version)
 * Any Docker-related error messages
-* The output of `./scripts/run-tests-docker.sh --help` (if available)
+* The output of `./scripts/user/run-tests-docker.sh --help` (if available)
 
 # Frequent problems
 
@@ -326,7 +326,7 @@ Before contributing, please:
 1. **Test with Docker**: Use the Docker testing environment to ensure your
     changes work across all supported Python versions (3.10.13, 3.11.9, 3.12.4, 3.13.0)
 
-2. **Run Full Test Suite**: Use `./scripts/test-all-python-versions.sh` to test
+2. **Run Full Test Suite**: Use `./scripts/user/test-all-python-versions.sh` to test
     with all supported Python versions
 
 3. **Check CI**: Ensure the GitHub Actions CI passes for your changes

@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Mapping of major.minor to full version (same as run-tests-docker.sh)
+# Mapping of major.minor to full version (same as run-tests-docker.sh in user folder)
 declare -A PYTHON_VERSIONS
 PYTHON_VERSIONS["3.10"]="3.10.13"
 PYTHON_VERSIONS["3.11"]="3.11.9"
@@ -61,7 +61,7 @@ else
     done
     echo ""
     echo -e "${YELLOW}To run tests for a specific version:${NC}"
-    echo -e "${BLUE}  ./scripts/run-tests-docker.sh <major.minor>${NC}"
-    echo -e "${BLUE}  Example: ./scripts/run-tests-docker.sh 3.11${NC}"
+    echo -e "${BLUE}  ./scripts/user/run-tests-docker.sh <major.minor>${NC}"
+    echo -e "${BLUE}  Example: ./scripts/user/run-tests-docker.sh 3.11${NC}"
     exit 1
 fi 

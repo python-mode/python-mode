@@ -15,7 +15,7 @@ To run all tests in Docker (default version 3.13.0):
 
 ```bash
 # Using the convenience script
-./scripts/run-tests-docker.sh
+./scripts/user/run-tests-docker.sh
 
 # Or manually with docker-compose
 docker compose run --rm python-mode-tests
@@ -80,13 +80,13 @@ You can test python-mode with different Python versions:
 
 ```bash
 # Test with Python 3.11.9
-./scripts/run-tests-docker.sh 3.11
+./scripts/user/run-tests-docker.sh 3.11
 
 # Test with Python 3.12.4
-./scripts/run-tests-docker.sh 3.12
+./scripts/user/run-tests-docker.sh 3.12
 
 # Test with Python 3.13.0
-./scripts/run-tests-docker.sh 3.13
+./scripts/user/run-tests-docker.sh 3.13
 ```
 
 Available Python versions: 3.10.13, 3.11.9, 3.12.4, 3.13.0
@@ -126,7 +126,7 @@ If tests fail in Docker but pass locally:
 
 To add support for additional Python versions:
 
-1. Add the new version to the `pyenv install` commands in the Dockerfile.base
+1. Add the new version to the PYTHON_VERSION arg in the Dockerfile
 2. Update the test scripts to include the new version
-4. Test that the new version works with the python-mode plugin
-5. Update this documentation with the new version information 
+3. Test that the new version works with the python-mode plugin
+4. Update this documentation with the new version information
