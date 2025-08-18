@@ -33,6 +33,8 @@ function! SetupPythonBuffer()
     new
     setlocal filetype=python
     setlocal buftype=
+    " Explicitly load the python ftplugin to ensure commands are available
+    runtime! ftplugin/python/pymode.vim
 endfunction
 
 function! CleanupPythonBuffer()
@@ -70,35 +72,35 @@ endfunction
 
 " Python code snippets for testing
 let g:test_python_simple = [
-    'def hello():',
-    '    print("Hello, World!")',
-    '    return True'
-]
+    \ 'def hello():',
+    \ '    print("Hello, World!")',
+    \ '    return True'
+    \ ]
 
 let g:test_python_unformatted = [
-    'def test():    return 1',
-    'class   TestClass:',
-    '  def method(self):',
-    '      pass'
-]
+    \ 'def test():    return 1',
+    \ 'class   TestClass:',
+    \ '  def method(self):',
+    \ '      pass'
+    \ ]
 
 let g:test_python_formatted = [
-    'def test():',
-    '    return 1',
-    '',
-    '',
-    'class TestClass:',
-    '    def method(self):',
-    '        pass'
-]
+    \ 'def test():',
+    \ '    return 1',
+    \ '',
+    \ '',
+    \ 'class TestClass:',
+    \ '    def method(self):',
+    \ '        pass'
+    \ ]
 
 let g:test_python_with_errors = [
-    'def test():',
-    '    undefined_variable',
-    '    return x + y'
-]
+    \ 'def test():',
+    \ '    undefined_variable',
+    \ '    return x + y'
+    \ ]
 
 let g:test_python_long_line = [
-    'def very_long_function_name_that_exceeds_line_length_limit(parameter_one, parameter_two, parameter_three, parameter_four):',
-    '    return parameter_one + parameter_two + parameter_three + parameter_four'
-]
+    \ 'def very_long_function_name_that_exceeds_line_length_limit(parameter_one, parameter_two, parameter_three, parameter_four):',
+    \ '    return parameter_one + parameter_two + parameter_three + parameter_four'
+    \ ]

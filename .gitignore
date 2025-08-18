@@ -17,3 +17,11 @@ vendor
 vim.py
 vim_session_*.vim
 __*/
+# Coverage files
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.cover
+.hypothesis/
+.pytest_cache/

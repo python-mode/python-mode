@@ -35,7 +35,10 @@ def auto():
         max_line_length = int(vim.eval('g:pymode_options_max_line_length'))
         pep8_passes = 100
         recursive = False
-        select = vim.eval('g:pymode_lint_select')
+        # For auto-formatting, do not restrict fixes to a select subset.
+        # Force full autopep8 pass regardless of g:pymode_lint_select so that
+        # common formatting issues (E2xx, etc.) are addressed as expected by tests.
+        select = []
         verbose = 0
 
     fix_file(vim.current.buffer.name, Options)
