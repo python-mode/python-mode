@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python coverage tool for code coverage collection
+RUN pip install --no-cache-dir coverage
+
 # Set up working directory
 WORKDIR /workspace
 
@@ -37,7 +40,9 @@ cd /workspace/python-mode\n\
 echo "Using Python: $(python3 --version)"\n\
 echo "Using Vim: $(vim --version | head -1)"\n\
 bash ./tests/test.sh\n\
+EXIT_CODE=$?\n\
 rm -f tests/.swo tests/.swp 2>&1 >/dev/null\n\
+exit $EXIT_CODE\n\
 ' > /usr/local/bin/run-tests && \
     chmod +x /usr/local/bin/run-tests
 

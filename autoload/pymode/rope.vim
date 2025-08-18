@@ -1,19 +1,25 @@
 " Python-mode Rope support
 
-if ! g:pymode_rope
-    finish
+" Import Python rope integration only when rope is enabled,
+" but always define Vimscript functions so they exist even if disabled
+if exists('g:pymode_rope') && g:pymode_rope
+    PymodePython from pymode import rope
 endif
-
-PymodePython from pymode import rope
 
 call pymode#tools#loclist#init()
 
 
 fun! pymode#rope#completions(findstart, base)
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return
+    endif
     PymodePython rope.completions()
 endfunction
 
 fun! pymode#rope#complete(dot)
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return ""
+    endif
     if pumvisible()
         if stridx('noselect', &completeopt) != -1
             return "\<C-n>"
@@ -30,6 +36,9 @@ fun! pymode#rope#complete(dot)
 endfunction
 
 fun! pymode#rope#complete_on_dot() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return ""
+    endif
     if !exists("*synstack")
         return ""
     endif
@@ -47,11 +56,17 @@ fun! pymode#rope#complete_on_dot() "{{{
 endfunction "}}}
 
 fun! pymode#rope#goto_definition()
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.goto()
 endfunction
 
 
 fun! pymode#rope#organize_imports()
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -61,6 +76,9 @@ endfunction
 
 
 fun! pymode#rope#find_it()
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     let loclist = g:PymodeLocList.current()
     let loclist._title = "Occurrences"
     call pymode#wide_message('Finding Occurrences ...')
@@ -70,6 +88,9 @@ endfunction
 
 
 fun! pymode#rope#show_doc()
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     let l:output = []
 
     PymodePython rope.show_doc()
@@ -89,17 +110,26 @@ endfunction
 
 
 fun! pymode#rope#regenerate() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     call pymode#wide_message('Regenerate Rope cache ... ')
     PymodePython rope.regenerate()
 endfunction "}}}
 
 
 fun! pymode#rope#new(...) "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.new()
 endfunction "}}}
 
 
 fun! pymode#rope#rename() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -107,6 +137,9 @@ fun! pymode#rope#rename() "{{{
 endfunction "}}}
 
 fun! pymode#rope#rename_module() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -114,6 +147,9 @@ fun! pymode#rope#rename_module() "{{{
 endfunction "}}}
 
 fun! pymode#rope#extract_method() range "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -121,6 +157,9 @@ fun! pymode#rope#extract_method() range "{{{
 endfunction "}}}
 
 fun! pymode#rope#extract_variable() range "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -128,14 +167,23 @@ fun! pymode#rope#extract_variable() range "{{{
 endfunction "}}}
 
 fun! pymode#rope#undo() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.undo()
 endfunction "}}}
 
 fun! pymode#rope#redo() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.redo()
 endfunction "}}}
 
 fun! pymode#rope#inline() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -143,6 +191,9 @@ fun! pymode#rope#inline() "{{{
 endfunction "}}}
 
 fun! pymode#rope#move() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -150,6 +201,9 @@ fun! pymode#rope#move() "{{{
 endfunction "}}}
 
 fun! pymode#rope#signature() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -157,6 +211,9 @@ fun! pymode#rope#signature() "{{{
 endfunction "}}}
 
 fun! pymode#rope#use_function() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -164,6 +221,9 @@ fun! pymode#rope#use_function() "{{{
 endfunction "}}}
 
 fun! pymode#rope#module_to_package() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -171,10 +231,16 @@ fun! pymode#rope#module_to_package() "{{{
 endfunction "}}}
 
 fun! pymode#rope#autoimport(word) "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.autoimport()
 endfunction "}}}
 
 fun! pymode#rope#generate_function() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -182,6 +248,9 @@ fun! pymode#rope#generate_function() "{{{
 endfunction "}}}
 
 fun! pymode#rope#generate_class() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -189,6 +258,9 @@ fun! pymode#rope#generate_class() "{{{
 endfunction "}}}
 
 fun! pymode#rope#generate_package() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     if !pymode#save()
         return 0
     endif
@@ -196,5 +268,8 @@ fun! pymode#rope#generate_package() "{{{
 endfunction "}}}
 
 fun! pymode#rope#select_logical_line() "{{{
+    if !exists('g:pymode_rope') || !g:pymode_rope
+        return 0
+    endif
     PymodePython rope.select_logical_line()
 endfunction "}}}

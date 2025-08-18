@@ -24,13 +24,18 @@ set nomore
 set noswapfile
 set packpath+=/tmp
 set paste
+" Do not clobber runtimepath here; it will be configured by the test runner
+set rtp+=/root/.vim/pack/vader/start/vader.vim
 set rtp+=/root/.vim/pack/foo/start/python-mode
-set runtimepath+="$(dirname "${PWD}")"
-set runtimepath=
+"set runtimepath+="$(dirname "${PWD}")"
+"set runtimepath=
 set shell=bash
 set shortmess=at
 set undodir=
-set verbosefile="${VIM_OUTPUT_FILE}"
+" VIM_OUTPUT_FILE may not be set; guard its use
+if exists('g:VIM_OUTPUT_FILE')
+  execute 'set verbosefile=' . g:VIM_OUTPUT_FILE
+endif
 set viewdir=
 syntax on
 

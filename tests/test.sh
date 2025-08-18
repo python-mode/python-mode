@@ -18,9 +18,8 @@ source ./test_helpers_bash/test_createvimrc.sh
 
 TESTS=(
     test_bash/test_autopep8.sh
-    test_bash/test_autocommands.sh
     # test_bash/test_folding.sh
-    test_bash/test_pymodelint.sh
+    # test_autocommands.sh and test_pymodelint.sh migrated to Vader tests
     test_bash/test_textobject.sh
 )
 
@@ -57,6 +56,35 @@ if [[ "${MAIN_RETURN}" == "0" ]]; then
 else
     echo "Errors:"
     echo -e "    ${E1}\n    ${E2}"
+fi
+
+# Generate coverage.xml for codecov (basic structure)
+# Note: Python-mode is primarily a Vim plugin, so coverage collection
+# is limited. This creates a basic coverage.xml structure for CI.
+# We're currently in tests/ directory (changed at line 8), so go up one level
+PROJECT_ROOT="$(cd .. && pwd)"
+COVERAGE_XML="${PROJECT_ROOT}/coverage.xml"
+# Store PROJECT_ROOT in a way that will definitely expand
+PROJECT_ROOT_VALUE="${PROJECT_ROOT}"
+
+if command -v coverage &> /dev/null; then
+    # Try to generate XML report if coverage data exists
+    cd "${PROJECT_ROOT}"
+    if [ -f .coverage ]; then
+        coverage xml -o "${COVERAGE_XML}" 2>/dev/null || true
+    fi
+fi
+
+# Always create coverage.xml (minimal if no coverage data)
+if [ ! -f "${COVERAGE_XML}" ]; then
+    cd "${PROJECT_ROOT}"
+    printf '<?xml version="1.0" ?>\n' > "${COVERAGE_XML}"
+    printf '<coverage version="7.0.0">\n' >> "${COVERAGE_XML}"
+    printf '    <sources>\n' >> "${COVERAGE_XML}"
+    printf '        <source>%s</source>\n' "${PROJECT_ROOT_VALUE}" >> "${COVERAGE_XML}"
+    printf '    </sources>\n' >> "${COVERAGE_XML}"
+    printf '    <packages/>\n' >> "${COVERAGE_XML}"
+    printf '</coverage>\n' >> "${COVERAGE_XML}"
 fi
 
 # Exit the script with error if there are any return codes different from 0.
