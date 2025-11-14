@@ -32,7 +32,8 @@ fun! pymode#motion#select(first_pattern, second_pattern, inner) "{{{
     let cnt = v:count1 - 1
     let orig = getpos('.')[1:2]
     let posns = s:BlockStart(orig[0], a:first_pattern, a:second_pattern)
-    if getline(posns[0]) !~ a:first_pattern && getline(posns[0]) !~ a:second_pattern
+    " Check if no block was found (posns[0] == 0) or if the found line doesn't match patterns
+    if posns[0] == 0 || (getline(posns[0]) !~ a:first_pattern && getline(posns[0]) !~ a:second_pattern)
         return 0
     endif
     let snum = posns[0]
@@ -50,9 +51,24 @@ fun! pymode#motion#select(first_pattern, second_pattern, inner) "{{{
             let snum = posns[1] + 1
         endif
 
+        " Select the text range for both operator-pending and visual mode
+        " For operator-pending mode, start visual selection
+        " For visual mode (vnoremap), extend the existing selection
         call cursor(snum, 1)
-        normal! V
-        call cursor(enum, len(getline(enum)))
+        if mode() =~# '[vV]'
+            " Already in visual mode - move to start and extend to end
+            normal! o
+            call cursor(snum, 1)
+            normal! o
+            call cursor(enum, len(getline(enum)))
+        else
+            " Operator-pending mode - start visual line selection
+            execute "normal! V"
+            call cursor(enum, len(getline(enum)))
+        endif
+        " Explicitly set visual marks for immediate access in tests
+        call setpos("'<", [0, snum, 1, 0])
+        call setpos("'>", [0, enum, len(getline(enum)), 0])
     endif
 endfunction "}}}
 

@@ -84,6 +84,9 @@ set noswapfile
 set paste
 set shell=bash
 
+" Enable magic for motion support (required for text object mappings)
+set magic
+
 " Enable filetype detection
 filetype plugin indent on
 syntax on
