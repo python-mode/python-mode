@@ -48,6 +48,32 @@ log_info "  Docker: $(docker --version 2>&1 || echo 'not available')"
 log_info "  Docker Compose: $(docker compose version 2>&1 || echo 'not available')"
 log_info "  Working directory: $(pwd)"
 log_info "  CI environment: ${CI:-false}"
+log_info "  GITHUB_ACTIONS: ${GITHUB_ACTIONS:-false}"
+log_info "  PYTHON_VERSION: ${PYTHON_VERSION:-not set}"
+
+# Check if docker compose is available
+if ! command -v docker &> /dev/null; then
+    log_error "Docker is not available"
+    exit 1
+fi
+
+if ! docker compose version &> /dev/null; then
+    log_error "Docker Compose is not available"
+    exit 1
+fi
+
+# Ensure docker compose file exists
+if [ ! -f "docker-compose.yml" ]; then
+    log_error "docker-compose.yml not found in current directory"
+    exit 1
+fi
+
+# Verify docker compose can see the service
+if ! docker compose config --services | grep -q "python-mode-tests"; then
+    log_error "python-mode-tests service not found in docker-compose.yml"
+    log_info "Available services: $(docker compose config --services 2>&1 || echo 'failed to get services')"
+    exit 1
+fi
 
 # Run tests using docker compose
 FAILED_TESTS=()
@@ -94,7 +120,16 @@ if [ ! -f "$TEST_FILE_PATH" ]; then
 fi
 
 echo "=== Starting Vader test: $TEST_FILE_PATH ==="
+echo "=== Vim binary: $VIM_BINARY ==="
+echo "=== Vimrc: $VIM_TEST_VIMRC ==="
+# Verify vim is available
+if ! command -v "$VIM_BINARY" &> /dev/null; then
+    echo "ERROR: Vim binary not found: $VIM_BINARY"
+    exit 1
+fi
+
 # Use -es (ex mode, silent) for better output handling as Vader recommends
+# Add explicit error handling and ensure vim exits
 timeout 60 $VIM_BINARY \
     --not-a-term \
     -es \
@@ -140,6 +175,7 @@ EOFSCRIPT
     )
     
     # Replace placeholder with actual test file
+    # The template already has /workspace/python-mode/ prefix, so just use the relative path
     TEST_SCRIPT="${TEST_SCRIPT//PLACEHOLDER_TEST_FILE/$test_file}"
     
     # Run test in container and capture full output
@@ -160,7 +196,19 @@ EOFSCRIPT
     # Capture both stdout and stderr, and check exit code properly
     # Note: timeout returns 124 if timeout occurred, otherwise returns the command's exit code
     set +e  # Temporarily disable exit on error to capture exit code
-    timeout 120 docker compose run --rm --no-TTY python-mode-tests bash "$SCRIPT_PATH_IN_CONTAINER" > "$TEMP_OUTPUT" 2>&1
+    
+    # Build docker compose command with environment variables
+    # Environment variables are passed via -e flags before the service name
+    DOCKER_ENV_ARGS=()
+    if [ -n "${PYTHON_VERSION:-}" ]; then
+        DOCKER_ENV_ARGS+=(-e "PYTHON_VERSION=${PYTHON_VERSION}")
+    fi
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        DOCKER_ENV_ARGS+=(-e "GITHUB_ACTIONS=${GITHUB_ACTIONS}")
+    fi
+    
+    log_info "Running docker compose with env: PYTHON_VERSION=${PYTHON_VERSION:-not set}, GITHUB_ACTIONS=${GITHUB_ACTIONS:-not set}"
+    timeout 120 docker compose run --rm --no-TTY "${DOCKER_ENV_ARGS[@]}" python-mode-tests bash "$SCRIPT_PATH_IN_CONTAINER" > "$TEMP_OUTPUT" 2>&1
     DOCKER_EXIT_CODE=$?
     set -e  # Re-enable exit on error
     log_info "Docker command completed with exit code: $DOCKER_EXIT_CODE"
@@ -176,6 +224,17 @@ EOFSCRIPT
         echo "--- Timeout Details for $test_name ---"
         echo "$OUTPUT" | tail -50
         echo "--- End Timeout Details ---"
+        FAILED_TESTS+=("$test_name")
+        rm -f "$TEMP_OUTPUT"
+        continue
+    fi
+    
+    # Check if docker compose command itself failed (e.g., image not found, service not available)
+    if [ "$DOCKER_EXIT_CODE" -ne 0 ] && [ -z "$OUTPUT" ]; then
+        log_error "Docker compose command failed for test: $test_name (exit code: $DOCKER_EXIT_CODE, no output)"
+        log_info "Attempting to verify docker compose setup..."
+        docker compose ps 2>&1 || true
+        docker compose images 2>&1 || true
         FAILED_TESTS+=("$test_name")
         rm -f "$TEMP_OUTPUT"
         continue

@@ -857,15 +857,13 @@ documentation (except as a first word in a sentence in which case is
 4. Special marks for project development are `XXX` and `TODO`. They provide a
 easy way for developers to check pending issues.
 5. If submitting a pull request then a test should be added which smartly
-covers the found bug/new feature. Check out the `tests/test.sh` (1) file and
-other executed files.
-A suggested structure is the following: add your test to
-`tests/test_bash` (2) and a vim script to be sourced at
-`tests/test_procedures_vimscript` (3). Try to make use of the already existing
-files at `tests/test_python_sample_code` (4). File (1) should be trigger the
-newly added file (2). This latter file should invoke vim which in turn sources
-file (3). File (3) may then read (4) as a first part of its assertion
-structure and then execute the remaning of the instructions/assertions.
+covers the found bug/new feature. Tests are written using the Vader test
+framework. Check out the existing test files in `tests/vader/` (1) for examples.
+A suggested structure is the following: add your test to `tests/vader/` (2)
+as a `.vader` file. You can make use of the existing sample files at
+`tests/test_python_sample_code` (3). Vader tests use Vimscript syntax and
+can directly test python-mode functionality. See `tests/vader/setup.vim` (4)
+for test setup utilities. The test runner is at `scripts/user/run_tests.sh` (5).
 
 6. Testing Environment: The project uses Docker for consistent testing across
 different Python versions. See `README-Docker.md` for detailed information about
