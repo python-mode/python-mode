@@ -258,7 +258,33 @@ RESULTS_DIR="${PROJECT_ROOT}/results"
 LOGS_DIR="${PROJECT_ROOT}/test-logs"
 mkdir -p "${RESULTS_DIR}" "${LOGS_DIR}"
 
+# Function to format array as JSON array with proper escaping
+format_json_array() {
+    local arr=("$@")
+    if [ ${#arr[@]} -eq 0 ]; then
+        echo "[]"
+        return
+    fi
+    local result="["
+    local first=true
+    for item in "${arr[@]}"; do
+        if [ "$first" = true ]; then
+            first=false
+        else
+            result+=","
+        fi
+        # Escape JSON special characters: ", \, and control characters
+        local escaped=$(echo "$item" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\x00//g')
+        result+="\"${escaped}\""
+    done
+    result+="]"
+    echo "$result"
+}
+
 TEST_RESULTS_JSON="${PROJECT_ROOT}/test-results.json"
+PASSED_ARRAY_JSON=$(format_json_array "${PASSED_TESTS[@]}")
+FAILED_ARRAY_JSON=$(format_json_array "${FAILED_TESTS[@]}")
+
 cat > "${TEST_RESULTS_JSON}" << EOF
 {
   "timestamp": $(date +%s),
@@ -270,11 +296,26 @@ cat > "${TEST_RESULTS_JSON}" << EOF
   "total_assertions": ${TOTAL_ASSERTIONS},
   "passed_assertions": ${PASSED_ASSERTIONS},
   "results": {
-    "passed": $(IFS=','; echo "[$(printf '"%s"' "${PASSED_TESTS[@]}")]"),
-    "failed": $(IFS=','; echo "[$(printf '"%s"' "${FAILED_TESTS[@]}")]")
+    "passed": ${PASSED_ARRAY_JSON},
+    "failed": ${FAILED_ARRAY_JSON}
   }
 }
 EOF
+
+# Validate JSON syntax if jq or python is available
+if command -v jq &> /dev/null; then
+    if ! jq empty "${TEST_RESULTS_JSON}" 2>/dev/null; then
+        log_error "Generated JSON is invalid!"
+        cat "${TEST_RESULTS_JSON}"
+        exit 1
+    fi
+elif command -v python3 &> /dev/null; then
+    if ! python3 -m json.tool "${TEST_RESULTS_JSON}" > /dev/null 2>&1; then
+        log_error "Generated JSON is invalid!"
+        cat "${TEST_RESULTS_JSON}"
+        exit 1
+    fi
+fi
 
 # Create summary log
 SUMMARY_LOG="${LOGS_DIR}/test-summary.log"
