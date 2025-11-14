@@ -43,14 +43,25 @@ function! SetupPythonBuffer()
     new
     setlocal filetype=python
     setlocal buftype=
+    
+    " Enable magic for motion support (required by after/ftplugin/python.vim)
+    " This is needed for text object mappings (aM, aC, iM, iC) to work
+    set magic
+    
     " Ensure autoload functions are loaded before loading ftplugin
     " This guarantees that commands defined in ftplugin can call autoload functions
     runtime! autoload/pymode.vim
     runtime! autoload/pymode/tools/signs.vim
     runtime! autoload/pymode/tools/loclist.vim
     runtime! autoload/pymode/lint.vim
+    runtime! autoload/pymode/motion.vim
+    
     " Explicitly load the python ftplugin to ensure commands are available
     runtime! ftplugin/python/pymode.vim
+    
+    " Explicitly load after/ftplugin to ensure text object mappings are created
+    " Vim should auto-load this, but we ensure it's loaded for test reliability
+    runtime! after/ftplugin/python.vim
 endfunction
 
 function! CleanupPythonBuffer()

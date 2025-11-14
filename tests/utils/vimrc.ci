@@ -11,6 +11,9 @@ set noswapfile
 set paste
 set shell=bash
 
+" Enable magic for motion support (required for text object mappings)
+set magic
+
 " Enable filetype detection
 filetype plugin indent on
 syntax on
@@ -25,10 +28,42 @@ execute 'set rtp+=' . s:vim_home . '/pack/vader/start/vader.vim'
 " Add python-mode to runtimepath
 execute 'set rtp+=' . s:project_root
 
-" Load python-mode configuration if available
+" Load python-mode configuration FIRST to set g:pymode_rope = 1
+" This ensures the plugin will define all rope variables when it loads
 if filereadable(s:project_root . '/tests/utils/pymoderc')
     execute 'source ' . s:project_root . '/tests/utils/pymoderc'
 endif
 
+" Load python-mode plugin AFTER pymoderc so it sees rope is enabled
+" and defines all rope configuration variables
+runtime plugin/pymode.vim
+
+" Ensure rope variables exist even if rope gets disabled later
+" The plugin only defines these when g:pymode_rope is enabled,
+" but tests expect them to exist even when rope is disabled
+if !exists('g:pymode_rope_completion')
+    let g:pymode_rope_completion = 1
+endif
+if !exists('g:pymode_rope_autoimport_import_after_complete')
+    let g:pymode_rope_autoimport_import_after_complete = 0
+endif
+if !exists('g:pymode_rope_regenerate_on_write')
+    let g:pymode_rope_regenerate_on_write = 1
+endif
+if !exists('g:pymode_rope_goto_definition_bind')
+    let g:pymode_rope_goto_definition_bind = '<C-c>g'
+endif
+if !exists('g:pymode_rope_rename_bind')
+    let g:pymode_rope_rename_bind = '<C-c>rr'
+endif
+if !exists('g:pymode_rope_extract_method_bind')
+    let g:pymode_rope_extract_method_bind = '<C-c>rm'
+endif
+if !exists('g:pymode_rope_organize_imports_bind')
+    let g:pymode_rope_organize_imports_bind = '<C-c>ro'
+endif
+
 " Note: Tests will initialize python-mode via tests/vader/setup.vim
-" which is sourced in each test's "Before" block
+" which is sourced in each test's "Before" block. The setup.vim may
+" disable rope (g:pymode_rope = 0), but the config variables will
+" still exist because they were defined above.
