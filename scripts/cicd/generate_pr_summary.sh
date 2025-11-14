@@ -43,6 +43,8 @@ fi
 
 # Process each Python version's test results
 # Handle both direct artifact structure and nested structure
+# Use nullglob to handle case where no directories match
+shopt -s nullglob
 for artifact_dir in "$ARTIFACTS_DIR"/*/; do
     if [ ! -d "$artifact_dir" ]; then
         continue
@@ -62,29 +64,46 @@ for artifact_dir in "$ARTIFACTS_DIR"/*/; do
         continue
     fi
     
+    # Initialize variables with defaults
+    total_tests=0
+    passed_tests=0
+    failed_tests=0
+    total_assertions=0
+    passed_assertions=0
+    python_ver="unknown"
+    vim_ver="unknown"
+    failed_test_names=""
+    
     # Parse JSON (using jq if available, otherwise use basic parsing)
     if command -v jq &> /dev/null; then
-        total_tests=$(jq -r '.total_tests // 0' "$results_file")
-        passed_tests=$(jq -r '.passed_tests // 0' "$results_file")
-        failed_tests=$(jq -r '.failed_tests // 0' "$results_file")
-        total_assertions=$(jq -r '.total_assertions // 0' "$results_file")
-        passed_assertions=$(jq -r '.passed_assertions // 0' "$results_file")
-        python_ver=$(jq -r '.python_version // "unknown"' "$results_file")
-        vim_ver=$(jq -r '.vim_version // "unknown"' "$results_file")
+        total_tests=$(jq -r '.total_tests // 0' "$results_file" 2>/dev/null || echo "0")
+        passed_tests=$(jq -r '.passed_tests // 0' "$results_file" 2>/dev/null || echo "0")
+        failed_tests=$(jq -r '.failed_tests // 0' "$results_file" 2>/dev/null || echo "0")
+        total_assertions=$(jq -r '.total_assertions // 0' "$results_file" 2>/dev/null || echo "0")
+        passed_assertions=$(jq -r '.passed_assertions // 0' "$results_file" 2>/dev/null || echo "0")
+        python_ver=$(jq -r '.python_version // "unknown"' "$results_file" 2>/dev/null || echo "unknown")
+        vim_ver=$(jq -r '.vim_version // "unknown"' "$results_file" 2>/dev/null || echo "unknown")
         
         # Get failed test names
         failed_test_names=$(jq -r '.results.failed[]?' "$results_file" 2>/dev/null | tr '\n' ',' | sed 's/,$//' || echo "")
     else
         # Fallback: basic parsing without jq
-        total_tests=$(grep -o '"total_tests":[0-9]*' "$results_file" | grep -o '[0-9]*' || echo "0")
-        passed_tests=$(grep -o '"passed_tests":[0-9]*' "$results_file" | grep -o '[0-9]*' || echo "0")
-        failed_tests=$(grep -o '"failed_tests":[0-9]*' "$results_file" | grep -o '[0-9]*' || echo "0")
-        total_assertions=$(grep -o '"total_assertions":[0-9]*' "$results_file" | grep -o '[0-9]*' || echo "0")
-        passed_assertions=$(grep -o '"passed_assertions":[0-9]*' "$results_file" | grep -o '[0-9]*' || echo "0")
+        total_tests=$(grep -o '"total_tests":[0-9]*' "$results_file" 2>/dev/null | grep -o '[0-9]*' | head -1 || echo "0")
+        passed_tests=$(grep -o '"passed_tests":[0-9]*' "$results_file" 2>/dev/null | grep -o '[0-9]*' | head -1 || echo "0")
+        failed_tests=$(grep -o '"failed_tests":[0-9]*' "$results_file" 2>/dev/null | grep -o '[0-9]*' | head -1 || echo "0")
+        total_assertions=$(grep -o '"total_assertions":[0-9]*' "$results_file" 2>/dev/null | grep -o '[0-9]*' | head -1 || echo "0")
+        passed_assertions=$(grep -o '"passed_assertions":[0-9]*' "$results_file" 2>/dev/null | grep -o '[0-9]*' | head -1 || echo "0")
         python_ver="Python $python_version"
         vim_ver="unknown"
         failed_test_names=""
     fi
+    
+    # Ensure variables are numeric
+    total_tests=$((total_tests + 0))
+    passed_tests=$((passed_tests + 0))
+    failed_tests=$((failed_tests + 0))
+    total_assertions=$((total_assertions + 0))
+    passed_assertions=$((passed_assertions + 0))
     
     TOTAL_PYTHON_VERSIONS=$((TOTAL_PYTHON_VERSIONS + 1))
     TOTAL_TESTS=$((TOTAL_TESTS + total_tests))
@@ -106,6 +125,17 @@ for artifact_dir in "$ARTIFACTS_DIR"/*/; do
     fi
     
     # Add version summary to markdown
+    # Ensure all variables are set before using them in heredoc
+    python_version="${python_version:-unknown}"
+    status_icon="${status_icon:-❓}"
+    status_text="${status_text:-UNKNOWN}"
+    python_ver="${python_ver:-unknown}"
+    vim_ver="${vim_ver:-unknown}"
+    passed_tests="${passed_tests:-0}"
+    total_tests="${total_tests:-0}"
+    passed_assertions="${passed_assertions:-0}"
+    total_assertions="${total_assertions:-0}"
+    
     cat >> "$OUTPUT_FILE" << EOF
 
 ### Python $python_version $status_icon
@@ -133,7 +163,31 @@ EOF
     fi
 done
 
+# Check if we processed any artifacts
+if [ "$TOTAL_PYTHON_VERSIONS" -eq 0 ]; then
+    echo "" >> "$OUTPUT_FILE"
+    echo "⚠️ **Warning**: No test artifacts were processed." >> "$OUTPUT_FILE"
+    echo "This may indicate that test jobs haven't completed yet or artifacts failed to upload." >> "$OUTPUT_FILE"
+    echo "" >> "$OUTPUT_FILE"
+    echo "Debug information:" >> "$OUTPUT_FILE"
+    echo "- Artifacts directory: \`$ARTIFACTS_DIR\`" >> "$OUTPUT_FILE"
+    echo "- Directory exists: $([ -d "$ARTIFACTS_DIR" ] && echo "yes" || echo "no")" >> "$OUTPUT_FILE"
+    if [ -d "$ARTIFACTS_DIR" ]; then
+        echo "- Contents:" >> "$OUTPUT_FILE"
+        ls -la "$ARTIFACTS_DIR" >> "$OUTPUT_FILE" 2>&1 || true
+    fi
+fi
+
 # Add overall summary
+# Ensure all summary variables are set
+TOTAL_PYTHON_VERSIONS="${TOTAL_PYTHON_VERSIONS:-0}"
+TOTAL_TESTS="${TOTAL_TESTS:-0}"
+TOTAL_PASSED="${TOTAL_PASSED:-0}"
+TOTAL_FAILED="${TOTAL_FAILED:-0}"
+TOTAL_ASSERTIONS="${TOTAL_ASSERTIONS:-0}"
+PASSED_ASSERTIONS="${PASSED_ASSERTIONS:-0}"
+ALL_PASSED="${ALL_PASSED:-true}"
+
 cat >> "$OUTPUT_FILE" << EOF
 
 ---
