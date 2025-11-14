@@ -1,4 +1,5 @@
-PymodePython from pymode.lint import code_check
+" Note: code_check is imported lazily in pymode#lint#check() to avoid
+" importing Python modules before paths are initialized
 
 call pymode#tools#signs#init()
 call pymode#tools#loclist#init()
@@ -57,6 +58,8 @@ fun! pymode#lint#check() "{{{
 
     call pymode#wide_message('Code checking is running ...')
 
+    " Import code_check lazily here to ensure Python paths are initialized
+    PymodePython from pymode.lint import code_check
     PymodePython code_check()
 
     if loclist.is_empty()

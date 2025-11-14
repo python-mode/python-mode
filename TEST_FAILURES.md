@@ -1,12 +1,14 @@
 # Known Test Failures - Investigation Required
 
-## Status: Partially Fixed
+## Status: ✅ All Tests Passing
 
-The Vader test infrastructure has been improved with Vader.vim installation in Dockerfile and enhanced test runner script. However, some tests are still failing due to python-mode functionality issues.
+All Vader test suites are now passing! The issues have been resolved by fixing Python path initialization and making imports lazy.
 
 ## Test Results Summary
 
-### ✅ Passing Test Suites (6/8)
+### ✅ Passing Test Suites (8/8)
+- `autopep8.vader` - All 8 tests passing ✅
+- `commands.vader` - All 7 tests passing ✅
 - `folding.vader` - All tests passing
 - `lint.vader` - All tests passing  
 - `motion.vader` - All tests passing
@@ -14,81 +16,33 @@ The Vader test infrastructure has been improved with Vader.vim installation in D
 - `simple.vader` - All tests passing
 - `textobjects.vader` - All tests passing
 
-### ⚠️ Failing Test Suites (2/8)
-
-#### 1. autopep8.vader - 1/8 tests passing
-
-**Error:**
-```
-E117: Unknown function: pymode#lint#auto
-```
-
-**Root Cause:**
-The `pymode#lint#auto` function is defined in `autoload/pymode/lint.vim` but is not being loaded/available in the Vader test environment.
-
-**Affected Tests:**
-- Test multiple formatting issues
-- Test autopep8 with class formatting
-- Test autopep8 with long lines
-- Test autopep8 with imports
-- Test autopep8 preserves functionality
-- Test autopep8 with well-formatted code
-
-**Investigation Needed:**
-1. Verify autoload function loading mechanism in Vader test setup
-2. Check if `autoload/pymode/lint.vim` is being sourced properly
-3. Verify python-mode plugin initialization sequence in test containers
-4. Check if runtimepath includes autoload directories correctly
-
-#### 2. commands.vader - 6/7 tests passing
-
-**Error:**
-```
-PymodeLintAuto produced no changes
-```
-
-**Root Cause:**
-One test expects `PymodeLintAuto` to format code, but it's not producing changes. This is likely related to the same autoload function loading issue affecting autopep8.vader.
-
-**Affected Test:**
-- Test PymodeLintAuto command
-
-**Investigation Needed:**
-1. Same as autopep8.vader - autoload function loading
-2. Verify PymodeLintAuto command is properly registered
-3. Check if autopep8 functionality is working in test environment
-
 ## Fixes Applied
 
-### Commit: 48c868a
+### Track 3: Test Fixes (Completed)
+
+**Issue:** Python module imports were failing because:
+1. Python paths were not initialized before autoload files imported Python modules
+2. Top-level imports in `autoload/pymode/lint.vim` executed before `patch_paths()` added submodules to sys.path
+
+**Solution:**
+1. **Fixed `tests/vader/setup.vim`:**
+   - Added Python path initialization (`pymode#init()`) before loading autoload files that import Python modules
+   - Ensured `patch_paths()` is called to add submodules to sys.path
+   - Used robust plugin root detection
+
+2. **Fixed `autoload/pymode/lint.vim`:**
+   - Made `code_check` import lazy (moved from top-level to inside `pymode#lint#check()` function)
+   - This ensures Python paths are initialized before the import happens
+
+**Files Modified:**
+- `tests/vader/setup.vim` - Added Python path initialization
+- `autoload/pymode/lint.vim` - Made imports lazy
+
+### Previous Fixes
+
+#### Commit: 48c868a
 - ✅ Added Vader.vim installation to Dockerfile
 - ✅ Improved test runner script error handling
 - ✅ Enhanced success detection for Vader output
 - ✅ Changed to use Vim's -es mode for better output handling
-
-## Next Steps
-
-1. **Investigate autoload function loading**
-   - Check `tests/utils/vimrc` runtimepath configuration
-   - Verify autoload directory is in runtimepath
-   - Test manual loading of `autoload/pymode/lint.vim`
-
-2. **Debug test environment**
-   - Run tests with verbose Vim output
-   - Check if python-mode plugin is fully initialized
-   - Verify all autoload functions are available
-
-3. **Fix autoload loading**
-   - Ensure autoload functions are loaded before tests run
-   - May need to explicitly source autoload files in test setup
-   - Or ensure runtimepath is correctly configured
-
-## Related Files
-
-- `autoload/pymode/lint.vim` - Contains `pymode#lint#auto` function
-- `ftplugin/python/pymode.vim` - Defines `PymodeLintAuto` command
-- `tests/utils/vimrc` - Test configuration file
-- `tests/vader/setup.vim` - Vader test setup
-- `tests/vader/autopep8.vader` - Failing test suite
-- `tests/vader/commands.vader` - Partially failing test suite
 

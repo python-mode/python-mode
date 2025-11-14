@@ -7,7 +7,7 @@ This directory contains scripts for testing and CI/CD automation, organized into
 Scripts used by the GitHub Actions CI/CD pipeline:
 
 - **check_python_docker_image.sh** - Handles Python version resolution (especially for Python 3.13)
-- **dual_test_runner.py** - Orchestrates running both legacy bash tests and Vader tests
+- **run_tests.py** - Runs the Vader test suite (legacy bash tests have been migrated to Vader)
 - **generate_test_report.py** - Generates HTML/Markdown test reports for CI/CD
 
 ## 📁 user/ - User Scripts  
@@ -15,7 +15,7 @@ Scripts used by the GitHub Actions CI/CD pipeline:
 Scripts for local development and testing:
 
 - **run-tests-docker.sh** - Run tests with a specific Python version locally
-- **run-vader-tests.sh** - Run Vader test suite (also used by dual_test_runner.py)
+- **run_tests.sh** - Run Vader test suite (also used by run_tests.py)
 - **test-all-python-versions.sh** - Test against all supported Python versions
 
 ## Usage Examples
@@ -33,7 +33,7 @@ Scripts for local development and testing:
 ./scripts/user/test-all-python-versions.sh
 
 # Run only Vader tests
-./scripts/user/run-vader-tests.sh
+./scripts/user/run_tests.sh
 ```
 
 ### CI/CD (automated)

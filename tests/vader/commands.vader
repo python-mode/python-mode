@@ -6,6 +6,7 @@ Before:
   call SetupPythonBuffer()
 
 After:
+  source tests/vader/setup.vim
   call CleanupPythonBuffer()
 
 # Test basic pymode functionality
