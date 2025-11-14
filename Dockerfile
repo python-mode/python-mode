@@ -31,6 +31,11 @@ RUN mkdir -p /root/.vim/pack/foo/start/ && \
     cp ${PYMODE_DIR}/tests/utils/vimrc /root/.vimrc && \
     touch /root/.vimrc.before /root/.vimrc.after
 
+# Install Vader.vim for Vader test framework
+RUN mkdir -p /root/.vim/pack/vader/start && \
+    git clone --depth 1 https://github.com/junegunn/vader.vim.git /root/.vim/pack/vader/start/vader.vim || \
+    (cd /root/.vim/pack/vader/start && git clone --depth 1 https://github.com/junegunn/vader.vim.git vader.vim)
+
 # Initialize git submodules
 WORKDIR /workspace/python-mode
 
