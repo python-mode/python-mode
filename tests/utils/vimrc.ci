@@ -1,0 +1,34 @@
+" CI-specific vimrc for direct test execution
+set nocompatible
+set nomore
+set shortmess=at
+set cmdheight=10
+set backupdir=
+set directory=
+set undodir=
+set viewdir=
+set noswapfile
+set paste
+set shell=bash
+
+" Enable filetype detection
+filetype plugin indent on
+syntax on
+
+" Set up runtimepath for CI environment
+let s:vim_home = '\/home\/diraol\/.vim'
+let s:project_root = '\/home\/diraol\/dev\/floss\/python-mode'
+
+" Add Vader.vim to runtimepath
+execute 'set rtp+=' . s:vim_home . '/pack/vader/start/vader.vim'
+
+" Add python-mode to runtimepath
+execute 'set rtp+=' . s:project_root
+
+" Load python-mode configuration if available
+if filereadable(s:project_root . '/tests/utils/pymoderc')
+    execute 'source ' . s:project_root . '/tests/utils/pymoderc'
+endif
+
+" Note: Tests will initialize python-mode via tests/vader/setup.vim
+" which is sourced in each test's "Before" block

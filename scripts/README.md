@@ -6,24 +6,27 @@ This directory contains scripts for testing and CI/CD automation, organized into
 
 Scripts used by the GitHub Actions CI/CD pipeline:
 
-- **check_python_docker_image.sh** - Handles Python version resolution (especially for Python 3.13)
-- **run_tests.py** - Runs the Vader test suite (legacy bash tests have been migrated to Vader)
-- **generate_test_report.py** - Generates HTML/Markdown test reports for CI/CD
+- **run_vader_tests_direct.sh** - Direct Vader test runner for CI (no Docker)
+  - Runs tests directly in GitHub Actions environment
+  - Installs Vader.vim automatically
+  - Generates test-results.json and logs
 
 ## 📁 user/ - User Scripts  
 
-Scripts for local development and testing:
+Scripts for local development and testing (using Docker):
 
-- **run-tests-docker.sh** - Run tests with a specific Python version locally
-- **run_tests.sh** - Run Vader test suite (also used by run_tests.py)
+- **run-tests-docker.sh** - Run tests with a specific Python version locally using Docker
+- **run_tests.sh** - Run Vader test suite using Docker Compose
 - **test-all-python-versions.sh** - Test against all supported Python versions
 
-## Usage Examples
+## Test Execution Paths
 
-### Local Testing
+### Local Development (Docker)
+
+For local development, use Docker Compose to run tests in a consistent environment:
 
 ```bash
-# Test with default Python version
+# Test with default Python version (3.11)
 ./scripts/user/run-tests-docker.sh
 
 # Test with specific Python version
@@ -32,10 +35,22 @@ Scripts for local development and testing:
 # Test all Python versions
 ./scripts/user/test-all-python-versions.sh
 
-# Run only Vader tests
+# Run Vader tests using docker compose
 ./scripts/user/run_tests.sh
+
+# Or directly with docker compose
+docker compose run --rm python-mode-tests
 ```
 
-### CI/CD (automated)
+### CI/CD (Direct Execution)
 
-The CI/CD scripts are automatically called by GitHub Actions workflows and typically don't need manual execution.
+In GitHub Actions, tests run directly without Docker for faster execution:
+
+- Uses `scripts/cicd/run_vader_tests_direct.sh`
+- Automatically called by `.github/workflows/test.yml`
+- No Docker build/pull overhead
+- Same test coverage as local Docker tests
+
+## Adding New Tests
+
+To add new tests, simply create a new `.vader` file in `tests/vader/`. Both local Docker and CI test runners will automatically discover and run it.

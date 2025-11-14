@@ -1,6 +1,6 @@
 # Docker Test Environment for python-mode
 
-This directory contains Docker configuration to run python-mode tests in a containerized environment that matches the GitHub Actions CI environment.
+This directory contains Docker configuration to run python-mode tests locally. **Note:** Docker is only used for local development. CI tests run directly in GitHub Actions without Docker.
 
 ## Prerequisites
 
@@ -67,7 +67,27 @@ The container replicates the GitHub Actions environment:
 
 ## Test Execution
 
-Tests are run using the Vader test framework. The `tests/test.sh` script delegates to the Vader test runner (`scripts/user/run_tests.sh`).
+### Local Testing (Docker)
+
+Tests are run using the Vader test framework via Docker Compose:
+
+```bash
+# Using docker compose directly
+docker compose run --rm python-mode-tests
+
+# Or using the convenience script
+./scripts/user/run-tests-docker.sh
+
+# Or using the Vader test runner script
+./scripts/user/run_tests.sh
+```
+
+### CI Testing (Direct Execution)
+
+In GitHub Actions CI, tests run directly without Docker using `scripts/cicd/run_vader_tests_direct.sh`. This approach:
+- Runs 3-5x faster (no Docker build/pull overhead)
+- Provides simpler debugging (direct vim output)
+- Uses the same Vader test suite for consistency
 
 **Vader Test Suites:**
 - **autopep8.vader** - Tests automatic code formatting (8/8 tests passing)
