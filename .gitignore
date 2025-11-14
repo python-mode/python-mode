@@ -25,3 +25,5 @@ htmlcov/
 *.cover
 .hypothesis/
 .pytest_cache/
+# Temporary test runner scripts
+.tmp_run_test_*.sh

@@ -1,6 +1,13 @@
 #!/bin/bash
-# Final Vader test runner - mimics legacy test approach
+# Test runner - runs Vader test suite
 set -euo pipefail
+
+# Cleanup function to remove temporary files on exit
+cleanup() {
+    # Remove any leftover temporary test scripts
+    rm -f .tmp_run_test_*.sh
+}
+trap cleanup EXIT INT TERM
 
 echo "⚡ Running Vader Test Suite (Final)..."
 
@@ -34,6 +41,13 @@ if [[ ${#TEST_FILES[@]} -eq 0 ]]; then
 fi
 
 log_info "Found ${#TEST_FILES[@]} test file(s)"
+
+# Log environment information for debugging
+log_info "Environment:"
+log_info "  Docker: $(docker --version 2>&1 || echo 'not available')"
+log_info "  Docker Compose: $(docker compose version 2>&1 || echo 'not available')"
+log_info "  Working directory: $(pwd)"
+log_info "  CI environment: ${CI:-false}"
 
 # Run tests using docker compose
 FAILED_TESTS=()
@@ -135,11 +149,47 @@ EOFSCRIPT
     echo "$TEST_SCRIPT" > "$TEMP_SCRIPT"
     chmod +x "$TEMP_SCRIPT"
     
-    # Copy script into container and execute it
+    # Use a more reliable method: write script to workspace (which is mounted as volume)
+    # This avoids stdin redirection issues that can cause hanging
+    SCRIPT_PATH_IN_CONTAINER="/workspace/python-mode/.tmp_run_test_${test_name}.sh"
+    cp "$TEMP_SCRIPT" ".tmp_run_test_${test_name}.sh"
+    chmod +x ".tmp_run_test_${test_name}.sh"
+    
+    # Execute script in container with proper timeout and error handling
     # Use --no-TTY to prevent hanging on TTY allocation
-    timeout 90 docker compose run --rm --no-TTY python-mode-tests bash -c "cat > /tmp/run_test.sh && bash /tmp/run_test.sh" < "$TEMP_SCRIPT" > "$TEMP_OUTPUT" 2>&1 || true
-    OUTPUT=$(cat "$TEMP_OUTPUT")
-    rm -f "$TEMP_SCRIPT"
+    # Capture both stdout and stderr, and check exit code properly
+    # Note: timeout returns 124 if timeout occurred, otherwise returns the command's exit code
+    set +e  # Temporarily disable exit on error to capture exit code
+    timeout 120 docker compose run --rm --no-TTY python-mode-tests bash "$SCRIPT_PATH_IN_CONTAINER" > "$TEMP_OUTPUT" 2>&1
+    DOCKER_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    log_info "Docker command completed with exit code: $DOCKER_EXIT_CODE"
+    
+    OUTPUT=$(cat "$TEMP_OUTPUT" 2>/dev/null || echo "")
+    
+    # Cleanup temporary files
+    rm -f "$TEMP_SCRIPT" ".tmp_run_test_${test_name}.sh"
+    
+    # Check if docker command timed out or failed
+    if [ "$DOCKER_EXIT_CODE" -eq 124 ]; then
+        log_error "Test timed out: $test_name (exceeded 120s timeout)"
+        echo "--- Timeout Details for $test_name ---"
+        echo "$OUTPUT" | tail -50
+        echo "--- End Timeout Details ---"
+        FAILED_TESTS+=("$test_name")
+        rm -f "$TEMP_OUTPUT"
+        continue
+    fi
+    
+    # Check if output is empty (potential issue)
+    if [ -z "$OUTPUT" ]; then
+        log_error "Test produced no output: $test_name"
+        echo "--- Error: No output from test execution ---"
+        echo "Docker exit code: $DOCKER_EXIT_CODE"
+        FAILED_TESTS+=("$test_name")
+        rm -f "$TEMP_OUTPUT"
+        continue
+    fi
     
     # Check for success message in output
     if echo "$OUTPUT" | grep -q "SUCCESS: Test passed"; then
@@ -169,6 +219,7 @@ EOFSCRIPT
             else
                 log_error "Test failed: $test_name (could not parse results)"
                 echo "--- Error Details for $test_name ---"
+                echo "Docker exit code: $DOCKER_EXIT_CODE"
                 echo "$OUTPUT" | tail -50
                 echo "--- End Error Details ---"
                 FAILED_TESTS+=("$test_name")
@@ -176,6 +227,7 @@ EOFSCRIPT
         else
             log_error "Test failed: $test_name (no success message found)"
             echo "--- Error Details for $test_name ---"
+            echo "Docker exit code: $DOCKER_EXIT_CODE"
             echo "$OUTPUT" | tail -50
             echo "--- End Error Details ---"
             FAILED_TESTS+=("$test_name")
@@ -204,3 +256,4 @@ else
     log_success "All tests passed!"
     exit 0
 fi
+

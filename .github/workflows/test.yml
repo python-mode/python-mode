@@ -58,8 +58,8 @@ jobs:
         export TEST_SUITE="${{ matrix.test-suite }}"
         export GITHUB_ACTIONS=true
         
-        # Run dual test suite (both legacy and Vader tests)
-        python scripts/cicd/dual_test_runner.py
+        # Run Vader test suite
+        python scripts/cicd/run_tests.py
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
