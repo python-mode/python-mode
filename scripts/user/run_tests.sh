@@ -6,7 +6,61 @@ set -euo pipefail
 cleanup() {
     # Remove any leftover temporary test scripts
     rm -f .tmp_run_test_*.sh
+    # Cleanup root-owned files created by Docker container
+    cleanup_root_files "$(pwd)"
 }
+
+# Cleanup function to remove root-owned files created by Docker container
+# This function ensures cleanup only happens within the git repository root
+cleanup_root_files() {
+    local provided_path="${1:-$(pwd)}"
+    
+    # Find git root directory - this ensures we only operate within the project
+    local git_root
+    if ! git_root=$(cd "$provided_path" && git rev-parse --show-toplevel 2>/dev/null); then
+        log_warn "Not in a git repository, skipping cleanup"
+        return 0
+    fi
+    
+    # Normalize paths for comparison
+    git_root=$(cd "$git_root" && pwd)
+    local normalized_path=$(cd "$provided_path" && pwd)
+    
+    # Safety check: ensure the provided path is within git root
+    if [[ "$normalized_path" != "$git_root"* ]]; then
+        log_error "Path '$normalized_path' is outside git root '$git_root', aborting cleanup"
+        return 1
+    fi
+    
+    # Use git root as the base for cleanup operations
+    local project_root="$git_root"
+    log_info "Cleaning up files created by Docker container in: $project_root"
+    
+    # Find and remove root-owned files/directories that shouldn't persist
+    # Use sudo if available, otherwise try without (may fail silently)
+    if command -v sudo &> /dev/null; then
+        # Remove Python cache files (only within git root)
+        sudo find "$project_root" -type d -name "__pycache__" -user root -exec rm -rf {} + 2>/dev/null || true
+        sudo find "$project_root" -type f \( -name "*.pyc" -o -name "*.pyo" \) -user root -delete 2>/dev/null || true
+        
+        # Remove temporary test scripts (only within git root)
+        sudo find "$project_root" -type f -name ".tmp_run_test_*.sh" -user root -delete 2>/dev/null || true
+        
+        # Remove test artifacts (only within git root)
+        sudo rm -rf "$project_root/test-logs" "$project_root/results" 2>/dev/null || true
+        sudo rm -f "$project_root/test-results.json" "$project_root/coverage.xml" 2>/dev/null || true
+        
+        # Remove Vim swap files (only within git root)
+        sudo find "$project_root" -type f \( -name "*.swp" -o -name "*.swo" -o -name ".*.swp" -o -name ".*.swo" \) -user root -delete 2>/dev/null || true
+    else
+        # Without sudo, try to remove files we can access (only within git root)
+        find "$project_root" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+        find "$project_root" -type f \( -name "*.pyc" -o -name "*.pyo" -o -name ".tmp_run_test_*.sh" -o -name "*.swp" -o -name "*.swo" \) -delete 2>/dev/null || true
+        rm -rf "$project_root/test-logs" "$project_root/results" 2>/dev/null || true
+        rm -f "$project_root/test-results.json" "$project_root/coverage.xml" 2>/dev/null || true
+    fi
+}
+
 trap cleanup EXIT INT TERM
 
 echo "⚡ Running Vader Test Suite (Final)..."
@@ -15,6 +69,7 @@ echo "⚡ Running Vader Test Suite (Final)..."
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 log_info() {
@@ -27,6 +82,10 @@ log_success() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $*"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $*"
 }
 
 # Find test files
@@ -218,6 +277,9 @@ EOFSCRIPT
     # Cleanup temporary files
     rm -f "$TEMP_SCRIPT" ".tmp_run_test_${test_name}.sh"
     
+    # Cleanup root-owned files after each Docker execution
+    cleanup_root_files "$(pwd)"
+    
     # Check if docker command timed out or failed
     if [ "$DOCKER_EXIT_CODE" -eq 124 ]; then
         log_error "Test timed out: $test_name (exceeded 120s timeout)"
@@ -302,6 +364,9 @@ log_info "============"
 log_info "Total tests: ${#TEST_FILES[@]}"
 log_info "Passed: ${#PASSED_TESTS[@]}"
 log_info "Failed: ${#FAILED_TESTS[@]}"
+
+# Final cleanup before exit
+cleanup_root_files "$(pwd)"
 
 if [[ ${#FAILED_TESTS[@]} -gt 0 ]]; then
     echo
