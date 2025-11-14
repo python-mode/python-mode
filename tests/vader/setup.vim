@@ -6,37 +6,12 @@ if !exists('g:pymode')
     runtime plugin/pymode.vim
 endif
 
+" Explicitly load autoload functions to ensure they're available
+" Vim's autoload mechanism should load functions automatically when called,
+" but we ensure they're loaded upfront for test reliability
 " Load core autoload functions first (pymode#save, pymode#wide_message, etc.)
 runtime! autoload/pymode.vim
-
-" Initialize Python paths BEFORE loading autoload files that import Python modules
-" This is critical because autoload/pymode/lint.vim imports Python at the top level
-if !exists('g:pymode_init') || !g:pymode_init
-    " Get plugin root directory
-    " setup.vim is in tests/vader/, so go up 2 levels to get plugin root
-    let s:setup_file = expand('<sfile>:p')
-    let s:plugin_root = fnamemodify(s:setup_file, ':h:h')
-    " Verify it's correct by checking for autoload/pymode.vim
-    if !filereadable(s:plugin_root . '/autoload/pymode.vim')
-        " Try alternative: look in runtimepath
-        for path in split(&runtimepath, ',')
-            if filereadable(path . '/autoload/pymode.vim')
-                let s:plugin_root = path
-                break
-            endif
-        endfor
-    endif
-    call pymode#init(s:plugin_root, get(g:, 'pymode_paths', []))
-    let g:pymode_init = 1
-    " Also call patch_paths like ftplugin does
-    if g:pymode_python != 'disable'
-        PymodePython from pymode.utils import patch_paths
-        PymodePython patch_paths()
-    endif
-endif
-
-" Now load lint-related autoload functions and their dependencies
-" These files import Python modules, so paths must be initialized first
+" Load lint-related autoload functions and their dependencies
 runtime! autoload/pymode/tools/signs.vim
 runtime! autoload/pymode/tools/loclist.vim
 runtime! autoload/pymode/lint.vim
@@ -68,25 +43,6 @@ function! SetupPythonBuffer()
     new
     setlocal filetype=python
     setlocal buftype=
-    " Ensure Python paths are initialized (should already be done, but be safe)
-    if !exists('g:pymode_init') || !g:pymode_init
-        let s:setup_file = expand('<sfile>:p')
-        let s:plugin_root = fnamemodify(s:setup_file, ':h:h')
-        if !filereadable(s:plugin_root . '/autoload/pymode.vim')
-            for path in split(&runtimepath, ',')
-                if filereadable(path . '/autoload/pymode.vim')
-                    let s:plugin_root = path
-                    break
-                endif
-            endfor
-        endif
-        call pymode#init(s:plugin_root, get(g:, 'pymode_paths', []))
-        let g:pymode_init = 1
-        if g:pymode_python != 'disable'
-            PymodePython from pymode.utils import patch_paths
-            PymodePython patch_paths()
-        endif
-    endif
     " Ensure autoload functions are loaded before loading ftplugin
     " This guarantees that commands defined in ftplugin can call autoload functions
     runtime! autoload/pymode.vim

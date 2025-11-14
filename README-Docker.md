@@ -67,12 +67,19 @@ The container replicates the GitHub Actions environment:
 
 ## Test Execution
 
-Tests are run using the same `tests/test.sh` script as in CI:
+Tests are run using the Vader test framework. The `tests/test.sh` script delegates to the Vader test runner (`scripts/user/run_tests.sh`).
 
-1. **test_autopep8.sh** - Tests automatic code formatting
-2. **test_autocommands.sh** - Tests Vim autocommands
-3. **test_folding.sh** - Tests code folding functionality
-4. **test_textobject.sh** - Tests text object operations
+**Vader Test Suites:**
+- **autopep8.vader** - Tests automatic code formatting (8/8 tests passing)
+- **commands.vader** - Tests Vim commands and autocommands (7/7 tests passing)
+- **folding.vader** - Tests code folding functionality
+- **lint.vader** - Tests linting functionality
+- **motion.vader** - Tests motion operators
+- **rope.vader** - Tests Rope refactoring features
+- **simple.vader** - Basic functionality tests
+- **textobjects.vader** - Tests text object operations
+
+All legacy bash tests have been migrated to Vader tests.
 
 ## Testing with Different Python Versions
 

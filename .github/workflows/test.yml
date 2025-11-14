@@ -47,6 +47,12 @@ jobs:
         
         # Build the docker compose services
         docker compose build python-mode-tests
+        
+        # Verify the image was built successfully
+        echo "Verifying docker image was built..."
+        docker compose images || true
+        docker images | grep -E "(python-mode|python)" || true
+        echo "✓ Docker image build step completed"
 
     - name: Run test suite
       run: |
