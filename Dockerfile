@@ -46,7 +46,17 @@ echo "Using Python: $(python3 --version)"\n\
 echo "Using Vim: $(vim --version | head -1)"\n\
 bash ./tests/test.sh\n\
 EXIT_CODE=$?\n\
-rm -f tests/.swo tests/.swp 2>&1 >/dev/null\n\
+# Cleanup files that might be created during tests\n\
+# Remove Vim swap files\n\
+find . -type f -name "*.swp" -o -name "*.swo" -o -name ".*.swp" -o -name ".*.swo" 2>/dev/null | xargs rm -f 2>/dev/null || true\n\
+# Remove temporary test scripts\n\
+rm -f .tmp_run_test_*.sh 2>/dev/null || true\n\
+# Remove Python cache files and directories\n\
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true\n\
+find . -type f -name "*.pyc" -o -name "*.pyo" 2>/dev/null | xargs rm -f 2>/dev/null || true\n\
+# Remove test artifacts\n\
+rm -rf test-logs results 2>/dev/null || true\n\
+rm -f test-results.json coverage.xml .coverage .coverage.* 2>/dev/null || true\n\
 exit $EXIT_CODE\n\
 ' > /usr/local/bin/run-tests && \
     chmod +x /usr/local/bin/run-tests
