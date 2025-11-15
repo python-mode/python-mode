@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y \
 # Install Python coverage tool for code coverage collection
 RUN pip install --no-cache-dir coverage
 
+# Install Ruff for linting and formatting (replaces pyflakes, pycodestyle, mccabe, pylint, pydocstyle, pylama, autopep8)
+RUN pip install --no-cache-dir ruff
+
 # Set up working directory
 WORKDIR /workspace
 

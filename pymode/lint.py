@@ -18,6 +18,10 @@ def code_check():
     if not env.curbuf.name:
         return env.stop()
 
+    # Check if Ruff is enabled
+    if not env.var('g:pymode_ruff_enabled', silence=True, default=True):
+        return env.stop()
+
     # Check if ruff is available
     if not check_ruff_available():
         env.error("Ruff is not available. Please install ruff: pip install ruff")

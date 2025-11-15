@@ -15,9 +15,10 @@ Execute (Test autopep8 configuration):
   Assert 1, 'Basic autopep8 configuration test passed'
 
 Execute (Test basic autopep8 formatting):
-  " Clear buffer and set badly formatted content that autopep8 will definitely fix
+  " Clear buffer and set badly formatted content that Ruff will format
+  " Note: Ruff requires valid Python syntax, so we use properly indented code
   %delete _
-  call setline(1, ['def  test( ):','x=1+2','return x'])
+  call setline(1, ['def  test( ):', '    x=1+2', '    return x'])
   
   " Give the buffer a filename so PymodeLintAuto can save it
   let temp_file = tempname() . '.py'
@@ -37,10 +38,11 @@ Execute (Test basic autopep8 formatting):
     Assert 1, 'PymodeLintAuto command not available - test skipped'
   endif
   
-  " Check that autopep8 formatted it correctly
+  " Check that Ruff formatted it correctly
   let actual_lines = getline(1, '$')
   
-  " Verify key formatting improvements were made
+  " Verify key formatting improvements were made (Ruff format)
+  " Ruff formats: 'def test():' and 'x = 1 + 2'
   if actual_lines[0] =~# 'def test():' && join(actual_lines, ' ') =~# 'x = 1'
     Assert 1, "PymodeLintAuto formatted code correctly"
   else
@@ -157,8 +159,10 @@ Execute (Test autopep8 with imports):
   let actual_lines = getline(1, '$')
   let formatted_text = join(actual_lines, '\n')
   
-  " Verify imports were separated and formatted properly
-  if formatted_text =~# 'import os' && formatted_text =~# 'import sys'
+  " Verify imports were formatted properly (Ruff keeps 'import os, sys' on one line)
+  " Ruff formats imports differently than autopep8 - it keeps multiple imports on one line
+  " and adds proper spacing: 'import os, sys' instead of splitting into separate lines
+  if formatted_text =~# 'import os' && formatted_text =~# 'sys' && formatted_text =~# 'def test'
     Assert 1, "Import formatting was applied correctly"
   else
     Assert 0, "Import formatting failed: " . string(actual_lines)

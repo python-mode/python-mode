@@ -41,8 +41,11 @@ def patch_paths():
     if sys.platform == 'win32' or sys.platform == 'msys':
         dir_submodule = os.path.abspath(os.path.join(dir_script,
                                                      '..', 'submodules'))
-        sub_modules = os.listdir(dir_submodule)
-        for module in sub_modules:
+        # Only add submodules that are still needed (rope, astroid, toml, tomli, pytoolconfig, appdirs)
+        # Removed: pyflakes, pycodestyle, mccabe, pylint, pydocstyle, pylama, autopep8 (replaced by ruff)
+        # Removed: snowball_py (was only used by pydocstyle)
+        required_submodules = ['rope', 'astroid', 'toml', 'tomli', 'pytoolconfig', 'appdirs']
+        for module in required_submodules:
             module_full_path = os.path.join(dir_submodule, module)
-            if module_full_path not in sys.path:
+            if os.path.exists(module_full_path) and module_full_path not in sys.path:
                 sys.path.insert(0, module_full_path)

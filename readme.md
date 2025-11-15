@@ -84,6 +84,12 @@ Another old presentation here: <http://www.youtube.com/watch?v=YhqsjUUHj6g>.
 Vim >= 7.3 (most features needed +python3 support) (also
 `--with-features=big` if you want `g:pymode_lint_signs`).
 
+**Python dependencies:**
+- **Ruff** - Required for linting and formatting. Install with: `pip install ruff`
+  - Ruff replaces the previous linting tools (pyflakes, pycodestyle, mccabe, pylint, pydocstyle, pylama, autopep8)
+  - See [Ruff documentation](https://docs.astral.sh/ruff/) for installation options
+  - Verify installation: `./scripts/verify_ruff_installation.sh`
+
 # How to install
 
 ## Manually (according to vim's package structure)

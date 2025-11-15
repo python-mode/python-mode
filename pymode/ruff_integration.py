@@ -214,15 +214,30 @@ def run_ruff_check(file_path: str, content: str = None) -> List[RuffError]:
     Returns:
         List of RuffError objects
     """
+    # Check if Ruff is enabled
+    if not env.var('g:pymode_ruff_enabled', silence=True, default=True):
+        return []
+    
     try:
         ruff_path = _get_ruff_executable()
     except RuntimeError:
         return []
     
     # Get configuration from vim variables
-    linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
-    ignore = env.var('g:pymode_lint_ignore', default=[])
-    select = env.var('g:pymode_lint_select', default=[])
+    # Use Ruff-specific options if set, otherwise fall back to legacy options
+    ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
+    ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
+    
+    if ruff_select or ruff_ignore:
+        # Use Ruff-specific configuration
+        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+        ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
+        select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
+    else:
+        # Use legacy configuration (backward compatibility)
+        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+        ignore = env.var('g:pymode_lint_ignore', default=[])
+        select = env.var('g:pymode_lint_select', default=[])
     
     # Build ruff configuration
     config = _build_ruff_config(linters, ignore, select)
@@ -317,8 +332,8 @@ def run_ruff_format(file_path: str, content: str = None) -> Optional[str]:
     # Prepare command
     cmd = [ruff_path, 'format', '--stdin-filename', file_path]
     
-    # Get configuration
-    config_file = env.var('g:pymode_ruff_config_file', silence=True)
+    # Get configuration file if specified
+    config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
     if config_file and os.path.exists(config_file):
         cmd.extend(['--config', config_file])
     
@@ -337,6 +352,11 @@ def run_ruff_format(file_path: str, content: str = None) -> Optional[str]:
             if result.returncode == 0:
                 return result.stdout
             else:
+                # If ruff fails due to syntax errors, return original content
+                # This maintains backward compatibility with autopep8 behavior
+                # if "Failed to parse" in result.stderr or "SyntaxError" in result.stderr:
+                #     env.debug(f"Ruff format skipped due to syntax errors: {result.stderr}")
+                #     return content if content else None
                 env.debug(f"Ruff format failed: {result.stderr}")
                 return None
                 

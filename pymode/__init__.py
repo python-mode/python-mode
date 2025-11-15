@@ -42,8 +42,13 @@ def auto():
     
     if formatted_content is not None and formatted_content != content:
         # Update buffer with formatted content
-        lines = formatted_content.splitlines()
+        lines = formatted_content.rstrip('\n').splitlines()
+        if not lines:
+            lines = ['']
         current_buffer[:] = lines
+        
+        # Mark buffer as modified so Vim knows it can be written
+        vim.command('setlocal modified')
         vim.command('echom "Ruff format completed"')
     else:
         vim.command('echom "No formatting changes needed"')
