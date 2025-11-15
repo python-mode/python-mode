@@ -28,6 +28,12 @@ let g:pymode_lint_message = 1
 let g:pymode_lint_checkers = ['pyflakes', 'pycodestyle', 'mccabe']
 let g:pymode_lint_ignore = ["E501", "W",]
 let g:pymode_lint_select = ["E501", "W0011", "W430"]
+" Ruff-specific options (optional - legacy options above still work)
+let g:pymode_ruff_enabled = 1
+let g:pymode_ruff_format_enabled = 1
+let g:pymode_ruff_select = []
+let g:pymode_ruff_ignore = []
+let g:pymode_ruff_config_file = ""
 let g:pymode_lint_sort = []
 let g:pymode_lint_cwindow = 1
 let g:pymode_lint_signs = 1

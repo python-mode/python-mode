@@ -53,7 +53,7 @@ This document outlines a comprehensive plan to replace most of the python-mode s
 **Timeline: 1 week**
 
 #### Task 2.1: Remove Submodules
-- [ ] Remove from `.gitmodules`:
+- [x] Remove from `.gitmodules`:
   - `submodules/pyflakes`
   - `submodules/pycodestyle`
   - `submodules/mccabe`
@@ -61,38 +61,39 @@ This document outlines a comprehensive plan to replace most of the python-mode s
   - `submodules/pydocstyle`
   - `submodules/pylama`
   - `submodules/autopep8`
+  - `submodules/snowball_py` (was only used by pydocstyle)
 - [ ] Clean up submodule references in git
 - [ ] Update repository size documentation
 
 #### Task 2.2: Update Installation Requirements
-- [ ] Add ruff as external dependency requirement
-- [ ] Update installation documentation in README.md
-- [ ] Modify `Dockerfile` and `Dockerfile.base` to include ruff
-- [ ] Update `docker-compose.yml` if needed
-- [ ] Create installation verification script
+- [x] Add ruff as external dependency requirement
+- [x] Update installation documentation in README.md
+- [x] Modify `Dockerfile` to include ruff
+- [x] Update `docker-compose.yml` if needed (no changes needed)
+- [x] Create installation verification script (`scripts/verify_ruff_installation.sh`)
 
 #### Task 2.3: Update Path Management
-- [ ] Modify `pymode/utils.py` `patch_paths()` function
-- [ ] Remove submodule path additions for replaced tools
-- [ ] Keep paths for remaining tools (rope, toml, etc.)
+- [x] Modify `pymode/utils.py` `patch_paths()` function
+- [x] Remove submodule path additions for replaced tools
+- [x] Keep paths for remaining tools (rope, astroid, toml, tomli, pytoolconfig, appdirs)
 - [ ] Test path resolution on different platforms
 
 ### Phase 3: Configuration Migration
 **Timeline: 1 week**
 
 #### Task 3.1: Create Ruff Configuration Mapping
-- [ ] Map current settings to ruff equivalents:
+- [x] Map current settings to ruff equivalents:
   ```
   g:pymode_lint_checkers -> ruff select rules
   g:pymode_lint_ignore -> ruff ignore patterns  
   g:pymode_lint_select -> ruff select patterns
   g:pymode_lint_options_* -> ruff tool-specific config
   ```
-- [ ] Create configuration converter utility
-- [ ] Document configuration changes
+- [x] Create configuration converter utility (handled automatically in ruff_integration.py)
+- [x] Document configuration changes (see RUFF_CONFIGURATION_MAPPING.md)
 
 #### Task 3.2: Add New Configuration Options
-- [ ] Add ruff-specific VimScript options:
+- [x] Add ruff-specific VimScript options:
   ```vim
   g:pymode_ruff_enabled
   g:pymode_ruff_select
@@ -100,8 +101,8 @@ This document outlines a comprehensive plan to replace most of the python-mode s
   g:pymode_ruff_format_enabled
   g:pymode_ruff_config_file
   ```
-- [ ] Update default configurations
-- [ ] Add configuration validation
+- [x] Update default configurations (all options have sensible defaults)
+- [x] Add configuration validation (in ruff_integration.py validate_configuration())
 
 ### Phase 4: Preserve Advanced Features
 **Timeline: 1 week**

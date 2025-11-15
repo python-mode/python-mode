@@ -19,8 +19,8 @@ filetype plugin indent on
 syntax on
 
 " Set up runtimepath for CI environment
-let s:vim_home = '\/home\/diraol\/.vim'
-let s:project_root = '\/home\/diraol\/dev\/floss\/python-mode'
+let s:vim_home = '\/root\/.vim'
+let s:project_root = '\/workspace\/python-mode'
 
 " Add Vader.vim to runtimepath
 execute 'set rtp+=' . s:vim_home . '/pack/vader/start/vader.vim'

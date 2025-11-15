@@ -123,13 +123,38 @@ call pymode#default("g:pymode_lint_on_fly", 0)
 call pymode#default("g:pymode_lint_message", 1)
 
 " Choices are: pylint, pyflakes, pycodestyle, mccabe and pep257
+" NOTE: These are now mapped to Ruff rules. See RUFF_MIGRATION_PLAN.md for details.
 call pymode#default("g:pymode_lint_checkers", ['pyflakes', 'pycodestyle', 'mccabe'])
 
 " Skip errors and warnings (e.g. E4,W)
+" NOTE: These are converted to Ruff ignore patterns
 call pymode#default("g:pymode_lint_ignore", [])
 
 " Select errors and warnings (e.g. E4,W)
+" NOTE: These are converted to Ruff select patterns
 call pymode#default("g:pymode_lint_select", [])
+
+" RUFF-SPECIFIC OPTIONS {{{
+"
+" Enable/disable Ruff linting (replaces pylama-based linting)
+call pymode#default("g:pymode_ruff_enabled", 1)
+
+" Enable/disable Ruff formatting (replaces autopep8)
+call pymode#default("g:pymode_ruff_format_enabled", 1)
+
+" Ruff-specific select rules (overrides g:pymode_lint_select if set)
+" Example: ['E', 'F', 'W'] to select specific rule categories
+call pymode#default("g:pymode_ruff_select", [])
+
+" Ruff-specific ignore patterns (overrides g:pymode_lint_ignore if set)
+" Example: ['E501', 'F401'] to ignore specific rules
+call pymode#default("g:pymode_ruff_ignore", [])
+
+" Path to Ruff configuration file (pyproject.toml, ruff.toml, etc.)
+" If empty, Ruff will use default configuration or search for config files
+call pymode#default("g:pymode_ruff_config_file", "")
+
+" }}}
 
 " Auto open cwindow if any errors has been finded
 call pymode#default("g:pymode_lint_cwindow", 1)
