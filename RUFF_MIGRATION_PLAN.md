@@ -154,11 +154,11 @@ This document outlines a comprehensive plan to replace most of the python-mode s
 **Timeline: 1-2 weeks**
 
 #### Task 6.1: Update Documentation
-- [ ] Update `doc/pymode.txt` with ruff information
+- [x] Update `doc/pymode.txt` with ruff information (✅ Complete)
 - [ ] Create migration guide from old configuration
-- [ ] Document new ruff-specific features
-- [ ] Update README.md with new requirements
-- [ ] Add troubleshooting section
+- [x] Document new ruff-specific features (✅ In doc/pymode.txt section 3.1)
+- [x] Update README.md with new requirements (✅ Done in Phase 2)
+- [x] Add troubleshooting section (✅ Added to FAQ section)
 
 #### Task 6.2: Provide Migration Tools
 - [ ] Create configuration converter script
