@@ -108,21 +108,23 @@ This document outlines a comprehensive plan to replace most of the python-mode s
 **Timeline: 1 week**
 
 #### Task 4.1: Keep Rope Integration
-- [ ] Maintain rope submodule
-- [ ] Keep astroid dependency if required by rope
-- [ ] Preserve all rope functionality:
-  - Code completion
-  - Go to definition
-  - Refactoring operations
-  - Auto-imports
-- [ ] Test rope integration with new ruff setup
+- [x] Maintain rope submodule
+- [x] Keep astroid dependency if required by rope (evaluated: not needed, was only for pylint)
+- [x] Preserve all rope functionality:
+  - Code completion ✅
+  - Go to definition ✅
+  - Refactoring operations ✅
+  - Auto-imports ✅
+- [x] Test rope integration with new ruff setup (all rope tests passing: 9/9)
 
 #### Task 4.2: Handle Configuration Dependencies
-- [ ] Evaluate toml/tomli necessity for ruff config
-- [ ] Assess pytoolconfig requirement
-- [ ] Determine if appdirs is still needed
-- [ ] Remove snowballstemmer if pydocstyle is replaced
-- [ ] Update dependency documentation
+- [x] Evaluate toml/tomli necessity for ruff config (tomli needed for pytoolconfig, toml not needed)
+- [x] Assess pytoolconfig requirement (required by rope)
+- [x] Determine if appdirs is still needed (not needed, removed)
+- [x] Remove snowballstemmer if pydocstyle is replaced (removed in Phase 2)
+- [x] Update dependency documentation (see PHASE4_DEPENDENCY_EVALUATION.md)
+
+**Final submodules:** rope, tomli, pytoolconfig (3 total, down from 13 original)
 
 ### Phase 5: Testing and Validation
 **Timeline: 2-3 weeks**
