@@ -947,23 +947,13 @@ CI environment.
     Rope
         Copyright (C) 2006-2010 Ali Gholami Rudi
         Copyright (C) 2009-2010 Anton Gritsay
+        https://github.com/python-rope/rope
 
-    Pylint
-        Copyright (C) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
-        http://www.logilab.fr/
-
-    Pyflakes:
-        Copyright (c) 2005-2011 Divmod, Inc.
-        Copyright (c) 2013-2014 Florent Xicluna
-        https://github.com/PyCQA/pyflakes
-
-    PEP8:
-        Copyright (c) 2006 Johann C. Rocholl <johann@rocholl.net>
-        http://github.com/jcrocholl/pep8
-
-    autopep8:
-        Copyright (c) 2012 hhatto <hhatto.jp@gmail.com>
-        https://github.com/hhatto/autopep8
+    Ruff:
+        Copyright (c) 2022-present Astral Software
+        https://github.com/astral-sh/ruff
+        Ruff replaces multiple linting tools (pylint, pyflakes, pycodestyle,
+        mccabe, pydocstyle, autopep8) with a single, fast tool.
 
     Python syntax for vim:
         Copyright (c) 2010 Dmitry Vasiliev
