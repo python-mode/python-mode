@@ -1,4 +1,5 @@
-" Test that the PymodeLintAuto changes a badly formated buffer.
+" Test that the PymodeLintAuto changes a badly formatted buffer.
+" Note: PymodeLintAuto now uses Ruff instead of autopep8 for formatting.
 
 " Load sample python file.
 read ./test_python_sample_code/from_autopep8.py

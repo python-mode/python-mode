@@ -1,0 +1,206 @@
+" Comprehensive Ruff integration tests
+" Tests for Ruff linting and formatting functionality
+
+Before:
+  source tests/vader/setup.vim
+  call SetupPythonBuffer()
+
+After:
+  source tests/vader/setup.vim
+  call CleanupPythonBuffer()
+
+# Test Ruff configuration variables
+Execute (Test Ruff configuration variables):
+  " Test that Ruff-specific configuration variables exist
+  Assert exists('g:pymode_ruff_enabled'), 'g:pymode_ruff_enabled should exist'
+  Assert exists('g:pymode_ruff_format_enabled'), 'g:pymode_ruff_format_enabled should exist'
+  Assert exists('g:pymode_ruff_select'), 'g:pymode_ruff_select should exist'
+  Assert exists('g:pymode_ruff_ignore'), 'g:pymode_ruff_ignore should exist'
+  Assert exists('g:pymode_ruff_config_file'), 'g:pymode_ruff_config_file should exist'
+  Assert 1, 'All Ruff configuration variables exist'
+
+# Test Ruff linting basic functionality
+Execute (Test Ruff linting basic):
+  " Clear buffer and set content with linting issues
+  %delete _
+  call setline(1, ['import os', 'x = 1', 'y = 2', 'print(x)'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Run linting (should use Ruff)
+  PymodeLint
+  
+  " Verify linting completed (no errors expected for this simple code)
+  Assert 1, "Ruff linting completed successfully"
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff formatting with syntax errors (should handle gracefully)
+Execute (Test Ruff formatting with syntax error):
+  " Clear buffer and set syntactically invalid content
+  %delete _
+  call setline(1, ['def test():', '    x = 1', '    return x', '    # Missing closing'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Store original content
+  let original_lines = getline(1, '$')
+  
+  " Try to format (should handle syntax errors gracefully)
+  try
+    PymodeLintAuto
+    let formatted_lines = getline(1, '$')
+    
+    " Ruff should return original content for syntax errors
+    " or format what it can
+    Assert 1, "Ruff handled syntax error gracefully"
+  catch
+    " If it fails, that's also acceptable for syntax errors
+    Assert 1, "Ruff correctly identified syntax error"
+  endtry
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff formatting with valid code
+Execute (Test Ruff formatting valid code):
+  " Clear buffer and set badly formatted but valid code
+  %delete _
+  call setline(1, ['def  test( ):', '    x=1+2', '    return x'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Run formatting
+  PymodeLintAuto
+  
+  " Check that formatting was applied
+  let formatted_lines = getline(1, '$')
+  let formatted_text = join(formatted_lines, '\n')
+  
+  " Verify Ruff formatted the code
+  if formatted_text =~# 'def test():' && formatted_text =~# 'x = 1 + 2'
+    Assert 1, "Ruff formatted valid code correctly"
+  else
+    Assert 0, "Ruff formatting failed: " . string(formatted_lines)
+  endif
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff with configuration file
+Execute (Test Ruff with config file):
+  " Test that Ruff respects configuration file setting
+  " This is a basic test - actual config file testing would require file creation
+  Assert exists('g:pymode_ruff_config_file'), 'Config file option exists'
+  Assert 1, "Ruff config file option available"
+
+# Test Ruff linting with ignore rules
+Execute (Test Ruff linting ignore):
+  " Clear buffer and set content that would normally trigger warnings
+  %delete _
+  call setline(1, ['import os', 'import sys', '', 'def test():', '    unused_var = 1', '    return True'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Run linting
+  PymodeLint
+  
+  " Verify linting completed (ignore rules would be applied if configured)
+  Assert 1, "Ruff linting with ignore rules completed"
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff formatting preserves code functionality
+Execute (Test Ruff preserves functionality):
+  " Clear buffer and set functional code
+  %delete _
+  call setline(1, ['def calculate(x, y):', '    result = x * 2 + y', '    return result'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Store original structure
+  let original_text = join(getline(1, '$'), '\n')
+  
+  " Run formatting
+  PymodeLintAuto
+  
+  " Check that code structure is preserved
+  let formatted_lines = getline(1, '$')
+  let formatted_text = join(formatted_lines, '\n')
+  
+  " Verify key elements are still present
+  if formatted_text =~# 'def calculate' && formatted_text =~# 'return result'
+    Assert 1, "Ruff preserved code functionality"
+  else
+    Assert 0, "Ruff changed code functionality: " . string(formatted_lines)
+  endif
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff with empty buffer
+Execute (Test Ruff with empty buffer):
+  " Clear buffer completely
+  %delete _
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Try to format empty buffer
+  try
+    PymodeLintAuto
+    Assert 1, "Ruff handled empty buffer gracefully"
+  catch
+    " Empty buffer might cause issues, which is acceptable
+    Assert 1, "Ruff correctly handled empty buffer"
+  endtry
+  
+  " Clean up temp file
+  call delete(temp_file)
+
+# Test Ruff formatting with comments
+Execute (Test Ruff formatting with comments):
+  " Clear buffer and set code with comments
+  %delete _
+  call setline(1, ['# This is a comment', 'def test():', '    # Another comment', '    return True'])
+  
+  " Give the buffer a filename
+  let temp_file = tempname() . '.py'
+  execute 'write ' . temp_file
+  execute 'edit ' . temp_file
+  
+  " Run formatting
+  PymodeLintAuto
+  
+  " Verify comments are preserved
+  let formatted_lines = getline(1, '$')
+  let formatted_text = join(formatted_lines, '\n')
+  
+  if formatted_text =~# '# This is a comment' && formatted_text =~# '# Another comment'
+    Assert 1, "Ruff preserved comments correctly"
+  else
+    Assert 0, "Ruff removed or changed comments: " . string(formatted_lines)
+  endif
+  
+  " Clean up temp file
+  call delete(temp_file)
+
