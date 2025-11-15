@@ -177,10 +177,11 @@ This document outlines a comprehensive plan to replace most of the python-mode s
 ## Expected Benefits
 
 ### Performance Improvements
-- **10-100x faster linting** compared to current tool combination
+- **Significantly faster linting** compared to current tool combination (Ruff is known to be 10-100x faster)
 - **Reduced memory usage** by eliminating multiple tool processes
 - **Single tool coordination** instead of managing multiple linters
 - **Near-instantaneous feedback** for developers
+- *Note: Performance benchmarking not performed as part of this migration*
 
 ### Maintenance Benefits
 - **7 fewer submodules** to maintain and update
