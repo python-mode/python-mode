@@ -22,7 +22,8 @@ CONTENTS                                                        *pymode-contents
     2.7 Run code.....................................................|pymode-run|
     2.8 Breakpoints..........................................|pymode-breakpoints|
 3. Code checking....................................................|pymode-lint|
-    3.1 Code checkers options...............................|pymode-lint-options|
+    3.1 Ruff-specific configuration...................|pymode-ruff-configuration|
+    3.2 Legacy code checker options (mapped to Ruff)..|pymode-lint-options|
 4. Rope support.....................................................|pymode-rope|
     4.1 Code completion.......................................|pymode-completion|
     4.2 Find definition......................................|pymode-rope-findit|
@@ -43,12 +44,14 @@ Thus some of its functionality may not work as expected. Please be patient and
 do report bugs or inconsistencies in its documentation. But remember to look
 for already openned bug reports for the same issue before creating a new one.
 
-Python-mode is a vim plugin that allows you to use the pylint, rope, and pydoc
-libraries in vim to provide features like python code bug checking,
+Python-mode is a vim plugin that allows you to use Ruff (a fast Python linter
+and formatter), rope (for refactoring and code completion), and other libraries
+in vim to provide features like python code bug checking, formatting,
 refactoring, and some other useful things.
 
-This plugin allows you to create python code in vim very easily. There is no
-need to install the pylint or rope libraries on your system.
+This plugin allows you to create python code in vim very easily. You need to
+install Ruff on your system (via `pip install ruff`), but rope and other
+dependencies are included as submodules.
 
 Python-mode contains all you need to develop python applications in Vim.
 
@@ -63,9 +66,8 @@ Features:                                                       *pymode-features
 - Python folding
 - Python motions and operators (``]]``, ``3[[``, ``]]M``, ``vaC``, ``viM``,
   ``daC``, ``ciM``, ...)
-- Code checking  (pylint_, pyflakes_, pylama_, ...) that can be run
-  simultaneously (``:PymodeLint``)
-- Autofix PEP8 errors (``:PymodeLintAuto``)
+- Code checking using Ruff (fast Python linter) (``:PymodeLint``)
+- Auto-format code using Ruff (``:PymodeLintAuto``)
 - Search in python documentation (``K``)
 - Code refactoring <rope refactoring library> (rope_)
 - Strong code completion (rope_)
@@ -298,20 +300,20 @@ Manually set breakpoint command (leave empty for automatic detection)
 3. Code checking ~
                                                                     *pymode-lint*
 
-Pymode supports `pylint`, `pep257`, `pycodestyle`, `pyflakes`, `mccabe` code
-checkers. You could run several similar checkers.
+Pymode uses Ruff for code checking and formatting. Ruff is a fast Python linter
+and formatter written in Rust that replaces multiple tools (pyflakes, pycodestyle,
+mccabe, pylint, pydocstyle, autopep8) with a single, unified tool.
 
-        Pymode uses Pylama library for code checking. Many options like skip
-        files, errors and etc could be defined in `pylama.ini` file or modelines.
-        Check Pylama documentation for details.
+        Ruff configuration can be defined in `pyproject.toml` or `ruff.toml` files.
+        See Ruff documentation for details: https://docs.astral.sh/ruff/
 
-        Pylint options (ex. disable messages) may be defined in `$HOME/pylint.rc`
-        See pylint documentation.
+        For backward compatibility, existing `g:pymode_lint_*` options are mapped
+        to Ruff rules. See |pymode-ruff-configuration| for Ruff-specific options.
 
 Commands:
-*:PymodeLint* -- Check code in current buffer
+*:PymodeLint* -- Check code in current buffer using Ruff
 *:PymodeLintToggle* -- Toggle code checking
-*:PymodeLintAuto* -- Fix PEP8 errors in current buffer automatically
+*:PymodeLintAuto* -- Format code in current buffer using Ruff
 
 Turn on code checking                                           *'g:pymode_lint'*
 >
@@ -333,11 +335,14 @@ Show error message if cursor placed at the error line   *'g:pymode_lint_message'
 >
     let g:pymode_lint_message = 1
 
-Default code checkers (you could set several)          *'g:pymode_lint_checkers'*
+Default code checkers (legacy option, mapped to Ruff rules)
+                                                      *'g:pymode_lint_checkers'*
 >
     let g:pymode_lint_checkers = ['pyflakes', 'pycodestyle', 'mccabe']
 
-Values may be chosen from: `pylint`, `pycodestyle`, `mccabe`, `pep257`, `pyflakes`.
+Note: This option is now mapped to Ruff rules. The checker names are used to
+determine which Ruff rules to enable. For Ruff-specific configuration, see
+|pymode-ruff-configuration|.
 
 Skip errors and warnings                                 *'g:pymode_lint_ignore'*
 E.g. ["W", "E2"] (Skip all Warnings and the Errors starting with E2) etc.
@@ -376,37 +381,72 @@ Definitions for |signs|
     let g:pymode_lint_pyflakes_symbol = 'FF'
 
 -------------------------------------------------------------------------------
-3.1 Set code checkers options ~
+3.1 Ruff-specific configuration ~
+                                                      *pymode-ruff-configuration*
+
+Pymode provides Ruff-specific configuration options for fine-grained control:
+
+Enable Ruff linting                                          *'g:pymode_ruff_enabled'*
+>
+    let g:pymode_ruff_enabled = 1
+
+Enable Ruff formatting (auto-format)              *'g:pymode_ruff_format_enabled'*
+>
+    let g:pymode_ruff_format_enabled = 1
+
+Select specific Ruff rules to enable                    *'g:pymode_ruff_select'*
+Takes precedence over g:pymode_lint_select if set.
+>
+    let g:pymode_ruff_select = []
+
+Ignore specific Ruff rules                                *'g:pymode_ruff_ignore'*
+Takes precedence over g:pymode_lint_ignore if set.
+>
+    let g:pymode_ruff_ignore = []
+
+Path to Ruff configuration file                    *'g:pymode_ruff_config_file'*
+If empty, Ruff will look for pyproject.toml or ruff.toml automatically.
+>
+    let g:pymode_ruff_config_file = ""
+
+For more information about Ruff rules and configuration, see:
+https://docs.astral.sh/ruff/rules/
+
+-------------------------------------------------------------------------------
+3.2 Legacy code checker options (mapped to Ruff) ~
                                                             *pymode-lint-options*
 
-Pymode has the ability to set code checkers options from pymode variables:
+The following options are maintained for backward compatibility and are mapped
+to Ruff rules:
 
-Set PEP8 options                            *'g:pymode_lint_options_pycodestyle'*
+Set PEP8 options (mapped to Ruff E/W rules)
+                            *'g:pymode_lint_options_pycodestyle'*
 >
     let g:pymode_lint_options_pycodestyle =
         \ {'max_line_length': g:pymode_options_max_line_length}
 
-See https://pep8.readthedocs.org/en/1.4.6/intro.html#configuration for more
-info.
-
-Set Pyflakes options                           *'g:pymode_lint_options_pyflakes'*
+Set Pyflakes options (mapped to Ruff F rules)
+                           *'g:pymode_lint_options_pyflakes'*
 >
     let g:pymode_lint_options_pyflakes = { 'builtins': '_' }
 
-Set mccabe options                               *'g:pymode_lint_options_mccabe'*
+Set mccabe options (mapped to Ruff C90 rules)
+                               *'g:pymode_lint_options_mccabe'*
 >
     let g:pymode_lint_options_mccabe = { 'complexity': 12 }
 
-Set pep257 options                               *'g:pymode_lint_options_pep257'*
+Set pep257 options (mapped to Ruff D rules)
+                               *'g:pymode_lint_options_pep257'*
 >
     let g:pymode_lint_options_pep257 = {}
 
-Set pylint options                               *'g:pymode_lint_options_pylint'*
+Set pylint options (mapped to Ruff PLE/PLR/PLW rules)
+                               *'g:pymode_lint_options_pylint'*
 >
     let g:pymode_lint_options_pylint =
         \ {'max-line-length': g:pymode_options_max_line_length}
 
-See http://docs.pylint.org/features.html#options for more info.
+For mapping details, see RUFF_CONFIGURATION_MAPPING.md in the repository.
 
 
 ===============================================================================
@@ -777,7 +817,19 @@ plugin seems broken.
 
 
 
-2. Rope completion is very slow                                *pymode-rope-slow*
+2. Ruff linting or formatting issues                          *pymode-ruff-issues*
+
+If Ruff is not found, make sure it's installed: `pip install ruff`
+You can verify installation with: `ruff --version`
+
+If Ruff reports errors, check your `pyproject.toml` or `ruff.toml` configuration.
+For Ruff-specific options, use |pymode-ruff-configuration| instead of legacy
+options.
+
+For migration from old linting tools, see RUFF_CONFIGURATION_MAPPING.md in the
+repository.
+
+3. Rope completion is very slow                                *pymode-rope-slow*
 -------------------------------
 
 Rope creates a project-level service directory in |.ropeproject|
@@ -800,12 +852,16 @@ You may also set |'g:pymode_rope_project_root'| to manually specify the project
 root path.
 
 
-3. Pylint check is very slow
-----------------------------
+3. Ruff performance and configuration
+--------------------------------------
 
-In some projects pylint may check slowly, because it also scans imported
-modules if possible. Try using another code checker: see
-|'g:pymode_lint_checkers'|.
+Ruff is significantly faster than the old linting tools (pylint, pyflakes, etc.).
+If you experience any issues:
+
+- Ensure Ruff is installed: `pip install ruff`
+- Check Ruff configuration in `pyproject.toml` or `ruff.toml`
+- Use |pymode-ruff-configuration| for Ruff-specific options
+- Legacy options are automatically mapped to Ruff rules
 
 You may set |exrc| and |secure| in your |vimrc| to auto-set custom settings
 from `.vimrc` from your projects directories.
