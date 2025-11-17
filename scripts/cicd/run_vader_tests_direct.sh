@@ -35,6 +35,8 @@ cd "${PROJECT_ROOT}"
 log_info "Project root: ${PROJECT_ROOT}"
 log_info "Python version: $(python3 --version 2>&1 || echo 'not available')"
 log_info "Vim version: $(vim --version | head -1 || echo 'not available')"
+log_info "Vim path: $(which vim || echo 'not found')"
+log_info "Platform: $(uname -s)"
 
 # Check prerequisites
 if ! command -v vim &> /dev/null; then
@@ -182,20 +184,30 @@ for test_file in "${TEST_FILES[@]}"; do
     # Run Vader test with timeout
     # macOS doesn't have timeout by default, so use gtimeout if available, or run without timeout
     set +e  # Don't exit on error, we'll check exit code
+    
+    # Check if --not-a-term is supported (some Vim versions don't support it)
+    VIM_TERM_FLAG=""
+    if vim --help 2>&1 | grep -q "\-\-not-a-term"; then
+        VIM_TERM_FLAG="--not-a-term"
+    fi
+    
+    # Determine timeout command
+    TIMEOUT_CMD=""
     if command -v timeout &> /dev/null; then
-        timeout 120 vim \
-            --not-a-term \
-            -es \
-            -i NONE \
-            -u "${CI_VIMRC}" \
-            -c "Vader! ${TEST_FILE_ABS}" \
-            -c "qa!" \
-            < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
-        EXIT_CODE=$?
+        TIMEOUT_CMD="timeout 120"
     elif command -v gtimeout &> /dev/null; then
         # macOS with GNU coreutils installed via Homebrew
-        gtimeout 120 vim \
-            --not-a-term \
+        TIMEOUT_CMD="gtimeout 120"
+    else
+        # No timeout available (macOS without GNU coreutils)
+        log_warn "timeout command not available, running without timeout"
+        TIMEOUT_CMD=""
+    fi
+    
+    # Build vim command
+    if [ -n "$TIMEOUT_CMD" ]; then
+        $TIMEOUT_CMD vim \
+            ${VIM_TERM_FLAG} \
             -es \
             -i NONE \
             -u "${CI_VIMRC}" \
@@ -204,11 +216,8 @@ for test_file in "${TEST_FILES[@]}"; do
             < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
         EXIT_CODE=$?
     else
-        # No timeout available (macOS without GNU coreutils)
-        # Run without timeout - tests should complete quickly anyway
-        log_warn "timeout command not available, running without timeout"
         vim \
-            --not-a-term \
+            ${VIM_TERM_FLAG} \
             -es \
             -i NONE \
             -u "${CI_VIMRC}" \

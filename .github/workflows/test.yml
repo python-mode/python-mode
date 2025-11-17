@@ -89,7 +89,10 @@ jobs:
         which vim
         vim --version
         # Verify timeout is available (from coreutils)
+        # On macOS, coreutils installs commands with 'g' prefix, but PATH should have both
         which timeout || which gtimeout || echo "Warning: timeout command not found"
+        # Test timeout command
+        timeout --version || gtimeout --version || echo "Warning: timeout not working"
 
     - name: Run Vader test suite
       run: |
