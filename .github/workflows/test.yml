@@ -39,6 +39,10 @@ jobs:
 
     - name: Run Vader test suite
       run: |
+        pwd
+        ls -la scripts/cicd/
+        which bash
+        bash --version
         bash scripts/cicd/run_vader_tests_direct.sh
 
     - name: Upload test results
@@ -96,6 +100,10 @@ jobs:
 
     - name: Run Vader test suite
       run: |
+        pwd
+        ls -la scripts/cicd/
+        which bash
+        bash --version
         bash scripts/cicd/run_vader_tests_direct.sh
 
     - name: Upload test results
@@ -188,6 +196,10 @@ jobs:
     - name: Run Vader test suite
       shell: pwsh
       run: |
+        Get-Location
+        Get-ChildItem scripts\cicd\
+        Get-Command pwsh | Select-Object -ExpandProperty Source
+        pwsh --version
         pwsh scripts/cicd/run_vader_tests_windows.ps1
 
     - name: Upload test results
