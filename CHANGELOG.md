@@ -1,8 +1,6 @@
 # Changelog
 
-## TODO
-
-## 2024-XX-XX 0.15.0
+## [Unreleased] 0.15.0
 
 ### BREAKING CHANGES: Ruff Migration
 
@@ -88,6 +86,7 @@ If you need to rollback to the old system:
 
 - Added comprehensive migration guide (`MIGRATION_GUIDE.md`)
 - Added Ruff configuration mapping documentation (`RUFF_CONFIGURATION_MAPPING.md`)
+- Added CI improvements documentation (`CI_IMPROVEMENTS.md`)
 - Updated `doc/pymode.txt` with Ruff configuration options
 - Added migration tools (`scripts/migrate_to_ruff.py`, `scripts/validate_ruff_migration.sh`)
 
@@ -97,6 +96,11 @@ If you need to rollback to the old system:
 - All existing tests continue to pass
 - Verified compatibility with Python 3.10-3.13
 - Verified Docker environment compatibility
+- **Multi-platform CI testing:** Added support for testing on Linux, macOS, and Windows
+  - Windows PowerShell test script (`scripts/cicd/run_vader_tests_windows.ps1`)
+  - Updated GitHub Actions workflow for cross-platform testing
+  - Tests run on all platforms with Python 3.10, 3.11, 3.12, and 3.13
+  - Platform-specific test result aggregation in PR summaries
 
 ## 2023-07-02 0.14.0
 
