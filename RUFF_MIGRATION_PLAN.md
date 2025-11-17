@@ -63,7 +63,7 @@ This document outlines a comprehensive plan to replace most of the python-mode s
   - `submodules/autopep8`
   - `submodules/snowball_py` (was only used by pydocstyle)
 - [x] Clean up submodule references in git (✅ Removed git index entries and .git/modules references)
-- [ ] Update repository size documentation
+- [x] Update repository size documentation (✅ Updated README.md with size reduction info)
 
 #### Task 2.2: Update Installation Requirements
 - [x] Add ruff as external dependency requirement
@@ -75,8 +75,8 @@ This document outlines a comprehensive plan to replace most of the python-mode s
 #### Task 2.3: Update Path Management
 - [x] Modify `pymode/utils.py` `patch_paths()` function
 - [x] Remove submodule path additions for replaced tools
-- [x] Keep paths for remaining tools (rope, astroid, toml, tomli, pytoolconfig, appdirs)
-- [ ] Test path resolution on different platforms
+- [x] Keep paths for remaining tools (rope, tomli, pytoolconfig)
+- [x] Test path resolution on different platforms (✅ Test script created, verified on Linux, CI tests Windows/macOS)
 
 ### Phase 3: Configuration Migration
 **Timeline: 1 week**
