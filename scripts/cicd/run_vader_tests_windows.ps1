@@ -35,6 +35,19 @@ Write-Info "Project root: $ProjectRoot"
 Write-Info "PowerShell version: $($PSVersionTable.PSVersion)"
 Write-Info "OS: $([System.Environment]::OSVersion.VersionString)"
 
+# Create /tmp symlink or directory for Windows compatibility
+# Some tests use /tmp/ paths which don't exist on Windows
+$TmpDir = $env:TEMP
+if (-not (Test-Path "C:\tmp")) {
+    # Try to create C:\tmp directory
+    try {
+        New-Item -ItemType Directory -Path "C:\tmp" -Force | Out-Null
+        Write-Info "Created C:\tmp directory for test compatibility"
+    } catch {
+        Write-Warn "Could not create C:\tmp, tests using /tmp/ may fail"
+    }
+}
+
 # Try python3 first, then python, then py
 $PythonCmd = $null
 if (Get-Command python3 -ErrorAction SilentlyContinue) {
@@ -120,6 +133,8 @@ set directory=
 set undodir=
 set viewdir=
 set noswapfile
+set nobackup
+set nowritebackup
 set paste
 set shell=cmd.exe
 

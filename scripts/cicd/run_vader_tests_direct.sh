@@ -149,7 +149,11 @@ log_info "Created CI vimrc at ${CI_VIMRC}"
 # Find test files
 TEST_FILES=()
 if [[ -d "tests/vader" ]]; then
-    mapfile -t TEST_FILES < <(find tests/vader -name "*.vader" -type f | sort)
+    # Use while read loop instead of mapfile for better compatibility (macOS bash/zsh)
+    # mapfile is bash 4+ only, macOS has bash 3.x or uses zsh
+    while IFS= read -r file; do
+        TEST_FILES+=("$file")
+    done < <(find tests/vader -name "*.vader" -type f | sort)
 fi
 
 if [[ ${#TEST_FILES[@]} -eq 0 ]]; then
