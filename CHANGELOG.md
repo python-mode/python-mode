@@ -109,6 +109,11 @@ If you need to rollback to the old system:
   - Updated GitHub Actions workflow for cross-platform testing
   - Tests run on all platforms with Python 3.10, 3.11, 3.12, and 3.13
   - Platform-specific test result aggregation in PR summaries
+  - **Platform-specific fixes:**
+    - macOS: Fixed `mapfile` compatibility (bash 3.x/zsh), empty array handling, sed errors
+    - Windows: Fixed path resolution across drive letters, `/tmp/` path redirection to `$TEMP`
+    - Added robust error handling and timeout support across all platforms
+    - Improved Vim detection and PATH configuration for Windows
 
 ## 2023-07-02 0.14.0
 
