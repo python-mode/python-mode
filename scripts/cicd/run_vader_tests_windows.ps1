@@ -159,32 +159,25 @@ if has('win32') || has('win64')
         endif
         return a:path
     endfunction
-    " Intercept all file writes and redirect /tmp/ paths
-    function! s:HandleFileWrite()
+    " Intercept only /tmp/ path writes
+    function! s:HandleTmpWrite()
         let l:filename = expand('<afile>:p')
-        " Check if this is a /tmp/ path
-        if l:filename =~# '^/tmp/'
-            let l:converted = s:ConvertTmpPath(l:filename)
-            " Create directory if needed
-            let l:win_dir = fnamemodify(l:converted, ':h')
-            if !isdirectory(l:win_dir)
-                call mkdir(l:win_dir, 'p')
-            endif
-            " Write to converted path using noautocmd to avoid recursion
-            noautocmd execute 'write! ' . fnameescape(l:converted)
-            " Update buffer name
-            noautocmd execute 'file ' . fnameescape(l:converted)
-        else
-            " Not a /tmp/ path, do normal write
-            " Use noautocmd to avoid recursion, then call normal write
-            noautocmd write
+        let l:converted = s:ConvertTmpPath(l:filename)
+        " Create directory if needed
+        let l:win_dir = fnamemodify(l:converted, ':h')
+        if !isdirectory(l:win_dir)
+            call mkdir(l:win_dir, 'p')
         endif
+        " Write to converted path using noautocmd to avoid recursion
+        noautocmd execute 'write! ' . fnameescape(l:converted)
+        " Update buffer name
+        noautocmd execute 'file ' . fnameescape(l:converted)
     endfunction
-    " Use BufWriteCmd to catch all buffer writes (including :write! /path)
-    " This fires before the actual write happens and replaces normal write
-    autocmd BufWriteCmd * call s:HandleFileWrite()
-    " Also catch FileWriteCmd for direct file writes
-    autocmd FileWriteCmd * call s:HandleFileWrite()
+    " ONLY intercept writes to /tmp/ paths - don't interfere with other writes
+    " Use BufWriteCmd to catch :write! /tmp/file
+    autocmd BufWriteCmd /tmp/* call s:HandleTmpWrite()
+    " Use FileWriteCmd to catch direct file writes to /tmp/
+    autocmd FileWriteCmd /tmp/* call s:HandleTmpWrite()
 endif
 
 " Enable magic for motion support (required for text object mappings)
