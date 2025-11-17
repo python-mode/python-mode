@@ -27,9 +27,19 @@
   still need to use it with python2 you should look for the `last-py2-support`
   branch and/or tag.
 
+  * From version 0.15.0 onwards, python-mode uses **Ruff** for linting and formatting,
+  replacing 7 legacy submodules (pyflakes, pycodestyle, mccabe, pylint, pydocstyle,
+  pylama, autopep8). This reduces the repository size significantly (from 13 to 3
+  submodules) and improves performance. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)
+  for migration details.
+
 If you are a new user please clone the repos using the recursive flag:
 
 > git clone --recurse-submodules https://github.com/python-mode/python-mode
+
+**Repository size:** The repository now includes only 3 essential submodules (rope,
+pytoolconfig, tomli), down from 13 previously. This reduces clone size and improves
+maintenance. Ruff is installed separately via `pip install ruff`.
 
 -------------------------------------------------------------------------------
 
