@@ -52,11 +52,19 @@ The following linting tools are **no longer available** as submodules or separat
 - `submodules/pylama`
 - `submodules/autopep8`
 - `submodules/snowball_py` (was only used by pydocstyle)
+- `submodules/appdirs` (not used in pymode code)
+- `submodules/astroid` (was only needed for pylint)
+- `submodules/toml` (not used; Ruff handles its own TOML parsing)
 
 **Remaining submodules (3 total, down from 13):**
 - `submodules/rope` - Refactoring and code intelligence (essential)
 - `submodules/tomli` - TOML parsing (required by pytoolconfig)
 - `submodules/pytoolconfig` - Tool configuration (required by rope)
+
+**Repository cleanup:**
+- Removed git index entries for all removed submodules
+- Cleaned up `.git/modules` references (freed ~90MB+ of repository space)
+- Physical directories removed from working tree
 
 #### Migration Resources
 
