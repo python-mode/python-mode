@@ -313,7 +313,13 @@ format_json_array() {
             result+=","
         fi
         # Escape JSON special characters: ", \, and control characters
-        local escaped=$(echo "$item" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\x00//g')
+        # Use printf to ensure we have a string, then escape
+        local escaped=$(printf '%s' "$item")
+        # Escape backslashes first, then quotes
+        escaped=$(printf '%s' "$escaped" | sed 's/\\/\\\\/g')
+        escaped=$(printf '%s' "$escaped" | sed 's/"/\\"/g')
+        # Remove null bytes
+        escaped=$(printf '%s' "$escaped" | tr -d '\000')
         result+="\"${escaped}\""
     done
     result+="]"
@@ -321,8 +327,18 @@ format_json_array() {
 }
 
 TEST_RESULTS_JSON="${PROJECT_ROOT}/test-results.json"
-PASSED_ARRAY_JSON=$(format_json_array "${PASSED_TESTS[@]}")
-FAILED_ARRAY_JSON=$(format_json_array "${FAILED_TESTS[@]}")
+# Handle empty arrays properly with set -u (unbound variable check)
+# Use parameter expansion to provide empty string if array is unset
+if [ ${#PASSED_TESTS[@]} -eq 0 ]; then
+    PASSED_ARRAY_JSON="[]"
+else
+    PASSED_ARRAY_JSON=$(format_json_array "${PASSED_TESTS[@]}")
+fi
+if [ ${#FAILED_TESTS[@]} -eq 0 ]; then
+    FAILED_ARRAY_JSON="[]"
+else
+    FAILED_ARRAY_JSON=$(format_json_array "${FAILED_TESTS[@]}")
+fi
 
 cat > "${TEST_RESULTS_JSON}" << EOF
 {
@@ -372,10 +388,10 @@ Total Assertions: ${TOTAL_ASSERTIONS}
 Passed Assertions: ${PASSED_ASSERTIONS}
 
 Passed Tests:
-$(for test in "${PASSED_TESTS[@]}"; do echo "  ✓ ${test}"; done)
+$(if [ ${#PASSED_TESTS[@]} -gt 0 ]; then for test in "${PASSED_TESTS[@]}"; do echo "  ✓ ${test}"; done; else echo "  (none)"; fi)
 
 Failed Tests:
-$(for test in "${FAILED_TESTS[@]}"; do echo "  ✗ ${test}"; done)
+$(if [ ${#FAILED_TESTS[@]} -gt 0 ]; then for test in "${FAILED_TESTS[@]}"; do echo "  ✗ ${test}"; done; else echo "  (none)"; fi)
 EOF
 
 # Print summary
