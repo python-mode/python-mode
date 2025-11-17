@@ -1,7 +1,8 @@
 # PowerShell script for running Vader tests on Windows
 # This script is designed to run in GitHub Actions CI environment on Windows
 
-$ErrorActionPreference = "Stop"
+# Set error action preference but allow continue on some errors
+$ErrorActionPreference = "Continue"
 
 # Colors for output
 function Write-Info {
@@ -31,6 +32,8 @@ $ProjectRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
 Set-Location $ProjectRoot
 
 Write-Info "Project root: $ProjectRoot"
+Write-Info "PowerShell version: $($PSVersionTable.PSVersion)"
+Write-Info "OS: $([System.Environment]::OSVersion.VersionString)"
 
 # Try python3 first, then python, then py
 $PythonCmd = $null
@@ -199,9 +202,6 @@ foreach ($TestFile in $TestFiles) {
     # Convert Windows path to Unix-style for Vim (Vim on Windows can handle both)
     $TestFileUnix = $TestFile -replace '\\', '/'
     
-    # Create output file for this test
-    $VimOutputFile = New-TemporaryFile
-    
     # Run Vader test
     $VimArgs = @(
         "-es",
@@ -213,15 +213,35 @@ foreach ($TestFile in $TestFiles) {
     
     try {
         # Capture both stdout and stderr
-        $Output = & $VimCmd $VimArgs 2>&1 | Out-String
+        # Use a script block to capture all streams
+        $Output = & {
+            & $VimCmd $VimArgs 2>&1
+        } | Out-String
+        
+        # Get exit code - PowerShell sets $LASTEXITCODE for native commands
         $ExitCode = $LASTEXITCODE
         
-        # If LASTEXITCODE is not set, check the actual exit code
+        # If LASTEXITCODE is not set (PowerShell < 6), try to determine from $?
         if ($null -eq $ExitCode) {
-            if ($Output -match "error|Error|ERROR|failed|Failed|FAILED") {
-                $ExitCode = 1
-            } else {
+            if ($?) {
                 $ExitCode = 0
+            } else {
+                $ExitCode = 1
+            }
+        }
+        
+        # If exit code is 0 but we have errors in output, check more carefully
+        if ($ExitCode -eq 0) {
+            # Check if Vim actually ran successfully by looking at output
+            if ($Output -match "E\d+|error|Error|ERROR") {
+                # Might be an error, but check if it's a Vader test failure vs Vim error
+                if ($Output -notmatch "Success/Total:") {
+                    # No success message, likely a Vim error
+                    # But don't change exit code if we see Vader output
+                    if ($Output -notmatch "Vader|vader") {
+                        $ExitCode = 1
+                    }
+                }
             }
         }
         
@@ -269,9 +289,11 @@ foreach ($TestFile in $TestFiles) {
         }
     } catch {
         Write-Error "Exception running test $TestName : $_"
+        Write-Error "Exception details: $($_.Exception.Message)"
+        Write-Error "Stack trace: $($_.ScriptStackTrace)"
         $FailedTests += $TestName
     } finally {
-        Remove-Item $VimOutputFile -ErrorAction SilentlyContinue
+        # Cleanup if needed
     }
 }
 
