@@ -68,8 +68,8 @@ The following linting tools are **no longer available** as submodules or separat
 
 #### Migration Resources
 
-- **Migration Guide:** See `MIGRATION_GUIDE.md` for step-by-step instructions
-- **Configuration Mapping:** See `RUFF_CONFIGURATION_MAPPING.md` for detailed rule mappings
+- **Migration Guide:** See `doc/MIGRATION_GUIDE.md` for step-by-step instructions
+- **Configuration Mapping:** See `doc/RUFF_CONFIGURATION_MAPPING.md` for detailed rule mappings
 - **Migration Script:** Use `scripts/migrate_to_ruff.py` to convert your vimrc configuration
 - **Validation Script:** Use `scripts/validate_ruff_migration.sh` to verify your setup
 
@@ -92,9 +92,8 @@ If you need to rollback to the old system:
 
 ### Documentation
 
-- Added comprehensive migration guide (`MIGRATION_GUIDE.md`)
-- Added Ruff configuration mapping documentation (`RUFF_CONFIGURATION_MAPPING.md`)
-- Added CI improvements documentation (`CI_IMPROVEMENTS.md`)
+- Added comprehensive migration guide (`doc/MIGRATION_GUIDE.md`)
+- Added Ruff configuration mapping documentation (`doc/RUFF_CONFIGURATION_MAPPING.md`)
 - Updated `doc/pymode.txt` with Ruff configuration options
 - Added migration tools (`scripts/migrate_to_ruff.py`, `scripts/validate_ruff_migration.sh`)
 
