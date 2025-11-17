@@ -146,7 +146,7 @@ set paste
 set shell=cmd.exe
 
 " Map /tmp/ to Windows temp directory for test compatibility
-" Vim on Windows doesn't recognize /tmp/, so intercept writes and redirect
+" Vim on Windows doesn't recognize /tmp/, so intercept all writes
 if has('win32') || has('win64')
     " Function to convert /tmp/ paths to Windows temp paths
     function! s:ConvertTmpPath(path)
@@ -159,9 +159,10 @@ if has('win32') || has('win64')
         endif
         return a:path
     endfunction
-    " Intercept file writes to /tmp/ paths
-    function! s:HandleTmpWrite()
+    " Intercept all file writes and redirect /tmp/ paths
+    function! s:HandleFileWrite()
         let l:filename = expand('<afile>:p')
+        " Check if this is a /tmp/ path
         if l:filename =~# '^/tmp/'
             let l:converted = s:ConvertTmpPath(l:filename)
             " Create directory if needed
@@ -169,16 +170,21 @@ if has('win32') || has('win64')
             if !isdirectory(l:win_dir)
                 call mkdir(l:win_dir, 'p')
             endif
-            " Write to converted path
-            execute 'write! ' . fnameescape(l:converted)
+            " Write to converted path using noautocmd to avoid recursion
+            noautocmd execute 'write! ' . fnameescape(l:converted)
             " Update buffer name
-            execute 'file ' . fnameescape(l:converted)
-            return 1
+            noautocmd execute 'file ' . fnameescape(l:converted)
+        else
+            " Not a /tmp/ path, do normal write
+            " Use noautocmd to avoid recursion, then call normal write
+            noautocmd write
         endif
-        return 0
     endfunction
-    " Use FileWriteCmd to intercept writes to /tmp/ paths
-    autocmd FileWriteCmd /tmp/* call s:HandleTmpWrite()
+    " Use BufWriteCmd to catch all buffer writes (including :write! /path)
+    " This fires before the actual write happens and replaces normal write
+    autocmd BufWriteCmd * call s:HandleFileWrite()
+    " Also catch FileWriteCmd for direct file writes
+    autocmd FileWriteCmd * call s:HandleFileWrite()
 endif
 
 " Enable magic for motion support (required for text object mappings)
