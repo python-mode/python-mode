@@ -179,18 +179,44 @@ for test_file in "${TEST_FILES[@]}"; do
     # Create output file for this test
     VIM_OUTPUT_FILE=$(mktemp)
     
-    # Run Vader test
+    # Run Vader test with timeout
+    # macOS doesn't have timeout by default, so use gtimeout if available, or run without timeout
     set +e  # Don't exit on error, we'll check exit code
-    timeout 120 vim \
-        --not-a-term \
-        -es \
-        -i NONE \
-        -u "${CI_VIMRC}" \
-        -c "Vader! ${TEST_FILE_ABS}" \
-        -c "qa!" \
-        < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
-    
-    EXIT_CODE=$?
+    if command -v timeout &> /dev/null; then
+        timeout 120 vim \
+            --not-a-term \
+            -es \
+            -i NONE \
+            -u "${CI_VIMRC}" \
+            -c "Vader! ${TEST_FILE_ABS}" \
+            -c "qa!" \
+            < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
+        EXIT_CODE=$?
+    elif command -v gtimeout &> /dev/null; then
+        # macOS with GNU coreutils installed via Homebrew
+        gtimeout 120 vim \
+            --not-a-term \
+            -es \
+            -i NONE \
+            -u "${CI_VIMRC}" \
+            -c "Vader! ${TEST_FILE_ABS}" \
+            -c "qa!" \
+            < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
+        EXIT_CODE=$?
+    else
+        # No timeout available (macOS without GNU coreutils)
+        # Run without timeout - tests should complete quickly anyway
+        log_warn "timeout command not available, running without timeout"
+        vim \
+            --not-a-term \
+            -es \
+            -i NONE \
+            -u "${CI_VIMRC}" \
+            -c "Vader! ${TEST_FILE_ABS}" \
+            -c "qa!" \
+            < /dev/null > "${VIM_OUTPUT_FILE}" 2>&1
+        EXIT_CODE=$?
+    fi
     set -e
     
     OUTPUT=$(cat "${VIM_OUTPUT_FILE}" 2>/dev/null || echo "")

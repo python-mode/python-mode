@@ -80,9 +80,16 @@ jobs:
       run: |
         pip install ruff
 
-    - name: Install Vim
+    - name: Install Vim and coreutils
       run: |
-        brew install vim
+        brew install vim coreutils
+        # Ensure brew's bin directory is in PATH
+        echo "$(brew --prefix)/bin" >> $GITHUB_PATH
+        # Verify vim is available
+        which vim
+        vim --version
+        # Verify timeout is available (from coreutils)
+        which timeout || which gtimeout || echo "Warning: timeout command not found"
 
     - name: Run Vader test suite
       run: |
@@ -134,7 +141,46 @@ jobs:
         choco install vim -y
         # Refresh PATH to make vim available
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        vim --version
+        # Also add common Vim installation paths
+        $env:Path += ";C:\Program Files (x86)\Vim\vim91\bin;C:\Program Files\Vim\vim91\bin;C:\tools\vim\vim91\bin"
+        # Add to GITHUB_PATH for subsequent steps
+        $vimPaths = @(
+          "C:\Program Files (x86)\Vim\vim91\bin",
+          "C:\Program Files\Vim\vim91\bin",
+          "C:\tools\vim\vim91\bin"
+        )
+        foreach ($path in $vimPaths) {
+          if (Test-Path $path) {
+            echo "$path" >> $env:GITHUB_PATH
+            Write-Host "Added to GITHUB_PATH: $path"
+          }
+        }
+        # Verify vim is available
+        $vimPath = (Get-Command vim -ErrorAction SilentlyContinue).Source
+        if ($vimPath) {
+          Write-Host "Vim found at: $vimPath"
+          & $vimPath --version
+        } else {
+          Write-Host "Vim not in PATH, trying to find it..."
+          $possiblePaths = @(
+            "C:\Program Files (x86)\Vim\vim91\vim.exe",
+            "C:\Program Files\Vim\vim91\vim.exe",
+            "C:\tools\vim\vim91\vim.exe"
+          )
+          $found = $false
+          foreach ($path in $possiblePaths) {
+            if (Test-Path $path) {
+              Write-Host "Found Vim at: $path"
+              & $path --version
+              $found = $true
+              break
+            }
+          }
+          if (-not $found) {
+            Write-Host "ERROR: Could not find Vim installation"
+            exit 1
+          }
+        }
 
     - name: Run Vader test suite
       shell: pwsh

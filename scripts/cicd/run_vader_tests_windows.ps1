@@ -31,19 +31,52 @@ $ProjectRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
 Set-Location $ProjectRoot
 
 Write-Info "Project root: $ProjectRoot"
-Write-Info "Python version: $(python --version 2>&1)"
-Write-Info "Vim version: $(vim --version 2>&1 | Select-Object -First 1)"
 
-# Check prerequisites
-if (-not (Get-Command vim -ErrorAction SilentlyContinue)) {
-    Write-Error "Vim is not installed"
+# Try python3 first, then python, then py
+$PythonCmd = $null
+if (Get-Command python3 -ErrorAction SilentlyContinue) {
+    $PythonCmd = "python3"
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $PythonCmd = "python"
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    $PythonCmd = "py"
+} else {
+    Write-Error "Python is not installed (tried python3, python, py)"
     exit 1
 }
 
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Error "Python is not installed"
-    exit 1
+Write-Info "Python command: $PythonCmd"
+Write-Info "Python version: $(& $PythonCmd --version 2>&1)"
+
+# Try to find vim in PATH or common locations
+$VimCmd = $null
+if (Get-Command vim -ErrorAction SilentlyContinue) {
+    $VimCmd = "vim"
+} else {
+    # Try common Vim installation paths
+    $possiblePaths = @(
+        "C:\Program Files (x86)\Vim\vim91\vim.exe",
+        "C:\Program Files\Vim\vim91\vim.exe",
+        "C:\tools\vim\vim91\vim.exe"
+    )
+    foreach ($path in $possiblePaths) {
+        if (Test-Path $path) {
+            $VimCmd = $path
+            $env:Path += ";$(Split-Path $path -Parent)"
+            Write-Info "Found Vim at: $VimCmd"
+            break
+        }
+    }
+    if (-not $VimCmd) {
+        Write-Error "Vim is not installed or not found in PATH"
+        exit 1
+    }
 }
+
+Write-Info "Vim command: $VimCmd"
+Write-Info "Vim version: $(& $VimCmd --version 2>&1 | Select-Object -First 1)"
+
+# Prerequisites already checked above
 
 # Set up Vim runtime paths (Windows uses different path format)
 $VimHome = Join-Path $env:USERPROFILE ".vim"
@@ -179,8 +212,18 @@ foreach ($TestFile in $TestFiles) {
     )
     
     try {
-        $Output = & vim $VimArgs 2>&1 | Out-String
+        # Capture both stdout and stderr
+        $Output = & $VimCmd $VimArgs 2>&1 | Out-String
         $ExitCode = $LASTEXITCODE
+        
+        # If LASTEXITCODE is not set, check the actual exit code
+        if ($null -eq $ExitCode) {
+            if ($Output -match "error|Error|ERROR|failed|Failed|FAILED") {
+                $ExitCode = 1
+            } else {
+                $ExitCode = 0
+            }
+        }
         
         # Check for timeout (not applicable in PowerShell, but keep for consistency)
         if ($ExitCode -eq 124) {
@@ -239,8 +282,8 @@ New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $LogsDir | Out-Null
 
 $TestResultsJson = Join-Path $ProjectRoot "test-results.json"
-$PythonVersion = (python --version 2>&1).ToString() -replace 'Python ', ''
-$VimVersion = (vim --version 2>&1 | Select-Object -First 1).ToString() -replace '.*VIM.*v(\S+).*', '$1'
+$PythonVersion = (& $PythonCmd --version 2>&1).ToString() -replace 'Python ', ''
+$VimVersion = (& $VimCmd --version 2>&1 | Select-Object -First 1).ToString() -replace '.*VIM.*v(\S+).*', '$1'
 
 $ResultsJson = @{
     timestamp = [int64]((Get-Date).ToUniversalTime() - (Get-Date "1970-01-01")).TotalSeconds
@@ -273,8 +316,8 @@ $SummaryLog = Join-Path $LogsDir "test-summary.log"
 $SummaryContent = @"
 Test Summary
 ============
-Python Version: $(python --version 2>&1)
-Vim Version: $(vim --version 2>&1 | Select-Object -First 1)
+Python Version: $(& $PythonCmd --version 2>&1)
+Vim Version: $(& $VimCmd --version 2>&1 | Select-Object -First 1)
 Timestamp: $(Get-Date)
 
 Total Tests: $($TestFiles.Count)
