@@ -36,8 +36,15 @@ def code_check():
     content = '\n'.join(env.curbuf) + '\n'
     file_path = env.curbuf.name
 
-    path = os.path.relpath(file_path, env.curdir)
-    env.debug("Start ruff code check: ", path)
+    # Use relpath if possible, but handle Windows drive letter differences
+    try:
+        path = os.path.relpath(file_path, env.curdir)
+        env.debug("Start ruff code check: ", path)
+    except ValueError:
+        # On Windows, relpath fails if paths are on different drives
+        # Fall back to absolute path in this case
+        env.debug("Start ruff code check (abs path): ", file_path)
+        path = file_path
 
     # Run ruff check
     errors = run_ruff_check(file_path, content)

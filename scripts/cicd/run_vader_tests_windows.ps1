@@ -35,11 +35,14 @@ Write-Info "Project root: $ProjectRoot"
 Write-Info "PowerShell version: $($PSVersionTable.PSVersion)"
 Write-Info "OS: $([System.Environment]::OSVersion.VersionString)"
 
-# Create /tmp symlink or directory for Windows compatibility
+# Create /tmp mapping for Windows compatibility
 # Some tests use /tmp/ paths which don't exist on Windows
+# Vim on Windows can use environment variables or we can create a junction
 $TmpDir = $env:TEMP
+$TmpDirUnix = $TmpDir -replace '\\', '/'
+
+# Try to create C:\tmp directory and set up mapping
 if (-not (Test-Path "C:\tmp")) {
-    # Try to create C:\tmp directory
     try {
         New-Item -ItemType Directory -Path "C:\tmp" -Force | Out-Null
         Write-Info "Created C:\tmp directory for test compatibility"
@@ -47,6 +50,10 @@ if (-not (Test-Path "C:\tmp")) {
         Write-Warn "Could not create C:\tmp, tests using /tmp/ may fail"
     }
 }
+
+# Set TMPDIR environment variable for Vim to use
+$env:TMPDIR = $TmpDir
+$env:TMP = $TmpDir
 
 # Try python3 first, then python, then py
 $PythonCmd = $null
@@ -137,6 +144,42 @@ set nobackup
 set nowritebackup
 set paste
 set shell=cmd.exe
+
+" Map /tmp/ to Windows temp directory for test compatibility
+" Vim on Windows doesn't recognize /tmp/, so intercept writes and redirect
+if has('win32') || has('win64')
+    " Function to convert /tmp/ paths to Windows temp paths
+    function! s:ConvertTmpPath(path)
+        if a:path =~# '^/tmp/'
+            let l:win_temp = expand('$TEMP')
+            let l:rel_path = substitute(a:path, '^/tmp/', '', '')
+            " Convert forward slashes to backslashes for Windows
+            let l:rel_path = substitute(l:rel_path, '/', '\', 'g')
+            return l:win_temp . '\' . l:rel_path
+        endif
+        return a:path
+    endfunction
+    " Intercept file writes to /tmp/ paths
+    function! s:HandleTmpWrite()
+        let l:filename = expand('<afile>:p')
+        if l:filename =~# '^/tmp/'
+            let l:converted = s:ConvertTmpPath(l:filename)
+            " Create directory if needed
+            let l:win_dir = fnamemodify(l:converted, ':h')
+            if !isdirectory(l:win_dir)
+                call mkdir(l:win_dir, 'p')
+            endif
+            " Write to converted path
+            execute 'write! ' . fnameescape(l:converted)
+            " Update buffer name
+            execute 'file ' . fnameescape(l:converted)
+            return 1
+        endif
+        return 0
+    endfunction
+    " Use FileWriteCmd to intercept writes to /tmp/ paths
+    autocmd FileWriteCmd /tmp/* call s:HandleTmpWrite()
+endif
 
 " Enable magic for motion support (required for text object mappings)
 set magic
