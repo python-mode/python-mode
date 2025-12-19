@@ -54,55 +54,6 @@ def _get_ruff_executable() -> str:
         raise RuntimeError("Ruff executable not found")
 
 
-def _build_ruff_config(linters: List[str], ignore: List[str], select: List[str]) -> Dict[str, Any]:
-    """Build ruff configuration from pymode settings."""
-    config = {}
-    
-    # Map old linter names to ruff rule categories
-    linter_mapping = {
-        'pyflakes': ['F'],  # Pyflakes rules
-        'pycodestyle': ['E', 'W'],  # pycodestyle rules  
-        'pep8': ['E', 'W'],  # Legacy pep8 (same as pycodestyle)
-        'mccabe': ['C90'],  # McCabe complexity (C901 is specific, C90 is category)
-        'pylint': ['PL'],  # Pylint rules
-        'pydocstyle': ['D'],  # pydocstyle rules
-        'pep257': ['D'],  # Legacy pep257 (same as pydocstyle)
-        'autopep8': ['E', 'W'],  # Same as pycodestyle for checking
-    }
-    
-    # Build select rules from linters and explicit select
-    select_rules = set()
-    
-    # Add rules from explicit select first
-    if select:
-        select_rules.update(select)
-    
-    # Add rules from enabled linters
-    for linter in linters:
-        if linter in linter_mapping:
-            select_rules.update(linter_mapping[linter])
-    
-    # If no specific rules selected, use a sensible default
-    if not select_rules:
-        select_rules = {'F', 'E', 'W'}  # Pyflakes + pycodestyle by default
-    
-    config['select'] = list(select_rules)
-    
-    # Add ignore rules
-    if ignore:
-        config['ignore'] = ignore
-    
-    # Handle tool-specific options
-    _add_tool_specific_options(config, linters)
-    
-    # Add other common settings
-    max_line_length = env.var('g:pymode_options_max_line_length', silence=True, default=79)
-    if max_line_length:
-        config['line-length'] = int(max_line_length)
-    
-    return config
-
-
 def _add_tool_specific_options(config: Dict[str, Any], linters: List[str]) -> None:
     """Add tool-specific configuration options."""
     
@@ -138,32 +89,6 @@ def _add_tool_specific_options(config: Dict[str, Any], linters: List[str]) -> No
         pyflakes_opts = env.var('g:pymode_lint_options_pyflakes', silence=True, default={})
         # Pyflakes builtins option doesn't have a direct ruff equivalent
         # Users can use ruff's built-in handling or per-file ignores
-
-
-def _build_ruff_args(config: Dict[str, Any]) -> List[str]:
-    """Build ruff command line arguments from configuration."""
-    args = []
-    
-    # Add select rules
-    if 'select' in config:
-        # Join multiple rules with comma for efficiency
-        select_str = ','.join(config['select'])
-        args.extend(['--select', select_str])
-    
-    # Add ignore rules
-    if 'ignore' in config:
-        # Join multiple rules with comma for efficiency
-        ignore_str = ','.join(config['ignore'])
-        args.extend(['--ignore', ignore_str])
-    
-    # Add line length
-    if 'line-length' in config:
-        args.extend(['--line-length', str(config['line-length'])])
-    
-    # Note: mccabe complexity needs to be set in pyproject.toml or ruff.toml
-    # We can't easily set it via command line args, so we'll document this limitation
-    
-    return args
 
 
 def validate_configuration() -> List[str]:
@@ -215,40 +140,16 @@ def run_ruff_check(file_path: str, content: str = None) -> List[RuffError]:
         List of RuffError objects
     """
     # Check if Ruff is enabled
-    if not env.var('g:pymode_ruff_enabled', silence=True, default=True):
+    ruff_enabled = env.var('g:pymode_ruff_enabled', silence=True, default=True)
+    if not ruff_enabled:
         return []
     
     try:
         ruff_path = _get_ruff_executable()
     except RuntimeError:
         return []
-    
-    # Get configuration from vim variables
-    # Use Ruff-specific options if set, otherwise fall back to legacy options
-    ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
-    ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
-    
-    if ruff_select or ruff_ignore:
-        # Use Ruff-specific configuration
-        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
-        ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
-        select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
-    else:
-        # Use legacy configuration (backward compatibility)
-        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
-        ignore = env.var('g:pymode_lint_ignore', default=[])
-        select = env.var('g:pymode_lint_select', default=[])
-    
-    # Build ruff configuration
-    config = _build_ruff_config(linters, ignore, select)
-    
     # Prepare command
     cmd = [ruff_path, 'check', '--output-format=json']
-    
-    # Add configuration arguments
-    if config:
-        cmd.extend(_build_ruff_args(config))
-    
     # Handle content checking (for unsaved buffers)
     temp_file_path = None
     if content is not None:
@@ -331,12 +232,6 @@ def run_ruff_format(file_path: str, content: str = None) -> Optional[str]:
     
     # Prepare command
     cmd = [ruff_path, 'format', '--stdin-filename', file_path]
-    
-    # Get configuration file if specified
-    config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
-    if config_file and os.path.exists(config_file):
-        cmd.extend(['--config', config_file])
-    
     try:
         with silence_stderr():
             # Run ruff format
