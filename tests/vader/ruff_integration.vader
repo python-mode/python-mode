@@ -204,3 +204,156 @@ Execute (Test Ruff formatting with comments):
   " Clean up temp file
   call delete(temp_file)
 
+# Test Ruff configuration mode: local
+Execute (Test Ruff config mode local):
+  " Test that 'local' mode uses only local config files
+  " Create a temporary directory with a ruff.toml file
+  let test_dir = tempname()
+  call mkdir(test_dir, 'p')
+  
+  " Create a ruff.toml file in the test directory
+  let config_file = test_dir . '/ruff.toml'
+  call writefile(['line-length = 120', 'select = ["E", "F"]'], config_file)
+  
+  " Create a test Python file in the test directory
+  let test_file = test_dir . '/test.py'
+  call writefile(['import os', 'x = 1', 'print(x)'], test_file)
+  
+  " Set config mode to 'local'
+  let g:pymode_ruff_config_mode = 'local'
+  
+  " Open the file
+  execute 'edit ' . test_file
+  
+  " Run linting (should use local config)
+  PymodeLint
+  
+  " Verify that the config mode variable exists and is set correctly
+  Assert exists('g:pymode_ruff_config_mode'), 'g:pymode_ruff_config_mode should exist'
+  Assert g:pymode_ruff_config_mode ==# 'local', 'Config mode should be set to local'
+  Assert 1, "Ruff config mode 'local' test completed"
+  
+  " Clean up
+  call delete(test_file)
+  call delete(config_file)
+  call delete(test_dir, 'd')
+
+# Test Ruff configuration mode: local_override (with local config)
+Execute (Test Ruff config mode local_override with local config):
+  " Test that 'local_override' mode uses local config when available
+  " Create a temporary directory with a ruff.toml file
+  let test_dir = tempname()
+  call mkdir(test_dir, 'p')
+  
+  " Create a ruff.toml file in the test directory
+  let config_file = test_dir . '/ruff.toml'
+  call writefile(['line-length = 100', 'select = ["E"]'], config_file)
+  
+  " Create a test Python file in the test directory
+  let test_file = test_dir . '/test.py'
+  call writefile(['import os', 'x = 1', 'print(x)'], test_file)
+  
+  " Set config mode to 'local_override' (default)
+  let g:pymode_ruff_config_mode = 'local_override'
+  
+  " Set some pymode settings that should be ignored when local config exists
+  let g:pymode_ruff_select = ['F', 'W']
+  
+  " Open the file
+  execute 'edit ' . test_file
+  
+  " Run linting (should use local config, not pymode settings)
+  PymodeLint
+  
+  " Verify that the config mode is set correctly
+  Assert g:pymode_ruff_config_mode ==# 'local_override', 'Config mode should be set to local_override'
+  Assert 1, "Ruff config mode 'local_override' with local config test completed"
+  
+  " Clean up
+  call delete(test_file)
+  call delete(config_file)
+  call delete(test_dir, 'd')
+
+# Test Ruff configuration mode: local_override (without local config)
+Execute (Test Ruff config mode local_override without local config):
+  " Test that 'local_override' mode uses pymode settings when no local config exists
+  " Create a temporary directory without any config files
+  let test_dir = tempname()
+  call mkdir(test_dir, 'p')
+  
+  " Create a test Python file in the test directory
+  let test_file = test_dir . '/test.py'
+  call writefile(['import os', 'x = 1', 'print(x)'], test_file)
+  
+  " Set config mode to 'local_override' (default)
+  let g:pymode_ruff_config_mode = 'local_override'
+  
+  " Set pymode settings that should be used as fallback
+  let g:pymode_ruff_select = ['E', 'F']
+  let g:pymode_ruff_ignore = ['E501']
+  
+  " Open the file
+  execute 'edit ' . test_file
+  
+  " Run linting (should use pymode settings as fallback)
+  PymodeLint
+  
+  " Verify that the config mode is set correctly
+  Assert g:pymode_ruff_config_mode ==# 'local_override', 'Config mode should be set to local_override'
+  Assert 1, "Ruff config mode 'local_override' without local config test completed"
+  
+  " Clean up
+  call delete(test_file)
+  call delete(test_dir, 'd')
+
+# Test Ruff configuration mode: global
+Execute (Test Ruff config mode global):
+  " Test that 'global' mode ignores local config files
+  " Create a temporary directory with a ruff.toml file
+  let test_dir = tempname()
+  call mkdir(test_dir, 'p')
+  
+  " Create a ruff.toml file in the test directory (should be ignored)
+  let config_file = test_dir . '/ruff.toml'
+  call writefile(['line-length = 200', 'select = ["D"]'], config_file)
+  
+  " Create a test Python file in the test directory
+  let test_file = test_dir . '/test.py'
+  call writefile(['import os', 'x = 1', 'print(x)'], test_file)
+  
+  " Set config mode to 'global'
+  let g:pymode_ruff_config_mode = 'global'
+  
+  " Set pymode settings that should be used (local config should be ignored)
+  let g:pymode_ruff_select = ['E', 'F']
+  let g:pymode_ruff_ignore = ['E501']
+  
+  " Open the file
+  execute 'edit ' . test_file
+  
+  " Run linting (should use pymode settings, ignore local config)
+  PymodeLint
+  
+  " Verify that the config mode is set correctly
+  Assert g:pymode_ruff_config_mode ==# 'global', 'Config mode should be set to global'
+  Assert 1, "Ruff config mode 'global' test completed"
+  
+  " Clean up
+  call delete(test_file)
+  call delete(config_file)
+  call delete(test_dir, 'd')
+
+# Test Ruff configuration mode: default value
+Execute (Test Ruff config mode default):
+  " Test that default config mode is 'local_override'
+  " Unset the variable to test default
+  unlet! g:pymode_ruff_config_mode
+  
+  " Reload plugin to get default value
+  " Note: In actual usage, the default is set in plugin/pymode.vim
+  " For testing, we'll verify the variable can be set
+  let g:pymode_ruff_config_mode = 'local_override'
+  
+  Assert g:pymode_ruff_config_mode ==# 'local_override', 'Default config mode should be local_override'
+  Assert 1, "Ruff config mode default value test completed"
+

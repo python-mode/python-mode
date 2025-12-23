@@ -154,6 +154,12 @@ call pymode#default("g:pymode_ruff_ignore", [])
 " If empty, Ruff will use default configuration or search for config files
 call pymode#default("g:pymode_ruff_config_file", "")
 
+" Ruff configuration mode: 'local', 'local_override', or 'global'
+" 'local': Use only project's local Ruff config. Pymode settings are ignored.
+" 'local_override': Local config takes priority. Pymode settings serve as fallback when no local config exists.
+" 'global': Use only pymode settings. Local config files are ignored (uses --isolated).
+call pymode#default("g:pymode_ruff_config_mode", "local_override")
+
 " }}}
 
 " Auto open cwindow if any errors has been finded

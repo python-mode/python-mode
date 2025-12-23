@@ -95,6 +95,29 @@ ignore = ["E501"]
 
 Python-mode will automatically use these files if they exist in your project root.
 
+### Configuration Precedence
+
+Python-mode now supports flexible configuration precedence via `g:pymode_ruff_config_mode`:
+
+**Default Behavior (`"local_override"`):**
+- If your project has a local `ruff.toml` or `pyproject.toml` with `[tool.ruff]` section, it will be used
+- If no local config exists, python-mode settings serve as fallback
+- This ensures project-specific configs are respected while providing defaults
+
+**Using Only Local Config (`"local"`):**
+```vim
+let g:pymode_ruff_config_mode = "local"
+```
+Use this when you want python-mode to completely respect your project's Ruff configuration and ignore all python-mode settings.
+
+**Using Only Global Config (`"global"`):**
+```vim
+let g:pymode_ruff_config_mode = "global"
+```
+Use this to restore the previous behavior where python-mode settings always override local configs. Local config files will be ignored.
+
+**Note:** The default `"local_override"` mode is recommended for most users as it respects project standards while providing sensible defaults.
+
 ## Step-by-Step Migration
 
 ### Step 1: Verify Ruff Installation
