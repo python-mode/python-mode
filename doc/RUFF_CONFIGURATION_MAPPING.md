@@ -116,6 +116,30 @@ let g:pymode_ruff_config_file = '/path/to/pyproject.toml'
 " Use specific Ruff configuration file
 ```
 
+#### `g:pymode_ruff_config_mode`
+**Default:** `"local_override"`
+
+Controls how Ruff configuration is resolved. This option determines whether local project configuration files (`ruff.toml`, `pyproject.toml`) or python-mode settings take precedence.
+
+**Modes:**
+- `"local"`: Use only the project's local Ruff config. Python-mode settings are ignored. Ruff will auto-discover configuration files in the project hierarchy.
+- `"local_override"`: Local config takes priority. If a local Ruff config file exists, it will be used. If no local config exists, python-mode settings serve as fallback.
+- `"global"`: Use only python-mode settings. Local config files are ignored (uses `--isolated` flag). This restores the previous behavior where python-mode settings always override local configs.
+
+**Example:**
+```vim
+" Respect project's local Ruff config (recommended for team projects)
+let g:pymode_ruff_config_mode = "local"
+
+" Use local config if available, otherwise use pymode defaults (default)
+let g:pymode_ruff_config_mode = "local_override"
+
+" Always use pymode settings, ignore project configs
+let g:pymode_ruff_config_mode = "global"
+```
+
+**Note:** The default `"local_override"` mode provides the best user experience by respecting project-specific configurations while providing sensible defaults when no local config exists.
+
 ## Migration Examples
 
 ### Example 1: Basic Configuration

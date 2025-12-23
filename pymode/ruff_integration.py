@@ -54,6 +54,55 @@ def _get_ruff_executable() -> str:
         raise RuntimeError("Ruff executable not found")
 
 
+def _find_local_ruff_config(file_path: str) -> Optional[str]:
+    """Find local Ruff configuration file starting from file's directory.
+    
+    Ruff searches for config files in this order (highest priority first):
+    1. .ruff.toml
+    2. ruff.toml
+    3. pyproject.toml (with [tool.ruff] section)
+    
+    Args:
+        file_path: Path to the Python file being checked
+        
+    Returns:
+        Path to the first Ruff config file found, or None if none found
+    """
+    # Start from the file's directory
+    current_dir = os.path.dirname(os.path.abspath(file_path))
+    
+    # Config file names in priority order
+    config_files = ['.ruff.toml', 'ruff.toml', 'pyproject.toml']
+    
+    # Walk up the directory tree
+    while True:
+        # Check for config files in current directory
+        for config_file in config_files:
+            config_path = os.path.join(current_dir, config_file)
+            if os.path.exists(config_path):
+                # For pyproject.toml, check if it contains [tool.ruff] section
+                if config_file == 'pyproject.toml':
+                    try:
+                        with open(config_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            if '[tool.ruff]' in content:
+                                return config_path
+                    except (IOError, UnicodeDecodeError):
+                        # If we can't read it, let Ruff handle it
+                        pass
+                else:
+                    return config_path
+        
+        # Move to parent directory
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:
+            # Reached root directory
+            break
+        current_dir = parent_dir
+    
+    return None
+
+
 def _build_ruff_config(linters: List[str], ignore: List[str], select: List[str]) -> Dict[str, Any]:
     """Build ruff configuration from pymode settings."""
     config = {}
@@ -223,31 +272,97 @@ def run_ruff_check(file_path: str, content: str = None) -> List[RuffError]:
     except RuntimeError:
         return []
     
-    # Get configuration from vim variables
-    # Use Ruff-specific options if set, otherwise fall back to legacy options
-    ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
-    ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
-    
-    if ruff_select or ruff_ignore:
-        # Use Ruff-specific configuration
-        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
-        ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
-        select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
-    else:
-        # Use legacy configuration (backward compatibility)
-        linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
-        ignore = env.var('g:pymode_lint_ignore', default=[])
-        select = env.var('g:pymode_lint_select', default=[])
-    
-    # Build ruff configuration
-    config = _build_ruff_config(linters, ignore, select)
+    # Get configuration mode
+    config_mode = env.var('g:pymode_ruff_config_mode', silence=True, default='local_override')
     
     # Prepare command
     cmd = [ruff_path, 'check', '--output-format=json']
     
-    # Add configuration arguments
-    if config:
-        cmd.extend(_build_ruff_args(config))
+    # Check for local config file (used in multiple modes)
+    local_config = _find_local_ruff_config(file_path)
+    
+    # Determine which config to use based on mode
+    if config_mode == 'local':
+        # Use only local config - don't pass any CLI config args
+        # If local config exists and we'll use a temp file, explicitly point to it
+        if local_config and content is not None:
+            cmd.extend(['--config', local_config])
+        # Otherwise, Ruff will auto-discover local config files
+    elif config_mode == 'local_override':
+        # Check if local config exists
+        if local_config:
+            # Local config found - use it
+            # If we'll use a temp file, explicitly point to the config
+            if content is not None:
+                cmd.extend(['--config', local_config])
+            # Otherwise, Ruff will auto-discover and use local config
+        else:
+            # No local config - use pymode settings as fallback
+            ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
+            ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
+            
+            if ruff_select or ruff_ignore:
+                # Use Ruff-specific configuration
+                linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+                ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
+                select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
+            else:
+                # Use legacy configuration (backward compatibility)
+                linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+                ignore = env.var('g:pymode_lint_ignore', default=[])
+                select = env.var('g:pymode_lint_select', default=[])
+            
+            # Build ruff configuration
+            config = _build_ruff_config(linters, ignore, select)
+            
+            # Add configuration arguments
+            if config:
+                cmd.extend(_build_ruff_args(config))
+    elif config_mode == 'global':
+        # Use only pymode settings - ignore local configs
+        cmd.append('--isolated')
+        
+        # Get pymode configuration
+        ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
+        ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
+        
+        if ruff_select or ruff_ignore:
+            # Use Ruff-specific configuration
+            linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+            ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
+            select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
+        else:
+            # Use legacy configuration (backward compatibility)
+            linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+            ignore = env.var('g:pymode_lint_ignore', default=[])
+            select = env.var('g:pymode_lint_select', default=[])
+        
+        # Build ruff configuration
+        config = _build_ruff_config(linters, ignore, select)
+        
+        # Add configuration arguments
+        if config:
+            cmd.extend(_build_ruff_args(config))
+    else:
+        # Invalid mode - default to local_override behavior
+        env.debug(f"Invalid g:pymode_ruff_config_mode: {config_mode}, using 'local_override'")
+        if not local_config:
+            # No local config - use pymode settings
+            ruff_select = env.var('g:pymode_ruff_select', silence=True, default=[])
+            ruff_ignore = env.var('g:pymode_ruff_ignore', silence=True, default=[])
+            
+            if ruff_select or ruff_ignore:
+                linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+                ignore = ruff_ignore if ruff_ignore else env.var('g:pymode_lint_ignore', default=[])
+                select = ruff_select if ruff_select else env.var('g:pymode_lint_select', default=[])
+            else:
+                linters = env.var('g:pymode_lint_checkers', default=['pyflakes', 'pycodestyle'])
+                ignore = env.var('g:pymode_lint_ignore', default=[])
+                select = env.var('g:pymode_lint_select', default=[])
+            
+            config = _build_ruff_config(linters, ignore, select)
+            if config:
+                cmd.extend(_build_ruff_args(config))
     
     # Handle content checking (for unsaved buffers)
     temp_file_path = None
@@ -329,13 +444,46 @@ def run_ruff_format(file_path: str, content: str = None) -> Optional[str]:
     if not env.var('g:pymode_ruff_format_enabled', silence=True, default=True):
         return None
     
+    # Get configuration mode
+    config_mode = env.var('g:pymode_ruff_config_mode', silence=True, default='local_override')
+    
+    # Check for local config file (used in multiple modes)
+    local_config = _find_local_ruff_config(file_path)
+    
     # Prepare command
     cmd = [ruff_path, 'format', '--stdin-filename', file_path]
     
-    # Get configuration file if specified
-    config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
-    if config_file and os.path.exists(config_file):
-        cmd.extend(['--config', config_file])
+    # Determine which config to use based on mode
+    if config_mode == 'local':
+        # Use only local config - Ruff will use --stdin-filename to discover config
+        # If local config exists, explicitly point to it for consistency
+        if local_config:
+            cmd.extend(['--config', local_config])
+    elif config_mode == 'local_override':
+        # Check if local config exists
+        if local_config:
+            # Local config found - explicitly use it
+            cmd.extend(['--config', local_config])
+        else:
+            # No local config - use pymode config file if specified
+            config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
+            if config_file and os.path.exists(config_file):
+                cmd.extend(['--config', config_file])
+    elif config_mode == 'global':
+        # Use only pymode settings - ignore local configs
+        cmd.append('--isolated')
+        
+        # Use pymode config file if specified
+        config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
+        if config_file and os.path.exists(config_file):
+            cmd.extend(['--config', config_file])
+    else:
+        # Invalid mode - default to local_override behavior
+        env.debug(f"Invalid g:pymode_ruff_config_mode: {config_mode}, using 'local_override'")
+        if not local_config:
+            config_file = env.var('g:pymode_ruff_config_file', silence=True, default='')
+            if config_file and os.path.exists(config_file):
+                cmd.extend(['--config', config_file])
     
     try:
         with silence_stderr():
