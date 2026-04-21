@@ -113,9 +113,10 @@ def __run_with_external_python(python_cmd, lines):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=env.curdir,
-            universal_newlines=True)
+            text=True)
         output, err = process.communicate()
-    except OSError:
+    except OSError as exc:
+        env.debug('Failed to execute external python', python_cmd, exc)
         return None
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
