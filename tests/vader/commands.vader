@@ -109,6 +109,7 @@ Execute (Test PymodeRun uses active virtualenv python):
           execute 'buffer ' . run_buffer
           let run_output = substitute(join(getline(1, '$'), "\n"), '\\', '/', 'g')
           let expected_python = has('win32') || has('win64') ? venv_dir . '/Scripts/python.exe' : venv_dir . '/bin/python'
+          let expected_python = substitute(expected_python, '\\', '/', 'g')
           Assert stridx(run_output, expected_python) >= 0, 'PymodeRun should execute with virtualenv python executable'
         else
           Assert 0, 'PymodeRun should create run buffer when using virtualenv'
