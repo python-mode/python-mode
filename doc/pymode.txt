@@ -268,6 +268,9 @@ Set path to virtualenv manually                      *'g:pymode_virtualenv_path'
 Commands:
 *:PymodeRun* -- Run current buffer or selection
 
+When a virtualenv is activated with |:PymodeVirtualenv|, *:PymodeRun* uses the
+virtualenv's Python executable.
+
 Turn on the run code script                                      *'g:pymode_run'*
 >
     let g:pymode_run = 1

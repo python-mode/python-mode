@@ -86,6 +86,45 @@ Execute (Test PymodeRun command):
     Assert 1, 'PymodeRun executed without producing a run buffer'
   endif
 
+Execute (Test PymodeRun uses active virtualenv python):
+  if exists(':PymodeRun') && exists(':PymodeVirtualenv')
+    let pycmd = executable('python3') ? 'python3' : (executable('python') ? 'python' : '')
+    if !empty(pycmd)
+      let temp_dir = tempname()
+      call mkdir(temp_dir, 'p')
+      let venv_dir = temp_dir . '/.venv'
+      let sample_file = temp_dir . '/run_from_venv.py'
+      let saved_venv_enabled = get(g:, 'pymode_virtualenv_enabled', '')
+      let saved_venv = get(g:, 'pymode_virtualenv', 0)
+
+      call writefile(['import sys', 'print(sys.executable)'], sample_file)
+
+      call system(pycmd . ' -m venv ' . shellescape(venv_dir))
+      if v:shell_error == 0
+        execute 'edit ' . fnameescape(sample_file)
+        let g:pymode_virtualenv = 1
+        execute 'PymodeVirtualenv ' . fnameescape(venv_dir)
+        PymodeRun
+
+        let run_buffer = bufnr('__run__')
+        if run_buffer != -1
+          execute 'buffer ' . run_buffer
+          let run_output = substitute(join(getline(1, '$'), "\n"), '\\', '/', 'g')
+          let expected_python = has('win32') || has('win64') ? venv_dir . '/Scripts/python.exe' : venv_dir . '/bin/python'
+          let expected_python = substitute(expected_python, '\\', '/', 'g')
+          Assert stridx(run_output, expected_python) >= 0, 'PymodeRun should execute with virtualenv python executable'
+        else
+          Assert 0, 'PymodeRun should create run buffer when using virtualenv'
+        endif
+      endif
+
+      let g:pymode_virtualenv_enabled = saved_venv_enabled
+      let g:pymode_virtualenv = saved_venv
+      call delete(sample_file)
+      call delete(temp_dir, 'rf')
+    endif
+  endif
+
 # Test PymodeLint command
 Given python (Python code with lint issues):
   import math, sys;
