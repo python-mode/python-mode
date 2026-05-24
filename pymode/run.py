@@ -28,9 +28,10 @@ def run_code():
     elif encoding.match(lines[1]):
         lines.pop(1)
 
+    real_file = env.var('expand("%:p")')
     python_cmd = __get_virtualenv_python()
     if python_cmd:
-        result = __run_with_external_python(python_cmd, lines)
+        result = __run_with_external_python(python_cmd, lines, real_file)
         if result is not None:
             output, err = result
         else:
@@ -39,7 +40,7 @@ def run_code():
     if not python_cmd:
         context = dict(
             __name__='__main__',
-            __file__=env.var('expand("%:p")'),
+            __file__=real_file,
             input=env.user_input,
             raw_input=env.user_input)
 
@@ -57,6 +58,7 @@ def run_code():
                 # A non-false code indicates abnormal termination.
                 # A false code will be treated as a
                 # successful run, and the error will be hidden from Vim
+                sys.stdout, sys.stderr = stdout_, stderr_
                 env.error("Script exited with code %s" % e.code)
                 return env.stop()
 
@@ -98,8 +100,10 @@ def __get_virtualenv_python():
     return None
 
 
-def __run_with_external_python(python_cmd, lines):
-    source = '\n'.join(lines) + '\n'
+def __run_with_external_python(python_cmd, lines, real_file):
+    # Inject __file__ so user code sees the real source path, not the temp file
+    header = '__file__ = %r\n' % real_file
+    source = header + '\n'.join(lines) + '\n'
     temp_file_path = None
     try:
         with tempfile.NamedTemporaryFile(
@@ -108,19 +112,30 @@ def __run_with_external_python(python_cmd, lines):
             temp_file.write(source)
             temp_file_path = temp_file.name
 
+        timeout = env.var('g:pymode_run_timeout', silence=True, default=0) or None
         process = subprocess.Popen(
             [python_cmd, temp_file_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=env.curdir,
-            text=True)
-        output, err = process.communicate()
+            text=True,
+            encoding='utf-8')
+        try:
+            output, err = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            output, err = process.communicate()
+            err += '\nProcess timed out after %s second(s).' % timeout
     except OSError as exc:
         env.debug('Failed to execute external python', python_cmd, exc)
         return None
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
+
+    # Replace temp path in tracebacks so errors reference the real source file
+    if temp_file_path:
+        err = err.replace(temp_file_path, real_file)
 
     return output, err
 

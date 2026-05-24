@@ -99,6 +99,9 @@ call pymode#default('g:pymode_run', 1)
 " Key's map for run python code
 call pymode#default('g:pymode_run_bind', '<leader>r')
 
+" Timeout in seconds for :PymodeRun when using a virtualenv interpreter (0 = no limit)
+call pymode#default('g:pymode_run_timeout', 0)
+
 " }}}
 
 " CHECK CODE {{{

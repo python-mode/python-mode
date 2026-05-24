@@ -94,6 +94,8 @@ Execute (Test PymodeRun uses active virtualenv python):
       call mkdir(temp_dir, 'p')
       let venv_dir = temp_dir . '/.venv'
       let sample_file = temp_dir . '/run_from_venv.py'
+      let saved_venv_enabled = get(g:, 'pymode_virtualenv_enabled', '')
+      let saved_venv = get(g:, 'pymode_virtualenv', 0)
 
       call writefile(['import sys', 'print(sys.executable)'], sample_file)
 
@@ -101,7 +103,7 @@ Execute (Test PymodeRun uses active virtualenv python):
       if v:shell_error == 0
         execute 'edit ' . fnameescape(sample_file)
         let g:pymode_virtualenv = 1
-        execute 'PymodeVirtualenv ' . string(venv_dir)
+        execute 'PymodeVirtualenv ' . fnameescape(venv_dir)
         PymodeRun
 
         let run_buffer = bufnr('__run__')
@@ -114,17 +116,13 @@ Execute (Test PymodeRun uses active virtualenv python):
         else
           Assert 0, 'PymodeRun should create run buffer when using virtualenv'
         endif
-      else
-        Assert 1, 'Unable to create test virtualenv in this environment - test skipped'
       endif
 
+      let g:pymode_virtualenv_enabled = saved_venv_enabled
+      let g:pymode_virtualenv = saved_venv
       call delete(sample_file)
       call delete(temp_dir, 'rf')
-    else
-      Assert 1, 'No python executable available to create virtualenv - test skipped'
     endif
-  else
-    Assert 1, 'PymodeRun/PymodeVirtualenv command not available - test skipped'
   endif
 
 # Test PymodeLint command
